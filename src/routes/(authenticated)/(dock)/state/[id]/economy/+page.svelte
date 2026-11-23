@@ -2,6 +2,7 @@
 <!-- The finance minister's desk: the treasury book, the power grid gauge,
      the state stockpile manifest and the drawers that lead elsewhere. -->
 <script lang="ts">
+	import { goodLabel } from "#lib/config/index.js";
 	import FluentMoney20Filled from "~icons/fluent/money-20-filled";
 	import FluentBox20Filled from "~icons/fluent/box-20-filled";
 	import FluentFlash20Filled from "~icons/fluent/flash-20-filled";
@@ -200,7 +201,7 @@
 				{@const quantity = resourceMap.get(resource) || 0}
 				<li class="flex items-center gap-2 py-2 border-b border-dashed border-line/15 min-w-0">
 					<ResourceIcon name={resource} class="size-5 shrink-0" />
-					<span class="text-sm text-fg-soft capitalize truncate">{resource}</span>
+					<span class="text-sm text-fg-soft truncate">{goodLabel(resource)}</span>
 					<span class="ml-auto font-mono text-sm font-bold {quantity > 0 ? 'text-fg' : 'text-fg-muted/60'}">
 						{quantity.toLocaleString()}
 					</span>

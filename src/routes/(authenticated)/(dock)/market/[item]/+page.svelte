@@ -7,6 +7,7 @@
 	import { toastResult } from "#lib/ui/toast.svelte.js";
 	import { confirmSubmit } from "#lib/ui/confirm-submit.js";
 	import { celebrate } from "#lib/utils/celebrate.js";
+	import { goodLabel } from "#lib/config/index.js";
 	import { vanish } from "#lib/utils/motion.js";
 	import FluentAdd20Filled from "~icons/fluent/add-20-filled";
 	import FluentEdit20Filled from "~icons/fluent/edit-20-filled";
@@ -134,7 +135,7 @@
 </script>
 
 <svelte:head>
-	<title>{`${data.itemName.charAt(0).toUpperCase()}${data.itemName.slice(1)} market · PsyOps`}</title>
+	<title>{goodLabel(data.itemName)} market · PsyOps</title>
 </svelte:head>
 
 {#snippet qtyPrice(
@@ -196,7 +197,7 @@
 					<ResourceIcon name={data.itemName} class="size-7" />
 				</div>
 				<div class="min-w-0">
-					<h1 class="font-sans text-xl sm:text-2xl font-semibold text-fg capitalize truncate">{data.itemName}</h1>
+					<h1 class="font-sans text-xl sm:text-2xl font-semibold text-fg truncate">{goodLabel(data.itemName)}</h1>
 					<p class="text-xs text-fg-muted">
 						{data.itemType === "resource" ? "Raw material" : "Goods"} ·
 						<span class="font-mono text-fg-soft">{data.userItemQuantity.toLocaleString()}</span> in stock
@@ -500,7 +501,7 @@
 						Next order in <span class="font-mono">{cooldownDisplay}</span>
 					</p>
 				{:else}
-					<p class="text-sm text-fg-muted">No {data.itemName} in stock to sell.</p>
+					<p class="text-sm text-fg-muted">No {goodLabel(data.itemName)} in stock to sell.</p>
 				{/if}
 			</div>
 		</section>

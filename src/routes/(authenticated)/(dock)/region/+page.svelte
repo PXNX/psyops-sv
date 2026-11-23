@@ -2,6 +2,7 @@
 <!-- The regions as an atlas gazetteer: coat of arms, name, owning state and
      the figure the list is sorted by. -->
 <script lang="ts">
+	import { goodLabel } from "#lib/config/index.js";
 	import { getRegionName, regionCoatUrl } from "#lib/utils/formatting.js";
 	import FluentSearch20Filled from "~icons/fluent/search-20-filled";
 	import FluentDismiss20Filled from "~icons/fluent/dismiss-20-filled";
@@ -136,7 +137,7 @@
 										><FluentPeople20Filled class="size-3 text-friendly" />{region.population.toLocaleString()}</span
 									>
 									{#each resources as k (k)}
-										<span class="hidden capitalize text-fg-soft sm:inline">· {k} {region[k]}</span>
+										<span class="hidden text-fg-soft sm:inline">· {goodLabel(k)} {region[k]}</span>
 									{/each}
 								</p>
 							</div>

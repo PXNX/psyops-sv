@@ -42,15 +42,16 @@
 			<p class="font-mono text-lg font-bold text-positive-fg">{money(data.interest)}</p>
 		</div>
 		<div class="panel rounded-sm p-3">
-			<p class="text-[10px] uppercase tracking-wide text-fg-muted">Coupon rate</p>
-			<p class="font-mono text-lg font-bold text-fg">{data.config.BOND_COUPON_PERCENT}% / year</p>
+			<p class="text-[10px] uppercase tracking-wide text-fg-muted">Coupon range</p>
+			<p class="font-mono text-lg font-bold text-fg">{data.riskRange.min}–{data.riskRange.max}% / year</p>
 		</div>
 	</div>
 
 	<section class="panel rounded-sm p-4">
 		<h2 class="section-title mb-3">Buy a bond</h2>
 		<p class="mb-3 text-xs text-fg-muted">
-			States borrow only when their president or economy minister opens an offering. Pick one below.
+			States borrow only when their president or economy minister opens an offering. The coupon is priced
+			from that state's debt, treasury, wars and stability — risky borrowers pay more.
 		</p>
 		{#if form?.error}
 			<p class="field-error mb-3">{form.error}</p>
@@ -79,7 +80,7 @@
 				<select name="offeringId" class="field-control rounded-sm px-3 py-2.5 w-full" required>
 					{#each data.offerings as offering (offering.id)}
 						<option value={offering.id}>
-							{offering.stateName} · {money(offering.remaining)} left
+							{offering.stateName} · {offering.risk.ratePercent}% ({offering.risk.grade}) · {money(offering.remaining)} left
 							{offering.issuerName ? `· handed out by ${offering.issuerName}` : ""}
 						</option>
 					{/each}

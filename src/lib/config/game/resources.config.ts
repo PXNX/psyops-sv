@@ -137,3 +137,46 @@ export function estimatedShiftsLeft(
 	}
 	return shifts;
 }
+
+/**
+ * Human names for every tradeable good. Resource and product keys are DB
+ * enums and snake_case, so they must never be shown raw in the UI.
+ */
+export const GOOD_LABELS: Record<string, string> = {
+	// Resources
+	iron: "Iron ore",
+	copper: "Copper",
+	steel: "Steel",
+	gunpowder: "Gunpowder",
+	wood: "Timber",
+	coal: "Coal",
+	oil: "Crude oil",
+	gas: "Natural gas",
+	uranium: "Uranium",
+	rare_earth: "Rare earths",
+	silicon: "Silicon",
+	fuel: "Fuel",
+	enriched_uranium: "Enriched uranium",
+	// Products
+	rifles: "Rifles",
+	ammunition: "Ammunition",
+	artillery: "Artillery",
+	vehicles: "Vehicles",
+	explosives: "Explosives",
+	chips: "Chips",
+	electronics: "Electronics",
+	hardware: "Server hardware",
+	datacenter: "Datacenter",
+	machine_tools: "Machine tools",
+	fab_equipment: "Fab equipment",
+	// Pseudo-goods used in costs and ledgers
+	currency: "Credits",
+	money: "Credits",
+	credits: "Credits"
+};
+
+/** The display name for a good, with a readable fallback for unknown keys. */
+export function goodLabel(name: string | null | undefined): string {
+	if (!name) return "—";
+	return GOOD_LABELS[name] ?? name.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
+}

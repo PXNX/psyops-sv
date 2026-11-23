@@ -2,6 +2,7 @@
 <!-- Founding a factory, laid out as a works licence application: the site
      survey (deposits, taxes), the works to build, staffing, and the fees. -->
 <script lang="ts">
+	import { goodLabel } from "#lib/config/index.js";
 	import { enhance } from "$app/forms";
 	import { toastResult } from "#lib/ui/toast.svelte.js";
 	import FluentFactory20Filled from "~icons/fluent/building-factory-20-filled";
@@ -183,7 +184,7 @@
 								<div class="panel-muted rounded-sm p-2.5">
 									<div class="flex items-center gap-1.5">
 										<ResourceIcon name={resource.resourceType} class="size-4" />
-										<span class="text-sm font-medium text-fg capitalize truncate">{resource.resourceType}</span>
+										<span class="text-sm font-medium text-fg truncate">{goodLabel(resource.resourceType)}</span>
 									</div>
 									<p class="mt-0.5 text-xs text-fg-muted">
 										<span class="font-mono text-politics-fg">{resource.remaining.toLocaleString()}</span> left · {resource.amount}%
@@ -262,8 +263,8 @@
 							title={minable ? undefined : "No deposit in this region"}
 						>
 							<ResourceIcon name={output} class="size-6 mx-auto" />
-							<span class="block text-[11px] capitalize mt-1 truncate {selected ? 'text-primary-fg' : 'text-fg-soft'}"
-								>{output}</span
+							<span class="block text-[11px] mt-1 truncate {selected ? 'text-primary-fg' : 'text-fg-soft'}"
+								>{goodLabel(output)}</span
 							>
 						</button>
 					{/each}

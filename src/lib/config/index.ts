@@ -7,6 +7,7 @@ export * from "./game/economy.config";
 export * from "./game/officials.config";
 export * from "./game/stocks.config";
 export * from "./game/investments.config";
+export * from "./game/bond-risk.config";
 export * from "./game/factory-finance.config";
 export * from "./game/diseases.config";
 export * from "./game/buildings.config";

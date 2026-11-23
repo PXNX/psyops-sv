@@ -2,6 +2,7 @@
 <!-- A region as a gazetteer entry: coat of arms, facts and figures, its
      governor and industry. Visas are a passport page, travel a ticket. -->
 <script lang="ts">
+	import { goodLabel } from "#lib/config/index.js";
 	import { toastResult } from "#lib/ui/toast.svelte.js";
 	import { enhance } from "$app/forms";
 	import { tick } from "svelte";
@@ -540,7 +541,7 @@
 						>
 							<ResourceIcon name={resource.name} class="size-5 shrink-0" />
 							<div class="min-w-0">
-								<dt class="text-[10px] text-fg-muted uppercase tracking-wide capitalize">{resource.name}</dt>
+								<dt class="text-[10px] text-fg-muted uppercase tracking-wide">{goodLabel(resource.name)}</dt>
 								<dd class="text-sm font-bold font-mono text-fg">{resource.value}</dd>
 							</div>
 						</div>

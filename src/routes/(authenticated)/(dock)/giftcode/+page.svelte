@@ -1,5 +1,6 @@
 <!-- src/routes/(authenticated)/(dock)/giftcode/+page.svelte -->
 <script lang="ts">
+	import { goodLabel } from "#lib/config/index.js";
 	import FluentGift20Filled from "~icons/fluent/gift-20-filled";
 	import FluentCheckmark20Filled from "~icons/fluent/checkmark-20-filled";
 	import FluentDismiss20Filled from "~icons/fluent/dismiss-20-filled";
@@ -92,7 +93,7 @@
 										{:else}
 											<ResourceIcon name={resource.type} class="size-3.5" />
 										{/if}
-										<span class="capitalize">{resource.type}</span>
+										<span>{goodLabel(resource.type)}</span>
 									</span>
 									<span class="font-mono text-xs text-positive-fg">
 										+{formatNumber(resource.quantity)}
@@ -206,7 +207,7 @@
 											{:else}
 												<ResourceIcon name={resource.type} class="size-3.5" />
 											{/if}
-											<span class="capitalize">{resource.type}</span>
+											<span>{goodLabel(resource.type)}</span>
 										</span>
 										<span class="font-mono text-xs text-positive-fg">
 											+{formatNumber(resource.quantity)}

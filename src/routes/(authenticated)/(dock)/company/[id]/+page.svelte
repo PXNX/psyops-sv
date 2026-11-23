@@ -3,6 +3,7 @@
      balance sheet, the share capital (certificates, register, order book)
      and the works it operates. -->
 <script lang="ts">
+	import { goodLabel } from "#lib/config/index.js";
 	import { tick } from "svelte";
 	import { enhance } from "$app/forms";
 	import { vanish } from "#lib/utils/motion.js";
@@ -727,7 +728,7 @@
 				{#each data.resourceProduction as resource (resource.type)}
 					<li>
 						<div class="flex items-baseline justify-between gap-3 text-sm">
-							<span class="capitalize font-semibold text-fg-body">{resource.type}</span>
+							<span class="font-semibold text-fg-body">{goodLabel(resource.type)}</span>
 							<span class="font-mono text-fg">{resource.productionRate.toLocaleString()}</span>
 						</div>
 						<div class="mt-1 h-2 rounded-full bg-surface-4 overflow-hidden">

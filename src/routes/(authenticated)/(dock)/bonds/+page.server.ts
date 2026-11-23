@@ -7,6 +7,8 @@ import type { Actions, PageServerLoad } from "./$types";
 import { db } from "#lib/server/db.js";
 import { userWallets } from "#lib/server/schema.js";
 import { INVESTMENTS_CONFIG } from "#lib/config/game/investments.config.js";
+import { BOND_RISK } from "#lib/config/index.js";
+import { bondRiskFor } from "#lib/server/services/economy/bond-risk.js";
 import {
 	BondError,
 	bondPortfolio,
@@ -17,11 +19,18 @@ import {
 
 export const load: PageServerLoad = async ({ locals }) => {
 	const account = locals.account!;
-	const [wallet, offerings, bonds] = await Promise.all([
+	const [wallet, rawOfferings, bonds] = await Promise.all([
 		db.select({ balance: userWallets.balance }).from(userWallets).where(eq(userWallets.userId, account.id)).limit(1),
 		openBondOfferings(db),
 		bondPortfolio(db, account.id)
 	]);
+	// Each offering is priced from the borrowing state's current risk.
+	const offerings = await Promise.all(
+		rawOfferings.map(async (offering) => ({
+			...offering,
+			risk: await bondRiskFor(db, offering.stateId)
+		}))
+	);
 	const invested = bonds.filter((b) => !b.redeemedAt).reduce((sum, b) => sum + b.principal, 0);
 	const interest = bonds.reduce((sum, b) => sum + b.earned, 0);
 	return {
@@ -31,6 +40,7 @@ export const load: PageServerLoad = async ({ locals }) => {
 		invested,
 		interest,
 		config: INVESTMENTS_CONFIG,
+		riskRange: { min: BOND_RISK.MIN_RATE, max: BOND_RISK.MAX_RATE },
 		now: Date.now()
 	};
 };

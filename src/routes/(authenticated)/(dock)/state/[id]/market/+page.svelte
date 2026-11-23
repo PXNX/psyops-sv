@@ -2,6 +2,7 @@
 <!-- The government's procurement desk: a stockpile ledger and a purchase /
      disposal order the president or economy minister signs. -->
 <script lang="ts">
+	import { goodLabel } from "#lib/config/index.js";
 	import { enhance } from "$app/forms";
 	import { toastResult } from "#lib/ui/toast.svelte.js";
 	import { celebrate } from "#lib/utils/celebrate.js";
@@ -131,8 +132,8 @@
 							<span class="flex items-center gap-2 min-w-0">
 								<ResourceIcon name={resource} class="size-5 shrink-0" />
 								<span
-									class="capitalize truncate text-sm {isSelected ? 'text-primary-fg font-semibold' : 'text-fg-soft'}"
-									>{resource}</span
+									class="truncate text-sm {isSelected ? 'text-primary-fg font-semibold' : 'text-fg-soft'}"
+									>{goodLabel(resource)}</span
 								>
 							</span>
 							<span class="text-right font-mono text-sm tabular-nums {quantity > 0 ? 'text-fg' : 'text-fg-muted/60'}"
@@ -196,7 +197,7 @@
 						<p class="text-[10px] uppercase tracking-wide text-fg-muted">
 							{tradeMode === "buy" ? "Requisition of" : "Release of"}
 						</p>
-						<p class="font-serif text-xl font-bold capitalize text-fg">{selectedResource}</p>
+						<p class="font-serif text-xl font-bold text-fg">{goodLabel(selectedResource)}</p>
 					</div>
 				</div>
 

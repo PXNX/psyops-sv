@@ -48,6 +48,30 @@
 	</div>
 
 	<section class="panel rounded-sm p-4 sm:p-5 mt-4 space-y-3">
+		<div class="flex flex-wrap items-center justify-between gap-3">
+			<h2 class="section-title">Credit rating</h2>
+			<p class="text-sm text-fg-body">
+				New bonds from this state pay <strong class="font-mono text-fg">{data.risk.ratePercent}%</strong>
+				a year · grade <strong class="font-mono text-fg">{data.risk.grade}</strong> ({data.risk.label},
+				risk {data.risk.score}/100)
+			</p>
+		</div>
+		<div class="rounded-sm border border-line/20">
+			{#each data.risk.components as component (component.key)}
+				<div class="flex items-center justify-between gap-3 border-b border-line/10 px-3 py-2 text-sm last:border-0">
+					<span><strong class="font-medium text-fg">{component.label}</strong><span class="block text-xs text-fg-muted">{component.detail}</span></span>
+					<span class="font-mono {component.points < 0 ? 'text-positive-fg' : 'text-amber-300'}">
+						{component.points > 0 ? "+" : ""}{component.points}
+					</span>
+				</div>
+			{/each}
+		</div>
+		<p class="text-xs text-fg-muted">
+			The coupon is fixed when an investor buys a bond; a later change in this rating does not alter bonds already sold.
+		</p>
+	</section>
+
+	<section class="panel rounded-sm p-4 sm:p-5 mt-4 space-y-3">
 		<h2 class="section-title">How GDP is estimated</h2>
 		<p class="text-sm text-fg-body">
 			A year of tax receipts is grossed up by the average tax rate to estimate the taxable base, then

@@ -1,5 +1,6 @@
 <!-- src/routes/(authenticated)/admin/giftcode/+page.svelte -->
 <script lang="ts">
+	import { goodLabel } from "#lib/config/index.js";
 	import { confirmSubmit } from "#lib/ui/confirm-submit.js";
 	import FluentGift20Filled from "~icons/fluent/gift-20-filled";
 	import FluentAdd20Filled from "~icons/fluent/add-20-filled";
@@ -407,7 +408,7 @@
 							{#each resourceTypes as type}
 								<option value={type}>
 									{resourceIcons[type] || "📦"}
-									{type.charAt(0).toUpperCase() + type.slice(1)}
+									{goodLabel(type)}
 								</option>
 							{/each}
 						</select>

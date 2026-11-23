@@ -2,6 +2,7 @@
 <!-- The player's workshop: a time card for the factory shift, the production
      line (running batch or the workbench to start one) and the storeroom. -->
 <script lang="ts">
+	import { goodLabel } from "#lib/config/index.js";
 	import { invalidateAll } from "$app/navigation";
 	import { enhance } from "$app/forms";
 	import { toastResult } from "#lib/ui/toast.svelte.js";
@@ -283,8 +284,8 @@
 							<ResourceIcon name={activeProduction.productType} class="size-10 sm:size-12" />
 						</div>
 						<div class="min-w-0 flex-1">
-							<p class="text-lg sm:text-xl font-bold text-fg capitalize truncate">
-								{activeProduction.productType}
+							<p class="text-lg sm:text-xl font-bold text-fg truncate">
+								{goodLabel(activeProduction.productType)}
 							</p>
 							<p class="text-xs text-fg-muted">Batch of {activeProduction.quantity}</p>
 						</div>
@@ -345,9 +346,9 @@
 								/>
 								<ResourceIcon name={product} class="size-8 mx-auto mb-1" />
 								<span
-									class="block text-xs font-medium capitalize truncate {selected ? 'text-primary-fg' : 'text-fg-muted'}"
+									class="block text-xs font-medium truncate {selected ? 'text-primary-fg' : 'text-fg-muted'}"
 								>
-									{product}
+									{goodLabel(product)}
 								</span>
 								<span class="block text-[10px] font-mono text-fg-muted">{productMap.get(product) || 0} in stock</span>
 							</label>
@@ -429,7 +430,7 @@
 									: ''}"
 							>
 								<ResourceIcon name={item} class="size-6" />
-								<span class="text-[10px] capitalize text-fg-soft truncate max-w-full">{item}</span>
+								<span class="text-[10px] text-fg-soft truncate max-w-full">{goodLabel(item)}</span>
 								<span class="text-sm font-bold font-mono {quantity > 0 ? 'text-fg' : 'text-fg-muted'}">{quantity}</span>
 							</a>
 						{/each}

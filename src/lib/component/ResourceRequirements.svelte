@@ -9,6 +9,7 @@
 	import FluentClock20Filled from "~icons/fluent/clock-24-filled";
 	import FluentPeople20Filled from "~icons/fluent/people-20-filled";
 	import ResourceIcon from "#lib/component/ResourceIcon.svelte";
+	import { goodLabel } from "#lib/config/index.js";
 
 	type Props = {
 		costs: Record<string, number>;
@@ -33,7 +34,7 @@
 		MONEY_KEYS.has(key) ? "money" : TIME_KEYS.has(key) ? "time" : PEOPLE_KEYS.has(key) ? "manpower" : "resource";
 	const labelOf = (key: string) => {
 		const known: Record<string, string> = { hours: "Build time", duration: "Duration", durationHours: "Duration", cooldown: "Cooldown", cooldownHours: "Cooldown", days: "Days", manpower: "Manpower", civilians: "Civilians", energy: "Energy", heat: "Heat" };
-		return known[key] ?? key.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
+		return known[key] ?? goodLabel(key);
 	};
 	const unitOf = (key: string) => (TIME_KEYS.has(key) ? (key === "days" ? "days" : "h") : PEOPLE_KEYS.has(key) ? "civilians" : key === "heat" ? "heat" : "");
 

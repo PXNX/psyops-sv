@@ -13,11 +13,12 @@ import { states, stateTreasury, userProfiles } from "../../schema";
 import { bondCoupons, stateBondOfferings, stateBonds } from "../../schema-investments";
 import { creditWallet, debitWallet, type Executor } from "../../money";
 import { canManagePortfolio, stateRoles } from "../government/authority";
+import { bondRiskFor } from "./bond-risk.js";
 import { INVESTMENTS_CONFIG } from "#lib/config/game/investments.config.js";
 import { REAL_DAY_MS, gameYearsToMs } from "#lib/utils/game-time.js";
 
 const DAY = REAL_DAY_MS;
-const { BOND_MIN_PRINCIPAL, BOND_COUPON_PERCENT, BOND_TERM_DAYS, COUPON_PERIOD_DAYS } = INVESTMENTS_CONFIG;
+const { BOND_MIN_PRINCIPAL, BOND_TERM_DAYS, COUPON_PERIOD_DAYS } = INVESTMENTS_CONFIG;
 
 /** A bond operation the user should see as a validation error. */
 export class BondError extends Error {}
@@ -132,6 +133,9 @@ export async function buyStateBond(
 			)
 			.returning({ stateId: stateBondOfferings.stateId, authorizedBy: stateBondOfferings.authorizedBy });
 		if (!claimed) throw new BondError("That offering no longer has enough left.");
+		// The coupon is fixed for the life of this bond, but priced from the
+		// borrowing state's risk at the moment it is bought.
+		const risk = await bondRiskFor(db, claimed.stateId, now);
 
 		await debitWallet(tx, userId, principal);
 		await tx
@@ -161,7 +165,7 @@ export async function buyStateBond(
 				offeringId,
 				issuedBy: claimed.authorizedBy,
 				principal,
-				couponRatePercent: BOND_COUPON_PERCENT,
+				couponRatePercent: risk.ratePercent,
 				purchasedAt: now,
 				lastCouponAt: now,
 				maturesAt: new Date(now.getTime() + BOND_TERM_DAYS * DAY)

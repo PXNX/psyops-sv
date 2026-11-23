@@ -3,6 +3,7 @@
      and cabinet, regions, resources, tax schedule and the travel papers the
      viewer holds for this state. -->
 <script lang="ts">
+	import { goodLabel } from "#lib/config/index.js";
 	import { toast, toastResult } from "#lib/ui/toast.svelte.js";
 	import WarHistory from "#lib/component/WarHistory.svelte";
 	import FluentPeople20Filled from "~icons/fluent/people-20-filled";
@@ -735,7 +736,7 @@
 						{#each resourceEntries as resource (resource.name)}
 							<li class="panel-muted rounded-sm px-3 py-2 flex items-center gap-2 min-w-0">
 								<ResourceIcon name={resource.name} class="size-5 shrink-0" />
-								<span class="text-xs text-fg-muted capitalize truncate">{resource.name}</span>
+								<span class="text-xs text-fg-muted truncate">{goodLabel(resource.name)}</span>
 								<span class="ml-auto text-sm font-bold font-mono text-fg">
 									{resource.value.toLocaleString()}
 								</span>
