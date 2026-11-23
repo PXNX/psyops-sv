@@ -971,19 +971,24 @@
 	}
 
 	/** The hex map is part of the world SVG itself, not a second floating canvas.
-	 *  It is inserted *before* the region paths: the opaque land clips every
-	 *  hex that falls on shore, so the grid only shows over water. Hexes inside
-	 *  an EEZ carry the owner's colour; the rest of the sea grid is drawn faintly
-	 *  so the whole map can be navigated by hex. Each cell keeps its coordinate
-	 *  so it can be tapped and selected. */
+	 *  It is inserted *before* the region paths: the opaque land clips it at the
+	 *  shoreline. Cells inside a coastal region's EEZ are filled with that
+	 *  region's colour but carry no grid outline — the EEZ is the band of water
+	 *  between the coast and the hex grid, which starts at its seaward edge.
+	 *  Every cell keeps its coordinate so it can still be tapped. */
 	const worldSvg = $derived.by(() => {
 		if (!showSea || !overlays.sea) return WorldMap;
 		const cells = seaHexes
 			.map((h) => {
 				const picked = h.key === selectedHexKey;
+				if (h.inEez) {
+					return `<polygon data-hex='${h.key}' data-tutorial='hex-cell' points='${h.points}' fill='${h.color}' fill-opacity='${
+						picked ? 0.34 : 0.13
+					}' stroke='${picked ? "#f8fafc" : "none"}' stroke-width='${picked ? 2 : 0}' style='cursor:pointer'/>`;
+				}
 				return `<polygon data-hex='${h.key}' data-tutorial='hex-cell' points='${h.points}' fill='${h.color}' fill-opacity='${
-					picked ? 0.36 : h.active ? 0.2 : h.inEez ? 0.14 : 0.05
-				}' stroke='${picked ? "#f8fafc" : h.color}' stroke-opacity='${picked ? 1 : h.active ? 0.9 : h.inEez ? 0.65 : 0.22}' stroke-width='${
+					picked ? 0.36 : h.active ? 0.2 : 0.05
+				}' stroke='${picked ? "#f8fafc" : h.color}' stroke-opacity='${picked ? 1 : h.active ? 0.9 : 0.22}' stroke-width='${
 					picked ? 2 : h.active ? 1 : 0.8
 				}' style='cursor:pointer'/>`;
 			})
@@ -1137,17 +1142,18 @@
 				{/if}
 
 				{#if showSea && overlays.sea}
-					<!-- Each EEZ is a single zone grown out of its coastline. -->
+					<!-- The dashed line is the seaward edge of the EEZ band:
+				         coast → coloured EEZ water → hex grid starts here. -->
 					<g pointer-events="none">
 						{#each eezZones as zone (zone.regionId)}
 							<path
 								d={zone.path}
 								stroke={zone.color}
-								stroke-opacity="0.38"
-								stroke-width={0.9 * k}
+								stroke-opacity="0.55"
+								stroke-width={1.1 * k}
 								stroke-dasharray="{3 * k} {2 * k}"
 								fill="none"
-							><title>EEZ of region {zone.name}</title></path>
+							><title>EEZ of region {zone.name} · coast to hex grid</title></path>
 						{/each}
 					</g>
 					<!-- Ports, ships and minefields (hexes live in the world SVG) -->
@@ -1527,7 +1533,7 @@
 				{mode === "naval" ? "NAVAL · sea + coasts" : mode === "aerial" ? "AERIAL · Luftraum sectors" : "LAND · regions + forces"}
 			</span>
 			{#if showSea && overlays.sea}
-				<span class="inline-flex items-center gap-1"><span class="size-2.5 border border-sky-400"></span>Sea hex / EEZ</span>
+				<span class="inline-flex items-center gap-1"><span class="size-2.5 border border-sky-400"></span>EEZ band · hex grid</span>
 				<span class="inline-flex items-center gap-1">⚓ Port</span>
 			{/if}
 			{#if mode !== "naval" && overlays.friendly}<span class="inline-flex items-center gap-1"

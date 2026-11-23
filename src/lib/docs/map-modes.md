@@ -22,9 +22,10 @@ view of the same world.
 
 - Shows only the sea and coastal regions. Inland regions fade out and land
   units, battles and army intel are hidden.
-- The full hex grid is drawn over the real world map and clipped to the
-  coastline, so there are no hexes on land. Hexes inside a coastal state's EEZ
-  carry that state's colour; the rest of the sea grid is drawn faintly.
+- Each coastal region's **EEZ** is the band of coloured water between its
+  shoreline and the hex grid — there are no hex outlines inside it. The hex
+  map starts at the EEZ's dashed seaward edge and covers the rest of the sea,
+  clipped so no hexes sit on land.
 - Ports (⚓), ships and minefields (✳) sit on their hexes.
 - Clicking a hex opens a panel with coordinates, EEZ owner, port, ships and
   mines, plus a link to the navy console.
@@ -68,9 +69,10 @@ sea is blank.
   by the separate fleet console view.
 - EEZ (`EEZ`): `radiusHexes = 2`. A coastal region's claim is grown from the
   **sampled outline of its actual shoreline**, not from its centroid: the
-  nearest coastline owns each water hex. Hexes are painted before the land
-  paths, so the real (non-hexagonal) coast clips them and a partial hex hugs
-  the shore.
+  nearest coastline owns each water hex. Those two rings form the EEZ band —
+  filled with the region's colour but drawn without hex outlines — so the hex
+  grid ends at its dashed seaward edge. Everything is painted before the land
+  paths, so the real (non-hexagonal) coast clips the band to the shoreline.
 - Airspace (`AIRSPACE`): **4 columns × 3 rows = 12** sectors, labelled
   LR-A1 … LR-C4. Each sector is drawn as **one union-shaped region**: the
   hexes it contains (and their EEZs, shown as `H`) plus the land regions above
