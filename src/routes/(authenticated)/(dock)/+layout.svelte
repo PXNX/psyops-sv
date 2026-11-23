@@ -9,6 +9,7 @@
 	import FluentChat from "~icons/fluent/chat-multiple-24-regular";
 	import FluentDataTrending from "~icons/fluent/data-trending-24-regular";
 	import FluentMoney from "~icons/fluent/money-20-filled";
+	import FluentShield from "~icons/fluent/shield-20-filled";
 	import FluentHeart from "~icons/fluent/heart-20-regular";
 	import FluentTarget from "~icons/fluent/target-24-regular";
 	import FluentGlobeShield from "~icons/fluent/globe-shield-20-filled";
@@ -39,6 +40,7 @@
 		{ href: "/chat", icon: FluentChat, label: "Comms" },
 		{ href: "/market", icon: FluentDataTrending, label: "Market" },
 		{ href: "/bonds", icon: FluentMoney, label: "Bonds" },
+		{ href: "/armaments", icon: FluentShield, label: "Armaments" },
 		{ href: "/civic", icon: FluentHeart, label: "Patronage" },
 		{ href: "/training", icon: FluentTarget, label: "Forces", mobile: true },
 		{ href: "/domains", icon: FluentGlobeShield, label: "Domains" },

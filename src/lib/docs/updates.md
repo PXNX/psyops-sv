@@ -219,7 +219,28 @@ generation and consumption, and a ranking compares every state by total and
 per-capita use. The figures are derived from the same live tables as the energy
 desk, so the two pages never disagree.
 
-## 11. Animated consoles
+## 11. The armaments market
+
+Military hardware has its own market (`/armaments`), separate from ordinary
+goods. Rifles, ammunition, artillery, vehicles and explosives can be offered to
+anyone or reserved for a specific buyer. An offer aimed at a state **outside the
+seller's bloc** is not tradable until the seller's **defence minister** (or
+president) approves it; the page shows pending deals to anyone holding that
+office, with approve and refuse buttons. Refusing returns the units to the
+seller. Approved external sales pay a 5% export levy into the seller state's
+treasury.
+
+| Sale | Approval |
+| --- | --- |
+| Same bloc, or no target state | None — cleared immediately |
+| Outside the bloc | Defence minister or president must approve |
+| Refused | Units returned, offer closed |
+
+The rules live in `game/armaments.config.ts` and the deals in
+`services/economy/armaments.ts`. The corresponding market data is in
+`arms_listings`.
+
+## 12. Animated consoles
 
 The Domains and Intel pages were rebuilt as visual consoles: small theme-aware
 SVG vignettes (rolling convoys, sweeping radars, orbiting satellites, pulsing

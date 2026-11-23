@@ -1028,6 +1028,31 @@ export const marketListings = pgTable("market_listings", {
 	createdAt: timestamp("created_at").defaultNow().notNull()
 });
 
+// A dedicated arms deal. External sales stay pending until the seller's
+// defence minister (or president) signs them off.
+export const armsListings = pgTable(
+	"arms_listings",
+	{
+		id: integer("id").generatedByDefaultAsIdentity().primaryKey(),
+		sellerId: text("seller_id")
+			.notNull()
+			.references(() => accounts.id, { onDelete: "cascade" }),
+		sellerStateId: integer("seller_state_id").references(() => states.id, { onDelete: "set null" }),
+		good: varchar("good", { length: 30 }).notNull(),
+		quantity: integer("quantity").notNull(),
+		pricePerUnit: bigint("price_per_unit", { mode: "number" }).notNull(),
+		targetStateId: integer("target_state_id").references(() => states.id, { onDelete: "set null" }),
+		/** null for inside-the-bloc sales; otherwise the account that approved it. */
+		approvedBy: text("approved_by").references(() => accounts.id, { onDelete: "set null" }),
+		rejected: boolean("rejected").default(false).notNull(),
+		createdAt: timestamp("created_at").defaultNow().notNull()
+	},
+	(t) => ({
+		stateIdx: index("idx_arms_listing_state").on(t.sellerStateId),
+		approvalIdx: index("idx_arms_listing_approval").on(t.approvedBy)
+	})
+);
+
 export const marketTransactions = pgTable("market_transactions", {
 	id: integer("id").generatedByDefaultAsIdentity().primaryKey(),
 	listingId: integer("listing_id")
