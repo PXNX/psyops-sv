@@ -28,6 +28,7 @@
 	import { toastResult } from "#lib/ui/toast.svelte.js";
 	import { vanish } from "#lib/utils/motion.js";
 	import OpsTerminal from "./OpsTerminal.svelte";
+	import OpsArt from "./OpsArt.svelte";
 	import IconShield from "~icons/fluent/shield-keyhole-20-regular";
 	import IconNetwork from "~icons/mdi/network";
 
@@ -153,7 +154,6 @@
 	let outcome = $state<NonNullable<typeof form>["outcome"] | null>(null);
 	let consoleEl: HTMLElement | undefined = $state();
 
-	const KIND_ICON: Record<CovertDomain, string> = { cyber: "⌁", psyops: "◉" };
 	const effectsOnUs = $derived(data.effectsOnUs.filter((e) => new Date(e.expiresAt) > now));
 	const running = $derived((data.planner?.running ?? []).filter((e) => new Date(e.expiresAt) > now));
 </script>
@@ -163,38 +163,56 @@
 </svelte:head>
 
 <PageContainer maxWidth="6xl">
-	<header class="flex flex-wrap items-end justify-between gap-3">
-		<div>
-			<p class="font-mono text-[11px] uppercase tracking-[0.2em] text-fg-muted">J3 · Information operations</p>
-			<h1 class="text-2xl font-bold text-fg">Covert operations</h1>
-			{#if data.state}
-				<p class="text-sm text-fg-muted">
-					{data.state.name}{data.authority ? ` · ${data.authority.roleLabel}` : ""}
+	<!-- Animated command banner -->
+	<header class="panel relative mb-5 overflow-hidden rounded-sm">
+		<OpsArt
+			kind="radar"
+			class="pointer-events-none absolute inset-x-0 top-0 h-full w-full opacity-75"
+			label="Radar sweeping for hostile signals"
+		/>
+		<div class="relative flex flex-wrap items-end justify-between gap-4 p-4 sm:p-5">
+			<div class="max-w-lg">
+				<p class="font-mono text-[11px] uppercase tracking-[0.2em] text-primary-fg">
+					J3 · Information operations
 				</p>
+				<h1 class="mt-1 text-2xl font-bold text-fg drop-shadow-sm">Covert operations</h1>
+				{#if data.state}
+					<p class="mt-1 text-sm text-fg-muted">
+						{data.state.name}{data.authority ? ` · ${data.authority.roleLabel}` : ""}
+					</p>
+				{/if}
+				<div class="mt-3 flex flex-wrap gap-2" aria-hidden="true">
+					<span class="rounded-full border border-primary/30 bg-primary/10 px-2.5 py-1 font-mono text-[10px] uppercase tracking-widest text-primary-fg">
+						live intel
+					</span>
+					<span class="rounded-full border border-line/25 bg-surface-1/70 px-2.5 py-1 font-mono text-[10px] uppercase tracking-widest text-fg-muted">
+						need-to-know
+					</span>
+				</div>
+			</div>
+			{#if data.state}
+				<div class="flex flex-wrap items-end justify-end gap-5">
+					{#if data.planner}
+						<span class="data hidden text-xs text-fg-muted sm:block">
+							{targets.reduce((n, t) => n + (t.networkAssets ?? 0), 0)} footholds abroad
+						</span>
+					{/if}
+					<dl class="flex gap-5 text-right">
+						{#if data.state.treasury !== null}
+							<div>
+								<dt class="section-title justify-end">Treasury</dt>
+								<dd class="data text-lg text-fg">${data.state.treasury.toLocaleString()}</dd>
+							</div>
+						{/if}
+						<div>
+							<dt class="section-title justify-end">Cyber defence</dt>
+							<dd class="data text-lg text-fg">L{data.state.defenceLevel}/{CYBER_DEFENCE.MAX_LEVEL}</dd>
+						</div>
+					</dl>
+					<Button variant="secondary" size="sm" href="/ops/network" icon={IconNetwork}>Network</Button>
+				</div>
 			{/if}
 		</div>
-		{#if data.state}
-			<div class="flex flex-wrap items-end justify-end gap-5">
-				{#if data.planner}
-					<span class="data hidden text-xs text-fg-muted sm:block">
-						{targets.reduce((n, t) => n + (t.networkAssets ?? 0), 0)} footholds abroad
-					</span>
-				{/if}
-				<dl class="flex gap-5 text-right">
-					{#if data.state.treasury !== null}
-						<div>
-							<dt class="section-title justify-end">Treasury</dt>
-							<dd class="data text-lg text-fg">${data.state.treasury.toLocaleString()}</dd>
-						</div>
-					{/if}
-					<div>
-						<dt class="section-title justify-end">Cyber defence</dt>
-						<dd class="data text-lg text-fg">L{data.state.defenceLevel}/{CYBER_DEFENCE.MAX_LEVEL}</dd>
-					</div>
-				</dl>
-				<Button variant="secondary" size="sm" href="/ops/network" icon={IconNetwork}>Network</Button>
-			</div>
-		{/if}
 	</header>
 
 	{#if !data.state}
@@ -240,7 +258,7 @@
 										: 'text-fg-muted hover:text-fg'}"
 									onclick={() => pickDomain(d)}
 								>
-									<span aria-hidden="true">{KIND_ICON[d]}</span>
+									<OpsArt kind={d} class="size-5 shrink-0" label={d === "cyber" ? "Cyber" : "Psyops"} />
 									{d === "cyber" ? "Cyber" : "Psyops"}
 								</button>
 							{/each}
@@ -327,10 +345,15 @@
 						{/if}
 
 						<!-- Live odds and why -->
-						<div class="rounded-md border border-line/15 bg-surface-2 p-3">
-							<p class="text-sm text-fg-body">{effectPreview}</p>
+						<div class="relative overflow-hidden rounded-md border border-line/15 bg-surface-2 p-3">
+							<OpsArt
+								kind="trace"
+								class="pointer-events-none absolute inset-x-0 top-0 h-10 w-full opacity-60"
+								label="Signal trace"
+							/>
+							<p class="relative text-sm text-fg-body">{effectPreview}</p>
 							{#if odds}
-								<div class="mt-3 grid grid-cols-2 gap-3">
+								<div class="relative mt-3 grid grid-cols-2 gap-3">
 									{#each [{ label: "Success", v: odds.success, tone: "bg-positive" }, { label: "Attribution", v: odds.attribution, tone: "bg-hostile" }] as m (m.label)}
 										<div>
 											<div class="flex items-baseline justify-between">
@@ -351,7 +374,7 @@
 									{/each}
 								</div>
 								{#if !spec.self}
-									<ul class="mt-3 space-y-0.5 text-xs">
+									<ul class="relative mt-3 space-y-0.5 text-xs">
 										<li class="flex justify-between text-fg-muted">
 											<span>Base odds</span>
 											<span class="data">{pct(spec.baseSuccess)} / {pct(spec.baseAttribution)}</span>
@@ -426,7 +449,10 @@
 											{/if}
 										</p>
 									</div>
-									<span class="data shrink-0 text-xs text-fg-soft">{countdown(e.expiresAt, now) ?? "ended"}</span>
+									<span class="data flex shrink-0 items-center gap-1.5 text-xs text-fg-soft">
+										<span class="size-1.5 animate-pulse rounded-full bg-positive" aria-hidden="true"></span>
+										{countdown(e.expiresAt, now) ?? "ended"}
+									</span>
 								</li>
 							{/each}
 						</ul>
@@ -448,7 +474,10 @@
 											</Badge>
 											<p class="mt-1 text-xs text-fg-muted">on {e.target}</p>
 										</div>
-										<span class="data shrink-0 text-xs text-fg-soft">{countdown(e.expiresAt, now) ?? "ended"}</span>
+										<span class="data flex shrink-0 items-center gap-1.5 text-xs text-fg-soft">
+										<span class="size-1.5 animate-pulse rounded-full bg-positive" aria-hidden="true"></span>
+										{countdown(e.expiresAt, now) ?? "ended"}
+									</span>
 									</li>
 								{/each}
 							</ul>
@@ -460,10 +489,13 @@
 
 				<section aria-labelledby="defence-title" class="panel p-4">
 					<h2 id="defence-title" class="section-title mb-3"><IconShield class="size-4" /> Cyber defence</h2>
-					<div class="flex gap-1" aria-label="Level {data.state.defenceLevel} of {CYBER_DEFENCE.MAX_LEVEL}">
-						{#each Array(CYBER_DEFENCE.MAX_LEVEL) as _, i (i)}
-							<span class="h-2 flex-1 rounded-sm {i < data.state.defenceLevel ? 'bg-positive' : 'bg-surface-7'}"></span>
-						{/each}
+					<div class="flex items-center gap-4">
+						<OpsArt kind="shield" class="size-16 shrink-0" label="Cyber defence level {data.state.defenceLevel}" />
+						<div class="flex flex-1 gap-1" aria-label="Level {data.state.defenceLevel} of {CYBER_DEFENCE.MAX_LEVEL}">
+							{#each Array(CYBER_DEFENCE.MAX_LEVEL) as _, i (i)}
+								<span class="h-2 flex-1 rounded-sm transition-all duration-500 {i < data.state.defenceLevel ? 'bg-positive' : 'bg-surface-7'}"></span>
+							{/each}
+						</div>
 					</div>
 					<p class="mt-2 text-xs text-fg-muted">
 						Each level: cyber attacks on us {Math.round(CYBER_DEFENCE.SUCCESS_PER_LEVEL * 100)}% less likely to work and
