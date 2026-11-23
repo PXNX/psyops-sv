@@ -1,10 +1,15 @@
 // Shared parser for the Keep-a-Changelog style CHANGELOG.md so both the
 // about page sheet and the dedicated /changelog page stay consistent.
 
+export interface ChangelogComponent {
+	name: string;
+	items: string[];
+}
+
 export interface ChangelogGroup {
 	title: string;
 	type: string;
-	items: string[];
+	components: ChangelogComponent[];
 }
 
 export interface ChangelogRelease {
@@ -22,6 +27,8 @@ const TYPE_HINTS: Record<string, { type: string; tone: string }> = {
 	Deprecated: { type: "deprecation", tone: "neutral" }
 };
 
+const CONVENTIONAL = /^(?:feat|fix|chore|docs|refactor|perf|security|test|build|ci)\(([^)]+)\):\s*(.+)$/i;
+
 export function parseChangelog(raw: string): ChangelogRelease[] {
 	const releases: ChangelogRelease[] = [];
 	let release: ChangelogRelease | null = null;
@@ -38,12 +45,23 @@ export function parseChangelog(raw: string): ChangelogRelease[] {
 		if (sectionMatch && release) {
 			const title = sectionMatch[1]!.trim();
 			const hint = TYPE_HINTS[title] ?? { type: title.toLowerCase(), tone: "neutral" };
-			group = { title, type: hint.type, items: [] };
+			group = { title, type: hint.type, components: [] };
 			release.groups.push(group);
 			continue;
 		}
 		const itemMatch = line.match(/^- (.+)$/);
-		if (itemMatch && group) group.items.push(itemMatch[1]!.trim());
+		if (itemMatch && group) {
+			const text = itemMatch[1]!.trim();
+			const conventional = text.match(CONVENTIONAL);
+			const component = conventional?.[1]?.trim() || "General";
+			const message = conventional?.[2]?.trim() || text;
+			let entry = group.components.find((c) => c.name === component);
+			if (!entry) {
+				entry = { name: component, items: [] };
+				group.components.push(entry);
+			}
+			entry.items.push(message);
+		}
 	}
 	if (release) releases.push(release);
 	return releases;

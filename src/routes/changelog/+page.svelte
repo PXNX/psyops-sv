@@ -89,13 +89,19 @@
 										</span>
 										<h3 class="section-title text-base">{group.title}</h3>
 										<Badge tone={tone(group.type)} size="xs">{group.type}</Badge>
-										<span class="ml-auto text-[11px] text-fg-faint">{group.items.length} {group.items.length === 1 ? "entry" : "entries"}</span>
+										<span class="ml-auto text-[11px] text-fg-faint">{group.components.reduce((n, c) => n + c.items.length, 0)} entries</span>
 									</div>
 									<ul class="space-y-2">
-										{#each group.items as item}
+										{#each group.components as component (component.name)}
 											<li class="flex gap-2 text-sm leading-relaxed text-fg-soft">
 												<span class="mt-2 size-1.5 shrink-0 rounded-full bg-primary/70"></span>
-												<span>{item}</span>
+												<span>
+													{#if component.name !== "General"}
+														<Badge tone="neutral" size="xs">{component.name}</Badge>
+														<span class="mx-1 text-fg-faint">—</span>
+													{/if}
+													{#each component.items as item, n}{#if n}<span class="text-fg-faint"> · </span>{/if}{item}{/each}
+												</span>
 											</li>
 										{/each}
 									</ul>
