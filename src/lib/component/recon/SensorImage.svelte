@@ -13,7 +13,8 @@
 		FRAME_W,
 		type DetectionIcon,
 		type ImageryInput,
-		type Prim
+		type Prim,
+		type Scene
 	} from "#lib/utils/sensor-image.js";
 	import IconSatellite from "~icons/mdi/satellite-variant";
 	import IconDrone from "~icons/mdi/quadcopter";
@@ -36,6 +37,9 @@
 	import IconCrane from "~icons/mdi/crane";
 	import IconInfantry from "~icons/mdi/account-group";
 	import IconArtillery from "~icons/mdi/bullseye-arrow";
+	import IconShip from "~icons/mdi/ferry";
+	import IconSub from "~icons/mdi/submarine";
+	import IconMine from "~icons/mdi/mine";
 	import IconCrater from "~icons/mdi/circle-double";
 	import IconSam from "~icons/mdi/rocket-launch";
 
@@ -43,16 +47,18 @@
 
 	interface Props {
 		input: ImageryInput;
+		/** Prebuilt scene (sea/coastal passes); region passes build their own. */
+		scene?: Scene;
 		variant?: "full" | "mini";
 		irPalette?: IrPalette;
 		/** Play the "developing" reveal and scan line (skipped with reduced motion). */
 		animate?: boolean;
 		class?: string;
 	}
-	let { input, variant = "full", irPalette = "white", animate = false, class: className = "" }: Props = $props();
+	let { input, scene: sceneProp, variant = "full", irPalette = "white", animate = false, class: className = "" }: Props = $props();
 
 	const uid = $props.id();
-	const scene = $derived(buildScene(input));
+	const scene = $derived(sceneProp ?? buildScene(input));
 	const full = $derived(variant === "full");
 	const motion = $derived(animate && !prefersReducedMotion.current);
 	const id = (name: string) => `${uid}-${name}`;
@@ -94,7 +100,10 @@
 		hospital: IconHospital,
 		radar: IconRadar,
 		track: IconTarget,
-		build: IconCrane
+		build: IconCrane,
+		ship: IconShip,
+		sub: IconSub,
+		mine: IconMine
 	};
 	const stamp = (d: string) => dtgCompact(d);
 	const latlon = $derived(input.lat != null && input.lon != null ? formatLatLon(input.lat, input.lon, 3) : "GRID UNK");

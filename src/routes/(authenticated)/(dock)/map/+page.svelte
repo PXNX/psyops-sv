@@ -73,6 +73,8 @@
 	import IconNavalMode from "~icons/fluent/vehicle-ship-24-regular";
 	import IconLandMode from "~icons/fluent/map-24-regular";
 	import IconAerialMode from "~icons/fluent/airplane-24-regular";
+	import SensorImage from "#lib/component/recon/SensorImage.svelte";
+	import { buildSeaScene, seaFrameInput, type SeaImageryInput } from "#lib/utils/sea-image.js";
 
 	let { data }: { data: PageData } = $props();
 
@@ -168,6 +170,8 @@
 	let selectedId = $state<number | null>(null);
 	let selectedHexKey = $state<string | null>(null);
 	let seaSensor = $state("");
+	let showSeaImage = $state(false);
+	let showCoastImage = $state(false);
 	$effect(() => {
 		if (!seaSensor && data.sea.sensors?.length) seaSensor = data.sea.sensors[0]!.id;
 	});
@@ -888,6 +892,80 @@
 		};
 	});
 
+	/** Procedural sensor frame for the selected hex's freshest sea report. */
+	const seaImagery = $derived.by(() => {
+		const info = selectedHexInfo;
+		if (!info?.intel) return null;
+		const key = selectedHexKey!;
+		const h = parseHexKey(key);
+		const ll = mapToLatLon(hexCentre(h));
+		const conditions = regionConditions({ id: h.q * 100 + h.r, longitude: ll.lon, terrain: "shore" }, now);
+		const ownerId = info.owner?.regionId;
+		const shore = ownerId != null ? coastlines.find((c) => c.regionId === ownerId) : null;
+		const sensor: SeaImageryInput = {
+			seed: h.q * 100 + h.r,
+			coastline: shore?.points,
+			coastCentre: ownerId != null ? centroids[ownerId] : undefined,
+			lat: ll.lat,
+			lon: ll.lon,
+			sensor: info.intel.sensor,
+			observedAt: info.intel.observedAt,
+			night: conditions.night,
+			weather: conditions.weather,
+			coastal: !!info.owner || !!info.port,
+			port: !!info.port,
+			contacts: {
+				surface: info.intel.contacts?.surface ?? 0,
+				sub: info.intel.contacts?.sub ?? 0,
+				mine: info.intel.mines ?? 0
+			},
+			confidence: (info.intel.confidence ?? 0) / 100
+		};
+		return { input: seaFrameInput(sensor), scene: buildSeaScene(sensor) };
+	});
+
+	/** Coastal regions get their own frame: the same sea state and shoreline,
+	 *  with the port and any fresh report from the water just offshore. */
+	const coastalImagery = $derived.by(() => {
+		if (selectedId == null || !coastalIds.has(selectedId)) return null;
+		const region = data.sea.regionsForEez.find((r) => r.id === selectedId);
+		if (!region) return null;
+		const centre = hexFromLatLon(region.latitude, region.longitude);
+		const keys = [hexKey(centre), ...hexNeighborsSafe(centre).map(hexKey)];
+		const report = keys.map((key) => ({ key, r: data.sea.intel?.[key] })).find((x) => x.r) ?? null;
+		const cond = regionConditions({ id: selectedId, longitude: region.longitude, terrain: "shore" }, now);
+		const input: SeaImageryInput = {
+			seed: selectedId,
+			lat: region.latitude,
+			lon: region.longitude,
+			coastline: coastlines.find((c) => c.regionId === selectedId)?.points,
+			coastCentre: centroids[selectedId],
+			sensor: report?.r?.sensor ?? "sat_eo",
+			observedAt: report?.r?.observedAt ?? now.toISOString(),
+			night: cond.night,
+			weather: cond.weather,
+			coastal: true,
+			port: data.sea.ports.some((p) => p.regionId === selectedId),
+			contacts: {
+				surface: report?.r?.contacts?.surface ?? 0,
+				sub: report?.r?.contacts?.sub ?? 0,
+				mine: report?.r?.mines ?? 0
+			},
+			confidence: (report?.r?.confidence ?? 0) / 100
+		};
+		return { input: seaFrameInput(input), scene: buildSeaScene(input) };
+	});
+	function hexNeighborsSafe(h: { q: number; r: number }) {
+		return [
+			{ q: h.q + 1, r: h.r },
+			{ q: h.q - 1, r: h.r },
+			{ q: h.q, r: h.r + 1 },
+			{ q: h.q, r: h.r - 1 },
+			{ q: h.q + 1, r: h.r - 1 },
+			{ q: h.q - 1, r: h.r + 1 }
+		];
+	}
+
 	/** The hex sea is part of the world SVG itself, not a second floating canvas.
 	 *  It is inserted *before* the region paths: the opaque land then clips each
 	 *  coastal hex to the real, non-hexagonal shoreline. Each cell still carries
@@ -1330,6 +1408,20 @@
 				{:else}
 					<div class="text-fg-muted">No fresh pass over this hex.</div>
 				{/if}
+				{#if seaImagery}
+					<button
+						type="button"
+						class="mt-1 text-[11px] text-primary-fg hover:underline"
+						onclick={() => (showSeaImage = !showSeaImage)}
+					>
+						{showSeaImage ? "Hide imagery" : "View imagery"} →
+					</button>
+					{#if showSeaImage}
+						<div class="mt-1 overflow-hidden rounded-sm border border-line/20">
+							<SensorImage input={seaImagery.input} scene={seaImagery.scene} variant="mini" />
+						</div>
+					{/if}
+				{/if}
 				{#if data.sea.sensors?.length}
 					<form
 						method="POST"
@@ -1520,6 +1612,23 @@
 
 			{#if selConditions}
 				<Conditions {...selConditions} />
+			{/if}
+
+			{#if coastalImagery}
+				<section class="rounded-sm border border-line/20 p-2">
+					<button
+						type="button"
+						class="text-xs font-semibold text-primary-fg hover:underline"
+						onclick={() => (showCoastImage = !showCoastImage)}
+					>
+						{showCoastImage ? "Hide coastal imagery" : "View coastal imagery"} →
+					</button>
+					{#if showCoastImage}
+						<div class="mt-2 overflow-hidden rounded-sm border border-line/20">
+							<SensorImage input={coastalImagery.input} scene={coastalImagery.scene} variant="mini" />
+						</div>
+					{/if}
+				</section>
 			{/if}
 
 			{#if selBattle}

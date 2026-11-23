@@ -119,7 +119,10 @@ export type DetectionIcon =
 	| "industry"
 	| "hospital"
 	| "track"
-	| "build";
+	| "build"
+	| "ship"
+	| "sub"
+	| "mine";
 
 /** An analyst's box, in frame (screen) coordinates. */
 export interface Detection {

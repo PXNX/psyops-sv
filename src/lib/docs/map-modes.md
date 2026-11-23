@@ -50,7 +50,10 @@ aircraft.
 
 Click a hex and use **Sea intel** in its panel to launch EO, IR, SAR, sonar or
 radar over it. EO identifies hulls, IR works at night, SAR sees through cloud,
-sonar finds submarines and radar sweeps wide. Enemy ships only appear if a fresh
+sonar finds submarines and radar sweeps wide. The report also produces a
+procedural sensor frame — open **View imagery** to see the sea state, contacts
+and, for a coast, the region's real outline with its beach, cliffs and palms.
+Enemy ships only appear if a fresh
 sea intel report (EO, IR, SAR, sonar, radar or air
 reconnaissance) saw their hex in the last 12 hours. Without reconnaissance the
 sea is blank.
