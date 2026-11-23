@@ -16,6 +16,8 @@
 		SPACE_OP_KINDS,
 	} from "#lib/config/index.js";
 	import { toastResult } from "#lib/ui/toast.svelte.js";
+	import DocArt from "#lib/component/docs/DocArt.svelte";
+	import DomainArt from "./DomainArt.svelte";
 
 	const { data, form } = $props();
 	const p = $derived(data.planner);
@@ -49,6 +51,15 @@
 			{/if}
 		</header>
 
+		<div class="animate-rise-in panel rounded-sm p-2" style="--rise-delay: 60ms">
+			<DocArt
+				kind="domains"
+				label="Combined arms"
+				caption="Hold ground, command the sea and sky — then use space and cyber to see, talk and strike first."
+				compact
+			/>
+		</div>
+
 		{#if form && "message" in form && form.message}
 			<p class="panel border-positive/40 p-3 text-sm">{String(form.message)}</p>
 		{/if}
@@ -57,8 +68,11 @@
 			<div class="panel p-6 text-sm text-fg-muted">Settle in a state to see its command picture.</div>
 		{:else}
 			<!-- ── Logistics ───────────────────────────────────────────────── -->
-			<section class="panel p-4" aria-labelledby="supply-title">
-				<h2 id="supply-title" class="section-title mb-2">🚚 Supply chains</h2>
+			<section class="animate-rise-in panel p-4" style="--rise-delay: 120ms" aria-labelledby="supply-title">
+				<div class="mb-3 flex flex-wrap items-center justify-between gap-3">
+					<h2 id="supply-title" class="section-title">🚚 Supply chains</h2>
+					<DomainArt kind="supply" label="Supply routes" class="w-44" />
+				</div>
 				<p class="text-sm">
 					Average supply <strong>{Math.round((p?.supply.average ?? 1) * 100)}%</strong> · worst region
 					{Math.round((p?.supply.worst ?? 1) * 100)}% · {p?.supply.regions ?? 0} active region(s){#if p?.supply.blockaded}<span
@@ -72,8 +86,11 @@
 				</p>
 			</section>
 
-			<section class="panel p-4" aria-labelledby="autonomy-title">
-				<h2 id="autonomy-title" class="section-title mb-2">🏭 Supply autonomy {Math.round((p?.autonomy.score ?? 1) * 100)}%</h2>
+			<section class="animate-rise-in panel p-4" style="--rise-delay: 180ms" aria-labelledby="autonomy-title">
+				<div class="mb-3 flex flex-wrap items-center justify-between gap-3">
+					<h2 id="autonomy-title" class="section-title">🏭 Supply autonomy {Math.round((p?.autonomy.score ?? 1) * 100)}%</h2>
+					<DomainArt kind="autonomy" label="Domestic sourcing" class="w-44" />
+				</div>
 				<p class="text-xs text-fg-muted">
 					{p?.autonomy.domestic ?? 0} of {p?.autonomy.total ?? 0} strategic inputs sourced at home ·
 					{p?.autonomy.bloc ?? 0} from bloc partners · {p?.autonomy.trade ?? 0} via trade lanes ·
@@ -87,8 +104,11 @@
 			</section>
 
 			<!-- ── Convoy operations ───────────────────────────────────────── -->
-			<section class="panel p-4" aria-labelledby="convoy-title">
-				<h2 id="convoy-title" class="section-title mb-3">🚚 Convoy operations</h2>
+			<section class="animate-rise-in panel p-4" style="--rise-delay: 240ms" aria-labelledby="convoy-title">
+				<div class="mb-3 flex flex-wrap items-center justify-between gap-3">
+					<h2 id="convoy-title" class="section-title">🚚 Convoy operations</h2>
+					<DomainArt kind="convoy" label="Convoy on the move" class="w-44" />
+				</div>
 				{#if p?.roles.convoy}
 					<form method="POST" action="?/convoy" use:enhance={handleSubmit} class="grid gap-2 sm:grid-cols-4">
 						<SearchSelect
@@ -135,8 +155,11 @@
 			</section>
 
 			<!-- ── Air & sea trade ─────────────────────────────────────────── -->
-			<section class="panel p-4" aria-labelledby="trade-title">
-				<h2 id="trade-title" class="section-title mb-3">✈️🚢 Air &amp; sea trade</h2>
+			<section class="animate-rise-in panel p-4" style="--rise-delay: 300ms" aria-labelledby="trade-title">
+				<div class="mb-3 flex flex-wrap items-center justify-between gap-3">
+					<h2 id="trade-title" class="section-title">✈️🚢 Air &amp; sea trade</h2>
+					<DomainArt kind="trade" label="Trade lanes" class="w-44" />
+				</div>
 				<p class="mb-3 text-xs text-fg-muted">
 					Air flow {Math.round((p?.trade.factors.air ?? 1) * 100)}% · sea flow {Math.round((p?.trade.factors.sea ?? 1) * 100)}%.
 					Lanes earn treasury every six hours; a closed airspace grounds air freight, and an EEZ closure or blockade
@@ -193,8 +216,11 @@
 			</section>
 
 			<!-- ── Sea ─────────────────────────────────────────────────────── -->
-			<section class="panel p-4" aria-labelledby="sea-title">
-				<h2 id="sea-title" class="section-title mb-3">⚓ Sea — {p?.seaControl ?? 0} sea-control points</h2>
+			<section class="animate-rise-in panel p-4" style="--rise-delay: 360ms" aria-labelledby="sea-title">
+				<div class="mb-3 flex flex-wrap items-center justify-between gap-3">
+					<h2 id="sea-title" class="section-title">⚓ Sea — {p?.seaControl ?? 0} sea-control points</h2>
+					<DomainArt kind="sea" label="Radar sweeping the sea" class="w-44" />
+				</div>
 				{#if p?.roles.naval}
 					<form method="POST" action="?/naval" use:enhance={handleSubmit} class="grid gap-3 sm:grid-cols-4">
 						<div>
@@ -244,8 +270,11 @@
 			</section>
 
 			<!-- ── Space ───────────────────────────────────────────────────── -->
-			<section class="panel p-4" aria-labelledby="space-title">
-				<h2 id="space-title" class="section-title mb-3">🛰️ Space — {p?.satellites.length ?? 0} satellites · GPS ×{p?.space.gps ?? 1}</h2>
+			<section class="animate-rise-in panel p-4" style="--rise-delay: 420ms" aria-labelledby="space-title">
+				<div class="mb-3 flex flex-wrap items-center justify-between gap-3">
+					<h2 id="space-title" class="section-title">🛰️ Space — {p?.satellites.length ?? 0} satellites · GPS ×{p?.space.gps ?? 1}</h2>
+					<DomainArt kind="space" label="Satellite in orbit" class="w-44" />
+				</div>
 				<p class="mb-3 text-xs text-fg-muted">
 					Recon +{Math.round((p?.space.recon ?? 0) * 100)}% · C2 resilience {Math.round((p?.space.comms ?? 0) * 100)}% ·
 					early warning {Math.round((p?.space.earlyWarning ?? 0) * 100)}% · upkeep {(p?.space.upkeep ?? 0).toLocaleString()}/day ·
@@ -297,8 +326,11 @@
 			</section>
 
 			<!-- ── AI ──────────────────────────────────────────────────────── -->
-			<section class="panel p-4" aria-labelledby="ai-title">
-				<h2 id="ai-title" class="section-title mb-2">🧠 Artificial intelligence — level {p?.ai.level ?? 0}</h2>
+			<section class="animate-rise-in panel p-4" style="--rise-delay: 480ms" aria-labelledby="ai-title">
+				<div class="mb-3 flex flex-wrap items-center justify-between gap-3">
+					<h2 id="ai-title" class="section-title">🧠 Artificial intelligence — level {p?.ai.level ?? 0}</h2>
+					<DomainArt kind="ai" label="Neural network" class="w-44" />
+				</div>
 				<p class="text-sm">{p?.ai.label ?? "No programme"}</p>
 				<p class="mt-1 text-xs text-fg-muted">
 					Cyber +{Math.round((p?.ai.cyberOffence ?? 0) * 100)}% · defence +{Math.round((p?.ai.cyberDefence ?? 0) * 100)}% ·
@@ -318,8 +350,11 @@
 			</section>
 
 			<!-- ── Smuggling ───────────────────────────────────────────────── -->
-			<section class="panel p-4" aria-labelledby="smuggle-title">
-				<h2 id="smuggle-title" class="section-title mb-3">🕸️ Smuggling — wallet {(data.civilian.wallet ?? 0).toLocaleString()}</h2>
+			<section class="animate-rise-in panel p-4" style="--rise-delay: 540ms" aria-labelledby="smuggle-title">
+				<div class="mb-3 flex flex-wrap items-center justify-between gap-3">
+					<h2 id="smuggle-title" class="section-title">🕸️ Smuggling — wallet {(data.civilian.wallet ?? 0).toLocaleString()}</h2>
+					<DomainArt kind="smuggling" label="Shadow route" class="w-44" />
+				</div>
 				{#if p?.roles.smuggler}
 					<form method="POST" action="?/openRoute" use:enhance={handleSubmit} class="grid gap-2 sm:grid-cols-3">
 						<select class="field-control w-full" name="good">
