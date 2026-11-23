@@ -90,6 +90,90 @@ export const PORTFOLIOS: Record<MinisterRole, PortfolioSpec> = {
 	}
 };
 
+/** A ministry's public face: what it does and which desks it administers. */
+export interface MinistrySpec {
+	label: string;
+	icon: string;
+	blurb: string;
+	portfolio: MinisterRole;
+	/** Links to the state's existing desks; `{id}` is the state id. */
+	tools: { label: string; href: string }[];
+}
+
+export const MINISTRY_META: Record<Ministry, MinistrySpec> = {
+	economy: {
+		label: "Economy",
+		icon: "💰",
+		blurb: "The treasury, public spending, state-owned industry and the national debt.",
+		portfolio: "economy_energy",
+		tools: [
+			{ label: "Treasury ledger", href: "/state/{id}/budget" },
+			{ label: "State market", href: "/state/{id}/market" },
+			{ label: "Public debt", href: "/state/{id}/debt" },
+			{ label: "Economy desk", href: "/state/{id}/economy" }
+		]
+	},
+	energy: {
+		label: "Energy",
+		icon: "⚡",
+		blurb: "Power plants, the grid and the fuel that keeps the lights on.",
+		portfolio: "economy_energy",
+		tools: [
+			{ label: "Power grid", href: "/state/{id}/energy" },
+			{ label: "Power rating", href: "/state/{id}/power" }
+		]
+	},
+	trade: {
+		label: "Trade",
+		icon: "🚢",
+		blurb: "Air and sea lanes, customs revenue and the flow of goods in and out.",
+		portfolio: "foreign_trade",
+		tools: [{ label: "Trade & closures", href: "/state/{id}/foreign-affairs" }]
+	},
+	foreign_affairs: {
+		label: "Foreign Affairs",
+		icon: "🌍",
+		blurb: "Diplomacy, civilian stances, sanctions and relations with other states.",
+		portfolio: "foreign_trade",
+		tools: [{ label: "Foreign desk", href: "/state/{id}/foreign-affairs" }]
+	},
+	defense: {
+		label: "Defence",
+		icon: "🛡️",
+		blurb: "The armed forces: formations, commanders, operations and the common defence.",
+		portfolio: "defence_interior",
+		tools: [
+			{ label: "Forces & commanders", href: "/training" },
+			{ label: "Situation map", href: "/map" }
+		]
+	},
+	interior: {
+		label: "Interior",
+		icon: "🏛️",
+		blurb: "Regions, residents, civil order and the infrastructure that binds the state together.",
+		portfolio: "defence_interior",
+		tools: [
+			{ label: "Residents", href: "/state/{id}/residents" },
+			{ label: "Civilians", href: "/state/{id}/civilians" },
+			{ label: "Construction", href: "/state/{id}/construction" }
+		]
+	},
+	science: {
+		label: "Science",
+		icon: "🔬",
+		blurb: "Research programmes turning tax receipts into lasting national capability.",
+		portfolio: "science_health",
+		tools: []
+	},
+	health: {
+		label: "Health",
+		icon: "🏥",
+		blurb: "Hospitals, epidemics and the resilience of the civilian population.",
+		portfolio: "science_health",
+		tools: [{ label: "Civilian welfare", href: "/state/{id}/civilians" }]
+	}
+};
+
 /** Map every ministry to the cabinet portfolio that owns it. */
 export const MINISTRY_PORTFOLIO: Record<Ministry, MinisterRole> = {
 	science: "science_health",

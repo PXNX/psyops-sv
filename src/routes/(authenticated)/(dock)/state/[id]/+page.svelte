@@ -561,7 +561,15 @@
 	<!-- Head of state & cabinet -->
 	{#if hasGovernment || data.nextElection}
 		<section class="panel rounded-sm p-4 sm:p-5 space-y-4">
-			<h2 class="section-title">Government</h2>
+			<div class="flex flex-wrap items-center justify-between gap-2">
+				<h2 class="section-title">Government</h2>
+				<a
+					href="/state/{data.state.id}/ministry"
+					class="text-xs text-fg-muted hover:text-primary-hover transition-colors"
+				>
+					All ministries →
+				</a>
+			</div>
 
 			{#if data.president}
 				<div class="flex items-center gap-3">
