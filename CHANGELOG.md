@@ -5,7 +5,19 @@ All notable changes to PsyOps will be documented in this file.
 Releases are labelled by date and build number (`YYYY-MM-DD.build`), so every
 entry says when it shipped rather than implying a semver contract.
 
-## [Unreleased]
+## [2026-11-23.2]
+
+### Fixed
+
+- fix(ci): run rstest under Bun's runtime and give builds a DATABASE_URL
+- fix(changelog): label releases by date and build number
+- fix(ci): align Bun version with the development toolchain
+
+### Changed
+
+- Bump dependencies to latest; keep TypeScript pinned to 6.0.3
+
+## [2026-11-23.1]
 
 ### Fixed
 
@@ -13,149 +25,49 @@ entry says when it shipped rather than implying a semver contract.
 - fix(map): clip coastal hexes to the real shoreline and keep regions visible in naval mode
 - fix(mermaid): resolve theme CSS variables to hex so diagrams render with readable colours
 - fix(navy): offset the standalone hex-map viewBox so edge hexes are not clipped
+
+### Added
+
+- feat(bloc): defence-spending guideline with member compliance
+- feat(bloc): declare and lift trade embargoes
+- feat(posts): Mermaid diagrams, polls, comments with upvotes and reports, YouTube players and internal link previews
+- feat(users): community karma separate from civilian reputation
+- feat(site): history timelines for states, blocs and parties
+- feat(site): redesigned about hub with licenses, support and changelog pages
+- feat(pwa): app icon, theme-colour sync, notification test and install shortcuts
+- feat(changelog): in-app changelog grouped by type and scope
+- feat(commander): academy, traits, portraits and ten experience levels
+- feat(navy): fleets, airgroups, divisions and battlefield command
+- feat(navy): naval landings and paradrops gated on sea/air dominance
+- feat(map): larger hexes, sea states and hover conditions
+- feat(map): multi-select sea hexes and fleet area assignment
+- feat(intel): procedural sea and coastal sensor imagery
+
+## [2026-11-22.1]
+
+### Fixed
+
 - fix(population): keep full precision in a region's share of the grid
 - fix(domains): import stateAutonomy used by the domains dashboard
 - fix(cyber): type the record date helper used by file templates
 - fix(dock): declare personalPromise before the load uses it
 - fix(build): build without storage credentials and prerender docs reliably
 
-### Changed
+### Added
 
-- Bump all dependencies to their latest versions; pin TypeScript to 6.0.3 (7.x breaks
-  svelte-kit sync with `ts.sys` errors)
-- `/api/cron/*` routes moved out of the `(authenticated)` route group (URLs unchanged) so
-  the scheduler reaches them without a session; they are gated by `CRON_SECRET` only
+- feat(intel): EO/IR sea sweeps from hexes and show all branch units
+- feat(map): coast-anchored EEZ hex sea, union airspace and unified Forces page
+- feat(air): directable bombing, logistic, naval, transport, recon, refuel and support missions
+
+## [2026-11-21.1]
 
 ### Added
 
-- feat(bloc): set a defence-spending guideline and see which member states meet it
-- feat(bloc): declare and lift trade embargoes that block cross-state work
-- feat(changelog): in-app changelog grouped by change type and component
-- feat(posts): Mermaid diagrams, polls, comments with upvotes and reports, safe YouTube players and internal link previews
-- feat(users): community karma from upvotes shown separately from civilian reputation
-- feat(site): history timelines for states, blocs and parties
-- feat(site): redesigned about hub with dedicated licenses, support and changelog pages
-- feat(pwa): generated app icon, theme-colour sync, notifications test and install shortcuts
-- feat(commander): academy graduates officers with random traits, portraits and ten experience levels
-- feat(navy): fleets, airgroups and divisions; commanders can be wounded or killed in battle
-- feat(navy): naval landings and paradrops gated on sea/air dominance, with AA and fortification risk
-- feat(map): larger hexes, sea states on every cell and hover conditions in the status bar
-- feat(map): multi-select sea hexes and assign a fleet to hold them
-- feat(intel): procedural sea and coastal sensor imagery from reports
-- feat(air): directable bombing, logistics, naval, transport, recon, refuel and support missions
 - feat(industry): hardware and datacenter chain with power and water constraints
 - feat(trade): air and sea lanes, closures and relief convoys
 - feat(government): cabinet portfolios, bloc representatives and research fields
 - feat(civilians): conscription, hospital strain and basic-need shortages shape population
 - feat(cyber): realistic intrusions with cascading attack effects
-
-
-- Computing chain: fabrication now builds server hardware from chips and
-  electronics, and datacenters from hardware, machine tools and fab equipment.
-  Both reserve far more grid capacity and draw far more cooling water than
-  ordinary lines, so a brownout or a poisoned water supply throttles them. A
-  stocked computing base gives a capped boost to cyber attacks, cyber defence,
-  attribution resistance and daily research, and the top three AI levels now
-  require hardware and datacenters to buy
-- Research: fourteen fields across public health, bio-defence, power efficiency,
-  production, AI, trade, land/air/naval defence, space and interior security.
-  Fields have rising costs and prerequisites, are paid from the treasury and
-  give a compounding effect to the domain they study
-- Cabinet government: a president and four paired minister portfolios (Science &
-  Health, Economy & Energy, Foreign & Trade, Defence & Interior) drawn from eight
-  ministries. Blocs mirror them with a leader and four High Representatives, and
-  one person may hold several offices at once
-- Regional energy: power plants are sited in a region, built over days from domestic
-  materials and imported world-market components, and their output depends on latitude
-  and terrain (solar, wind, hydro, geothermal and thermal plants each favour different sites)
-- Grid-network and battery-storage buildings: regional transmission capacity unlocks
-  bigger plants and curtails surplus; storage adds dispatchable power and smooths renewables
-- Refined-fuel policy: presidents and economy ministers set civilian / military / export
-  shares; a daily tick burns plant fuel and upkeep, fills the civilian heating and military
-  reserves and converts exported fuel into treasury. Naval operations draw the military reserve
-- Government market now trades strategic energy goods (oil, gas, uranium, rare earths,
-  silicon, fuel, enriched uranium) as well as the basic materials
-- Conscription bands derived from the share of a state under arms now reduce the
-  available workforce and birth rate, raise mortality and sour regime stability
-- Hospital capacity can be overwhelmed by wounded soldiers and recent strike
-  casualties or switched off by grid hacks and disrupted supplies; shortfalls
-  raise mortality, cut births and workforce participation, and hurt stability
-- Civilian manpower: recruiting a unit draws people from its home region, and
-  a region without enough spare civilians above the population floor cannot raise it
-- Civilian workers fill factories' free shifts each week, earning wages from the
-  company budget, generating revenue and paying income tax into the state treasury
-- Civilian supply: food, electricity, heat and water are now basic needs that
-  regions must meet for their people. Shortages from blockades, grid attacks,
-  cold terrain and poisoned water sour opinion and stability and, when severe,
-  kill or drive out civilians; water is also drawn by water-hungry companies,
-  whose output throttles when the region runs dry. The region page shows each
-  need as a share of demand met
-- State debt: bond principal is recorded as debt on the treasury and cleared when
-  the bond is repaid or the state is bailed out; the balance and debt show on the
-  state dossier and the finance desk
-- Bailouts: a president or economy minister can transfer treasury funds to another
-  state, clearing its debt and winning over its civilians; the aid, the debt
-  relieved and the goodwill gained are all shown on the recipient's dossier
-- Civilian stances toward foreign states: declaring war and striking civilians turn
-  a population against the aggressor, aid turns it friendly, and both are shown on
-  the state dossier and economy page
-- One-off field notes explaining a first company and a first presidency, shown once
-  on the company dossier and the state dossier respectively
-- Civilian opinion now drives a derived regime stability score (0–100): war crimes,
-  environmental policy, conscription pressure, education, wages, cyberattacks and
-  propaganda all move it, and defending the homeland rallies support. The least
-  stable belligerent sets how much war weariness a war can absorb
-- Weekly population tick grows or shrinks each region's civilians from births and
-  mortality (war, environment, conscription, emigration), respecting the population floor
-- Supply autonomy: factory inputs are sourced domestically, from bloc partners, via trade lanes or not at all; dependence cuts output and quality, and blockade/closure throttles lane-reliant lines
-- Air/sea trade and closures: open trade lanes pay treasury every six hours; airspace closures ground air freight and block intruding aircraft, EEZ closures and blockades choke shipping and raise smuggling risk
-- Relief convoys and repairs: escorted convoys boost a region's supply capacity; strike-damaged infrastructure can be rebuilt with money and machine tools
-- Supply chains and logistics: region capacity from infrastructure, terrain, borders and ports; strikes, blockades and cyber disruption throttle supply, weakening combat output, burning unit supply and cutting factory shifts. Smuggled cargo now reaches the destination's stockpile and seized fines fund the intercepting state
-- Industrial equipment and learning: plants require machine tools (fabrication also needs fab equipment) produced in a new equipment plant; efficiency and quality grow with clean shifts and degrade under shortages, strikes, grid damage and blockade
-- Five-domain warfare: air, land, sea, space and cyber. Units carry a domain,
-  the edge matrix and combined-arms bonus feed into battles, and the README
-  documents what each domain can and cannot do
-- Naval warfare: frigate, submarine, carrier, landing ship and marine units;
-  sea control from coastal fleets; blockades (trade, energy and smuggling
-  effects), shore bombardment, amphibious assaults that open real battles,
-  sea-lane raids and minelaying
-- Space programme: reconnaissance, navigation, comms and early-warning
-  satellites with GPS/recon/C2/early-warning bonuses; anti-satellite, uplink
-  jamming and orbital sabotage operations with attribution and casus belli
-- Artificial intelligence capability (levels 0–5) bought with money, chips and
-  rare earths; improves cyber offence/defence, intel fusion, factory output
-  and customs detection
-- Smuggling: state-run routes and citizen-run cargoes around sanctions and
-  blockades, with interception risk, premiums and fines
-- Strategic resources (oil, gas, uranium, rare earths, silicon), fuel and
-  enriched-uranium refining, fabrication plants for chips and electronics,
-  plus geothermal and fusion power and a grid-diversity efficiency bonus
-- Vercel Schedules for the game ticks: battles, bloc elections, elections, premium
-  automation, proposals and travels run on the cadences declared in `vercel.json` instead
-  of an external scheduler
-
-- War-resolution cron (`/api/cron/wars`, hourly) that ends active wars no other
-  system would close: recorded surrenders, capitulation (a side left with no regions),
-  stalemate (no battle activity for 7 days) and war exhaustion (white peace at 100%).
-  Wars track `exhaustion` and `endedReason`; the war page shows the exhaustion bar
-  and how the war ended
-
-- Physics-tuned confetti bursts: shared `burst()` util with gravity, drag, tumbling shapes
-  and reduced-motion support, wired into the birthday-reward and premium-gift celebrations
-- Telegram bot in `bot/` (from [PXNX/ptb-psyops](https://github.com/PXNX/ptb-psyops)): `/login`
-  links the Telegram account to a psyops-sv account, `/premium` grants or extends a premium
-  membership (mocked for free, or real payment via Telegram Stars / TON)
-- Agent rules in `agents.md` (concurrent sessions, committing, git workflow)
-- Observability: OpenTelemetry request tracing plus structured, shareable event
-  telemetry in the web app and the Telegram bot (`auth.login.*`, `premium.granted`,
-  `cron.run`, …), with request IDs and account/Telegram IDs for correlation
-- State bonds with fortnightly coupon returns, a bond desk, company earnings
-  reports and an earnings dashboard panel
-- NATO DTG timestamps across the interface
-- UAV artillery spotting, report retention and more varied terrain imagery;
-  destructible air-defence radar and SAR-only reconnaissance imagery
-- Company dividends (declared payouts, automatic policy, yield) and market
-  quotes at the lowest live offer
 
 ## [2026-07-06.1]
 

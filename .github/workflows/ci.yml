@@ -30,15 +30,7 @@ jobs:
         run: bun install --frozen-lockfile
 
       - name: Run unit and integration tests
-        # Rstest on CI may execute .svelte.ts stores without the Svelte compiler
-        # transform, leaving `$state` undefined in the toast test. The shim
-        # defines a fallback only when the rune is missing.
-        run: |
-          cat > /tmp/rune-shim.mjs <<'SHIM'
-          globalThis.$state ??= (v) => v;
-          globalThis.$derived ??= (v) => v;
-          SHIM
-          NODE_OPTIONS="--import=file:///tmp/rune-shim.mjs" bun --bun x rstest run
+        run: bun --bun x rstest run
 
   quality:
     name: typecheck and build
