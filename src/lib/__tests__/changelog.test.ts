@@ -17,4 +17,10 @@ describe("changelog parser", () => {
 		expect(fixed.components.map((c) => c.name)).toEqual(["navy", "air", "General"]);
 		expect(fixed.components[0]!.items).toEqual(["repair hex selection", "show mine markers"]);
 	});
+
+	it("hides non-feature and non-fix sections", () => {
+		const raw = ["## [1.0.0]", "### Changed", "- old behaviour", "### Fixed", "- fix(navy): one bug"].join("\n");
+		const [release] = parseChangelog(raw);
+		expect(release!.groups.map((g) => g.title)).toEqual(["Fixed"]);
+	});
 });

@@ -1695,6 +1695,8 @@ export const blocs = pgTable("blocs", {
 	color: varchar("color", { length: 7 }).notNull(),
 	description: text("description"),
 	visaFreeForMembers: boolean("visa_free_for_members").default(false).notNull(),
+	/** Bloc-wide guideline: share of state income that should go to defence. */
+	defenceSpendingGuideline: integer("defence_spending_guideline"),
 	capitulated: boolean("capitulated").default(false).notNull(),
 	capitulated_at: timestamp("capitulated_at"),
 	createdAt: timestamp("created_at").defaultNow().notNull()
@@ -4089,6 +4091,26 @@ export const seaDocks = pgTable(
 
 /** An officer earned through the state's officer academy. Traits and portrait
  *  are picked once at graduation and stay with the commander. */
+/** A trade embargo declared by a bloc against another state. */
+export const blocEmbargoes = pgTable(
+	"bloc_embargoes",
+	{
+		id: integer("id").generatedByDefaultAsIdentity().primaryKey(),
+		blocId: integer("bloc_id")
+			.notNull()
+			.references(() => blocs.id, { onDelete: "cascade" }),
+		targetStateId: integer("target_state_id")
+			.notNull()
+			.references(() => states.id, { onDelete: "cascade" }),
+		declaredBy: text("declared_by")
+			.notNull()
+			.references(() => accounts.id, { onDelete: "cascade" }),
+		reason: text("reason").notNull(),
+		createdAt: timestamp("created_at").defaultNow().notNull()
+	},
+	(t) => ({ blocTargetIdx: uniqueIndex("uq_bloc_embargo").on(t.blocId, t.targetStateId) })
+);
+
 export const commanders = pgTable(
 	"commanders",
 	{

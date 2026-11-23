@@ -20,6 +20,13 @@ export const editBlocSchema = v.object({
 		""
 	),
 	visaFreeForMembers: v.optional(v.boolean(), false),
+	defenceSpendingGuideline: v.optional(
+		v.pipe(
+			v.string(),
+			v.check((value) => value === "" || (/^\d+$/.test(value) && Number(value) <= 100), "Enter a percentage between 0 and 100")
+		),
+		""
+	),
 	logo: v.optional(
 		v.pipe(
 			v.file("Logo must be a file"),

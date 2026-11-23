@@ -27,7 +27,7 @@ const TYPE_HINTS: Record<string, { type: string; tone: string }> = {
 	Deprecated: { type: "deprecation", tone: "neutral" }
 };
 
-const CONVENTIONAL = /^(?:feat|fix|chore|docs|refactor|perf|security|test|build|ci)\(([^)]+)\):\s*(.+)$/i;
+const CONVENTIONAL = /^(feat|fix|chore|docs|refactor|perf|security|test|build|ci)(?:\(([^)]+)\))?:\s*(.+)$/i;
 
 export function parseChangelog(raw: string): ChangelogRelease[] {
 	const releases: ChangelogRelease[] = [];
@@ -44,6 +44,11 @@ export function parseChangelog(raw: string): ChangelogRelease[] {
 		const sectionMatch = line.match(/^### (.+)$/);
 		if (sectionMatch && release) {
 			const title = sectionMatch[1]!.trim();
+			// Only features and fixes belong in the player-facing changelog.
+			if (title !== "Added" && title !== "Fixed") {
+				group = null;
+				continue;
+			}
 			const hint = TYPE_HINTS[title] ?? { type: title.toLowerCase(), tone: "neutral" };
 			group = { title, type: hint.type, components: [] };
 			release.groups.push(group);
@@ -53,8 +58,9 @@ export function parseChangelog(raw: string): ChangelogRelease[] {
 		if (itemMatch && group) {
 			const text = itemMatch[1]!.trim();
 			const conventional = text.match(CONVENTIONAL);
-			const component = conventional?.[1]?.trim() || "General";
-			const message = conventional?.[2]?.trim() || text;
+			if (conventional && !["feat", "fix"].includes(conventional[1]!.toLowerCase())) continue;
+			const component = conventional?.[2]?.trim() || "General";
+			const message = conventional?.[3]?.trim() || text;
 			let entry = group.components.find((c) => c.name === component);
 			if (!entry) {
 				entry = { name: component, items: [] };

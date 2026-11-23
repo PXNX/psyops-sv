@@ -135,6 +135,12 @@
 					{data.bloc.description}
 				</p>
 			{/if}
+			{#if data.bloc.defenceSpendingGuideline != null}
+				<p class="mt-3 text-xs text-fg-muted">
+					Defence guideline: <span class="font-semibold text-fg">{data.bloc.defenceSpendingGuideline}%</span> of state
+					income (last 30 days)
+				</p>
+			{/if}
 
 			<!-- Signatories' flags -->
 			{#if data.memberStates.length}
@@ -501,6 +507,15 @@
 								{/if}
 								<span>{state.population.toLocaleString()} citizens</span>
 								{#if state.rating}<span>· #{state.rating}</span>{/if}
+								{#if data.bloc.defenceSpendingGuideline != null}
+									{@const guideline = data.bloc.defenceSpendingGuideline}
+									<Badge
+										tone={state.defence.income > 0 && state.defence.percent >= guideline ? "green" : "amber"}
+										size="xs"
+									>
+										{state.defence.income > 0 ? `${state.defence.percent}% / ${guideline}% defence` : "No budget data"}
+									</Badge>
+								{/if}
 							</div>
 						</div>
 						{#if data.expellableStateIds.includes(state.id)}
@@ -530,6 +545,44 @@
 			</ul>
 		{:else}
 			<p class="py-4 text-center text-sm text-fg-muted">No signatories yet.</p>
+		{/if}
+	</section>
+
+	<!-- Trade embargoes -->
+	<section class="panel rounded-sm p-5 space-y-3">
+		<h2 class="section-title">Trade embargoes</h2>
+		{#if data.embargoes.length}
+			<ul class="space-y-2">
+				{#each data.embargoes as embargo (embargo.id)}
+					<li class="panel-muted flex flex-wrap items-center gap-2 rounded-sm p-3 text-sm">
+						<a href="/state/{embargo.targetStateId}" class="font-medium text-fg hover:text-primary-hover">{embargo.targetName}</a>
+						<Badge tone="red" size="xs">embargo</Badge>
+						<span class="text-xs text-fg-muted">{embargo.reason}</span>
+						{#if data.isLeader}
+							<form method="POST" action="?/liftEmbargo" use:enhance={withToast} class="ml-auto">
+								<input type="hidden" name="embargoId" value={embargo.id} />
+								<Button type="submit" size="xs" variant="ghost">Lift</Button>
+							</form>
+						{/if}
+					</li>
+				{/each}
+			</ul>
+		{:else}
+			<p class="text-xs text-fg-muted">No embargoes in force.</p>
+		{/if}
+		{#if data.isLeader}
+			<form method="POST" action="?/declareEmbargo" use:enhance={withToast} class="flex flex-wrap items-end gap-2 border-t border-line/20 pt-3">
+				<label class="min-w-40 flex-1"><span class="field-label">Target state</span>
+					<select name="targetStateId" required class="field-control mt-1 w-full rounded-sm px-2 py-1.5 text-sm">
+						<option value="">State…</option>
+						{#each data.embargoTargets as target (target.id)}<option value={target.id}>{target.name}</option>{/each}
+					</select>
+				</label>
+				<label class="min-w-40 flex-1"><span class="field-label">Reason</span>
+					<input name="reason" required maxlength="500" class="field-control mt-1 w-full rounded-sm px-2 py-1.5 text-sm" />
+				</label>
+				<Button type="submit" size="sm" variant="secondary">Declare embargo</Button>
+			</form>
 		{/if}
 	</section>
 

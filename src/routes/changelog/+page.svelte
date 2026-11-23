@@ -91,20 +91,26 @@
 										<Badge tone={tone(group.type)} size="xs">{group.type}</Badge>
 										<span class="ml-auto text-[11px] text-fg-faint">{group.components.reduce((n, c) => n + c.items.length, 0)} entries</span>
 									</div>
-									<ul class="space-y-2">
+									<div class="ml-1 space-y-3 border-l-2 border-line/20 pl-4">
 										{#each group.components as component (component.name)}
-											<li class="flex gap-2 text-sm leading-relaxed text-fg-soft">
-												<span class="mt-2 size-1.5 shrink-0 rounded-full bg-primary/70"></span>
-												<span>
-													{#if component.name !== "General"}
+											<div>
+												{#if component.name !== "General"}
+													<div class="mb-1.5 flex items-center gap-2">
 														<Badge tone="neutral" size="xs">{component.name}</Badge>
-														<span class="mx-1 text-fg-faint">—</span>
-													{/if}
-													{#each component.items as item, n}{#if n}<span class="text-fg-faint"> · </span>{/if}{item}{/each}
-												</span>
-											</li>
+														<span class="text-[10px] uppercase tracking-[0.16em] text-fg-faint">component</span>
+													</div>
+												{/if}
+												<ul class="ml-1 space-y-1.5">
+													{#each component.items as item}
+														<li class="flex gap-2 text-sm leading-relaxed text-fg-soft">
+															<span class="mt-2 size-1.5 shrink-0 rounded-full bg-primary/70"></span>
+															<span>{item}</span>
+														</li>
+													{/each}
+												</ul>
+											</div>
 										{/each}
-									</ul>
+									</div>
 								</section>
 							{/each}
 						</div>

@@ -8,6 +8,7 @@
 	import FluentCheckmark20Filled from "~icons/fluent/checkmark-20-filled";
 	import FluentImage20Filled from "~icons/fluent/image-20-filled";
 	import FluentBookCompass24Filled from "~icons/fluent/book-compass-24-filled";
+	import FluentShield20Filled from "~icons/fluent/shield-20-filled";
 	import { editBlocSchema } from "./schema.js";
 	import BottomSheet from "#lib/component/BottomSheet.svelte";
 	import ImageCropper from "#lib/component/ImageCropper.svelte";
@@ -343,6 +344,31 @@
 						</p>
 					</div>
 				</label>
+			</div>
+
+			<!-- Defence spending guideline -->
+			<div class="space-y-2">
+				<div class="flex items-center gap-2">
+					<FluentShield20Filled class="size-4 text-warning" />
+					<h2 class="text-sm font-semibold text-fg">Defence guideline</h2>
+				</div>
+				<label class="block">
+					<span class="field-label">Share of state income to defence (%)</span>
+					<input
+						type="number"
+						name="defenceSpendingGuideline"
+						min="0"
+						max="100"
+						bind:value={$form.defenceSpendingGuideline}
+						placeholder="No guideline"
+						class="field-control mt-1 w-full rounded-sm px-3 py-2 text-sm"
+						disabled={$submitting}
+					/>
+				</label>
+				<p class="text-xs text-fg-muted">
+					Member states are shown as meeting or missing the guideline based on their last 30 days of income and
+					defence spending. Leave blank for no guideline.
+				</p>
 			</div>
 
 			<!-- Description -->

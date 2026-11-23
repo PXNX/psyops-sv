@@ -17,10 +17,12 @@ import {
 	wars,
 	battles,
 	files,
-	userProfiles
+	userProfiles,
+	governmentBudgetTransactions,
+	blocEmbargoes
 } from "#lib/server/schema.js";
 import { error, fail, redirect } from "@sveltejs/kit";
-import { eq, and, or, ne, sql, inArray } from "drizzle-orm";
+import { eq, and, or, ne, sql, inArray, gte, notInArray } from "drizzle-orm";
 import type { Actions, PageServerLoad } from "./$types";
 import { getLogoUrl, uploadFileFromForm } from "#lib/server/backblaze.js";
 import {
@@ -52,6 +54,7 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 			color: blocs.color,
 			description: blocs.description,
 			visaFreeForMembers: blocs.visaFreeForMembers,
+			defenceSpendingGuideline: blocs.defenceSpendingGuideline,
 			createdAt: blocs.createdAt
 		})
 		.from(blocs)
@@ -145,6 +148,57 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 	// Get member state IDs for war queries
 	const memberStateIds = memberStates.map((s) => s.id);
 
+	// Defence-spending guideline compliance over the last 30 days. The ledger
+	// sign convention is inconsistent, so expenses use the absolute amount.
+	const INCOME_TYPES = new Set(["tax_collection", "trade_revenue", "tax_payment", "visa_purchase", "gift_code_redemption"]);
+	const DEFENCE_TYPES = new Set([
+		"military",
+		"naval_operation",
+		"airstrike",
+		"covert_operation",
+		"cyber_defence",
+		"satellite_launch",
+		"space_operation",
+		"ai_research"
+	]);
+	const since = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+	const compliance = new Map<number, { income: number; defence: number; percent: number }>();
+	if (memberStateIds.length) {
+		const ledger = await db
+			.select({
+				stateId: governmentBudgetTransactions.stateId,
+				transactionType: governmentBudgetTransactions.transactionType,
+				amount: governmentBudgetTransactions.amount
+			})
+			.from(governmentBudgetTransactions)
+			.where(and(inArray(governmentBudgetTransactions.stateId, memberStateIds), gte(governmentBudgetTransactions.createdAt, since)));
+		for (const row of ledger) {
+			const entry = compliance.get(row.stateId) ?? { income: 0, defence: 0, percent: 0 };
+			if (INCOME_TYPES.has(row.transactionType) && row.amount > 0) entry.income += row.amount;
+			if (DEFENCE_TYPES.has(row.transactionType)) entry.defence += Math.abs(row.amount);
+			compliance.set(row.stateId, entry);
+		}
+		for (const entry of compliance.values()) entry.percent = entry.income > 0 ? Math.round((entry.defence / entry.income) * 100) : 0;
+	}
+
+	const [embargoRows, availableStates] = await Promise.all([
+		db
+			.select({
+				id: blocEmbargoes.id,
+				targetStateId: blocEmbargoes.targetStateId,
+				targetName: states.name,
+				reason: blocEmbargoes.reason,
+				createdAt: blocEmbargoes.createdAt
+			})
+			.from(blocEmbargoes)
+			.innerJoin(states, eq(blocEmbargoes.targetStateId, states.id))
+			.where(eq(blocEmbargoes.blocId, blocId))
+			.orderBy(states.name),
+		memberStateIds.length
+			? db.select({ id: states.id, name: states.name }).from(states).where(notInArray(states.id, memberStateIds)).orderBy(states.name)
+			: db.select({ id: states.id, name: states.name }).from(states).orderBy(states.name)
+	]);
+
 	const isLeader = locals.account?.id === leaderRow?.userId;
 
 	// No vote counts here: this page only shows an election that is still
@@ -160,7 +214,8 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 					name: bloc.name,
 					color: bloc.color,
 					description: bloc.description || "",
-					visaFreeForMembers: bloc.visaFreeForMembers
+					visaFreeForMembers: bloc.visaFreeForMembers,
+					defenceSpendingGuideline: bloc.defenceSpendingGuideline == null ? "" : String(bloc.defenceSpendingGuideline)
 				},
 				valibot(editBlocSchema)
 			)
@@ -387,6 +442,7 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 				logo: await getLogoUrl(state.logo),
 				population: state.population || 0,
 				rating: state.rating || 0,
+				defence: compliance.get(state.id) ?? { income: 0, defence: 0, percent: 0 },
 				president: state.presidentUserId
 					? {
 							userId: state.presidentUserId,
@@ -436,9 +492,13 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 			logo: blocLogo,
 			color: bloc.color,
 			description: bloc.description,
+			visaFreeForMembers: bloc.visaFreeForMembers,
+			defenceSpendingGuideline: bloc.defenceSpendingGuideline,
 			createdAt: bloc.createdAt
 		},
 		memberStates: memberStatesWithLogos,
+		embargoes: embargoRows,
+		embargoTargets: availableStates,
 
 		leader: leaderRow
 			? {
@@ -558,7 +618,9 @@ export const actions: Actions = {
 			return message(form, "Only presidents of member states can edit the bloc", { status: 403 });
 		}
 
-		const { name, color, description, logo, visaFreeForMembers } = form.data;
+		const { name, color, description, logo, visaFreeForMembers, defenceSpendingGuideline } = form.data;
+		const guidelineRaw = String(defenceSpendingGuideline ?? "").trim();
+		const guideline = guidelineRaw === "" ? null : Number(guidelineRaw);
 
 		// Check if name is already taken by another bloc
 		const existingBloc = await db.select().from(blocs).where(eq(blocs.name, name)).limit(1);
@@ -600,7 +662,8 @@ export const actions: Actions = {
 					color,
 					description: description || null,
 					logo: logoFileId,
-					visaFreeForMembers: visaFreeForMembers ?? false
+					visaFreeForMembers: visaFreeForMembers ?? false,
+					defenceSpendingGuideline: guideline
 				})
 				.where(eq(blocs.id, blocId));
 
@@ -829,5 +892,46 @@ export const actions: Actions = {
 		}
 
 		return { success: true, message: "Vote recorded" };
+	},
+	declareEmbargo: async ({ request, params, locals }) => {
+		const account = locals.account!;
+		const blocId = Number(params.id);
+		const form = await request.formData();
+		const targetStateId = Number(form.get("targetStateId"));
+		const reason = String(form.get("reason") ?? "").trim();
+		if (!Number.isInteger(targetStateId) || targetStateId <= 0) return fail(400, { error: "Choose a state to embargo" });
+		if (!reason) return fail(400, { error: "Give a reason for the embargo" });
+
+		const [bloc] = await db.select().from(blocs).where(eq(blocs.id, blocId));
+		if (!bloc) return fail(404, { error: "Bloc not found" });
+		const [leader] = await db.select().from(blocLeaders).where(eq(blocLeaders.blocId, blocId));
+		const [memberPresident] = await db
+			.select({ id: presidents.id })
+			.from(presidents)
+			.innerJoin(states, eq(presidents.stateId, states.id))
+			.where(and(eq(states.blocId, blocId), eq(presidents.userId, account.id)))
+			.limit(1);
+		if (leader?.userId !== account.id && !memberPresident) return fail(403, { error: "Only bloc leaders can declare embargoes" });
+		const [target] = await db.select({ id: states.id, blocId: states.blocId }).from(states).where(eq(states.id, targetStateId));
+		if (!target || target.blocId === blocId) return fail(400, { error: "You cannot embargo a member state" });
+
+		await db
+			.insert(blocEmbargoes)
+			.values({ blocId, targetStateId, declaredBy: account.id, reason: reason.slice(0, 500) })
+			.onConflictDoUpdate({
+				target: [blocEmbargoes.blocId, blocEmbargoes.targetStateId],
+				set: { reason: reason.slice(0, 500), declaredBy: account.id, createdAt: new Date() }
+			});
+		return { success: true, message: "Embargo declared" };
+	},
+	liftEmbargo: async ({ request, params, locals }) => {
+		const account = locals.account!;
+		const blocId = Number(params.id);
+		const form = await request.formData();
+		const embargoId = Number(form.get("embargoId"));
+		const [leader] = await db.select().from(blocLeaders).where(eq(blocLeaders.blocId, blocId));
+		if (leader?.userId !== account.id) return fail(403, { error: "Only the bloc leader can lift embargoes" });
+		await db.delete(blocEmbargoes).where(and(eq(blocEmbargoes.id, embargoId), eq(blocEmbargoes.blocId, blocId)));
+		return { success: true, message: "Embargo lifted" };
 	}
 };
