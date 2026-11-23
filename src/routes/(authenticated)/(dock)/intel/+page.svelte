@@ -14,6 +14,8 @@
 	import IconMap from "~icons/fluent/map-20-regular";
 	import IconRadar from "~icons/fluent/radar-20-regular";
 	import IconImage from "~icons/fluent/image-multiple-20-regular";
+	import DocArt from "#lib/component/docs/DocArt.svelte";
+	import IntelArt from "./IntelArt.svelte";
 
 	const { data } = $props();
 
@@ -74,6 +76,15 @@
 		<Button href="/map" variant="secondary" size="sm" icon={IconMap}>Situation map</Button>
 	</header>
 
+	<div class="animate-rise-in panel rounded-sm p-2" style="--rise-delay: 60ms">
+		<DocArt
+			kind="intel"
+			label="Detection matrix"
+			caption="No sensor sees everything — combine passes to raise confidence in the fused picture."
+			compact
+		/>
+	</div>
+
 	{#if !data.side}
 		<section class="panel rounded-sm p-5 text-sm text-fg-muted">
 			You need to live in a state to receive intelligence. Recon is launched from an enemy region's page or the map.
@@ -81,8 +92,11 @@
 	{:else}
 		<!-- Passes in flight -->
 		{#if data.inFlight.length}
-			<section class="panel rounded-sm p-4">
-				<h2 class="section-title mb-3"><IconRadar class="size-5 text-primary-fg" /> Tasked</h2>
+			<section class="animate-rise-in panel rounded-sm p-4" style="--rise-delay: 120ms">
+				<div class="mb-3 flex flex-wrap items-center justify-between gap-3">
+					<h2 class="section-title flex items-center gap-2"><IconRadar class="size-5 text-primary-fg" /> Tasked</h2>
+					<IntelArt kind="tasked" label="Pass en route" class="w-44" />
+				</div>
 				<ul class="divide-y divide-line/15">
 					{#each data.inFlight as m (m.id)}
 						<li class="flex flex-wrap items-center gap-x-3 gap-y-1 py-2 text-sm">
@@ -100,8 +114,11 @@
 
 		<!-- Current picture per region -->
 		{#if data.pictures.length}
-			<section class="panel rounded-sm p-4">
-				<h2 class="section-title mb-3">Current picture</h2>
+			<section class="animate-rise-in panel rounded-sm p-4" style="--rise-delay: 180ms">
+				<div class="mb-3 flex flex-wrap items-center justify-between gap-3">
+					<h2 class="section-title">Current picture</h2>
+					<IntelArt kind="picture" label="Fused confidence" class="w-44" />
+				</div>
 				<div class="overflow-x-auto">
 					<table class="w-full text-sm">
 						<thead>
@@ -158,14 +175,20 @@
 		{/if}
 
 		{#if imagery.length}
-			<section class="panel rounded-sm p-4">
-				<h2 class="section-title mb-3"><IconImage class="size-5 text-primary-fg" /> Imagery</h2>
+			<section class="animate-rise-in panel rounded-sm p-4" style="--rise-delay: 240ms">
+				<div class="mb-3 flex flex-wrap items-center justify-between gap-3">
+					<h2 class="section-title flex items-center gap-2"><IconImage class="size-5 text-primary-fg" /> Imagery</h2>
+					<IntelArt kind="scan" label="Scanning the frame" class="w-44" />
+				</div>
 				<ImageryStrip bind:this={strip} items={imagery} showRegion />
 			</section>
 		{/if}
 
-		<div class="flex items-center justify-between gap-3">
-			<h2 class="section-title">Archive <span class="font-mono text-fg-muted">({data.reports.length})</span></h2>
+		<div class="flex flex-wrap items-center justify-between gap-3">
+			<h2 class="section-title flex items-center gap-3">
+				Archive <span class="font-mono text-fg-muted">({data.reports.length})</span>
+				<IntelArt kind="archive" label="INTREP stack" class="hidden w-40 sm:flex" />
+			</h2>
 			<label class="flex items-center gap-2 text-xs text-fg-muted">
 				<input type="checkbox" class="checkbox checkbox-xs" bind:checked={showStale} /> Show stale
 			</label>
@@ -181,7 +204,10 @@
 			{@const f = r.findings}
 			<article
 				id="report-{r.id}"
-				class="panel rounded-sm overflow-hidden border-error/25 {r.fresh ? '' : 'opacity-70'}"
+				class="intel-report panel animate-rise-in rounded-sm overflow-hidden border-error/25 {r.fresh
+					? ''
+					: 'opacity-70'}"
+				style="--rise-delay: {300 + (r.id % 5) * 55}ms"
 			>
 				<!-- Classification banner, top and bottom, like a printed INTREP. -->
 				<div
@@ -354,3 +380,35 @@
 		{/each}
 	{/if}
 </PageContainer>
+
+<style>
+	/* A single declassifying scan passes over each report as it arrives. */
+	.intel-report::after {
+		content: "";
+		position: absolute;
+		left: 0;
+		right: 0;
+		top: 0;
+		height: 2px;
+		pointer-events: none;
+		background: linear-gradient(90deg, transparent, var(--color-primary), transparent);
+		box-shadow: 0 0 12px color-mix(in oklab, var(--color-primary) 50%, transparent);
+		animation: intel-decrypt 1.5s ease-in-out 1 backwards;
+		animation-delay: var(--rise-delay, 0ms);
+	}
+	@keyframes intel-decrypt {
+		from {
+			transform: translateY(0);
+			opacity: 0.8;
+		}
+		to {
+			transform: translateY(520px);
+			opacity: 0;
+		}
+	}
+	@media (prefers-reduced-motion: reduce) {
+		.intel-report::after {
+			display: none;
+		}
+	}
+</style>
