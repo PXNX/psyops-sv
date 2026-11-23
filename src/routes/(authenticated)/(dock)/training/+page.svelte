@@ -23,7 +23,6 @@
 	import PageContainer from "#lib/component/PageContainer.svelte";
 	import PageHeader from "#lib/component/PageHeader.svelte";
 	import EmptyState from "#lib/component/EmptyState.svelte";
-	import NavyConsole from "#lib/component/forces/NavyConsole.svelte";
 	import AirOperations from "#lib/component/forces/AirOperations.svelte";
 	import Tutorial from "#lib/component/Tutorial.svelte";
 	import { Button, IconButton, Badge } from "#lib/component/ui/index.js";
@@ -280,8 +279,8 @@
 				<p class="text-sm text-fg-muted">No naval units in service yet.</p>
 			{/if}
 		</section>
-		<!-- The fleet console used to be /navy. It now lives here as its own tab. -->
-		<NavyConsole data={data.navy} embedded />
+		<!-- The hex-sea fleet console lives on /map, overlaid on the maritime map.
+		     This tab keeps the naval service record and the air operations panel. -->
 	{:else}
 		{#if view === "aviation"}
 			<section class="panel rounded-sm p-5 space-y-3">

@@ -22,6 +22,7 @@ import {
 } from "#lib/server/schema.js";
 import { sql, eq, and, inArray } from "drizzle-orm";
 import { SeaIntelError, launchSeaIntel, seaIntelOptions, seaPicture } from "#lib/server/services/military/sea-intel.js";
+import { fleetActions, fleetLoad } from "#lib/server/services/military/fleet-page.js";
 import { fail } from "@sveltejs/kit";
 import type { Actions, PageServerLoad } from "./$types";
 import {
@@ -220,6 +221,10 @@ async function situation(userId: string) {
 }
 
 export const actions: Actions = {
+	// The hex-sea fleet console is overlaid on this map, so its forms post here.
+	// The map's own sea-intel action below intentionally overrides the one in
+	// fleetActions, keeping the intel panel on the map in sync with the overlay.
+	...fleetActions,
 	launchRecon: async ({ request, locals }) => {
 		const form = await request.formData();
 		const sensor = String(form.get("sensor") ?? "") as SensorId;
@@ -361,6 +366,11 @@ export const load: PageServerLoad = async ({ locals }) => {
 						.where(inArray(militaryUnits.unitType, AIRCRAFT_IDS))
 				]).then(([ports, ships, mines, aircraft]) => ({ ports, ships, mines, aircraft }))
 			]);
+
+		// The fleet console (hex sea) is overlaid on this page rather than living
+		// on the Forces page. Keep its load isolated so a fleet hiccup cannot take
+		// the whole situational map down.
+		const navy = locals.account ? await fleetLoad(locals.account.id).catch(() => null) : null;
 
 		// blocColorMap: stateId → bloc colour string.
 		// blocNameMap: stateId → bloc name string.
@@ -513,6 +523,7 @@ export const load: PageServerLoad = async ({ locals }) => {
 			warDefenderStateIds,
 			currentUserRegionId,
 			sa,
+			navy,
 			// Airstrikes in the last 24 h (public: an air raid is no secret).
 			strikes: Object.fromEntries(await recentlyStruckRegions(db)),
 			sea: {
@@ -548,6 +559,7 @@ export const load: PageServerLoad = async ({ locals }) => {
 			warDefenderStateIds: new Set<number>(),
 			currentUserRegionId: null,
 			sa: null,
+			navy: null,
 			strikes: {},
 			sea: { intel: {}, sensors: [], aircraft: [], ports: [], ships: [], mines: [], regionsForEez: [], coastalRegions: [] }
 		};

@@ -35,8 +35,20 @@
 		type ShipClassId
 	} from "#lib/config/index.js";
 
-	/** `embedded` is set when the console is the Navy tab of the Forces page. */
-	let { data, embedded = false }: { data: FleetPageData; embedded?: boolean } = $props();
+	/** `embedded` is set when the console is overlaid on the map page.
+	 *  `initialHex` preselects the hex the player clicked on the maritime map,
+	 *  and `onselecthex` reports hex taps back so the map can highlight them too. */
+	let {
+		data,
+		embedded = false,
+		initialHex = null,
+		onselecthex
+	}: {
+		data: FleetPageData;
+		embedded?: boolean;
+		initialHex?: Hex | null;
+		onselecthex?: (h: Hex) => void;
+	} = $props();
 
 	const navySteps = [
 		{
@@ -151,6 +163,7 @@
 
 	function hexClicked(h: Hex) {
 		selectedHex = h;
+		onselecthex?.(h);
 		const ship = shipsAt(h)[0];
 		if (ship) selectedShipId = ship.id;
 		if (movingShipId != null) moveTarget = h;
@@ -175,6 +188,9 @@
 		if (!value) return;
 		const [q, r] = value.split(",").map(Number);
 		if (Number.isInteger(q) && Number.isInteger(r)) selectedHex = { q, r };
+	});
+	$effect(() => {
+		if (initialHex) selectedHex = initialHex;
 	});
 
 	const pct = (value: number, max: number) => Math.max(0, Math.min(100, max ? (value / max) * 100 : 0));
