@@ -6,6 +6,11 @@ export default defineConfig({
 	include: ["src/**/*.test.ts", "packages/**/*.test.ts", "tools/**/*.test.ts"],
 	exclude: ["node_modules", ".svelte-kit"],
 	pool: { maxWorkers: 2 },
+	// PGlite boot/teardown and the seeded world can take well over the 5 s / 10 s
+	// defaults on a loaded CI runner. Keep workers bounded but allow the slow
+	// integration setup to finish instead of failing with a spurious timeout.
+	testTimeout: 30_000,
+	hookTimeout: 60_000,
 	plugins: [
 		{
 			// Rune modules (*.svelte.ts) need the Svelte compiler, just like in

@@ -2,7 +2,7 @@
 import type { Database } from "../../db";
 import { regions, residences, regionBorders } from "../../schema";
 import { eq, or, and, sql, inArray } from "drizzle-orm";
-import { getRegionName } from "#lib/utils/formatting.js";
+import { getRegionName } from "#lib/utils/region-name.js";
 
 export class RegionService {
 	constructor(private db: typeof import("../../db").db) {}
