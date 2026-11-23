@@ -7,6 +7,8 @@ category: "Conflict & forces"
 
 <script>
   import Mermaid from "../component/Mermaid.svelte";
+  import DocArt from "../component/docs/DocArt.svelte";
+
 </script>
 
 # Map and airspace
@@ -29,6 +31,8 @@ view of the same world.
 - Ports (⚓), ships and minefields (✳) sit on their hexes.
 - Clicking a hex opens a panel with coordinates, EEZ owner, port, ships and
   mines, plus a link to the navy console.
+
+<DocArt kind="fleet" label="The sea as a grid" caption="Naval mode brings the hex sea, EEZ band, ports, ships and minefields to the front." />
 
 ## Land mode
 
@@ -59,6 +63,16 @@ Enemy ships only appear if a fresh
 sea intel report (EO, IR, SAR, sonar, radar or air
 reconnaissance) saw their hex in the last 12 hours. Without reconnaissance the
 sea is blank.
+
+## Historic maps
+
+The **History** button in the map toolbar opens [map history](/map/history). A
+snapshot is saved every day at midnight; enter a date at the top of the history
+page to replay who held what, and see the state of the world on that day.
+
+<DocArt kind="history" label="Daily snapshots" caption="One saved world per day. Pick any date on the history page; if that day has no snapshot, the nearest one is shown." />
+
+<Mermaid label="Opening a historic map" chart={"sequenceDiagram\nparticipant P as Player\nparticipant M as Map\nparticipant H as Map history\nP->>M: Click History in the toolbar\nM->>H: Open /map/history\nP->>H: Enter a date\nH-->>P: Regions coloured by that day's owner, plus the state ledger"} />
 
 
 ## Deep dive: exact numbers

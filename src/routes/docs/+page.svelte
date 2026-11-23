@@ -4,13 +4,16 @@
 	import FluentRocket20Filled from "~icons/fluent/rocket-20-filled";
 	import FluentDocument20Filled from "~icons/fluent/document-20-filled";
 	import FluentChevronRight20Filled from "~icons/fluent/chevron-right-20-filled";
+	import TutorialArt from "#lib/component/docs/TutorialArt.svelte";
+	import DocArt from "#lib/component/docs/DocArt.svelte";
+	import type { TutorialArtKind } from "#lib/component/docs/art.js";
 
 	const { data } = $props();
 	const groups = $derived(groupedDocs(data.docs));
-	const launches = [
-		{ href: "/training?view=navy&tutorial=navy", title: "Flotten-Tutorial", text: "Hafen, Dock, Schiffe, Minen und Seeaufklärung interaktiv üben." },
-		{ href: "/training?view=aviation&tutorial=air", title: "Luftwaffen-Tutorial", text: "Geschwader auswählen und Einsätze beauftragen." },
-		{ href: "/map?tutorial=map", title: "Karten-Tutorial", text: "See-, Land- und Luftraum-Modus sowie Hex-Auswahl." }
+	const launches: { href: string; title: string; text: string; art: TutorialArtKind }[] = [
+		{ href: "/training?view=navy&tutorial=navy", title: "Flotten-Tutorial", text: "Hafen, Dock, Schiffe, Minen und Seeaufklärung interaktiv üben.", art: "naval" },
+		{ href: "/training?view=aviation&tutorial=air", title: "Luftwaffen-Tutorial", text: "Geschwader auswählen und Einsätze beauftragen.", art: "squadron" },
+		{ href: "/map?tutorial=map", title: "Karten-Tutorial", text: "See-, Land- und Luftraum-Modus, Hex-Auswahl und Kartenhistorie.", art: "history" }
 	];
 
 	const tile = (category: string) =>
@@ -41,6 +44,10 @@
 		</div>
 	</div>
 
+	<div class="not-prose mt-4">
+		<DocArt kind="levers" label="The four levers of power" caption="Every guide below teaches one way to apply pressure. The interactive tours show where the controls are." />
+	</div>
+
 	<h2 class="section-title">Interaktive Tutorials</h2>
 	<div class="not-prose mt-3 grid gap-3 sm:grid-cols-3">
 		{#each launches as launch, i}
@@ -52,6 +59,9 @@
 				<span class="flex size-9 items-center justify-center rounded-sm border border-warning/30 bg-warning/12">
 					<FluentRocket20Filled class="size-4 text-warning" />
 				</span>
+				<div class="mt-2 overflow-hidden rounded-sm border border-line/15 bg-surface-0/60">
+					<TutorialArt kind={launch.art} />
+				</div>
 				<h3 class="mt-2 text-sm font-semibold text-heading group-hover:text-primary-hover">{launch.title}</h3>
 				<p class="mt-1 text-xs text-fg-muted">{launch.text}</p>
 			</a>

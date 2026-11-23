@@ -1,20 +1,23 @@
 <script lang="ts">
 	import WorldMap from "#lib/assets/worldmap3.svg?raw";
 	import PageContainer from "#lib/component/PageContainer.svelte";
-	import { Badge } from "#lib/component/ui/index.js";
+	import DocArt from "#lib/component/docs/DocArt.svelte";
+	import { Badge, Button } from "#lib/component/ui/index.js";
 	import { gameDate } from "#lib/utils/game-time.js";
 	import type { PageData } from "./$types";
 
 	let { data }: { data: PageData } = $props();
 
 	const selected = $derived(data.selected);
+	const day = $derived(selected ? selected.capturedAt.toISOString().slice(0, 10) : "");
+	const stateColors = ["#38bdf8", "#f472b6", "#a3e635", "#fbbf24", "#c084fc", "#fb7185", "#34d399", "#f97316"];
 	const regionColors = $derived.by(() => {
 		const colors = new Map<number, string>();
 		if (!selected) return colors;
 		for (const region of selected.regions) {
 			if (!region.stateId) continue;
 			const bloc = selected.blocs.find((b) => b.memberStateIds.includes(region.stateId));
-			colors.set(region.id, bloc?.color ?? "#38bdf8");
+			colors.set(region.id, bloc?.color ?? stateColors[region.stateId % stateColors.length]!);
 		}
 		return colors;
 	});
@@ -38,6 +41,7 @@
 
 	const stats = $derived(selected ? [...selected.states].sort((a, b) => b.treasury - a.treasury) : []);
 	const fmt = (n: number) => (n >= 1_000_000 ? `${(n / 1_000_000).toFixed(1)}m` : n.toLocaleString());
+	const population = $derived(selected ? selected.regions.reduce((sum, r) => sum + (r.population ?? 0), 0) : 0);
 </script>
 
 <svelte:head><title>Historic maps – PsyOps</title></svelte:head>
@@ -48,10 +52,35 @@
 			<h1 class="font-serif text-2xl text-heading">Historic maps</h1>
 			<p class="text-sm text-fg-muted">A snapshot is taken every day at midnight. Pick a day to see who held what.</p>
 		</div>
-		{#if selected}
-			<Badge tone="blue" size="sm">{gameDate(selected.capturedAt)}</Badge>
-		{/if}
+		<div class="flex flex-wrap items-center gap-2">
+			{#if selected}<Badge tone="blue" size="sm">{gameDate(selected.capturedAt)}</Badge>{/if}
+			<Button href="/map" size="sm" variant="ghost" iconRight={undefined}>← Live map</Button>
+		</div>
 	</div>
+
+	<!-- Date entry lives at the top so any day can be replayed directly. -->
+	<form method="GET" class="panel flex flex-wrap items-end gap-3 rounded-sm p-3">
+		<label class="flex flex-col gap-1">
+			<span class="section-title text-[10px] uppercase tracking-[0.16em]">Date</span>
+			<input
+				type="date"
+				name="at"
+				value={data.requested || day}
+				min={data.minDate || undefined}
+				max={data.maxDate || undefined}
+				class="field-control rounded-sm px-2 py-1.5 text-sm"
+			/>
+		</label>
+		<Button type="submit" size="sm">Show that day</Button>
+		<Button href="/map/history" size="sm" variant="ghost">Latest</Button>
+		{#if data.requested}
+			<p class="self-center text-xs text-fg-muted">
+				{data.nearest
+					? `No snapshot for ${data.requested} — showing the nearest saved day (${day}).`
+					: `Showing ${data.requested}.`}
+			</p>
+		{/if}
+	</form>
 
 	<div class="flex gap-2 overflow-x-auto pb-2">
 		{#each data.snapshots as snap (snap.id)}
@@ -77,6 +106,7 @@
 							<span class="size-2.5 rounded-sm" style="background:{bloc.color}"></span>{bloc.name}
 						</span>
 					{/each}
+					<span class="ml-auto">{regionColors.size} held regions · {fmt(population)} people</span>
 				</div>
 			</section>
 
@@ -89,7 +119,7 @@
 							<span class="text-fg-muted">{state.regionCount} regions</span>
 						</div>
 						<div class="mt-1 flex flex-wrap gap-x-3 gap-y-0.5 text-fg-muted">
-							<span><strong class="text-fg">{fmt(state.population)}</strong> people</span>
+							<span><strong class="text-fg">{fmt(state.civilians ?? state.population)}</strong> people</span>
 							<span><strong class="text-fg">{fmt(state.steel)}</strong> steel</span>
 							<span><strong class="text-fg">{fmt(state.power)}</strong> power</span>
 							<span><strong class="text-fg">{fmt(state.treasury)}</strong> treasury</span>
@@ -100,7 +130,11 @@
 			</section>
 		</div>
 	{:else}
-		<p class="py-10 text-center text-sm text-fg-muted">No snapshots yet. The first one is taken at midnight.</p>
+		<DocArt
+			kind="history"
+			label="Daily snapshots"
+			caption="The first snapshot is taken at midnight. Come back tomorrow to replay today's world."
+		/>
 	{/if}
 </PageContainer>
 

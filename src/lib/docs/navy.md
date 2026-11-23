@@ -7,6 +7,9 @@ category: "Conflict & forces"
 
 <script>
   import Mermaid from "../component/Mermaid.svelte";
+  import DocArt from "../component/docs/DocArt.svelte";
+  import DocPhoto from "../component/docs/DocPhoto.svelte";
+
 </script>
 
 # Naval warfare — ships, ports and docks
@@ -18,6 +21,10 @@ takes hours and burns fuel; the fleet cron advances every leg every 15 minutes.
 <Mermaid label="From a port to a ready ship" chart={"flowchart LR\nC[Coastal region] -->|one port per region| P[Port in its EEZ]\nP -->|build dock| D[Dock with build bays]\nD -->|queue order| Q[Ship under construction]\nQ -->|cron tick| S[Ready ship]\nS -->|move + target hex| F[Hex movement]\nS -->|sonar / SAR| I[Sea intel report]"} />
 
 ![Hex sea with EEZ, port, ship and minefield](/images/docs/hex-sea.svg)
+
+<DocArt kind="fleet" label="Coast, EEZ and open water" caption="The EEZ is the coloured band between the real shoreline and the hex grid. Ports, ships and mines all sit on hexes." />
+
+![A capital ship at sea](/images/docs/sea-capital.webp)
 
 ## 1. Find a coast
 
@@ -44,6 +51,8 @@ nearest free hex inside the region's EEZ. A port:
 Click **Build dock** in the same panel. A dock has as many build bays as its
 level (up to 4). Each level costs more money and steel, but runs more jobs in
 parallel and repairs hulls faster.
+
+<Mermaid label="A shipbuilding order" chart={"sequenceDiagram\nparticipant P as Player\nparticipant D as Dock\nparticipant C as Fleet cron\nP->>D: Queue hull (money and steel)\nD->>D: Wait for a free bay\nC->>D: Advance build timer every 15 min\nD-->>P: Ship appears in port with full fuel"} />
 
 ## 4. Order ships
 
@@ -97,6 +106,8 @@ Select a hex and launch an EO, IR, SAR, sonar or radar sweep under **Sea intel**
 hull types in clear conditions, IR works at night, SAR sees through cloud, sonar
 finds submarines, and maritime radar sweeps a wide area. Reports expire
 after 12 hours and drive the map's fog of war.
+
+<DocArt kind="fog" label="Sea fog of war" caption="Only a fresh EO, IR, SAR, sonar or radar pass reveals a contact — and only for 12 hours." />
 
 ## 10. Next steps
 

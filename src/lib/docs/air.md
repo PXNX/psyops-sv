@@ -7,6 +7,9 @@ category: "Conflict & forces"
 
 <script>
   import Mermaid from "../component/Mermaid.svelte";
+  import DocArt from "../component/docs/DocArt.svelte";
+  import DocPhoto from "../component/docs/DocPhoto.svelte";
+
 </script>
 
 # Air power and missions
@@ -15,7 +18,11 @@ Aircraft are trained under **Forces** (`/training`) and controlled in the navy
 console under **Air operations**. Every squadron has a role, burns fuel and
 gains experience.
 
+![Fighter squadron](/images/docs/air-fighter.webp)
+
 <Mermaid label="Life cycle of a sortie" chart={"flowchart LR\nT[Forces: train squadron] --> E[Experience + fuel]\nE --> A[Air operations: choose task]\nA --> R{Role matches?}\nR -->|no| X[rejected]\nR -->|yes| L[Launch mission — fuel spent now]\nL --> C[Cron: flight time]\nC --> W[Effect + experience gain]"} />
+
+<DocArt kind="sortie" label="A mission in four beats" caption="Train, launch, wait out the flight timer, then collect the effect and experience." />
 
 ![Luftraum sectors on the map](/images/docs/luftraum.svg)
 
@@ -55,6 +62,8 @@ In the navy console open **Air operations**:
 The mission requires the matching role; a fighter jet cannot fly strategic
 bombing, for example. Fuel is deducted immediately and the effect lands when
 the flight timer completes.
+
+<Mermaid label="Mission timeline" chart={"sequenceDiagram\nparticipant P as Player\nparticipant O as Air operations\nparticipant C as Cron\nP->>O: Pick squadron, role and target\nO->>O: Deduct fuel now\nC->>C: Flight time (1–3 h)\nC-->>P: Effect, casualties, +3 XP per firing round"} />
 
 | Mission | Target | Effect |
 | --- | --- | --- |

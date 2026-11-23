@@ -8,6 +8,8 @@
 	import IconClose from "~icons/fluent/dismiss-20-regular";
 	import IconLink from "~icons/fluent/link-20-regular";
 	import { Button, IconButton } from "#lib/component/ui/index.js";
+	import TutorialArt from "#lib/component/docs/TutorialArt.svelte";
+	import type { TutorialArtKind } from "#lib/component/docs/art.js";
 
 	/** Only one tour runs at a time; the docs links can launch a specific one. */
 	let activeTour: string | null = null;
@@ -22,6 +24,8 @@
 		done?: string;
 		/** Label of the fallback button when the step has no detectable action. */
 		manual?: string;
+		/** Small illustration shown above the step text. */
+		art?: TutorialArtKind;
 	}
 
 	interface Props {
@@ -206,6 +210,24 @@
 					<IconButton icon={IconClose} label="End guide" size="xs" shape="square" variant="ghost" onclick={finish} />
 				</div>
 			</div>
+			{#if step?.art}
+				<TutorialArt kind={step.art} />
+			{/if}
+			<div class="mt-2 flex items-center gap-1" aria-label="Guide progress">
+				{#each steps as s, i (s.id)}
+					<button
+						type="button"
+						class="tour-dot rounded-full transition-all {i === index ? 'w-4 bg-primary' : i < index ? 'w-1.5 bg-primary/50' : 'w-1.5 bg-line'}"
+						class:active={i === index}
+						aria-label="Go to step {i + 1}: {s.title}"
+						aria-current={i === index ? "step" : undefined}
+						onclick={() => {
+							index = i;
+							save();
+						}}
+					></button>
+				{/each}
+			</div>
 			<p class="mt-2 text-xs leading-relaxed text-fg-soft">{step?.body}</p>
 			<div class="mt-3 flex items-center justify-between gap-2">
 				<button class="text-[11px] text-fg-muted hover:underline" onclick={finish}>Skip</button>
@@ -227,5 +249,11 @@
 	}
 	.tour-panel {
 		@apply fixed z-50 w-[min(20rem,calc(100vw-1rem))] rounded-md border border-primary/30 bg-surface-1 p-3 shadow-2xl;
+	}
+	.tour-dot {
+		@apply h-1.5 shrink-0;
+	}
+	.tour-dot:hover {
+		@apply bg-primary-fg;
 	}
 </style>

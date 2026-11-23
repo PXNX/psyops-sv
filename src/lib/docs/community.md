@@ -7,12 +7,16 @@ category: "Everyday life & economy"
 
 <script>
   import Mermaid from "../component/Mermaid.svelte";
+  import DocArt from "../component/docs/DocArt.svelte";
+
 </script>
 
 # Community — chat, posts and newspapers
 
 Politics and economics happen between people. This guide shows how to
 coordinate and spread news.
+
+<DocArt kind="levers" label="Influence is a lever" caption="Chat, posts and papers change what people accept long before you have to pay for force." />
 
 <Mermaid label="Communication channels" chart={"flowchart TD\nA[Chat / Comms] --> B[Global, party, state, bloc or direct]\nC[Posts] --> D[Feed & subscriptions]\nD --> E[Upvotes & reach]\nF[Newspaper] --> G[Write articles]\nG --> H[Readers & statistics]\nH --> E\nE --> I[Reputation & influence]"} />
 
@@ -36,6 +40,8 @@ and statistics show how many players you influence.
 
 Reports and moderators keep order. Valuable contributions build reputation,
 which helps in elections and when applying for offices.
+
+<Mermaid label="A campaign that pays off" chart={"sequenceDiagram\nparticipant A as Your paper\nparticipant R as Readers\nparticipant S as State\nA->>R: Publish article\nR-->>A: Reach and upvotes\nA->>S: Public opinion shifts\nS->>S: Stability += 0.4 × opinion\nS-->>A: Better election odds"} />
 
 ## 5. Profile
 

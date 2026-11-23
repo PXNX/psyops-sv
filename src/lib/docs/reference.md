@@ -5,12 +5,18 @@ order: 98
 category: "Reference"
 ---
 
+<script>
+  import Mermaid from "../component/Mermaid.svelte";
+</script>
+
 # Reference — where the rules live
 
 Every number quoted in these tutorials comes from a config file in
 `src/lib/config/`. The client and the server import the **same** modules, so a
 value shown in the UI is the value the resolver uses. When a guide and the game
 disagree, the config file wins — and the guide should be updated.
+
+<Mermaid label="One config, two consumers" chart={"flowchart LR\nC[game/*.config.ts] --> U[Planner UI in the browser]\nC --> R[Server-side resolver]\nU --> V[Value shown to the player]\nR --> V\nV --> T[Tutorial quotes the same number]"} />
 
 ## Config map
 

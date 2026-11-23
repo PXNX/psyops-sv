@@ -7,6 +7,8 @@ category: "Conflict & forces"
 
 <script>
   import Mermaid from "../component/Mermaid.svelte";
+  import DocArt from "../component/docs/DocArt.svelte";
+
 </script>
 
 # Conflict — armies, battles and wars
@@ -41,11 +43,15 @@ capitulation (`/api/cron/wars`). Allies and blocs can join the fight.
 deployed from their region. Each round consumes supply; poor infrastructure and
 blocked roads make it worse.
 
+<Mermaid label="One combat round" chart={"sequenceDiagram\nparticipant C as Commander\nparticipant B as Battle\nparticipant U as Units\nC->>B: Deploy from region (width 80)\nB->>U: Roll initiative and planning bonus\nU->>U: Fire, burn supply, gain XP\nU-->>B: Damage, losses, morale\nB->>B: Next 1 h round or retreat"} />
+
 ## 5. Airstrikes and domains
 
 `/domains` plans airstrikes, missiles and operations in **Space** (satellites,
 ASAT) and **Cyber** (grid, C2, uplink). The [intelligence guide](/docs/intel)
 explains how to find targets first.
+
+<DocArt kind="domains" label="Domains interact" caption="Combined arms grants +8% per extra fighting domain; air beats sea, sea softens coasts, land with AA blunts air." />
 
 ## 6. Sea and air
 

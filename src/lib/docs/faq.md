@@ -5,7 +5,16 @@ order: 99
 category: "Reference"
 ---
 
+<script>
+  import DocArt from "../component/docs/DocArt.svelte";
+  import Mermaid from "../component/Mermaid.svelte";
+</script>
+
 # Frequently asked questions
+
+<DocArt kind="clock" label="Where to begin" caption="A few minutes of setup, then the world keeps ticking in the background." />
+
+<Mermaid label="What should I do next?" chart={"flowchart TD\nQ[What do you want?] --> M[Make money]\nQ --> P[Get involved in politics]\nQ --> W[Command forces]\nM --> E[Economy tutorial]\nP --> PO[Politics tutorial]\nW --> N[Navy or air tutorial]\nE --> D[Open the docs index for the rest]"} />
 
 ## How do I start?
 

@@ -70,6 +70,7 @@
 	import IconRadar from "~icons/fluent/radar-20-regular";
 	import IconDismiss from "~icons/fluent/dismiss-20-regular";
 	import IconDocument from "~icons/fluent/document-search-20-regular";
+	import IconHistory from "~icons/fluent/history-20-regular";
 	import IconChevronRight from "~icons/fluent/chevron-right-20-regular";
 	import IconSea from "~icons/fluent/water-24-regular";
 	import IconMultiSelect from "~icons/fluent/multiselect-24-regular";
@@ -88,14 +89,16 @@
 			body: "Click the ship icon in the top-left rail. The sea hex grid, EEZs and coastal regions come to the front while the regions stay visible.",
 			target: '[data-tutorial="naval-mode"]',
 			done: "mode-naval",
-			manual: "Show mode"
+			manual: "Show mode",
+			art: "naval" as const
 		},
 		{
 			id: "hex",
 			title: "2. Select a hex",
 			body: "Click a coloured hexagon. The panel shows coordinates, EEZ, port, ships and mines — plus a link to the navy console.",
 			target: '[data-tutorial="hex-cell"]',
-			done: "hex-selected"
+			done: "hex-selected",
+			art: "hex" as const
 		},
 		{
 			id: "aerial",
@@ -103,13 +106,23 @@
 			body: "Click the aircraft icon. Several hexes and the regions above them become sectors LR-A1 … with unit counts.",
 			target: '[data-tutorial="aerial-mode"]',
 			done: "mode-aerial",
-			manual: "Show mode"
+			manual: "Show mode",
+			art: "aerial" as const
+		},
+		{
+			id: "history",
+			title: "4. Map history",
+			body: "Use the History button in the right-hand toolbar to replay any saved day. Enter a date at the top of the history page, or pick one from the snapshot strip.",
+			target: '[data-tutorial="map-history"]',
+			manual: "Open history",
+			art: "history" as const
 		},
 		{
 			id: "done",
-			title: "4. Done",
+			title: "5. Done",
 			body: "The technical background is in /docs/map-modes and /docs/navy. Restart the tour from your profile or the docs index.",
-			manual: "Finish"
+			manual: "Finish",
+			art: "land" as const
 		}
 	];
 
@@ -1596,6 +1609,16 @@
 
 	<!-- Right tool column -->
 	<div class="panel absolute right-2 top-14 z-10 flex flex-col gap-0.5 rounded-sm p-1">
+		<Button
+			href="/map/history"
+			size="xs"
+			variant="ghost"
+			icon={IconHistory}
+			title="Map history · replay a saved day"
+			class="mb-0.5 whitespace-nowrap"
+			data-tutorial="map-history"
+		>History</Button>
+		<div class="mx-1 h-px bg-line/20"></div>
 		<IconButton icon={IconZoomIn} label="Zoom in" size="sm" shape="square" onclick={() => zoomBy(1.6)} />
 		<IconButton icon={IconZoomOut} label="Zoom out" size="sm" shape="square" onclick={() => zoomBy(1 / 1.6)} />
 		{#if data.currentUserRegionId}

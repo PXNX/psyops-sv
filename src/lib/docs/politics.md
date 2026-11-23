@@ -7,6 +7,8 @@ category: "Politics & state"
 
 <script>
   import Mermaid from "../component/Mermaid.svelte";
+  import DocArt from "../component/docs/DocArt.svelte";
+
 </script>
 
 # Politics — parties, elections and laws
@@ -36,6 +38,8 @@ president, the current economic mood, the party's ideology relative to the
 state's political orientation, and any propaganda working for or against it.
 Winning the room is often a better investment than winning the argument.
 
+<DocArt kind="election" label="The effective vote" caption="Half the result comes from ballots, half from oligarchs backing your party with wealth and loyalty." />
+
 Help your side by writing posts and reaching voters. Results appear in
 `/election/[id]`.
 
@@ -44,6 +48,8 @@ Help your side by writing posts and reaching voters. Results appear in
 Under `/state/[id]/proposal/create` you can submit laws: taxes, buildings,
 borders, war, exploitation and more. After the debate parliament votes; the
 cron applies passed proposals.
+
+<Mermaid label="Life of a proposal" chart={"stateDiagram-v2\n[*] --> Draft: Submit law\nDraft --> Debate: Parliament reads it\nDebate --> Vote: Majority reached\nDebate --> Rejected: No majority\nVote --> Law: Cron applies\nVote --> Rejected: Voted down\nLaw --> [*]\nRejected --> [*]"} />
 
 ## 4. Cabinet and ministers
 
@@ -61,6 +67,8 @@ trade lanes and declarations of war (`/bloc` and
 
 Public opinion, supply and internal tension decide whether your state stays
 stable. The current values are shown on `/state/[id]`.
+
+<DocArt kind="stability" label="Stability bands" caption="A state starts at 50, “stable”. Below 32 it is uneasy; below 18 it is in unrest and can sustain only a short war." />
 
 
 ## Deep dive: exact numbers

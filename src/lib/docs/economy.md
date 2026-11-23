@@ -7,6 +7,9 @@ category: "Everyday life & economy"
 
 <script>
   import Mermaid from "../component/Mermaid.svelte";
+  import DocArt from "../component/docs/DocArt.svelte";
+  import DocPhoto from "../component/docs/DocPhoto.svelte";
+
 </script>
 
 # Economy — money, factories and market
@@ -15,6 +18,10 @@ Money fuels almost every decision. This guide shows how to earn it, invest it
 in production and sell the output on the market.
 
 <Mermaid label="The economic loop" chart={"flowchart LR\nA[Work in a factory] --> B[Wage to wallet]\nB --> C[Buy raw materials]\nC --> D[Factory produces goods]\nD --> E[Sell goods on market]\nE --> B\nD --> F[Company: shares & dividends]"} />
+
+<DocArt kind="production" label="From raw material to reinvestment" caption="Follow one credit through the chain: inputs, factory time, market fees, then wages, shares or a new ship." />
+
+![Industry and production](/images/docs/industry.webp)
 
 ## 1. Earn money
 
@@ -44,6 +51,8 @@ payout history.
 
 The market keeps a **price history** and **orders**. Buy when many are selling
 and sell when prices are high. Every trade is recorded in `/transactions`.
+
+<Mermaid label="Price discovery" chart={"sequenceDiagram\nparticipant U as You\nparticipant M as Market\nparticipant B as Other players\nU->>M: List goods at a price\nB->>M: Buy and sell orders\nM-->>U: Price history and fills\nU->>U: Buy low, sell high, pay the 2% fee"} />
 
 ## 5. Public finances
 

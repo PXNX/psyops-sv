@@ -7,6 +7,8 @@ category: "Everyday life & economy"
 
 <script>
   import Mermaid from "../component/Mermaid.svelte";
+  import DocArt from "../component/docs/DocArt.svelte";
+
 </script>
 
 # Society — regions, residence and supply
@@ -33,6 +35,8 @@ Regions have inhabitants, infrastructure, education, hospitals and **civilian
 needs**. The region page shows what people require — supply, energy, safety and
 jobs.
 
+<DocArt kind="needs" label="Four needs, one threshold" caption="Food, water, electricity and heat are weighted 35/30/20/15. Below 0.85 coverage, hardship grows." />
+
 ## 4. Visas and migration
 
 States set visa rules (`/visas`). Citizens of other states need an approved
@@ -42,6 +46,8 @@ visa to settle permanently; applications appear in `/visas`.
 
 Use `/civic` to support patronage projects. Satisfaction, supply and stability
 feed back into elections and internal security.
+
+<Mermaid label="From supply to stability" chart={"flowchart LR\nF[Food · water · power · heat] --> H{Coverage ≥ 0.85?}\nH -->|no| SH[Hardship]\nSH --> O[Opinion −20 × hardship]\nSH --> T[Stability −14 × hardship]\nH -->|yes| C[Content citizens]\nC --> E[Elections: goodwill and votes]"} />
 
 ## 6. Under the hood
 

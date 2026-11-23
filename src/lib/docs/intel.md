@@ -7,6 +7,8 @@ category: "Conflict & forces"
 
 <script>
   import Mermaid from "../component/Mermaid.svelte";
+  import DocArt from "../component/docs/DocArt.svelte";
+
 </script>
 
 # Intelligence — recon, cyber and cover
@@ -25,11 +27,15 @@ time of day, cover and air defence all affect the result.
 Passes fuse into one **intel picture** per region, showing cover, units,
 buildings and confidence. Battle planners use it.
 
+<DocArt kind="intel" label="No single sensor sees everything" caption="Drone EO spots infantry, SAR sees metal through cloud, sonar finds submarines. Combine passes to raise confidence." />
+
 ## 2. Sea intelligence
 
 Sonar, maritime radar and SAR sweep hexes. Sonar is the only sensor that
 reliably finds submarines. Reports expire after 12 hours and drive the
 [fog of war](/docs/map-modes).
+
+<DocArt kind="fog" label="Fresh reports only" caption="A sonar sweep reveals the ships in one hex, but the contact disappears again after 12 hours." />
 
 ## 3. Cyber and infiltration
 
@@ -44,6 +50,8 @@ Under `/ops` and `/ops/network` you place assets inside hostile networks:
 Successful footholds improve uplink jamming, GNSS denial, C2 interception and
 strike accuracy.
 
+<DocArt kind="cyber" label="A quiet intrusion" caption="Scan, escalate, pivot, copy files — each step raises heat. Cover tracks before the asset burns." />
+
 ## 4. Cover and countermeasures
 
 Buildings, weather and night reduce detection. Radar, air defence and cyber
@@ -54,6 +62,8 @@ own activity.
 
 Rules live in `recon.config.ts`, `intel.ts`, `cyber.config.ts` and
 `infiltration.config.ts`. Sea sensors are defined in `SEA_SENSORS`.
+
+<Mermaid label="Asset heat" chart={"stateDiagram-v2\n[*] --> Inserted: Recruit and insert\nInserted --> Access: Scan and probe\nAccess --> Foothold: Escalate and pivot\nFoothold --> Burned: Heat reaches 100\nFoothold --> Hidden: Cover tracks (−35 heat)\nHidden --> Foothold: Keep working\nBurned --> [*]"} />
 
 
 ## Deep dive: exact numbers

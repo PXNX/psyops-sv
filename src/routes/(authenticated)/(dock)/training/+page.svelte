@@ -54,7 +54,8 @@
 			body: "This panel lists every ready squadron with its fuel and experience. Click inside the form to begin.",
 			target: '[data-tutorial="air-ops"]',
 			done: "air-panel-open",
-			manual: "Show form"
+			manual: "Show form",
+			art: "squadron" as const
 		},
 		{
 			id: "kind",
@@ -62,7 +63,8 @@
 			body: "Pick a mission type. Each requires a role: bombers for bombing, naval bombers for sea targets, tankers for refuelling.",
 			target: '[data-tutorial="air-kind"]',
 			done: "air-kind-changed",
-			manual: "Show selector"
+			manual: "Show selector",
+			art: "mission" as const
 		},
 		{
 			id: "launch",
@@ -70,7 +72,8 @@
 			body: "Choose a target and click “Launch mission”. Fuel is spent immediately and the effect lands after the flight — see /docs/air.",
 			target: '[data-tutorial="air-ops"]',
 			done: "air-mission",
-			manual: "Show form"
+			manual: "Show form",
+			art: "fuel" as const
 		}
 	];
 
