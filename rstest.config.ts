@@ -12,7 +12,7 @@ export default defineConfig({
 			// Vite: strip the types, then let Svelte turn $state & co into code.
 			name: "svelte-rune-modules",
 			setup(api) {
-				api.transform({ test: /\.svelte\.ts(?:\?|$)/ }, ({ code, resourcePath }) => {
+				api.transform({ test: /\.svelte(?:\.ts)?(?:\?|$)/ }, ({ code, resourcePath }) => {
 					const js = ts.transpileModule(code, {
 						fileName: resourcePath,
 						compilerOptions: {
