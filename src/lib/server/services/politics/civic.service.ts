@@ -114,7 +114,15 @@ export async function regionOpinionBreakdown(
 			.where(eq(strikes.regionId, regionId))
 	]);
 
-	const levels = ["infrastructure", "economy", "education", "hospitals", "fortifications", "radar"] as const;
+	const levels = [
+		"infrastructure",
+		"economy",
+		"education",
+		"hospitals",
+		"fortifications",
+		"radar",
+		"connectivity"
+	] as const;
 	const components: OpinionComponent[] = [
 		{ key: "base", label: "Neutral baseline", detail: "everyone starts here", points: OPINION_CONFIG.BASE }
 	];

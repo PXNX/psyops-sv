@@ -27,6 +27,20 @@ export const DATACENTER_BONUS = {
 	RESEARCH_PER_SITE: 2
 } as const;
 
+/** A site needs a lot of steady power and cooling water to actually work. */
+export const DATACENTER_SITE = {
+	MIN_ELECTRICITY_SUFFICIENCY: 0.85,
+	MIN_WATER_SUFFICIENCY: 0.85
+} as const;
+
+/** Whether a built site has the utilities it needs to contribute. */
+export function datacenterOperational(electricity: number, water: number): boolean {
+	return (
+		electricity >= DATACENTER_SITE.MIN_ELECTRICITY_SUFFICIENCY &&
+		water >= DATACENTER_SITE.MIN_WATER_SUFFICIENCY
+	);
+}
+
 const round3 = (n: number) => Math.round(n * 1000) / 1000;
 
 /**

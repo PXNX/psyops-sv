@@ -10,7 +10,11 @@ export type BuildingType =
 	| "fortifications"
 	| "radar"
 	| "grid"
-	| "energy_storage";
+	| "energy_storage"
+	| "datacenter"
+	| "internet_backbone"
+	| "network_switch"
+	| "radio_mast";
 
 /** The `regions` column a building type raises. */
 export type RegionStat =
@@ -21,7 +25,8 @@ export type RegionStat =
 	| "fortifications"
 	| "radar"
 	| "grid"
-	| "storage";
+	| "storage"
+	| "connectivity";
 
 export interface BuildingCosts {
 	currency: number;
@@ -33,6 +38,8 @@ export interface BuildingCosts {
 	coal?: number;
 	rare_earth?: number;
 	silicon?: number;
+	/** Finished products (e.g. server hardware) drawn from the state stockpile. */
+	hardware?: number;
 }
 
 export interface BuildingTemplate {
@@ -45,6 +52,8 @@ export interface BuildingTemplate {
 	maxLevel: number;
 	/** Currency from the state treasury, the rest from the state stockpile. */
 	costs: BuildingCosts;
+	/** A site counted by other systems instead of raising a region stat. */
+	siteOnly?: boolean;
 	/** In days. */
 	constructionTime: number;
 	/** Infrastructure level the region needs first. */
@@ -170,6 +179,64 @@ export const BUILDING_TEMPLATES: Record<BuildingType, BuildingTemplate> = {
 			"Removes up to 32% of the intermittency loss on renewables",
 			"Keeps the lights on when the sun sets"
 		]
+	},
+	datacenter: {
+		type: "datacenter",
+		name: "Datacenter",
+		icon: "🖥️",
+		stat: "economy",
+		statLabel: "Computing",
+		siteOnly: true,
+		maxLevel: 20,
+		costs: { currency: 750_000, steel: 800, silicon: 400, hardware: 60 },
+		constructionTime: 20,
+		infrastructureRequired: 4,
+		description:
+			"A full computing site: halls of server hardware, substations and cooling plant. It sharpens cyber operations and research, but only works with a steady supply of electricity and water.",
+		benefits: [
+			"Counts as one computing site for cyber and research",
+			"Needs 60 server hardware to build",
+			"Requires reliable power and cooling water to operate"
+		]
+	},
+	internet_backbone: {
+		type: "internet_backbone",
+		name: "Internet backbone",
+		icon: "🌐",
+		stat: "connectivity",
+		statLabel: "Connectivity",
+		maxLevel: 10,
+		costs: { currency: 220_000, steel: 200, copper: 400, silicon: 80 },
+		constructionTime: 10,
+		infrastructureRequired: 2,
+		description: "Fibre trunk lines and exchange points linking the region to the wider network.",
+		benefits: ["+1 connectivity level", "Civilian goodwill", "Faster business and datacenter links"]
+	},
+	network_switch: {
+		type: "network_switch",
+		name: "Network switches",
+		icon: "🔀",
+		stat: "connectivity",
+		statLabel: "Connectivity",
+		maxLevel: 10,
+		costs: { currency: 140_000, steel: 120, copper: 260, silicon: 60 },
+		constructionTime: 6,
+		infrastructureRequired: 2,
+		description: "Local switching gear that brings reliable broadband to towns and factories.",
+		benefits: ["+1 connectivity level", "Civilian goodwill"]
+	},
+	radio_mast: {
+		type: "radio_mast",
+		name: "Radio mast",
+		icon: "📡",
+		stat: "connectivity",
+		statLabel: "Connectivity",
+		maxLevel: 10,
+		costs: { currency: 90_000, steel: 180, copper: 90 },
+		constructionTime: 4,
+		infrastructureRequired: 1,
+		description: "Sending masts for mobile and emergency traffic where fibre cannot reach.",
+		benefits: ["+1 connectivity level", "Civilian goodwill"]
 	}
 };
 

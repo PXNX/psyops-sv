@@ -59,7 +59,6 @@ export const productTypeEnum = pgEnum("product_type", [
 	// Computing chain (industry.config.ts): hardware feeds datacenters, which
 	// sharpen cyber operations and AI. Both are heavy grid and water users.
 	"hardware",
-	"datacenter",
 	// Industrial equipment (equipment.config.ts): built before other plants.
 	"machine_tools",
 	"fab_equipment"
@@ -353,6 +352,8 @@ export const regions = pgTable("regions", {
 	// how much power regional plants can actually deliver (energy.config.ts).
 	grid: integer("grid").default(0),
 	storage: integer("storage").default(0),
+	/** Connectivity level from backbone, switch and mast construction. */
+	connectivity: integer("connectivity").default(0),
 	// Air-defence radar coverage (0-3), raised by the radar installation and
 	// knocked down by a strike on it. Cues the air defence (recon.config.ts).
 	radar: integer("radar").default(0),
@@ -2414,7 +2415,12 @@ export const buildingTypeEnum = pgEnum("building_type", [
 	"fortifications",
 	"radar",
 	"grid",
-	"energy_storage"
+	"energy_storage",
+	// Computing and connectivity sites, built by law rather than traded.
+	"datacenter",
+	"internet_backbone",
+	"network_switch",
+	"radio_mast"
 ]);
 
 export const stateBuildings = pgTable("state_buildings", {

@@ -19,7 +19,7 @@
 // page import this; the shift engine uses SHIFT_RECIPES in production.config.
 import { ENERGY_CONFIG } from "./energy.config.js";
 
-export type FabProduct = "chips" | "electronics" | "hardware" | "datacenter";
+export type FabProduct = "chips" | "electronics" | "hardware";
 
 export interface FabSpec {
 	label: string;
@@ -54,13 +54,6 @@ export const FABRICATION: Record<FabProduct, FabSpec> = {
 		inputs: { electronics: 3, chips: 4, copper: 4, rare_earth: 2 },
 		blurb: "Rack-mounted servers, switches and crypto gear. The physical edge that makes cyber operations and AI sharper — and a voracious draw on power and cooling water."
 	},
-	datacenter: {
-		label: "Datacenter",
-		output: 1,
-		energyDraw: 320,
-		inputs: { hardware: 4, machine_tools: 2, fab_equipment: 1, steel: 12, copper: 10 },
-		blurb: "A full computing site: halls of hardware, substations and cooling plant. Each one lifts a state's cyber reach and research rate, but needs a huge, steady supply of electricity and water."
-	}
 };
 
 export const FAB_PRODUCTS = Object.keys(FABRICATION) as FabProduct[];

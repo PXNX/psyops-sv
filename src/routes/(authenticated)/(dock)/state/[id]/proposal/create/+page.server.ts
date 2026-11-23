@@ -14,6 +14,7 @@ import {
 	parliamentaryVotes,
 	stateBuildings,
 	stateResourceInventory,
+	stateProductInventory,
 	userWallets,
 	proposalTaxDetails,
 	proposalBorderDetails,
@@ -58,7 +59,7 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 		.then((state) => state ?? error(404, "State not found"));
 
 	// All of these are independent reads keyed by the state id, so fetch them in parallel
-	const [state, { userMembership, userMinistry, userPresidency }, stateResources, existingBuildings] =
+	const [state, { userMembership, userMinistry, userPresidency }, stateResources, stateProducts, existingBuildings] =
 		await Promise.all([
 			statePromise,
 			// Check if user is a parliament member, minister, or president (404 wins over 403)
@@ -86,6 +87,10 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 			db.query.stateResourceInventory.findMany({
 				where: eq(stateResourceInventory.stateId, parseInt(params.id))
 			}),
+			// Finished products (e.g. server hardware) needed by some buildings.
+			db.query.stateProductInventory.findMany({
+				where: eq(stateProductInventory.stateId, parseInt(params.id))
+			}),
 			// Get existing buildings
 			db.query.stateBuildings.findMany({
 				where: eq(stateBuildings.stateId, parseInt(params.id))
@@ -110,13 +115,22 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 		exploitationPolicy: state.exploitationPolicy,
 		officialSalary: state.officialSalary,
 		martialLawUntil: state.martialLawUntil?.toISOString() ?? null,
-		stateResources: stateResources.reduce(
-			(acc, r) => {
-				acc[r.resourceType] = r.quantity;
-				return acc;
-			},
-			{} as Record<string, number>
-		),
+		stateResources: {
+			...stateResources.reduce(
+				(acc, r) => {
+					acc[r.resourceType] = r.quantity;
+					return acc;
+				},
+				{} as Record<string, number>
+			),
+			...stateProducts.reduce(
+				(acc, p) => {
+					acc[p.productType] = p.quantity;
+					return acc;
+				},
+				{} as Record<string, number>
+			)
+		},
 		pendingByRegion,
 		// States this one could declare war on (not itself, not its bloc)
 		warTargets: await Promise.all(

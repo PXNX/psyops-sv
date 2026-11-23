@@ -15,6 +15,7 @@ import {
 	ministers,
 	presidents,
 	stateAi,
+	stateBuildings,
 	stateProductInventory,
 	stateResourceInventory,
 	stateTreasury,
@@ -30,8 +31,10 @@ import {
 	aiReconBonus,
 	aiUpgradeCost,
 	datacenterCyberBonus,
+	datacenterOperational,
 	datacenterResearch
 } from "#lib/config/index.js";
+import { regionsCivilianNeeds } from "../civilians/supply.js";
 
 type Tx = Parameters<Parameters<Database["transaction"]>[0]>[0];
 type Db = Database | Tx;
@@ -65,25 +68,36 @@ export async function aiLevel(db: Db, stateId: number | null): Promise<number> {
 	return row?.level ?? 0;
 }
 
-/** A state's stocked computing base, read from product inventory. */
+/** Loose hardware plus built datacenter sites that still have power and water. */
 export async function datacenterStocks(
 	db: Db,
 	stateId: number | null
 ): Promise<{ hardware: number; datacenters: number }> {
 	if (stateId == null) return { hardware: 0, datacenters: 0 };
-	const rows = await db
-		.select({ productType: stateProductInventory.productType, quantity: stateProductInventory.quantity })
-		.from(stateProductInventory)
-		.where(
-			and(
-				eq(stateProductInventory.stateId, stateId),
-				inArray(stateProductInventory.productType, ["hardware", "datacenter"] as never[])
+	const [rows, sites] = await Promise.all([
+		db
+			.select({ quantity: stateProductInventory.quantity })
+			.from(stateProductInventory)
+			.where(
+				and(eq(stateProductInventory.stateId, stateId), eq(stateProductInventory.productType, "hardware"))
+			),
+		db
+			.select({ regionId: stateBuildings.regionId })
+			.from(stateBuildings)
+			.where(
+				and(
+					eq(stateBuildings.stateId, stateId),
+					eq(stateBuildings.buildingType, "datacenter"),
+					eq(stateBuildings.isUnderConstruction, false)
+				)
 			)
-		);
-	return {
-		hardware: rows.find((r) => r.productType === "hardware")?.quantity ?? 0,
-		datacenters: rows.find((r) => r.productType === "datacenter")?.quantity ?? 0
-	};
+	]);
+	const needs = await regionsCivilianNeeds(db, sites.map((s) => s.regionId));
+	const powered = sites.filter((s) => {
+		const need = needs.get(s.regionId);
+		return !need || datacenterOperational(need.electricity.sufficiency, need.water.sufficiency);
+	}).length;
+	return { hardware: rows[0]?.quantity ?? 0, datacenters: powered };
 }
 
 export interface AiBonuses {
@@ -178,15 +192,22 @@ export async function upgradeAi(db: Database, userId: string): Promise<AiUpgrade
 			throw new AiError(
 				`The state needs ${next.hardware} server hardware in its stockpile. Build a fabrication line making hardware first.`
 			);
-		const [datacenters] = await tx
-			.select({ quantity: stateProductInventory.quantity })
-			.from(stateProductInventory)
-			.where(and(eq(stateProductInventory.stateId, authority.stateId), eq(stateProductInventory.productType, "datacenter")))
-			.for("update");
-		if ((datacenters?.quantity ?? 0) < next.datacenters)
-			throw new AiError(
-				`The state needs ${next.datacenters} datacenter${next.datacenters === 1 ? "" : "s"} in its stockpile. They are built from server hardware.`
-			);
+		if (next.datacenters > 0) {
+			const sites = await tx
+				.select({ id: stateBuildings.id })
+				.from(stateBuildings)
+				.where(
+					and(
+						eq(stateBuildings.stateId, authority.stateId),
+						eq(stateBuildings.buildingType, "datacenter"),
+						eq(stateBuildings.isUnderConstruction, false)
+					)
+				);
+			if (sites.length < next.datacenters)
+				throw new AiError(
+					`The state needs ${next.datacenters} built datacenter${next.datacenters === 1 ? "" : "s"}. Datacenters are constructed by law from server hardware, not traded.`
+				);
+		}
 
 		await tx
 			.update(stateTreasury)
@@ -212,13 +233,6 @@ export async function upgradeAi(db: Database, userId: string): Promise<AiUpgrade
 				.set({ quantity: sql`${stateProductInventory.quantity} - ${next.hardware}`, updatedAt: new Date() })
 				.where(and(eq(stateProductInventory.stateId, authority.stateId), eq(stateProductInventory.productType, "hardware")));
 		}
-		if (next.datacenters > 0) {
-			await tx
-				.update(stateProductInventory)
-				.set({ quantity: sql`${stateProductInventory.quantity} - ${next.datacenters}`, updatedAt: new Date() })
-				.where(and(eq(stateProductInventory.stateId, authority.stateId), eq(stateProductInventory.productType, "datacenter")));
-		}
-
 		if (level === 0) {
 			await tx.insert(stateAi).values({ stateId: authority.stateId, level: 1, upgradedBy: userId });
 		} else {

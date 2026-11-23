@@ -54,7 +54,7 @@
 			value: "fabrication",
 			label: "Fabrication",
 			icon: FluentFactory20Filled,
-			desc: "Makes chips, electronics, server hardware and datacenters",
+			desc: "Makes chips, electronics and server hardware for the computing chain",
 			costs: { currency: data.factoryCost, energy: 100 } as Record<string, number>
 		},
 		{
@@ -70,7 +70,7 @@
 		mine: ["iron", "copper", "coal", "wood", "oil", "gas", "uranium", "rare_earth", "silicon"],
 		refinery: ["steel", "gunpowder", "fuel", "enriched_uranium"],
 		armaments: ["rifles", "ammunition", "artillery", "vehicles", "explosives"],
-		fabrication: ["chips", "electronics", "hardware", "datacenter"],
+		fabrication: ["chips", "electronics", "hardware"],
 		equipment: ["machine_tools", "fab_equipment"]
 	};
 

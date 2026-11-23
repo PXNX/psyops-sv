@@ -36,7 +36,11 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 			education: regions.education,
 			hospitals: regions.hospitals,
 			economy: regions.economy,
-			fortifications: regions.fortifications
+			fortifications: regions.fortifications,
+			radar: regions.radar,
+			grid: regions.grid,
+			storage: regions.storage,
+			connectivity: regions.connectivity
 		})
 		.from(regions)
 		.where(eq(regions.stateId, stateId))

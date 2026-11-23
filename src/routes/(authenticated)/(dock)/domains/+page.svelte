@@ -338,7 +338,7 @@
 					detection +{Math.round((p?.ai.detection ?? 0) * 100)}% · {p?.ai.researchPerDay ?? 0} research/day
 				</p>
 				<p class="mt-1 text-xs text-fg-muted">
-					Computing base: {p?.ai.hardware ?? 0} server hardware · {p?.ai.datacenters ?? 0} datacenters — built in a fabrication line, they run on electricity and cooling water.
+					Computing base: {p?.ai.hardware ?? 0} server hardware · {p?.ai.datacenters ?? 0} datacenters — sites are built by law from hardware, and run on electricity and cooling water.
 				</p>
 				{#if p?.roles.ai && p.aiNextCost}
 					<form method="POST" action="?/upgradeAi" use:enhance={handleSubmit} class="mt-3">

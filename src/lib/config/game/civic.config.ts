@@ -89,7 +89,9 @@ export const OPINION_FROM_STATE_BUILDINGS = {
 	hospitals: 3,
 	economy: 1,
 	fortifications: -2,
-	radar: 0
+	radar: 0,
+	/** Connectivity is what civilians actually notice day to day. */
+	connectivity: 2
 } as const;
 
 export const OPINION_CONFIG = {

@@ -240,7 +240,23 @@ The rules live in `game/armaments.config.ts` and the deals in
 `services/economy/armaments.ts`. The corresponding market data is in
 `arms_listings`.
 
-## 12. Animated consoles
+## 12. Datacenters and connectivity by law
+
+Datacenters are no longer a tradeable product. They are a **building constructed
+by law**: a state pays currency, steel, silicon and 60 server hardware up front,
+waits 20 days, and then owns a computing site. A site only contributes to cyber
+operations and research while its region has enough electricity and cooling
+water; loose hardware still counts, but more slowly. AI programmes at the top
+tiers now require built sites rather than stockpiled datacenters.
+
+Connectivity is a new regional level alongside infrastructure and power. Three
+buildings raise it: an **internet backbone**, **network switches** and **radio
+masts**. Each is proposed and built like any other public building, and every
+level adds to civilian happiness in the region's opinion breakdown. Businesses
+and datacenters benefit from a well-connected region, but connectivity is also
+a public good in its own right.
+
+## 13. Animated consoles
 
 The Domains and Intel pages were rebuilt as visual consoles: small theme-aware
 SVG vignettes (rolling convoys, sweeping radars, orbiting satellites, pulsing

@@ -5,7 +5,13 @@
 // raises its region's level by one when finished.
 import { and, count, eq, gte, inArray, lte, sql } from "drizzle-orm";
 import type { Database } from "#lib/server/db.js";
-import { regions, stateBuildings, stateResourceInventory, stateTreasury } from "#lib/server/schema.js";
+import {
+	regions,
+	stateBuildings,
+	stateProductInventory,
+	stateResourceInventory,
+	stateTreasury
+} from "#lib/server/schema.js";
 import { BUILDING_TEMPLATES, type BuildingType, type RegionStat } from "#lib/config/index.js";
 
 type Tx = Parameters<Parameters<Database["transaction"]>[0]>[0];
@@ -91,9 +97,18 @@ export async function pendingByType(db: Database | Tx, regionId: number): Promis
 }
 
 export async function stateStockpile(db: Database | Tx, stateId: number): Promise<Record<string, number>> {
-	const rows = await db.select().from(stateResourceInventory).where(eq(stateResourceInventory.stateId, stateId));
-	return Object.fromEntries(rows.map((r) => [r.resourceType, r.quantity]));
+	const [resources, products] = await Promise.all([
+		db.select().from(stateResourceInventory).where(eq(stateResourceInventory.stateId, stateId)),
+		db.select().from(stateProductInventory).where(eq(stateProductInventory.stateId, stateId))
+	]);
+	return {
+		...Object.fromEntries(resources.map((r) => [r.resourceType, r.quantity])),
+		...Object.fromEntries(products.map((p) => [p.productType, p.quantity]))
+	};
 }
+
+/** Keys in BuildingCosts that are finished products, not raw resources. */
+const PRODUCT_COSTS = new Set(["hardware"]);
 
 /**
  * Pays for and starts the next level of a building. All or nothing: the region is
@@ -148,17 +163,29 @@ export async function startConstruction(
 							})
 							.where(and(eq(stateTreasury.stateId, input.stateId), gte(stateTreasury.balance, needed)))
 							.returning({ id: stateTreasury.id })
-					: await tx
-							.update(stateResourceInventory)
-							.set({ quantity: sql`${stateResourceInventory.quantity} - ${needed}`, updatedAt: new Date() })
-							.where(
-								and(
-									eq(stateResourceInventory.stateId, input.stateId),
-									eq(stateResourceInventory.resourceType, resource as never),
-									gte(stateResourceInventory.quantity, needed)
+					: PRODUCT_COSTS.has(resource)
+						? await tx
+								.update(stateProductInventory)
+								.set({ quantity: sql`${stateProductInventory.quantity} - ${needed}`, updatedAt: new Date() })
+								.where(
+									and(
+										eq(stateProductInventory.stateId, input.stateId),
+										eq(stateProductInventory.productType, resource as never),
+										gte(stateProductInventory.quantity, needed)
+									)
 								)
-							)
-							.returning({ id: stateResourceInventory.id });
+								.returning({ id: stateProductInventory.id })
+						: await tx
+								.update(stateResourceInventory)
+								.set({ quantity: sql`${stateResourceInventory.quantity} - ${needed}`, updatedAt: new Date() })
+								.where(
+									and(
+										eq(stateResourceInventory.stateId, input.stateId),
+										eq(stateResourceInventory.resourceType, resource as never),
+										gte(stateResourceInventory.quantity, needed)
+									)
+								)
+								.returning({ id: stateResourceInventory.id });
 			if (paid.length === 0) throw new ConstructionError(`Not enough ${resource} any more.`);
 		}
 
@@ -218,7 +245,7 @@ export async function completePendingConstructions(
 
 		for (const b of claimed) {
 			const template = BUILDING_TEMPLATES[b.type as BuildingType];
-			if (!template) continue; // legacy road/bridge rows carry no level
+			if (!template || template.siteOnly) continue; // sites are counted, not levels
 			const column = regions[template.stat];
 			await tx
 				.update(regions)
@@ -241,7 +268,8 @@ export const CONQUEST_DAMAGE: Record<RegionStat, number> = {
 	infrastructure: 0.25,
 	economy: 0.25,
 	hospitals: 0.2,
-	education: 0.2
+	education: 0.2,
+	connectivity: 0.3
 };
 
 /** Levels lost per stat when a region is conquered (at least one of anything built). */

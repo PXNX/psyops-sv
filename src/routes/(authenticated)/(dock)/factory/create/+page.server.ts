@@ -26,7 +26,7 @@ const OUTPUTS: Record<string, readonly string[]> = {
 	mine: MINEABLE_RESOURCES,
 	refinery: ["steel", "gunpowder", "fuel", "enriched_uranium"],
 	armaments: ["rifles", "ammunition", "artillery", "vehicles", "explosives"],
-	fabrication: ["chips", "electronics", "hardware", "datacenter"],
+	fabrication: ["chips", "electronics", "hardware"],
 	equipment: EQUIPMENT_PRODUCTS
 };
 /** Factory types whose output is a manufactured product rather than a resource. */

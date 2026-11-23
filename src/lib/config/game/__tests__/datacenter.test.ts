@@ -2,8 +2,11 @@
 // the heavy utility draws and the cyber/AI edge are all tested without a DB.
 import { describe, expect, it } from "@rstest/core";
 import {
+	BUILDING_TEMPLATES,
 	DATACENTER_BONUS,
+	OPINION_FROM_STATE_BUILDINGS,
 	FABRICATION,
+	datacenterOperational,
 	FAB_PRODUCTS,
 	aiUpgradeCost,
 	covertOdds,
@@ -15,21 +18,31 @@ import {
 } from "#lib/config/index.js";
 
 describe("hardware and datacenter fabrication", () => {
-	it("extends the chip chain with hardware and datacenters", () => {
-		expect(FAB_PRODUCTS).toEqual(["chips", "electronics", "hardware", "datacenter"]);
+	it("keeps datacenters out of the tradeable fabrication chain", () => {
+		expect(FAB_PRODUCTS).toEqual(["chips", "electronics", "hardware"]);
 		expect(FABRICATION.electronics.inputs.chips).toBeGreaterThan(0);
 		expect(FABRICATION.hardware.inputs.electronics).toBeGreaterThan(0);
 		expect(FABRICATION.hardware.inputs.chips).toBeGreaterThan(0);
-		expect(FABRICATION.datacenter.inputs.hardware).toBeGreaterThan(0);
+		expect(BUILDING_TEMPLATES.datacenter.costs.hardware).toBeGreaterThan(0);
 	});
 
-	it("is far hungrier for electricity and water than earlier fab steps", () => {
+	it("makes hardware the power- and water-hungry fab step", () => {
 		expect(FABRICATION.hardware.energyDraw).toBeGreaterThan(FABRICATION.chips.energyDraw);
-		expect(FABRICATION.datacenter.energyDraw).toBeGreaterThan(FABRICATION.hardware.energyDraw);
-		expect(factoryEnergyRequirement("datacenter")).toBe(FABRICATION.datacenter.energyDraw);
 		expect(factoryEnergyRequirement("rifles")).toBeLessThan(factoryEnergyRequirement("hardware"));
 		expect(factoryWaterDraw("hardware")).toBeGreaterThan(factoryWaterDraw("chips"));
-		expect(factoryWaterDraw("datacenter")).toBeGreaterThan(factoryWaterDraw("hardware"));
+		expect(datacenterOperational(1, 1)).toBe(true);
+		expect(datacenterOperational(0.5, 1)).toBe(false);
+		expect(datacenterOperational(1, 0.5)).toBe(false);
+	});
+});
+
+describe("connectivity buildings", () => {
+	it("are constructed by law and make civilians happier", () => {
+		expect(BUILDING_TEMPLATES.internet_backbone.stat).toBe("connectivity");
+		expect(BUILDING_TEMPLATES.network_switch.stat).toBe("connectivity");
+		expect(BUILDING_TEMPLATES.radio_mast.stat).toBe("connectivity");
+		expect(BUILDING_TEMPLATES.datacenter.siteOnly).toBe(true);
+		expect(OPINION_FROM_STATE_BUILDINGS.connectivity).toBeGreaterThan(0);
 	});
 });
 
