@@ -5,13 +5,15 @@ import { afterAll, beforeAll, describe, expect, it } from "@rstest/core";
 import { eq } from "drizzle-orm";
 import { createMockDb, type MockDbHandle } from "../mock-db";
 import { stateTreasury, states, userWallets } from "../schema";
-import { bondCoupons, stateBonds } from "../schema-investments";
+import { bondCoupons, stateBondOfferings, stateBonds } from "../schema-investments";
 import { INVESTMENTS_CONFIG } from "#lib/config/game/investments.config.js";
 import {
 	BondError,
 	bondPortfolio,
 	buyStateBond,
 	couponAmount,
+	createBondOffering,
+	issueBondOffering,
 	redeemBond,
 	runBondCoupons
 } from "../services/economy/bonds";
@@ -36,6 +38,7 @@ describe("coupon math", () => {
 describe("state bonds", () => {
 	let handle: MockDbHandle;
 	let stateId: number;
+	let offeringId: number;
 
 	const wallet = async () =>
 		Number((await handle.db.select().from(userWallets).where(eq(userWallets.userId, "user-1")))[0]!.balance);
@@ -46,24 +49,43 @@ describe("state bonds", () => {
 		handle = await createMockDb();
 		const [state] = await handle.db.select({ id: states.id }).from(states).limit(1);
 		stateId = state!.id;
+		// Alice is the seeded president; she opens an offering investors can buy.
+		const offering = await createBondOffering(handle.db, {
+			authorizedBy: "user-1",
+			stateId,
+			principal: 100_000,
+			now: t0
+		});
+		offeringId = offering.id;
 	}, 900_000);
 
 	afterAll(async () => {
 		await handle?.close();
 	});
 
-	it("rejects a bond below the minimum", async () => {
-		await expect(buyStateBond(handle.db, { userId: "user-1", stateId, principal: 999, now: t0 })).rejects.toThrow(
-			BondError
+	it("only lets a president or economy minister hand out bonds", async () => {
+		await expect(issueBondOffering(handle.db, { userId: "user-2", stateId, principal: 5_000 })).rejects.toThrow(
+			/president or economy minister/
 		);
+		const offering = await issueBondOffering(handle.db, { userId: "user-1", stateId, principal: 5_000 });
+		expect(offering.authorizedBy).toBe("user-1");
+		expect((await handle.db.select().from(stateBondOfferings)).some((o) => o.id === offering.id)).toBe(true);
+	});
+
+	it("rejects a bond below the minimum", async () => {
+		await expect(
+			buyStateBond(handle.db, { userId: "user-1", offeringId, principal: 999, now: t0 })
+		).rejects.toThrow(BondError);
 	});
 
 	it("buys a bond, pays coupons and returns the principal at maturity", async () => {
 		const before = await wallet();
 		const beforeTreasury = await treasury();
-		const bond = await buyStateBond(handle.db, { userId: "user-1", stateId, principal: 10_000, now: t0 });
+		const bond = await buyStateBond(handle.db, { userId: "user-1", offeringId, principal: 10_000, now: t0 });
 		expect(await wallet()).toBe(before - 10_000);
 		expect(await treasury()).toBe(beforeTreasury + 10_000);
+		expect(bond.offeringId).toBe(offeringId);
+		expect(bond.issuedBy).toBe("user-1");
 
 		// Nothing is due before half a game year has passed.
 		expect((await runBondCoupons(handle.db, new Date(t0.getTime() + (PERIOD_DAYS - 0.5) * DAY))).couponsPaid).toBe(0);
@@ -84,7 +106,7 @@ describe("state bonds", () => {
 	});
 
 	it("lets the owner cash in early without earning a coupon", async () => {
-		const bond = await buyStateBond(handle.db, { userId: "user-2", stateId, principal: 5_000, now: t0 });
+		const bond = await buyStateBond(handle.db, { userId: "user-2", offeringId, principal: 5_000, now: t0 });
 		const before = Number(
 			(await handle.db.select().from(userWallets).where(eq(userWallets.userId, "user-2")))[0]!.balance
 		);

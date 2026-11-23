@@ -148,7 +148,10 @@ with a minimum yield of 0.25.
 Dividends (`economy.config.ts`): `DIVIDEND_RATE_PERCENT` 5%, cooldown 24 h,
 minimum 1 per share and 1,000 total, yield window 30 days. Bonds
 (`investments.config.ts`): minimum principal 1,000, coupon 5%, term 90 days,
-coupon period 14 days, earnings reported every 14 days.
+coupon period 14 days, earnings reported every 14 days. A state does not borrow
+until its **president or economy minister** opens a bond offering on the state's
+debt page; investors buy slices of that offering, and every bond records who
+handed it out.
 
 ### Research (`research.config.ts`)
 

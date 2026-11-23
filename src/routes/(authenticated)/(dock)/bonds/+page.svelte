@@ -49,8 +49,17 @@
 
 	<section class="panel rounded-sm p-4">
 		<h2 class="section-title mb-3">Buy a bond</h2>
+		<p class="mb-3 text-xs text-fg-muted">
+			States borrow only when their president or economy minister opens an offering. Pick one below.
+		</p>
 		{#if form?.error}
 			<p class="field-error mb-3">{form.error}</p>
+		{/if}
+		{#if data.offerings.length === 0}
+			<EmptyState
+				title="No offerings open"
+				subtitle="No state's president or economy minister has opened a bond offering yet."
+			/>
 		{/if}
 		<form
 			method="POST"
@@ -66,10 +75,13 @@
 			class="grid gap-3 sm:grid-cols-[minmax(0,1fr)_10rem_auto] items-end"
 		>
 			<label class="block">
-				<span class="field-label">Borrower</span>
-				<select name="stateId" class="field-control rounded-sm px-3 py-2.5 w-full" required>
-					{#each data.states as state (state.id)}
-						<option value={state.id}>{state.name}</option>
+				<span class="field-label">Offering</span>
+				<select name="offeringId" class="field-control rounded-sm px-3 py-2.5 w-full" required>
+					{#each data.offerings as offering (offering.id)}
+						<option value={offering.id}>
+							{offering.stateName} · {money(offering.remaining)} left
+							{offering.issuerName ? `· handed out by ${offering.issuerName}` : ""}
+						</option>
 					{/each}
 				</select>
 			</label>
@@ -85,7 +97,7 @@
 					required
 				/>
 			</label>
-			<Button type="submit" variant="primary" loading={buying} loadingText="Issuing…">Issue bond</Button>
+			<Button type="submit" variant="primary" loading={buying} disabled={data.offerings.length === 0} loadingText="Buying…">Buy bond</Button>
 		</form>
 		<p class="field-hint">
 			Minimum {money(data.config.BOND_MIN_PRINCIPAL)} · {data.config.BOND_TERM_DAYS}-day term ·

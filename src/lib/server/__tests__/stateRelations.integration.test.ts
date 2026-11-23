@@ -13,7 +13,7 @@ import {
 	stancesToward
 } from "../services/politics/civilian-stance";
 import { bailoutState, bailoutStanceGain, BailoutError, stateDebt } from "../services/economy/bailout";
-import { buyStateBond, redeemBond } from "../services/economy/bonds";
+import { buyStateBond, createBondOffering, redeemBond } from "../services/economy/bonds";
 import { reachFirstTime, takeFirstTimeDetail } from "../services/politics/first-time";
 
 let handle: MockDbHandle;
@@ -65,7 +65,8 @@ describe("civilian stances", () => {
 describe("state debt and bailouts", () => {
 	it("credits a bond as debt and clears that debt when it is redeemed", async () => {
 		const before = await stateDebt(handle.db, c);
-		const bond = await buyStateBond(handle.db, { userId: "user-5", stateId: c, principal: 10_000 });
+		const offering = await createBondOffering(handle.db, { authorizedBy: "user-1", stateId: c, principal: 10_000 });
+		const bond = await buyStateBond(handle.db, { userId: "user-5", offeringId: offering.id, principal: 10_000 });
 		expect(await stateDebt(handle.db, c)).toBe(before + 10_000);
 		await redeemBond(handle.db, { bondId: bond.id, userId: "user-5" });
 		expect(await stateDebt(handle.db, c)).toBe(before);

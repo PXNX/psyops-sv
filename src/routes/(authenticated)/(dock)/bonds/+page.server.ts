@@ -5,22 +5,28 @@ import { fail } from "@sveltejs/kit";
 import { eq } from "drizzle-orm";
 import type { Actions, PageServerLoad } from "./$types";
 import { db } from "#lib/server/db.js";
-import { states, userWallets } from "#lib/server/schema.js";
+import { userWallets } from "#lib/server/schema.js";
 import { INVESTMENTS_CONFIG } from "#lib/config/game/investments.config.js";
-import { BondError, bondPortfolio, buyStateBond, redeemBond } from "#lib/server/services/economy/bonds.js";
+import {
+	BondError,
+	bondPortfolio,
+	buyStateBond,
+	openBondOfferings,
+	redeemBond
+} from "#lib/server/services/economy/bonds.js";
 
 export const load: PageServerLoad = async ({ locals }) => {
 	const account = locals.account!;
-	const [wallet, allStates, bonds] = await Promise.all([
+	const [wallet, offerings, bonds] = await Promise.all([
 		db.select({ balance: userWallets.balance }).from(userWallets).where(eq(userWallets.userId, account.id)).limit(1),
-		db.select({ id: states.id, name: states.name }).from(states).orderBy(states.name),
+		openBondOfferings(db),
 		bondPortfolio(db, account.id)
 	]);
 	const invested = bonds.filter((b) => !b.redeemedAt).reduce((sum, b) => sum + b.principal, 0);
 	const interest = bonds.reduce((sum, b) => sum + b.earned, 0);
 	return {
 		walletBalance: Number(wallet[0]?.balance ?? 0),
-		states: allStates,
+		offerings,
 		bonds,
 		invested,
 		interest,
@@ -33,11 +39,11 @@ export const actions: Actions = {
 	buy: async ({ request, locals }) => {
 		const account = locals.account!;
 		const form = await request.formData();
-		const stateId = Number(form.get("stateId"));
+		const offeringId = Number(form.get("offeringId"));
 		const principal = Number(form.get("principal"));
-		if (!Number.isSafeInteger(stateId) || stateId <= 0) return fail(400, { error: "Choose a state." });
+		if (!Number.isSafeInteger(offeringId) || offeringId <= 0) return fail(400, { error: "Choose an offering." });
 		try {
-			const bond = await buyStateBond(db, { userId: account.id, stateId, principal });
+			const bond = await buyStateBond(db, { userId: account.id, offeringId, principal });
 			return { success: true, message: `Bond ${bond.id} purchased — coupons every fortnight.` };
 		} catch (err) {
 			if (err instanceof BondError) return fail(400, { error: err.message });

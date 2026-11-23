@@ -13,6 +13,28 @@ import { relations } from "drizzle-orm";
 import { boolean, index, integer, pgTable, timestamp, text, uniqueIndex, varchar } from "drizzle-orm/pg-core";
 import { accounts, companies, regions, states } from "./schema";
 
+// A state cannot borrow until its president or economy minister opens an
+// offering. Investors buy slices of it; each bond records who handed it out.
+export const stateBondOfferings = pgTable(
+	"state_bond_offerings",
+	{
+		id: integer("id").generatedByDefaultAsIdentity().primaryKey(),
+		stateId: integer("state_id")
+			.notNull()
+			.references(() => states.id, { onDelete: "cascade" }),
+		authorizedBy: text("authorized_by")
+			.notNull()
+			.references(() => accounts.id, { onDelete: "cascade" }),
+		principal: integer("principal").notNull(),
+		remaining: integer("remaining").notNull(),
+		createdAt: timestamp("created_at").defaultNow().notNull()
+	},
+	(t) => ({
+		stateIdx: index("idx_bond_offering_state").on(t.stateId),
+		openIdx: index("idx_bond_offering_open").on(t.remaining)
+	})
+);
+
 export const stateBonds = pgTable(
 	"state_bonds",
 	{
@@ -23,6 +45,8 @@ export const stateBonds = pgTable(
 		stateId: integer("state_id")
 			.notNull()
 			.references(() => states.id, { onDelete: "cascade" }),
+		offeringId: integer("offering_id").references(() => stateBondOfferings.id, { onDelete: "set null" }),
+		issuedBy: text("issued_by").references(() => accounts.id, { onDelete: "set null" }),
 		principal: integer("principal").notNull(),
 		couponRatePercent: integer("coupon_rate_percent").notNull(),
 		purchasedAt: timestamp("purchased_at").defaultNow().notNull(),

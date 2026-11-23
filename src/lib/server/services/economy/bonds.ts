@@ -7,11 +7,12 @@
 // No SvelteKit virtual modules at the top level: integration tests import this
 // file directly.
 
-import { and, eq, gte, isNull, lte, sql } from "drizzle-orm";
+import { and, eq, gt, gte, isNull, lte, sql } from "drizzle-orm";
 import type { Database } from "../../db";
-import { states, stateTreasury } from "../../schema";
-import { bondCoupons, stateBonds } from "../../schema-investments";
+import { states, stateTreasury, userProfiles } from "../../schema";
+import { bondCoupons, stateBondOfferings, stateBonds } from "../../schema-investments";
 import { creditWallet, debitWallet, type Executor } from "../../money";
+import { canManagePortfolio, stateRoles } from "../government/authority";
 import { INVESTMENTS_CONFIG } from "#lib/config/game/investments.config.js";
 import { REAL_DAY_MS, gameYearsToMs } from "#lib/utils/game-time.js";
 
@@ -36,26 +37,112 @@ export function nextCouponAt(lastCouponAt: Date | string, now: Date = new Date()
 	return next < now.getTime() - COUPON_PERIOD_DAYS * DAY ? new Date(now.getTime()) : new Date(next);
 }
 
-/** Buy a bond: the wallet is debited and the state treasury receives the loan. */
-export async function buyStateBond(
+/** Only a state's president or economy minister may hand out its bonds. */
+export async function canIssueStateBonds(db: Database, userId: string, stateId: number): Promise<boolean> {
+	const roles = await stateRoles(db, userId);
+	return canManagePortfolio(roles, stateId, "economy_energy");
+}
+
+/** Open an offering. Exported so tests can seed one without faking an office. */
+export async function createBondOffering(
+	db: Database,
+	{ authorizedBy, stateId, principal, now = new Date() }: { authorizedBy: string; stateId: number; principal: number; now?: Date }
+) {
+	if (!Number.isSafeInteger(principal) || principal < BOND_MIN_PRINCIPAL) {
+		throw new BondError(`An offering must be at least ${BOND_MIN_PRINCIPAL.toLocaleString()} currency.`);
+	}
+	const [offering] = await db
+		.insert(stateBondOfferings)
+		.values({ stateId, authorizedBy, principal, remaining: principal, createdAt: now })
+		.returning();
+	return offering!;
+}
+
+/** Authoritative wrapper: check the office, then open the offering. */
+export async function issueBondOffering(
 	db: Database,
 	{ userId, stateId, principal, now = new Date() }: { userId: string; stateId: number; principal: number; now?: Date }
+) {
+	if (!(await canIssueStateBonds(db, userId, stateId))) {
+		throw new BondError("Only the president or economy minister of this state can issue bonds.");
+	}
+	return createBondOffering(db, { authorizedBy: userId, stateId, principal, now });
+}
+
+/** Every offering investors can still buy, with the official who opened it. */
+export async function openBondOfferings(db: Database) {
+	return db
+		.select({
+			id: stateBondOfferings.id,
+			stateId: stateBondOfferings.stateId,
+			stateName: states.name,
+			issuerName: userProfiles.name,
+			principal: stateBondOfferings.principal,
+			remaining: stateBondOfferings.remaining,
+			createdAt: stateBondOfferings.createdAt
+		})
+		.from(stateBondOfferings)
+		.innerJoin(states, eq(states.id, stateBondOfferings.stateId))
+		.leftJoin(userProfiles, eq(userProfiles.accountId, stateBondOfferings.authorizedBy))
+		.where(gt(stateBondOfferings.remaining, 0))
+		.orderBy(states.name, stateBondOfferings.id);
+}
+
+/** Offerings opened by one state, for its own leadership view. */
+export async function stateBondOfferingsFor(db: Database, stateId: number) {
+	return db
+		.select({
+			id: stateBondOfferings.id,
+			principal: stateBondOfferings.principal,
+			remaining: stateBondOfferings.remaining,
+			createdAt: stateBondOfferings.createdAt,
+			issuerName: userProfiles.name
+		})
+		.from(stateBondOfferings)
+		.leftJoin(userProfiles, eq(userProfiles.accountId, stateBondOfferings.authorizedBy))
+		.where(eq(stateBondOfferings.stateId, stateId))
+		.orderBy(stateBondOfferings.id);
+}
+
+/**
+ * Buy a slice of an offering: the wallet is debited, the state treasury gets
+ * the loan, and the bond records the official who handed it out. The guarded
+ * decrement stops two investors racing for the last of an offering.
+ */
+export async function buyStateBond(
+	db: Database,
+	{ userId, offeringId, principal, now = new Date() }: { userId: string; offeringId: number; principal: number; now?: Date }
 ) {
 	if (!Number.isSafeInteger(principal) || principal < BOND_MIN_PRINCIPAL) {
 		throw new BondError(`A bond must be at least ${BOND_MIN_PRINCIPAL.toLocaleString()} currency.`);
 	}
-	const [state] = await db
-		.select({ id: states.id, name: states.name })
-		.from(states)
-		.where(eq(states.id, stateId))
+	const [offering] = await db
+		.select()
+		.from(stateBondOfferings)
+		.where(eq(stateBondOfferings.id, offeringId))
 		.limit(1);
-	if (!state) throw new BondError("That state does not exist.");
+	if (!offering) throw new BondError("That bond offering no longer exists.");
 
 	return db.transaction(async (tx) => {
+		const [claimed] = await tx
+			.update(stateBondOfferings)
+			.set({ remaining: sql`${stateBondOfferings.remaining} - ${principal}` })
+			.where(
+				and(eq(stateBondOfferings.id, offeringId), gte(stateBondOfferings.remaining, principal))
+			)
+			.returning({ stateId: stateBondOfferings.stateId, authorizedBy: stateBondOfferings.authorizedBy });
+		if (!claimed) throw new BondError("That offering no longer has enough left.");
+
 		await debitWallet(tx, userId, principal);
 		await tx
 			.insert(stateTreasury)
-			.values({ stateId, balance: principal, totalCollected: principal, totalSpent: 0, debt: principal })
+			.values({
+				stateId: claimed.stateId,
+				balance: principal,
+				totalCollected: principal,
+				totalSpent: 0,
+				debt: principal
+			})
 			.onConflictDoUpdate({
 				target: stateTreasury.stateId,
 				set: {
@@ -70,7 +157,9 @@ export async function buyStateBond(
 			.insert(stateBonds)
 			.values({
 				userId,
-				stateId,
+				stateId: claimed.stateId,
+				offeringId,
+				issuedBy: claimed.authorizedBy,
 				principal,
 				couponRatePercent: BOND_COUPON_PERCENT,
 				purchasedAt: now,
