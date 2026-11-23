@@ -4,7 +4,6 @@
 	import FluentMail20Filled from "~icons/fluent/mail-20-filled";
 	import FluentBug20Filled from "~icons/fluent/bug-20-filled";
 	import FluentDocument20Filled from "~icons/fluent/document-20-filled";
-	import FluentBookInformation20Filled from "~icons/fluent/book-information-20-filled";
 	import FluentCertificate20Filled from "~icons/fluent/certificate-20-filled";
 	import FluentImage20Filled from "~icons/fluent/image-20-filled";
 	import FluentInfo20Filled from "~icons/fluent/info-20-filled";
@@ -89,7 +88,7 @@
 	<title>{"About · PsyOps"}</title>
 </svelte:head>
 
-<PageContainer maxWidth="4xl" class="py-12 space-y-10">
+<PageContainer maxWidth="4xl" class="animate-soft-in py-12 space-y-10">
 	<!-- Header -->
 	<div class="flex flex-col items-center space-y-5">
 		<div class="panel size-32 rounded-sm flex items-center justify-center">
@@ -169,20 +168,6 @@
 					/>
 				</a>
 
-				<a class="group panel-interactive rounded-sm p-4 flex items-center gap-3" href="/docs/intro">
-					<div
-						class="size-10 bg-positive-bg/18 border-positive/30 border rounded-sm flex items-center justify-center shrink-0"
-					>
-						<FluentBookInformation20Filled class="size-5 text-positive-fg" />
-					</div>
-					<div class="flex-1 min-w-0">
-						<p class="font-medium text-fg group-hover:text-primary-hover transition-colors">Wiki</p>
-						<p class="text-xs text-fg-muted">Community knowledge</p>
-					</div>
-					<FluentChevronRight20Filled
-						class="size-4 text-fg-muted group-hover:text-primary-hover transition-colors shrink-0"
-					/>
-				</a>
 			</div>
 		</section>
 
@@ -485,3 +470,28 @@
 		</div>
 	</div>
 </BottomSheet>
+
+<style>
+	:global(.panel h2),
+	h2 {
+		font-family: var(--font-serif);
+		color: var(--color-heading);
+		border-bottom: 1px solid color-mix(in oklab, var(--color-line) 30%, transparent);
+		padding-bottom: 0.35rem;
+	}
+	h3 {
+		font-family: var(--font-serif);
+		color: var(--color-heading);
+	}
+	a {
+		transition: color 180ms ease, transform 180ms ease;
+	}
+	a:hover {
+		color: var(--color-primary-hover);
+	}
+	@media (prefers-reduced-motion: reduce) {
+		a {
+			transition: none;
+		}
+	}
+</style>

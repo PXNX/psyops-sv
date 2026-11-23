@@ -11,7 +11,8 @@
  * Run once after deploying the new code, before the game writes new hexes.
  */
 import postgres from "postgres";
-import { hexFromLatLon, mapToLatLon, WORLD_MAP_SIZE } from "#lib/config/index.js";
+import { hexFromLatLon, WORLD_MAP_SIZE } from "#lib/config/index.js";
+import { mapToLatLon } from "#lib/utils/military.js";
 
 if (!process.env.DATABASE_URL) throw new Error("DATABASE_URL is not set");
 if (process.env.CONFIRM_GRID_MIGRATION !== "1") {
@@ -70,11 +71,11 @@ await sql.begin(async (tx) => {
 		console.log(`${table}: ${changed}/${rows.length} hexes converted`);
 	}
 
-	const ships = await sql<PathRow[]>`select id, order_path from fleet_ships where order_path is not null`;
+	const ships = await tx.unsafe<PathRow[]>(`select id, order_path from fleet_ships where order_path is not null`);
 	for (const ship of ships) {
 		if (!Array.isArray(ship.order_path) || !ship.order_path.length) continue;
 		const path = ship.order_path.map((h) => convert(h.q, h.r));
-		await sql`update fleet_ships set order_path = ${JSON.stringify(path)}::jsonb where id = ${ship.id}`;
+		await tx.unsafe(`update fleet_ships set order_path = $1::jsonb where id = $2`, [JSON.stringify(path), ship.id]);
 	}
 	console.log(`fleet_ships.order_path: ${ships.length} routes converted`);
 });

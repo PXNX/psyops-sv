@@ -2,7 +2,20 @@
 import { desc, eq, inArray, or, type SQL } from "drizzle-orm";
 import { alias } from "drizzle-orm/pg-core";
 import type { Database } from "#lib/server/db.js";
-import { battles, states, wars } from "#lib/server/schema.js";
+import {
+	accounts,
+	battles,
+	blocDiplomats,
+	blocLeaders,
+	blocs,
+	ministers,
+	partyMembers,
+	politicalParties,
+	presidents,
+	states,
+	stateBailouts,
+	wars
+} from "#lib/server/schema.js";
 
 export interface WarRecord {
 	id: number;
@@ -129,4 +142,117 @@ export async function battlesInRegion(db: Database, regionId: number): Promise<B
 		defender: { id: battle.defenderStateId, name: defenderName },
 		buildingsDestroyed: battle.buildingsDestroyed ?? null
 	}));
+}
+
+// ── Unified timeline for states, blocs and parties ───────────────────────────
+
+export interface HistoryEntry {
+	id: string;
+	at: Date;
+	kind: "founded" | "leader" | "member" | "war" | "bailout";
+	title: string;
+	detail?: string;
+	tone: "neutral" | "blue" | "green" | "red" | "amber";
+}
+
+/** Merge the dated records that already exist into one readable timeline. */
+export async function historyFor(db: Database, kind: "state" | "bloc" | "party", id: number): Promise<HistoryEntry[]> {
+	const entries: HistoryEntry[] = [];
+	if (kind === "state") {
+		const [state] = await db.select().from(states).where(eq(states.id, id));
+		if (state?.createdAt)
+			entries.push({ id: `founded-${id}`, at: state.createdAt, kind: "founded", title: "State founded", tone: "green" });
+		const [president] = await db
+			.select({ at: presidents.electedAt, email: accounts.email, term: presidents.term })
+			.from(presidents)
+			.innerJoin(accounts, eq(presidents.userId, accounts.id))
+			.where(eq(presidents.stateId, id));
+		if (president)
+			entries.push({
+				id: `president-${id}`,
+				at: president.at,
+				kind: "leader",
+				title: `${president.email.split('@')[0]} elected president`,
+				detail: `Term ${president.term}`,
+				tone: "blue"
+			});
+		const cabinet = await db
+			.select({ at: ministers.appointedAt, email: accounts.email, ministry: ministers.ministry })
+			.from(ministers)
+			.innerJoin(accounts, eq(ministers.userId, accounts.id))
+			.where(eq(ministers.stateId, id));
+		for (const m of cabinet)
+			entries.push({
+				id: `minister-${m.email.split('@')[0]}-${m.ministry}`,
+				at: m.at,
+				kind: "leader",
+				title: `${m.email.split('@')[0]} appointed`,
+				detail: m.ministry.replaceAll("_", " "),
+				tone: "neutral"
+			});
+		const bailouts = await db.select().from(stateBailouts).where(eq(stateBailouts.recipientStateId, id));
+		for (const b of bailouts)
+			entries.push({
+				id: `bailout-${b.id}`,
+				at: b.createdAt,
+				kind: "bailout",
+				title: `Bailout of $${b.amount.toLocaleString()}`,
+				tone: "amber"
+			});
+		for (const w of await warsOfState(db, id))
+			entries.push({
+				id: `war-${w.id}`,
+				at: w.declaredAt,
+				kind: "war",
+				title: `War with ${w.side === "attacker" ? w.defender.name : w.attacker.name}`,
+				detail: w.result ? `Result: ${w.result}` : "Ongoing",
+				tone: w.result === "won" ? "green" : w.result === "lost" ? "red" : "neutral"
+			});
+	} else if (kind === "bloc") {
+		const [bloc] = await db.select().from(blocs).where(eq(blocs.id, id));
+		if (bloc?.createdAt)
+			entries.push({ id: `founded-${id}`, at: bloc.createdAt, kind: "founded", title: "Bloc founded", tone: "green" });
+		const leaders = await db
+			.select({ at: blocLeaders.appointedAt, email: accounts.email })
+			.from(blocLeaders)
+			.innerJoin(accounts, eq(blocLeaders.userId, accounts.id))
+			.where(eq(blocLeaders.blocId, id));
+		for (const l of leaders)
+			entries.push({ id: `leader-${l.email.split('@')[0]}`, at: l.at, kind: "leader", title: `${l.email.split('@')[0]} became bloc leader`, tone: "blue" });
+		const diplomats = await db
+			.select({ at: blocDiplomats.appointedAt, email: accounts.email })
+			.from(blocDiplomats)
+			.innerJoin(accounts, eq(blocDiplomats.userId, accounts.id))
+			.where(eq(blocDiplomats.blocId, id));
+		for (const d of diplomats)
+			entries.push({ id: `diplomat-${d.email.split('@')[0]}`, at: d.at, kind: "leader", title: `${d.email.split('@')[0]} appointed diplomat`, tone: "neutral" });
+		for (const w of await warsOfBloc(db, id))
+			entries.push({
+				id: `war-${w.id}`,
+				at: w.declaredAt,
+				kind: "war",
+				title: `Coalition war with ${w.side === "attacker" ? w.defender.name : w.attacker.name}`,
+				detail: w.result ? `Result: ${w.result}` : "Ongoing",
+				tone: w.result === "won" ? "green" : w.result === "lost" ? "red" : "neutral"
+			});
+	} else {
+		const [party] = await db.select().from(politicalParties).where(eq(politicalParties.id, id));
+		if (party?.foundedAt)
+			entries.push({ id: `founded-${id}`, at: party.foundedAt, kind: "founded", title: "Party founded", tone: "green" });
+		const members = await db
+			.select({ at: partyMembers.joinedAt, email: accounts.email, role: partyMembers.role })
+			.from(partyMembers)
+			.innerJoin(accounts, eq(partyMembers.userId, accounts.id))
+			.where(eq(partyMembers.partyId, id));
+		for (const m of members)
+			entries.push({
+				id: `member-${m.email.split('@')[0]}`,
+				at: m.at,
+				kind: "member",
+				title: `${m.email.split('@')[0]} joined the party`,
+				detail: m.role,
+				tone: "blue"
+			});
+	}
+	return entries.sort((a, b) => b.at.getTime() - a.at.getTime()).slice(0, 60);
 }

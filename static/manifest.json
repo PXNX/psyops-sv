@@ -2,12 +2,13 @@
 	"name": "PsyOps: Command & Control",
 	"short_name": "PsyOps",
 	"description": "Field operations dashboard for PsyOps — manage posts, training, production and your unit from one command console.",
-	"theme_color": "#12150f",
-	"background_color": "#12150f",
+	"theme_color": "#0c1222",
+	"background_color": "#0c1222",
 	"start_url": "/",
 	"scope": "/",
-	"orientation": "portrait",
+	"orientation": "any",
 	"display": "standalone",
+	"categories": ["games", "entertainment"],
 	"dir": "ltr",
 	"lang": "en",
 	"icons": [
@@ -34,6 +35,22 @@
 			"sizes": "512x512",
 			"src": "icon-maskable-512.png",
 			"type": "image/png"
+		}
+	],
+	"shortcuts": [
+		{
+			"name": "Map",
+			"short_name": "Map",
+			"description": "Open the situational map",
+			"url": "/map",
+			"icons": [{ "src": "icon-192.png", "sizes": "192x192" }]
+		},
+		{
+			"name": "Forces",
+			"short_name": "Forces",
+			"description": "Train and command your units",
+			"url": "/training",
+			"icons": [{ "src": "icon-192.png", "sizes": "192x192" }]
 		}
 	],
 	"share_target": {

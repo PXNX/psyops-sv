@@ -719,6 +719,10 @@
 		</section>
 	{/if}
 
+	<div class="mt-4">
+		<Button href="/state/{data.state.id}/history" size="sm" variant="secondary">Full history →</Button>
+	</div>
+
 	<!-- Natural resources + tax schedule side by side on wide screens -->
 	{#if resourceEntries.length > 0 || data.taxes.length > 0}
 		<div class="grid md:grid-cols-2 gap-4">

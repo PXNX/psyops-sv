@@ -15,7 +15,7 @@
 	<title>{"Privacy Policy · PsyOps"}</title>
 </svelte:head>
 
-<PageContainer maxWidth="4xl" class="py-12">
+<PageContainer maxWidth="4xl" class="animate-soft-in py-12">
 	<div class="space-y-8">
 		<!-- Header -->
 		<div class="flex flex-col items-center space-y-5">
@@ -486,3 +486,19 @@
 		</div>
 	</div>
 </PageContainer>
+
+<style>
+	h2,
+	h3 {
+		font-family: var(--font-serif);
+		color: var(--color-heading);
+	}
+	h2 {
+		border-bottom: 1px solid color-mix(in oklab, var(--color-line) 30%, transparent);
+		padding-bottom: 0.35rem;
+	}
+	section,
+	.panel {
+		animation: soft-in 320ms cubic-bezier(0.2, 0.9, 0.3, 1) both;
+	}
+</style>

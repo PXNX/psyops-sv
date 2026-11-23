@@ -46,6 +46,7 @@ import {
 	hexFromLatLon,
 	hexKey,
 	hexToLatLon,
+	seaSpeedAt,
 	hitChance,
 	isCoastal,
 	portHexForRegion,
@@ -427,7 +428,8 @@ export async function moveShip(db: Database, userId: string, shipId: number, tar
 
 	const now = new Date();
 	const jam = await gnssJammingAt(db, { q: ship.q, r: ship.r }, ship.stateId);
-	const legHours = def.moveHours * gnssSpeedFactor(jam.strength);
+	const legHours =
+		def.moveHours * gnssSpeedFactor(jam.strength) * seaSpeedAt(target.q, target.r, hexToLatLon(target).lat, now);
 	await db
 		.update(fleetShips)
 		.set({
@@ -678,7 +680,9 @@ export async function advanceMovements(db: Database, now: Date, rng: () => numbe
 
 		const rest = path.slice(1);
 		const jam = await gnssJammingAt(db, { q: ship.q, r: ship.r }, ship.stateId);
-		const legHours = def.moveHours * gnssSpeedFactor(jam.strength);
+		const nextHex = rest[0] ?? path[0];
+		const legHours =
+			def.moveHours * gnssSpeedFactor(jam.strength) * seaSpeedAt(nextHex.q, nextHex.r, hexToLatLon(nextHex).lat, now);
 		let health = ship.health;
 		let finalStatus: "moving" | "idle" | "sunk" = rest.length ? "moving" : "idle";
 		if (hostileMine) {
@@ -817,7 +821,24 @@ export async function resolveCombats(db: Database, now: Date, rng: () => number 
 	const fleetIds = ships.map((s) => s.fleetId ?? 0);
 	const factors = await commanderFactors(db, fleetIds, true);
 	const commandersByFleet = await commanderIdsFor(db, fleetIds, true);
-	const factorFor = (ship: (typeof ships)[number]) => factors.get(ship.fleetId ?? 0);
+	// Cohesion: a battered formation fights worse than a fresh one.
+	const cohesionTotals = new Map<number, { sum: number; n: number }>();
+	for (const ship of ships) {
+		const fid = ship.fleetId ?? 0;
+		const entry = cohesionTotals.get(fid) ?? { sum: 0, n: 0 };
+		entry.sum += Math.max(0, ship.health) / (shipClass(ship.shipClass)?.hp ?? 100);
+		entry.n++;
+		cohesionTotals.set(fid, entry);
+	}
+	const cohesionFor = (ship: (typeof ships)[number]) => {
+		const entry = cohesionTotals.get(ship.fleetId ?? 0);
+		return entry ? Math.max(0.6, Math.min(1.05, entry.sum / entry.n)) : 1;
+	};
+	const factorFor = (ship: (typeof ships)[number]) => {
+		const base = factors.get(ship.fleetId ?? 0) ?? { attack: 1, defense: 1, speed: 1, intel: 1 };
+		const cohesion = cohesionFor(ship);
+		return { ...base, attack: base.attack * cohesion, defense: base.defense * cohesion };
+	};
 	const commanderFor = (ship: (typeof ships)[number]) => commandersByFleet.get(ship.fleetId ?? 0) ?? null;
 	const stateIds = [...new Set(ships.map((s) => s.stateId))];
 	const enemySets = new Map<number, Set<number>>();

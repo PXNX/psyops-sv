@@ -20,8 +20,8 @@ view of the same world.
 
 ## Naval mode
 
-- Shows only the sea and coastal regions. Inland regions fade out and land
-  units, battles and army intel are hidden.
+- Brings the sea hex grid, EEZs and coastal regions to the front. Regions stay
+  visible; land units, battles and army intel are hidden.
 - Each coastal region's **EEZ** is the band of coloured water between its
   shoreline and the hex grid — there are no hex outlines inside it. The hex
   map starts at the EEZ's dashed seaward edge and covers the rest of the sea,
@@ -63,9 +63,9 @@ sea is blank.
 
 ## Deep dive: exact numbers
 
-- Sea grid (`fleet.config.ts`): `HEX_BOUNDS` q **0–59**, r **0–29** = **1,800**
-  hexes, about 6° per cell — large enough to pick out individual cells on the
-  1400×600 map. The grid lives in the map's own coordinates; `HEX_SIZE = 45` is
+- Sea grid (`fleet.config.ts`): `HEX_BOUNDS` q **0–49**, r **0–24** = **1,250**
+  hexes, about 7° per cell — large enough to pick out individual cells on the
+  1400×600 map. The grid lives in the map's own coordinates; `HEX_SIZE = 54` is
   only the radius used by the standalone console helpers. Each cell carries a
   sea state: ❄ icy at high latitude, ≋ stormy on a rolling six-hour roll.
 - EEZ (`EEZ`): `radiusHexes = 2`. A coastal region's claim is grown from the
@@ -85,8 +85,8 @@ sea is blank.
 - Fog of war (`SEA_INTEL_VALID_HOURS`): a sea report is fresh for **12 h**; only
   hexes covered by a fresh report reveal enemy ships.
 - Ship positions come from `hexFromLatLon(lat, lon)`, which projects the
-  position into the map and then reads the hex under that point (q 0…59,
-  r 0…29).
+  position into the map and then reads the hex under that point (q 0…49,
+  r 0…24).
 
 Ctrl/Cmd-click (or the multi-select rail button) holds several hexes for a
 fleet order. A fleet formed in the Navy console can then be ordered to hold

@@ -23,9 +23,12 @@
 		navigator.serviceWorker.register("/service-worker.js", { type: "module" });
 	}
 
-	// Keep the document theme in sync with the reactive setting on every page.
+	// Keep the document theme — including the PWA chrome colour — in sync with
+	// the reactive setting on every page.
 	$effect(() => {
 		document.documentElement.setAttribute("data-theme", settings.theme);
+		const meta = document.querySelector('meta[name="theme-color"]');
+		if (meta) meta.setAttribute("content", settings.theme === "light" ? "#f2f4f7" : "#0c1222");
 	});
 
 	// Cross-fade between pages using the View Transitions API instead of

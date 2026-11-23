@@ -85,7 +85,7 @@
 		{
 			id: "naval",
 			title: "1. Naval mode",
-			body: "Click the ship icon in the top-left rail. You will now see only the sea and coastal regions; the inland fades out.",
+			body: "Click the ship icon in the top-left rail. The sea hex grid, EEZs and coastal regions come to the front while the regions stay visible.",
 			target: '[data-tutorial="naval-mode"]',
 			done: "mode-naval",
 			manual: "Show mode"
@@ -170,6 +170,7 @@
 	let minZoom = 0.1;
 	let centroids = $state<Record<number, { x: number; y: number; r: number }>>({});
 	let cursor = $state<{ x: number; y: number } | null>(null);
+	let hoverHexKey = $state<string | null>(null);
 	let selectedId = $state<number | null>(null);
 	let selectedHexKey = $state<string | null>(null);
 	/** Ctrl/Cmd-click (or the pin toggle on touch) adds hexes to a group order. */
@@ -311,11 +312,10 @@
 				return;
 			}
 			const r = data.regionMap[id];
-			// Naval mode only knows the sea and the coasts: inland regions fade
-			// into the background so the EEZ overlay is readable.
-			const offshoreOnly = mode === "naval" && !coastalIds.has(id);
-			el.style.fill = offshoreOnly ? LAND : r ? fillFor(id, r, maxHeat) : LAND;
-			el.style.opacity = offshoreOnly ? "0.18" : "1";
+			// Regions stay visible in naval mode: the sea overlays sit on the
+			// world map rather than replacing the political/base layer.
+			el.style.fill = r ? fillFor(id, r, maxHeat) : LAND;
+			el.style.opacity = "1";
 			el.style.stroke = BORDER;
 			const flash = id === highlightedId;
 			el.classList.toggle("region-highlight", flash);
@@ -581,6 +581,7 @@
 	}
 	function onPointerMove(e: PointerEvent) {
 		if (!viewportEl) return;
+		hoverHexKey = (e.target as Element | null)?.closest?.("[data-hex]")?.getAttribute("data-hex") ?? null;
 		const rect = viewportEl.getBoundingClientRect();
 		cursor = {
 			x: (e.clientX - rect.left - transform.x) / transform.scale,
@@ -1654,6 +1655,16 @@
 		<span class="hidden sm:inline text-fg-faint">
 			{cursor ? `GRID ${Math.round(cursor.x)}/${Math.round(cursor.y)}` : ""}
 		</span>
+		{#if hoverHexKey}
+			<span class="text-fg-faint">
+				{seaHexes.find((h) => h.key === hoverHexKey)?.condition === "icy"
+					? "❄ icy"
+					: seaHexes.find((h) => h.key === hoverHexKey)?.condition === "stormy"
+						? "≋ stormy"
+						: "calm"}
+				{selectedHexKeys.has(hoverHexKey) ? " · in order" : ""}
+			</span>
+		{/if}
 		<span class="ml-auto flex items-center gap-1.5">
 			<span class="inline-block h-1.5 border-x border-b border-fg-soft" style:width="{scaleBar.px}px"></span>
 			{scaleBar.km >= 1 ? `${scaleBar.km.toLocaleString()} km` : "<1 km"}

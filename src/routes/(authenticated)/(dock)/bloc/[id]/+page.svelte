@@ -540,6 +540,10 @@
 			<WarHistory wars={pastWars} />
 		</section>
 	{/if}
+
+	<div class="mt-4">
+		<Button href="/bloc/{data.bloc.id}/history" size="sm" variant="secondary">Full history →</Button>
+	</div>
 </PageContainer>
 
 <!-- Edit Bloc Bottom Sheet -->

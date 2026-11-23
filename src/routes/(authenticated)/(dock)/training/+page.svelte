@@ -258,7 +258,7 @@
 	{/if}
 
 	<!-- ── Officers, academy and formations ──────────────────────────────── -->
-	<section class="panel rounded-sm p-5 space-y-3">
+	<section class="panel animate-soft-in rounded-sm p-5 space-y-3">
 		<div class="flex flex-wrap items-center justify-between gap-2">
 			<h2 class="section-title">Commanders & formations</h2>
 			{#if data.navy.canCommand}
@@ -269,15 +269,15 @@
 				</form>
 			{/if}
 		</div>
-		{#if data.commanderTrainings.length}
+		{#if (data.commanderTrainings ?? []).length}
 			<div class="text-xs text-fg-muted">
-				In training: {data.commanderTrainings.map((t) => new Date(t.completesAt).toLocaleString()).join(", ")}
+				In training: {(data.commanderTrainings ?? []).map((t) => new Date(t.completesAt).toLocaleString()).join(", ")}
 			</div>
 		{/if}
-		{#if data.officers.length}
+		{#if (data.officers ?? []).length}
 			<div class="flex flex-wrap gap-2">
-				{#each data.officers as officer (officer.id)}
-					<div class="flex items-center gap-2 rounded-sm border border-line/20 bg-surface-1 px-2 py-1">
+				{#each (data.officers ?? []) as officer (officer.id)}
+					<div class="soft-lift flex items-center gap-2 rounded-sm border border-line/20 bg-surface-1 px-2 py-1">
 						<CommanderPortrait seed={officer.portrait} alive={officer.alive} size={32} />
 						<div class="text-[11px]">
 							<div class="font-medium">{officer.name} {officer.alive ? "" : "†"}</div>
@@ -291,19 +291,19 @@
 			</div>
 		{/if}
 		{#each (["airgroup", "division"] as const) as kind}
-			{@const pool = data.officerUnits.filter((u) => !u.groupId && (kind === "airgroup" ? (AIRCRAFT_IDS as readonly string[]).includes(u.unitType) : (DOMAIN_UNITS.land as readonly string[]).includes(u.unitType)))}
+			{@const pool = (data.officerUnits ?? []).filter((u) => !u.groupId && (kind === "airgroup" ? (AIRCRAFT_IDS as readonly string[]).includes(u.unitType) : (DOMAIN_UNITS.land as readonly string[]).includes(u.unitType)))}
 			<div class="rounded-sm border border-line/20 p-3">
 				<div class="text-xs font-semibold text-heading">{kind === "airgroup" ? "Airgroups" : "Divisions"}</div>
-				{#each data.unitGroups.filter((g) => g.kind === kind) as group (group.id)}
+				{#each (data.unitGroups ?? []).filter((g) => g.kind === kind) as group (group.id)}
 					<div class="mt-2 flex flex-wrap items-center gap-2 border-t border-line/15 pt-2 text-[11px]">
 						<span class="font-medium">{group.name}</span>
-						<span class="text-fg-muted">{data.officerUnits.filter((u) => u.groupId === group.id).length} units</span>
+						<span class="text-fg-muted">{(data.officerUnits ?? []).filter((u) => u.groupId === group.id).length} units</span>
 						<form method="POST" action="?/assignCommander" use:enhance class="flex items-center gap-1">
 							<input type="hidden" name="kind" value={kind} />
 							<input type="hidden" name="id" value={group.id} />
 							<select name="commanderId" class="rounded border border-line/30 bg-surface-2 px-1 py-0.5">
 								<option value="">No commander</option>
-								{#each data.officers.filter((o) => o.alive) as o (o.id)}
+								{#each (data.officers ?? []).filter((o) => o.alive) as o (o.id)}
 									<option value={o.id} selected={o.id === group.commanderId}>{o.name}</option>
 								{/each}
 							</select>

@@ -24,14 +24,14 @@ export interface Hex {
 /**
  * The whole theatre is a bounded axial grid. Hexes outside do not exist.
  *
- * The grid is calibrated to the world map: 60 columns × 30 rows gives cells
- * of about 6° × 6° — large enough to read as individual hexes on the 1400×600
- * map, while an EEZ of two rings still reaches out from a coastline.
+ * The grid is calibrated to the world map: 50 columns × 25 rows gives cells
+ * of about 7° × 7° — clearly readable hexes on the 1400×600 map, while an EEZ
+ * of two rings still reaches out from a coastline.
  */
-export const HEX_BOUNDS = { minQ: 0, maxQ: 59, minR: 0, maxR: 29 } as const;
+export const HEX_BOUNDS = { minQ: 0, maxQ: 49, minR: 0, maxR: 24 } as const;
 
 /** Radius of one hex in the standalone console-view helpers, in pixels. */
-export const HEX_SIZE = 45;
+export const HEX_SIZE = 54;
 
 /** The six axial neighbour directions, clockwise from east. */
 const HEX_DIRECTIONS: readonly Hex[] = [

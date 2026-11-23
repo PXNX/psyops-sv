@@ -107,8 +107,8 @@ in [Map & airspace](/docs/map-modes).
 ## Deep dive: exact numbers
 
 All values below come from `fleet.config.ts` and `naval.config.ts`.
-The sea grid is `q = 0–59`, `r = 0–29` (1,800 cells, about 6° per cell);
-`HEX_SIZE = 45` is only the radius of the standalone console helpers. The grid
+The sea grid is `q = 0–49`, `r = 0–24` (1,250 cells, about 7° per cell);
+`HEX_SIZE = 54` is only the radius of the standalone console helpers. The grid
 is laid out in the world map's 1400×600 space, so `hexToLatLon` reads positions
 off the map projection. An EEZ reaches `EEZ.radiusHexes = 2` rings from the
 sampled coastline and a port sits one hex offshore.

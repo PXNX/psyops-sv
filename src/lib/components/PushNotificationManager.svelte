@@ -169,6 +169,22 @@
 		}
 	}
 
+	/** Let players verify notifications actually work before they rely on them. */
+	async function sendTestNotification() {
+		if (!browser || !("serviceWorker" in navigator)) return;
+		try {
+			const registration = await navigator.serviceWorker.ready;
+			await registration.showNotification("PsyOps test", {
+				body: "Notifications are working. You're all set.",
+				icon: "/favicon.png",
+				badge: "/badge.png",
+				tag: "psyops-test"
+			});
+		} catch (error) {
+			errorMessage = `Could not show a test notification: ${error instanceof Error ? error.message : String(error)}`;
+		}
+	}
+
 	// Helper function to convert base64 to Uint8Array
 	function urlBase64ToUint8Array(base64String: string): Uint8Array<ArrayBuffer> {
 		const padding = "=".repeat((4 - (base64String.length % 4)) % 4);
@@ -204,13 +220,21 @@
 	{#if notificationPermission === "denied"}
 		<span class="text-xs text-red-400 font-medium">Blocked</span>
 	{:else if notificationPermission === "granted" && isSubscribed}
-		<button
-			class="text-xs font-medium text-fg-muted hover:text-fg transition-colors disabled:opacity-50"
-			onclick={unsubscribeFromPushNotifications}
-			disabled={isLoading}
-		>
-			{isLoading ? "…" : "Disable"}
-		</button>
+		<div class="flex items-center gap-2">
+			<button
+				class="text-xs font-medium text-primary-fg hover:text-primary-hover transition-colors"
+				onclick={sendTestNotification}
+			>
+				Test
+			</button>
+			<button
+				class="text-xs font-medium text-fg-muted hover:text-fg transition-colors disabled:opacity-50"
+				onclick={unsubscribeFromPushNotifications}
+				disabled={isLoading}
+			>
+				{isLoading ? "…" : "Disable"}
+			</button>
+		</div>
 	{:else}
 		<input
 			type="checkbox"

@@ -439,6 +439,13 @@ export function seaConditionAt(q: number, r: number, latitude: number, at: Date 
 	return hash32(q, r, window, 0x5ea1) / 4294967296 < 0.18 ? "stormy" : "calm";
 }
 
+/** Rough seas and ice slow every leg; calm water is the baseline. */
+export const SEA_SPEED: Record<SeaCondition, number> = { calm: 1, stormy: 1.3, icy: 1.6 };
+
+export function seaSpeedAt(q: number, r: number, latitude: number, at: Date = new Date()): number {
+	return SEA_SPEED[seaConditionAt(q, r, latitude, at)];
+}
+
 /** Local solar hour (0-24) at a longitude. */
 export function localHour(longitude: number, at: Date = new Date()): number {
 	const utc = at.getUTCHours() + at.getUTCMinutes() / 60;

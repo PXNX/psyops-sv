@@ -155,7 +155,7 @@ export const load: PageServerLoad = async ({ locals }) => {
 			.where(eq(militaryUnits.ownerId, account.id))
 			.orderBy(militaryUnits.createdAt),
 		fleetLoad(account.id),
-		commanderPageLoad(account.id)
+		commanderPageLoad(account.id).catch(() => ({ officers: [], trainings: [], groups: [], units: [] }))
 	]);
 
 	const isIndependentRegion = !residence.stateId;

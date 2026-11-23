@@ -51,6 +51,33 @@ export const COMMANDER_TRAITS: Record<CommanderTraitId, CommanderTrait> = {
 
 export const COMMANDER_TRAIT_IDS = Object.keys(COMMANDER_TRAITS) as CommanderTraitId[];
 
+/** Certain pairs reinforce each other, rewarding interesting combinations. */
+export const COMMANDER_SYNERGIES: {
+	id: string;
+	needs: CommanderTraitId[];
+	label: string;
+	bonus: CommanderModifiers;
+}[] = [
+	{
+		id: "charge",
+		needs: ["bold", "reckless"],
+		label: "Reckless charge",
+		bonus: { attack: 0.05, defense: -0.05, speed: 0, intel: 0 }
+	},
+	{
+		id: "screen",
+		needs: ["navigator", "scout"],
+		label: "Recon screen",
+		bonus: { attack: 0, defense: 0, speed: 0.03, intel: 0.08 }
+	},
+	{
+		id: "hardened",
+		needs: ["inspiring", "veteran"],
+		label: "Hardened command",
+		bonus: { attack: 0.04, defense: 0.04, speed: 0, intel: 0 }
+	}
+];
+
 export const COMMANDER_MAX_LEVEL = 10;
 /** 100 experience per level, up to level 10. */
 export function commanderLevel(experience: number): number {
@@ -73,6 +100,14 @@ export function commanderModifiers(
 		out.defense += trait.defense;
 		out.speed += trait.speed;
 		out.intel += trait.intel;
+	}
+	for (const synergy of COMMANDER_SYNERGIES) {
+		if (synergy.needs.every((id) => traitIds.includes(id))) {
+			out.attack += synergy.bonus.attack;
+			out.defense += synergy.bonus.defense;
+			out.speed += synergy.bonus.speed;
+			out.intel += synergy.bonus.intel;
+		}
 	}
 	const levelBonus = 1 + commanderLevel(experience) * 0.015;
 	const woundPenalty = health <= 0 ? 0 : health < 50 ? 0.85 : 1;

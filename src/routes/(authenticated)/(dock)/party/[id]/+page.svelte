@@ -107,6 +107,9 @@
 				</a>
 				<span>· Est. {formatDate(data.party.foundedAt)}</span>
 			</div>
+			<div class="mt-3 flex justify-center">
+				<Button href="/party/{data.party.id}/history" size="sm" variant="secondary">Full history →</Button>
+			</div>
 
 			{#if data.party.description}
 				<figure class="mx-auto mt-5 max-w-2xl border-y border-line/15 py-4">

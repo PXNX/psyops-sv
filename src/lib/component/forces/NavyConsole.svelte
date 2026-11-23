@@ -527,7 +527,7 @@
 				<h2 class="text-sm font-semibold text-heading">Fleets <span class="text-fg-muted">({data.fleets.length})</span></h2>
 				{#each data.fleets as fleet (fleet.id)}
 					{@const officer = data.officers.find((o) => o.id === fleet.commanderId)}
-					<div class="mt-2 rounded-sm border border-line/20 p-2">
+					<div class="soft-lift mt-2 rounded-sm border border-line/20 p-2">
 						<div class="flex items-center gap-2">
 							{#if officer}
 								<CommanderPortrait seed={officer.portrait} alive={officer.alive} size={28} />
