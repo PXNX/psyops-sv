@@ -209,6 +209,7 @@ export async function buyShares(
 	if (embargoReason) throw new StockError(embargoReason);
 
 	const totalPrice = Number(listing.pricePerUnit) * quantity;
+	if (!Number.isSafeInteger(totalPrice) || totalPrice < 0) throw new StockError("Invalid trade total.");
 	const [buyerWallet] = await db.select().from(userWallets).where(eq(userWallets.userId, userId));
 	if (!buyerWallet || Number(buyerWallet.balance) < totalPrice) throw new StockError("Insufficient funds.");
 

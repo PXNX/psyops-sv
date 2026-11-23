@@ -93,11 +93,15 @@ export async function runDiseaseTick(
 	for (const outbreak of active) {
 		const disease = DISEASES[outbreak.diseaseId as DiseaseId];
 		if (!disease) continue;
+		const currentCases = Number.isFinite(outbreak.cases) ? Math.max(0, Math.floor(outbreak.cases)) : 0;
 		const harm = diseaseHarmFactor(disease, protectionFor(outbreak.regionId));
-		const spread = diseaseSpread(disease, outbreak.cases, harm);
-		const recovered = diseaseRecoveries(disease, outbreak.cases);
-		const deaths = diseaseDeaths(disease, outbreak.cases, harm);
-		const cases = Math.max(0, outbreak.cases + spread - recovered - deaths);
+		const spread = diseaseSpread(disease, currentCases, harm);
+		const recovered = diseaseRecoveries(disease, currentCases);
+		const deaths = Math.min(currentCases, diseaseDeaths(disease, currentCases, harm));
+		const cases = Math.min(
+			DISEASE_RULES.MAX_CASES,
+			Math.max(0, currentCases + spread - recovered - deaths)
+		);
 
 		if (deaths > 0) {
 			const region = regionById.get(outbreak.regionId);

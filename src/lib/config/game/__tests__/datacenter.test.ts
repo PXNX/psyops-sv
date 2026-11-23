@@ -51,7 +51,9 @@ describe("datacenter bonuses", () => {
 		expect(datacenterCapacity(0, 0)).toBe(0);
 		expect(datacenterCapacity(DATACENTER_BONUS.HARDWARE_PER_SITE, 0)).toBe(1);
 		expect(datacenterCapacity(0, 2)).toBe(2);
-		expect(datacenterCapacity(10_000, 0)).toBe(DATACENTER_BONUS.CAP);
+		expect(datacenterCapacity(DATACENTER_BONUS.HARDWARE_PER_SITE * DATACENTER_BONUS.CAP, 0)).toBe(
+			DATACENTER_BONUS.CAP
+		);
 	});
 
 	it("sharpens cyber offence and defence, and makes traffic more deniable", () => {

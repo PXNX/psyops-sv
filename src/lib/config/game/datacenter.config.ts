@@ -16,7 +16,7 @@ export const DATACENTER_BONUS = {
 	/** Fully supplied computing sites counted before the cap applies. */
 	CAP: 6,
 	/** Loose hardware contributes one site's worth of capacity per this many units. */
-	HARDWARE_PER_SITE: 60,
+	HARDWARE_PER_SITE: 60_000,
 	/** Added chance a cyber operation succeeds, per site. */
 	CYBER_OFFENCE_PER_SITE: 0.03,
 	/** Lowered chance an operation is attributed, per site. */
@@ -49,8 +49,11 @@ const round3 = (n: number) => Math.round(n * 1000) / 1000;
  * the efficient choice but a stockpile still helps.
  */
 export function datacenterCapacity(hardware: number, datacenters: number): number {
-	const loose = Math.floor(Math.max(0, hardware) / DATACENTER_BONUS.HARDWARE_PER_SITE);
-	return Math.min(DATACENTER_BONUS.CAP, Math.max(0, Math.floor(datacenters)) + loose);
+	// Bad or non-finite numbers must never produce Infinity/NaN sites.
+	const safeHardware = Number.isFinite(hardware) ? Math.max(0, hardware) : 0;
+	const safeSites = Number.isFinite(datacenters) ? Math.max(0, Math.floor(datacenters)) : 0;
+	const loose = Math.floor(safeHardware / DATACENTER_BONUS.HARDWARE_PER_SITE);
+	return Math.min(DATACENTER_BONUS.CAP, safeSites + loose);
 }
 
 export interface DatacenterCyberBonus {

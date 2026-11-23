@@ -13,6 +13,8 @@
 	import FluentArrowRight20Filled from "~icons/fluent/arrow-right-20-filled";
 	import { buttonClass } from "#lib/component/ui/styles.js";
 
+	let { data } = $props();
+
 	const levers = [
 		{
 			icon: FluentBuildingGovernment20Filled,

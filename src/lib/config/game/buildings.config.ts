@@ -188,14 +188,14 @@ export const BUILDING_TEMPLATES: Record<BuildingType, BuildingTemplate> = {
 		statLabel: "Computing",
 		siteOnly: true,
 		maxLevel: 20,
-		costs: { currency: 750_000, steel: 800, silicon: 400, hardware: 60 },
+		costs: { currency: 750_000, steel: 800, silicon: 400, hardware: 60_000 },
 		constructionTime: 20,
 		infrastructureRequired: 4,
 		description:
 			"A full computing site: halls of server hardware, substations and cooling plant. It sharpens cyber operations and research, but only works with a steady supply of electricity and water.",
 		benefits: [
 			"Counts as one computing site for cyber and research",
-			"Needs 60 server hardware to build",
+			"Needs 60,000 server hardware to build",
 			"Requires reliable power and cooling water to operate"
 		]
 	},

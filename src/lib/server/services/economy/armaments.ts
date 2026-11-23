@@ -201,7 +201,8 @@ export async function buyArms(
 	const reason = await checkEmbargo(listing.sellerStateId, userId);
 	if (reason) throw new ArmsError(reason);
 
-	const total = quantity * listing.pricePerUnit;
+	const total = quantity * Number(listing.pricePerUnit);
+	if (!Number.isSafeInteger(total) || total < 0) throw new ArmsError("Invalid trade total.");
 	const [wallet] = await db.select().from(userWallets).where(eq(userWallets.userId, userId));
 	if (!wallet || Number(wallet.balance) < total) throw new ArmsError("Insufficient funds.");
 

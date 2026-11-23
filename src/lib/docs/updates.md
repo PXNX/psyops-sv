@@ -243,7 +243,7 @@ The rules live in `game/armaments.config.ts` and the deals in
 ## 12. Datacenters and connectivity by law
 
 Datacenters are no longer a tradeable product. They are a **building constructed
-by law**: a state pays currency, steel, silicon and 60 server hardware up front,
+by law**: a state pays currency, steel, silicon and 60,000 server hardware up front,
 waits 20 days, and then owns a computing site. A site only contributes to cyber
 operations and research while its region has enough electricity and cooling
 water; loose hardware still counts, but more slowly. AI programmes at the top

@@ -52,6 +52,9 @@ export function checkConstruction(input: {
 	const template = BUILDING_TEMPLATES[input.type];
 	const level = regionLevel(input.region, template.stat);
 	const problems: string[] = [];
+	// Never let a corrupt balance or NaN stock turn an unaffordable build into
+	// a free one, or a quantity into a negative deduction.
+	const safeNumber = (n: number) => (Number.isFinite(n) && n > 0 ? Math.floor(n) : 0);
 
 	// Levels go up one at a time: one order, one level, and the next only
 	// once the current one is finished.
@@ -70,8 +73,8 @@ export function checkConstruction(input: {
 
 	const costs = Object.entries(template.costs).map(([resource, perUnit]) => ({
 		resource,
-		needed: perUnit,
-		available: resource === "currency" ? input.treasury : (input.stockpile[resource] ?? 0)
+		needed: safeNumber(perUnit),
+		available: safeNumber(resource === "currency" ? input.treasury : (input.stockpile[resource] ?? 0))
 	}));
 	for (const c of costs) {
 		if (c.available < c.needed) {

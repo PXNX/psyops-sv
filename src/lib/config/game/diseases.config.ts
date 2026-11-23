@@ -71,7 +71,9 @@ export const DISEASE_RULES = {
 	/** Outbreaks end once active cases fall below this. */
 	END_BELOW_CASES: 2,
 	/** Outbreaks cannot run longer than this many days without attention. */
-	MAX_DURATION_DAYS: 60
+	MAX_DURATION_DAYS: 60,
+	/** Hard ceiling on active cases in one region, so a bad tick cannot explode. */
+	MAX_CASES: 5_000_000
 } as const;
 
 export interface DiseaseProtection {
