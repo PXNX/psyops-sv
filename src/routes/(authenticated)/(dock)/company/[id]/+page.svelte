@@ -39,7 +39,6 @@
 	let isFunding = $state(false);
 	let isSettingHq = $state(false);
 
-	let ipoPrice = $state(1000);
 	let isGoingPublic = $state(false);
 
 	let listQuantity = $state(1);
@@ -384,12 +383,21 @@
 						{data.ipoConfig.totalShares.toLocaleString()} shares, unissued
 					</p>
 					<p class="mt-1 text-xs text-fg-muted">
-						You keep a locked {data.ipoConfig.founderLockedPercent}% block; the rest lists at your price.
+						You keep a locked {data.ipoConfig.founderLockedPercent}% block; the rest lists after {data.ipoQuote?.listingHours}h.
 					</p>
+					{#if data.ipoQuote}
+						<div class="mt-3 inline-block text-left text-xs text-fg-muted">
+							<span class="font-mono text-base font-bold text-primary-fg">
+								${data.ipoQuote.price.toLocaleString()}/share
+							</span>
+							· ${data.ipoQuote.cash.toLocaleString()} cash + {data.ipoQuote.factories} × ${data.ipoQuote.factoryValue.toLocaleString()} factories
+							÷ {data.ipoConfig.totalShares.toLocaleString()} shares
+						</div>
+					{/if}
 					<form
 						method="POST"
 						action="?/goPublic"
-						class="mt-4 flex flex-col sm:flex-row gap-2 sm:items-end justify-center"
+						class="mt-3 flex justify-center"
 						use:enhance={() => {
 							isGoingPublic = true;
 							const handle = settle(() => capitalEl);
@@ -399,19 +407,7 @@
 							};
 						}}
 					>
-						<div class="text-left">
-							<label class="field-label" for="startingPrice">Price per share</label>
-							<input
-								id="startingPrice"
-								type="number"
-								name="startingPrice"
-								bind:value={ipoPrice}
-								min={data.ipoConfig.minPrice}
-								class="field-control rounded-sm px-3 py-2.5 w-full sm:w-40 font-mono"
-								required
-							/>
-						</div>
-						<Button type="submit" variant="primary" loading={isGoingPublic} loadingText="Issuing…">Go public</Button>
+						<Button type="submit" variant="primary" loading={isGoingPublic} loadingText="Filing…">File for IPO</Button>
 					</form>
 				</div>
 			{:else}
@@ -478,6 +474,18 @@
 				</div>
 			</dl>
 
+			{#if !data.shares.isListed}
+				<div class="panel-muted rounded-sm p-3 text-sm text-fg-muted">
+					<p class="font-semibold text-fg">Shares pending listing</p>
+					<p>
+						The IPO is filed at ${data.shares.ipoPrice.toLocaleString()}/share. Shares reach the market on
+						{formatDate(data.shares.listAt)}, {data.ipoQuote?.listingHours ?? 72} hours after filing. The order book opens
+						automatically.
+					</p>
+				</div>
+			{/if}
+
+			{#if data.shares.isListed}
 			<!-- Shareholder register -->
 			{#if data.topHolders.length > 0}
 				<div>
@@ -631,6 +639,7 @@
 						Offer for sale
 					</Button>
 				</form>
+			{/if}
 			{/if}
 		{/if}
 	</section>

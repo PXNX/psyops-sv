@@ -2992,6 +2992,11 @@ export const companyShares = pgTable("company_shares", {
 	founderLockedShares: integer("founder_locked_shares").notNull(),
 	ipoPrice: bigint("ipo_price", { mode: "number" }).notNull(),
 	ipoAt: timestamp("ipo_at").defaultNow().notNull(),
+	// An IPO is public at once, but its float only reaches the order book after
+	// a 72-hour listing window. listAt is the due time; listedAt is set by the
+	// listing cron when the float is actually created (null while pending).
+	listAt: timestamp("list_at").defaultNow().notNull(),
+	listedAt: timestamp("listed_at").defaultNow(),
 	lastDividendAt: timestamp("last_dividend_at"),
 	// Automatic dividend policy, run by an hourly cron at most once per dividend
 	// cooldown: pay out this percentage (0-100) of the budget above

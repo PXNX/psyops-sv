@@ -47,6 +47,12 @@ A company bundles factories and workers. **Shares** can be bought and sold;
 profits are paid out as **dividends**. The company page shows yield and
 payout history.
 
+Going public files an IPO at a **determined price**: the company's cash plus
+the book value of its factories (`stocks.config.ts`), divided across 1,000
+shares. The float does not trade immediately — it takes **72 hours** to be
+listed on the market, after which the hourly listing cron places it on the
+order book automatically.
+
 ## 4. Market
 
 The market keeps a **price history** and **orders**. Buy when many are selling
@@ -88,6 +94,8 @@ These values come straight from `economy.config.ts`, `production.config.ts`,
 | `FACTORY_CREATION_COST` | 100,000 |
 | `IPO_TOTAL_SHARES` | 1,000 (founder locked 51%) |
 | `MIN_SHARE_PRICE` | 1 |
+| `STOCKS.LISTING_HOURS` | 72 (filing → listing) |
+| `STOCKS.FACTORY_BOOK_VALUE` | 100,000 per factory |
 
 Default tax rates (`DEFAULT_TAX_RATES`): mining **10%**, production **15%**,
 market transactions **5%**, income **20%**.

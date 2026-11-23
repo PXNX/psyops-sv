@@ -24,7 +24,7 @@ import {
 } from "#lib/server/schema.js";
 import { eq, and, desc, count, sum, sql, inArray } from "drizzle-orm";
 import { error, fail } from "@sveltejs/kit";
-import { ECONOMY_CONFIG } from "#lib/config/index.js";
+import { ECONOMY_CONFIG, STOCKS, ipoSharePrice, listingDueAt } from "#lib/config/index.js";
 import { getRegionName } from "#lib/utils/formatting.js";
 import { getEmbargoReason } from "#lib/server/embargo.js";
 import { getLogoUrl, getSignedDownloadUrl, uploadFileFromForm } from "#lib/server/backblaze.js";
@@ -422,9 +422,22 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 					totalShares: shares.totalShares,
 					founderLockedShares: shares.founderLockedShares,
 					ipoPrice: Number(shares.ipoPrice),
-					ipoAt: shares.ipoAt.toISOString()
+					ipoAt: shares.ipoAt.toISOString(),
+					listAt: shares.listAt.toISOString(),
+					listedAt: shares.listedAt?.toISOString() ?? null,
+					isListed: shares.listedAt !== null
 				}
 			: null,
+		// The price a filing IPO will get, derived from what the company owns.
+		ipoQuote: shares
+			? null
+			: {
+					price: ipoSharePrice(Number(budget.balance), companyFactories.length, ECONOMY_CONFIG.IPO_TOTAL_SHARES),
+					cash: Number(budget.balance),
+					factories: companyFactories.length,
+					factoryValue: STOCKS.FACTORY_BOOK_VALUE,
+					listingHours: STOCKS.LISTING_HOURS
+				},
 		myHolding,
 		listings,
 		topHolders,
@@ -682,16 +695,11 @@ export const actions: Actions = {
 	},
 
 	// Take the company public: issue a fixed share count, lock the founder's
-	// controlling block, and auto-list the remaining float at the chosen price.
-	goPublic: async ({ params, locals, request }) => {
+	// controlling block and price the float from the company's own book value.
+	// The float is created by the listing cron after the 72-hour window.
+	goPublic: async ({ params, locals }) => {
 		const account = locals.account!;
 		const companyId = parseInt(params.id);
-		const formData = await request.formData();
-		const startingPrice = parseInt(formData.get("startingPrice") as string);
-
-		if (!startingPrice || startingPrice < ECONOMY_CONFIG.MIN_SHARE_PRICE) {
-			return fail(400, { error: "Invalid starting share price" });
-		}
 
 		const [company] = await db
 			.select({ ownerId: companies.ownerId })
@@ -706,16 +714,26 @@ export const actions: Actions = {
 			return fail(400, { error: "Company is already public" });
 		}
 
+		const [[budget], factoryRows] = await Promise.all([
+			db.select({ balance: companyBudgets.balance }).from(companyBudgets).where(eq(companyBudgets.companyId, companyId)),
+			db.select({ id: factories.id }).from(factories).where(eq(factories.companyId, companyId))
+		]);
+
 		const totalShares = ECONOMY_CONFIG.IPO_TOTAL_SHARES;
 		const founderLockedShares = Math.ceil((totalShares * ECONOMY_CONFIG.IPO_FOUNDER_LOCKED_PERCENT) / 100);
-		const floatShares = totalShares - founderLockedShares;
+		const now = new Date();
+		const issuePrice = ipoSharePrice(Number(budget?.balance ?? 0), factoryRows.length, totalShares);
+		const listAt = listingDueAt(now, now);
 
 		await db.transaction(async (tx) => {
 			await tx.insert(companyShares).values({
 				companyId,
 				totalShares,
 				founderLockedShares,
-				ipoPrice: startingPrice
+				ipoPrice: issuePrice,
+				ipoAt: now,
+				listAt,
+				listedAt: null
 			});
 
 			await tx.insert(shareHoldings).values({
@@ -723,20 +741,11 @@ export const actions: Actions = {
 				userId: account.id,
 				quantity: founderLockedShares
 			});
-
-			if (floatShares > 0) {
-				await tx.insert(shareListings).values({
-					companyId,
-					sellerId: account.id,
-					quantity: floatShares,
-					pricePerUnit: startingPrice
-				});
-			}
 		});
 
 		return {
 			success: true,
-			message: `Company is now public: ${totalShares.toLocaleString()} shares issued at $${startingPrice.toLocaleString()}/share`
+			message: `Company is public: ${totalShares.toLocaleString()} shares priced at $${issuePrice.toLocaleString()}/share. Trading opens in ${STOCKS.LISTING_HOURS} hours.`
 		};
 	},
 
@@ -760,6 +769,9 @@ export const actions: Actions = {
 
 		const [shares] = await db.select().from(companyShares).where(eq(companyShares.companyId, companyId));
 		if (!shares) return fail(400, { error: "Company is not public" });
+		if (shares.listedAt === null) {
+			return fail(400, { error: `Shares list in ${STOCKS.LISTING_HOURS} hours; trading is not open yet` });
+		}
 
 		const [holding] = await db
 			.select()

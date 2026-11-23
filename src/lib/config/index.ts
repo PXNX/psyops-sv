@@ -4,6 +4,7 @@ export * from "./game/military.config";
 export * from "./game/exercise.config";
 export * from "./game/war.config";
 export * from "./game/economy.config";
+export * from "./game/stocks.config";
 export * from "./game/buildings.config";
 export * from "./game/production.config";
 export * from "./features/party.config";
