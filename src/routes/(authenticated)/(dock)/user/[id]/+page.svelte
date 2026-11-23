@@ -834,7 +834,7 @@
 				Relaunch an interactive tour or read the full explanation in the documentation.
 			</p>
 			<div class="mt-3 grid gap-2 sm:grid-cols-3">
-				<a href="/map?tutorial=navy" class="panel-interactive block rounded-sm p-3 no-underline">
+				<a href="/training?view=navy&tutorial=navy" class="panel-interactive block rounded-sm p-3 no-underline">
 					<h3 class="text-sm font-semibold text-heading">Fleet tour</h3>
 					<p class="mt-1 text-xs text-fg-muted">Ports, docks, ships, mines and sea intel.</p>
 				</a>

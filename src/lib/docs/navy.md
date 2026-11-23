@@ -11,11 +11,9 @@ category: "Conflict & forces"
 
 # Naval warfare — ships, ports and docks
 
-The **fleet console** is the command centre for everything that happens on the
-water. It is overlaid on the [map](/map) — open it with the ship button in the
-left tool rail, or from a selected sea hex. The ocean is divided into a
-hexagonal grid. Each move takes hours and burns fuel; the fleet cron advances
-every leg every 15 minutes.
+The **Navy** tab of [Forces](/training) (`/training?view=navy`) is the command centre for everything that
+happens on the water. The ocean is divided into a hexagonal grid. Each move
+takes hours and burns fuel; the fleet cron advances every leg every 15 minutes.
 
 <Mermaid label="From a port to a ready ship" chart={"flowchart LR\nC[Coastal region] -->|one port per region| P[Port in its EEZ]\nP -->|build dock| D[Dock with build bays]\nD -->|queue order| Q[Ship under construction]\nQ -->|cron tick| S[Ready ship]\nS -->|move + target hex| F[Hex movement]\nS -->|sonar / SAR| I[Sea intel report]"} />
 
@@ -28,10 +26,8 @@ regions (terrain "shore") are visible; inland regions fade out. Each coastal
 region claims an **EEZ** — two rings of offshore water clipped to the real
 coastline.
 
-Click a hex to see its EEZ owner, ships, mines and port. **Fleet orders** in
-that panel can move a ship to the hex or lay mines from a ship already there;
-"Open in fleet console" docks the full console beside the map with that hex
-selected. Hex taps in the console highlight the matching cell on the map.
+Click a hex to see its EEZ owner, ships, mines and port. "Open in fleet
+console" takes you straight to the navy console with that hex selected.
 
 ## 2. Build a port
 

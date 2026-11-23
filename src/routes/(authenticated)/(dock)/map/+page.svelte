@@ -12,7 +12,6 @@
 	import { enhance } from "$app/forms";
 	import { invalidateAll } from "$app/navigation";
 	import { onMount, tick } from "svelte";
-	import { fade, fly } from "svelte/transition";
 	import type { PageData } from "./$types";
 	import { getRegionName, regionCoatUrl } from "#lib/utils/formatting.js";
 	import { ageLabel, countdown, formatLatLon, kmPerMapUnit, mapToLatLon, niceKm } from "#lib/utils/military.js";
@@ -72,11 +71,9 @@
 	import IconChevronRight from "~icons/fluent/chevron-right-20-regular";
 	import IconSea from "~icons/fluent/water-24-regular";
 	import IconNavalMode from "~icons/fluent/vehicle-ship-24-regular";
-	import IconFleetConsole from "~icons/fluent/vehicle-ship-24-filled";
 	import IconLandMode from "~icons/fluent/map-24-regular";
 	import IconAerialMode from "~icons/fluent/airplane-24-regular";
 	import SensorImage from "#lib/component/recon/SensorImage.svelte";
-	import NavyConsole from "#lib/component/forces/NavyConsole.svelte";
 	import { buildSeaScene, seaFrameInput, type SeaImageryInput } from "#lib/utils/sea-image.js";
 
 	let { data }: { data: PageData } = $props();
@@ -175,10 +172,6 @@
 	let seaSensor = $state("");
 	let showSeaImage = $state(false);
 	let showCoastImage = $state(false);
-	/** The hex-sea fleet console is an overlay on the maritime map, not a tab
-	 *  on the Forces page. `fleetInitialHex` preselects a tapped sea hex. */
-	let fleetOpen = $state(false);
-	let fleetInitialHex = $state<{ q: number; r: number } | null>(null);
 	$effect(() => {
 		if (!seaSensor && data.sea.sensors?.length) seaSensor = data.sea.sensors[0]!.id;
 	});
@@ -199,15 +192,6 @@
 		const mq = window.matchMedia("(min-width: 768px)");
 		const set = () => (isDesktop = mq.matches);
 		set();
-		// Old fleet-console deep links (?hex=q,r) and the navy tour from /docs
-		// open the hex-sea overlay directly on the maritime map.
-		const params = new URLSearchParams(window.location.search);
-		const hexParam = params.get("hex");
-		if (hexParam) {
-			const [q, r] = hexParam.split(",").map(Number);
-			if (Number.isInteger(q) && Number.isInteger(r)) fleetInitialHex = { q, r };
-		}
-		if (hexParam || params.get("tutorial") === "navy") fleetOpen = true;
 		mq.addEventListener("change", set);
 		const t = setInterval(() => (now = new Date()), 60_000);
 		return () => {
@@ -215,11 +199,6 @@
 			clearInterval(t);
 		};
 	});
-
-	function openFleetConsole(hex: { q: number; r: number } | null = null) {
-		fleetInitialHex = hex;
-		fleetOpen = true;
-	}
 
 	const sa = $derived(data.sa);
 	const sideStates = $derived(new Set(sa?.side?.stateIds ?? []));
@@ -913,15 +892,6 @@
 		};
 	});
 
-	/** Fleet orders belong on the maritime map too, not only in the console
-	 *  overlay: the ships at the tapped hex and the player's whole fleet. */
-	const myFleetShips = $derived(
-		(data.navy?.ships ?? []).filter((s) => s.stateId === data.navy?.myStateId && s.status !== "sunk")
-	);
-	const fleetHere = $derived(
-		selectedHexInfo ? myFleetShips.filter((s) => s.q === selectedHexInfo.q && s.r === selectedHexInfo.r) : []
-	);
-
 	/** Procedural sensor frame for the selected hex's freshest sea report. */
 	const seaImagery = $derived.by(() => {
 		const info = selectedHexInfo;
@@ -1090,10 +1060,7 @@
 	</style>
 </svelte:head>
 
-<svelte:window
-	onclick={(e) => !(e.target as Element).closest?.(".map-search") && (searchFocused = false)}
-	onkeydown={(e) => e.key === "Escape" && (fleetOpen = false)}
-/>
+<svelte:window onclick={(e) => !(e.target as Element).closest?.(".map-search") && (searchFocused = false)} />
 
 <!-- The control panels are siblings of the pan surface, not children of it.
      Panzoom listens on the pan target's parent and calls preventDefault on
@@ -1405,15 +1372,6 @@
 			/>
 		{/each}
 		<div class="mx-1 my-1 h-px bg-line/20"></div>
-		<IconButton
-			icon={IconFleetConsole}
-			label="Fleet console · hex sea"
-			size="sm"
-			shape="square"
-			variant={fleetOpen ? "soft-blue" : "ghost"}
-			aria-pressed={fleetOpen}
-			onclick={() => openFleetConsole()}
-		/>
 		<IconButton icon={IconDocument} label="Intel reports" size="sm" shape="square" variant="ghost" href="/intel" />
 	</nav>
 
@@ -1490,59 +1448,12 @@
 					</form>
 				{/if}
 			</div>
-			{#if data.navy && data.navy.canCommand}
-				<div class="mt-2 border-t border-line/20 pt-2">
-					<div class="mb-1 font-semibold text-heading">Fleet orders</div>
-					{#if fleetHere.length}
-						<div class="mb-1 text-fg-muted">
-							Here: {fleetHere.map((s) => SHIP_CLASSES[s.shipClass]?.short ?? s.shipClass).join(", ")}
-						</div>
-						<div class="flex flex-wrap gap-1">
-							{#each fleetHere as ship (ship.id)}
-								<form
-									method="POST"
-									action="?/layMines"
-									use:enhance={() => async ({ result, update }) => {
-										await update();
-										toastResult(result);
-									}}
-								>
-									<input type="hidden" name="shipId" value={ship.id} />
-									<Button type="submit" size="xs" variant="ghost">✳ {SHIP_CLASSES[ship.shipClass]?.short ?? "Lay"}</Button>
-								</form>
-							{/each}
-						</div>
-					{/if}
-					{#if myFleetShips.length}
-						<form
-							method="POST"
-							action="?/moveShip"
-							use:enhance={() => async ({ result, update }) => {
-								await update();
-								toastResult(result);
-							}}
-							class="mt-1.5 flex gap-1"
-						>
-							<input type="hidden" name="q" value={selectedHexInfo.q} />
-							<input type="hidden" name="r" value={selectedHexInfo.r} />
-							<select name="shipId" required class="min-w-0 flex-1 rounded border border-line/30 bg-surface-2 px-1 py-1 text-[11px]">
-								<option value="">Ship…</option>
-								{#each myFleetShips as ship (ship.id)}
-									<option value={ship.id}>{SHIP_CLASSES[ship.shipClass]?.short ?? ship.shipClass} · {ship.q},{ship.r}</option>
-								{/each}
-							</select>
-							<Button type="submit" size="xs" variant="soft-blue">Move here</Button>
-						</form>
-					{/if}
-				</div>
-			{/if}
-			<button
-				type="button"
+			<a
+				href="/training?view=navy&hex={selectedHexInfo.q},{selectedHexInfo.r}"
 				class="mt-3 inline-block rounded-sm bg-primary/20 px-2 py-1 text-primary-fg hover:bg-primary/30"
-				onclick={() => openFleetConsole({ q: selectedHexInfo.q, r: selectedHexInfo.r })}
 			>
 				Open in fleet console →
-			</button>
+			</a>
 		</div>
 	{/if}
 
@@ -1661,46 +1572,6 @@
 		>
 			{@render regionPanel()}
 		</aside>
-	{/if}
-
-	<!-- Fleet console: the hex sea overlaid on the maritime map. The ship,
-	     port, dock and mine forms post to this route's spread fleetActions. -->
-	{#if fleetOpen}
-		<div
-			class="absolute inset-0 z-40 flex justify-end bg-base-100/30 backdrop-blur-[2px]"
-			role="presentation"
-			transition:fade={{ duration: 140 }}
-			onclick={(e) => e.target === e.currentTarget && (fleetOpen = false)}
-		>
-			<div
-				class="panel relative flex h-full w-full max-w-5xl flex-col overflow-hidden rounded-l-md border-l border-line/30 shadow-[-12px_0_40px_rgba(0,0,0,0.45)]"
-				transition:fly={{ x: 48, duration: 200 }}
-			>
-				<div class="flex items-center justify-between gap-3 border-b border-line/20 px-3 py-2">
-					<h2 class="section-title">Fleet console · hex sea</h2>
-					<IconButton
-						icon={IconDismiss}
-						label="Close fleet console"
-						size="sm"
-						shape="square"
-						variant="ghost"
-						onclick={() => (fleetOpen = false)}
-					/>
-				</div>
-				<div class="min-h-0 flex-1 overflow-y-auto">
-					{#if data.navy}
-						<NavyConsole
-							data={data.navy}
-							embedded
-							initialHex={fleetInitialHex}
-							onselecthex={(h) => (selectedHexKey = hexKey(h))}
-						/>
-					{:else}
-						<p class="p-5 text-sm text-fg-muted">Join a state to command ships, build ports and sail the sea lanes.</p>
-					{/if}
-				</div>
-			</div>
-		</div>
 	{/if}
 </div>
 

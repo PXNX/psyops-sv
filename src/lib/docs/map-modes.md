@@ -44,11 +44,7 @@ aircraft.
 1. Switch to **Naval** or **Aerial**.
 2. Click a hex (not a region).
 3. The panel shows coordinates `q,r`, the EEZ owner and all contacts.
-4. The hex panel's **Fleet orders** can sail one of your ships to the hex or
-   lay mines from a ship already there. "Open in fleet console →" docks the
-   full hex-sea console beside the map with that hex preselected; taps in the
-   console highlight the same hex on the map. The console can also be opened at
-   any time from the ship button in the left tool rail.
+4. "Open in fleet console →" opens `/training?view=navy&hex=q,r` with that hex preselected.
 
 <Mermaid label="Fog of war" chart={"sequenceDiagram\nparticipant P as Player\nparticipant M as Map\nparticipant S as Sea intel\nP->>S: Launch sonar sweep over hex\nS-->>P: Report (valid 12 h)\nP->>M: Open naval mode\nM->>M: Filter enemy ships by fresh report\nM-->>P: Contacts visible, rest hidden"} />
 
@@ -68,7 +64,7 @@ sea is blank.
 - Sea grid (`fleet.config.ts`): `HEX_BOUNDS` q **0–89**, r **0–44** = **4,050**
   hexes, about 4° per cell and roughly the size of one region. The grid lives
   in the 1400×600 map's own coordinates; `HEX_SIZE = 30` is only the radius used
-  by the fleet-console overlay on this map.
+  by the separate fleet console view.
 - EEZ (`EEZ`): `radiusHexes = 2`. A coastal region's claim is grown from the
   **sampled outline of its actual shoreline**, not from its centroid: the
   nearest coastline owns each water hex. Hexes are painted before the land
