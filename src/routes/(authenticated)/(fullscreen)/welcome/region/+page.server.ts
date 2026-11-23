@@ -241,7 +241,7 @@ export const actions: Actions = {
 			if (!existingWallet) {
 				await tx.insert(userWallets).values({
 					userId: account.id,
-					balance: 1000,
+					balance: 100_000,
 					updatedAt: new Date()
 				});
 			}

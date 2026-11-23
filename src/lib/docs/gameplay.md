@@ -7,8 +7,16 @@ category: "Getting started"
 
 # Gameplay overview
 
-Psyops combines economics, politics and warfare in one shared world. This page
-summarises the central systems; each one has its own tutorial.
+Psyops is a game about inherited power. You start with money from a late relative
+and spend it to build influence, buying offices, commanding soldiers and shaping
+what people believe. Every system below is one way to apply force:
+
+- **Politics** — parties, elections, cabinets and blocs decide who may act.
+- **Force** — armies, fleets, aircraft and wars decide what happens when they do.
+- **Money** — companies, factories, markets and your wallet fund the other levers.
+- **Influence** — newspapers, intelligence and reputation decide what the world accepts.
+
+This page summarises the central systems; each one has its own tutorial.
 
 | Area | Tutorial |
 | --- | --- |
@@ -41,7 +49,7 @@ Every tutorial links to a config file with the exact values. A few anchors:
 
 | System | Concrete value | Source |
 | --- | --- | --- |
-| Starting wallet | 10,000 | `economy.config.ts` |
+| Starting inheritance | 100,000 | `welcome/create/+page.server.ts` |
 | Default factory wage | 1,500 | `economy.config.ts` |
 | Default tax rates | mining 10%, production 15%, market 5%, income 20% | `economy.config.ts` |
 | Battle preparation / planning | 24 h / 48 h | `combat.config.ts` |

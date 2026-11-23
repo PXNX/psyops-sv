@@ -251,15 +251,15 @@
 						<!-- ── Greeting ── -->
 						<div class="text-center space-y-4 py-2" in:fly={{ y: 20, duration: 300 }}>
 							<div class="flex justify-center">
-								<div class="size-16 rounded-sm bg-primary/12 border border-primary/35 flex items-center justify-center">
-									<span class="text-3xl">🎖️</span>
+								<div class="size-16 rounded-sm bg-primary/12 border border-primary/35 flex items-center justify-center animate-float">
+									<span class="text-3xl">📜</span>
 								</div>
 							</div>
 							<div>
-								<h2 class="text-2xl font-bold text-fg tracking-wide">Greeting Commander</h2>
+								<h2 class="font-serif text-2xl text-heading tracking-wide">An inheritance</h2>
 								<p class="text-fg-soft text-sm mt-2 max-w-sm mx-auto leading-relaxed">
-									Welcome to PsyOps — a political simulation where you shape nations, build empires, and wage wars
-									through strategy and diplomacy.
+									Your rich uncle has passed away and left you his fortune, his contracts and his network.
+									From now on you decide how force is applied — through politics, money, soldiers or influence.
 								</p>
 							</div>
 							<button

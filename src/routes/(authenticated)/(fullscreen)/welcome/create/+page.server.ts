@@ -9,7 +9,7 @@ import { superValidate, message } from "sveltekit-superforms";
 import { valibot } from "sveltekit-superforms/adapters";
 import { createProfileSchema } from "./schema";
 
-const STARTING_BALANCE = 1000;
+const STARTING_BALANCE = 100_000;
 
 export const load: PageServerLoad = async ({ locals }) => {
 	const account = locals.account!;

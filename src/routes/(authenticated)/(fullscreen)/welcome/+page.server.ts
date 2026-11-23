@@ -19,5 +19,5 @@ export const load: PageServerLoad = async ({ locals }) => {
 	}
 
 	// If they have a residence, let them view the welcome page
-	return {};
+	return { startingBalance: 100_000 };
 };
