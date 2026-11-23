@@ -91,6 +91,28 @@ who bought how much, how many bonds they hold, when they first bought and when
 the bonds mature. Self-purchases never earned karma, but bonds have no such
 restriction.
 
+## Credit rating and risk-based yields
+
+State debt no longer carries one flat coupon. `bondRiskFor()` prices a state's
+borrowing from the signals already visible on its pages: debt/GDP, the size of
+its treasury cushion, active wars, stability, capitulation and whether it has
+allies. Each factor adds or removes risk points; the total maps to an **A–E
+grade** and a coupon between `MIN_RATE` and `MAX_RATE` in
+`bond-risk.config.ts`.
+
+The coupon is stamped on the bond when an investor buys it, so a later change
+in the state's rating never alters a bond already sold. The debt page shows the
+grade and the full arithmetic; the bond market shows each offering's grade and
+yield before you buy.
+
+## A quieter front page
+
+The dossier itself has been rebuilt around an illustrated survey banner. The
+old dotted key-figure list is replaced by four linked cards — Civilians,
+Residents, Power and Debt — with the remaining figures in small chips beneath.
+Government, offices, regions and the war record sit in one column; the
+situation, your papers and the budget sit in the other.
+
 ## Power rating — an explainable score
 
 `/state/{id}/power` replaces the old modal. It shows the weighted components

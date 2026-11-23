@@ -36,6 +36,12 @@ and `executeProposal` is the single place where a passed bill is applied. That
 means a bill counted by the cron, signed by a minister and accepted manually by
 the speaker all produce the same result.
 
+The bill picker separates its subjects into three groups: **State policy**,
+**Construction laws** (hospital, school, power plant, infrastructure,
+fortifications and radar drafts) and **War and peace**. Construction drafts
+all follow the same path: one region, one level, built through the construction
+service once the bill passes.
+
 ## Official salaries
 
 The bill asks for one number: the **weekly salary of a parliament member**. All

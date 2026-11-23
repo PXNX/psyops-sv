@@ -18,6 +18,19 @@ cameras, copy files and cover its tracks before the heat burns it.
 
 <Mermaid label="An asset's life" chart={"flowchart LR\nA[Plant asset] --> B[Name + face + traits]\nB --> C[Probe / camera / files]\nC --> D{Heat reaches 100?}\nD -->|yes| E[Burned]\nD -->|no| F[Cover tracks]\nF --> C\nG[Enemy asset in our state] --> H{Turn it? 3%}\nH -->|yes| I[Double agent + files]\nH -->|no| J[Heat +22]"} />
 
+## Not just buildings: organisations are targets too
+
+The site catalogue is no longer limited to a state's power plants. For every
+target state the console now also lists the **companies** headquartered in its
+regions, the **factories** standing there, and the **party bureaux** of its
+political groups. Each gets its own site code, security level, camera view,
+host list and dossier templates, and each is handled exactly like any other
+site when probing, watching or copying files.
+
+Parties are tied to a region through their founder's residence, companies
+through their headquarters, and factories through the region where they stand.
+The real region name appears on the site card instead of a generic district.
+
 ## People, not icons
 
 Every new asset gets a human identity the moment it is planted:

@@ -80,6 +80,11 @@ for the interactive tours, and `DocPhoto.svelte` frames photographic plates.
 Tutorial panels also show step dots so you can see how far through a walkthrough
 you are. All artwork uses active theme colours, including in dark mode.
 
+Resource and product keys are never shown raw. A single `GOOD_LABELS` map in
+`resources.config.ts` turns `machine_tools` into "Machine tools",
+`rare_earth` into "Rare earths" and `enriched_uranium` into "Enriched uranium"
+across the market, production, factory, economy and ledger pages.
+
 The same treatment now reaches the consoles. `/ops` opens with an animated radar
 banner, uses small cyber/psyops glyphs on its domain tabs, draws a signal trace
 behind the live odds and a breathing shield beside the defence level. The
