@@ -269,6 +269,8 @@ export const userProfiles = pgTable("user_profiles", {
 	premiumUntil: timestamp("premium_until"),
 	// When true, the premium automation job acts on this user's behalf.
 	premiumAutomation: boolean("premium_automation").default(true).notNull(),
+	/** Community karma from upvotes — distinct from civilian reputation. */
+	karma: integer("karma").default(0).notNull(),
 	createdAt: timestamp("created_at").defaultNow().notNull(),
 	updatedAt: timestamp("updated_at").defaultNow().notNull()
 });
@@ -690,6 +692,73 @@ export const upvotes = pgTable(
 			.references(() => articles.id, { onDelete: "cascade" })
 	},
 	(t) => ({ userArticleIdx: uniqueIndex("user_article_index").on(t.userId, t.articleId) })
+);
+
+/** A poll attached to a post. Options are plain strings, voted once per user. */
+export const polls = pgTable(
+	"polls",
+	{
+		id: integer("id").generatedByDefaultAsIdentity().primaryKey(),
+		articleId: integer("article_id")
+			.notNull()
+			.references(() => articles.id, { onDelete: "cascade" }),
+		question: varchar("question", { length: 200 }).notNull(),
+		options: jsonb("options").$type<string[]>().notNull(),
+		createdBy: text("created_by")
+			.notNull()
+			.references(() => accounts.id, { onDelete: "cascade" }),
+		closesAt: timestamp("closes_at"),
+		createdAt: timestamp("created_at").defaultNow().notNull()
+	},
+	(t) => ({ articleIdx: uniqueIndex("uq_poll_article").on(t.articleId) })
+);
+
+export const pollVotes = pgTable(
+	"poll_votes",
+	{
+		id: integer("id").generatedByDefaultAsIdentity().primaryKey(),
+		pollId: integer("poll_id")
+			.notNull()
+			.references(() => polls.id, { onDelete: "cascade" }),
+		userId: text("user_id")
+			.notNull()
+			.references(() => accounts.id, { onDelete: "cascade" }),
+		optionIndex: integer("option_index").notNull(),
+		createdAt: timestamp("created_at").defaultNow().notNull()
+	},
+	(t) => ({ userPollIdx: uniqueIndex("uq_poll_vote").on(t.pollId, t.userId) })
+);
+
+/** Reader comments on a post. Plain text, capped in the action. */
+export const comments = pgTable(
+	"comments",
+	{
+		id: integer("id").generatedByDefaultAsIdentity().primaryKey(),
+		articleId: integer("article_id")
+			.notNull()
+			.references(() => articles.id, { onDelete: "cascade" }),
+		authorId: text("author_id")
+			.notNull()
+			.references(() => accounts.id, { onDelete: "cascade" }),
+		content: text("content").notNull(),
+		createdAt: timestamp("created_at").defaultNow().notNull()
+	},
+	(t) => ({ articleIdx: index("idx_comment_article").on(t.articleId, t.id) })
+);
+
+export const commentVotes = pgTable(
+	"comment_votes",
+	{
+		id: integer("id").generatedByDefaultAsIdentity().primaryKey(),
+		commentId: integer("comment_id")
+			.notNull()
+			.references(() => comments.id, { onDelete: "cascade" }),
+		userId: text("user_id")
+			.notNull()
+			.references(() => accounts.id, { onDelete: "cascade" }),
+		createdAt: timestamp("created_at").defaultNow().notNull()
+	},
+	(t) => ({ userCommentIdx: uniqueIndex("uq_comment_vote").on(t.commentId, t.userId) })
 );
 
 // Newspaper subscriptions
@@ -1964,7 +2033,7 @@ export const violationReasonEnum = pgEnum("violation_reason", [
 ]);
 
 export const reportStatusEnum = pgEnum("report_status", ["pending", "resolved", "dismissed"]);
-export const reportTargetTypeEnum = pgEnum("report_target_type", ["message", "account", "party"]);
+export const reportTargetTypeEnum = pgEnum("report_target_type", ["message", "account", "party", "comment", "article"]);
 
 export const moderationActionEnum = pgEnum("moderation_action", [
 	"warning",

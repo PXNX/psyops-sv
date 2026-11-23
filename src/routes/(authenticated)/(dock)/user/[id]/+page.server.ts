@@ -1,6 +1,7 @@
 // src/routes/(authenticated)/(dock)/user/[id]/+page.server.ts
 import { db } from "#lib/server/db.js";
 import { dividendYieldPercent, dividendYields } from "#lib/server/services/economy/dividends.js";
+import { regionOpinion } from "#lib/server/services/politics/civic.service.js";
 import { portfolioReturns } from "#lib/server/services/economy/returns.js";
 import {
 	accounts,
@@ -487,6 +488,11 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 	]);
 
 	const profileEditCost: number = PROFILE_EDIT_CONFIG.COST;
+	const [karmaRow] = await db
+		.select({ karma: userProfiles.karma })
+		.from(userProfiles)
+		.where(eq(userProfiles.accountId, params.id));
+	const reputation = residence?.regionId ? Math.round(await regionOpinion(db, residence.regionId)) : null;
 
 	return {
 		userNotFound: false as const,
@@ -533,6 +539,8 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 			: null,
 		articleCount: articleCountResult?.count || 0,
 		upvoteCount: upvoteCountResult?.count || 0,
+		karma: karmaRow?.karma ?? 0,
+		reputation,
 		isOwnProfile,
 		editForm,
 		profileEditCost,

@@ -97,6 +97,18 @@
 		<input type="hidden" name="title" value={title} />
 		<input type="hidden" name="content" value={content} />
 
+		<fieldset class="space-y-2 rounded-sm border border-line/20 p-3">
+			<legend class="field-label">Poll (optional)</legend>
+			<input name="pollQuestion" maxlength="200" placeholder="Poll question" class="field-control w-full rounded-sm px-3 py-2 text-sm" />
+			<textarea
+				name="pollOptions"
+				rows="3"
+				placeholder="One option per line"
+				class="field-control w-full rounded-sm px-3 py-2 text-sm"
+			></textarea>
+			<p class="field-hint">Leave blank for no poll. Voters choose one option.</p>
+		</fieldset>
+
 		<p class="font-serif text-xl leading-tight text-fg break-words">{title}</p>
 
 		{#if data.newspapers.length > 0}

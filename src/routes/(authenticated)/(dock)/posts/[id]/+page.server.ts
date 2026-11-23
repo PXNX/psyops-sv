@@ -7,6 +7,16 @@ import type { PageServerLoad, Actions } from "./$types";
 import { getLogoUrl, getSignedDownloadUrl } from "#lib/server/backblaze.js";
 import { readingMinutes } from "#lib/server/services/content/article-text.js";
 import { sanitizeArticleHtml } from "#lib/utils/safe-html.js";
+import {
+	SocialError,
+	addComment,
+	adjustKarma,
+	loadComments,
+	loadPoll,
+	reportComment,
+	toggleCommentVote,
+	votePoll
+} from "#lib/server/services/content/social.js";
 
 export const load: PageServerLoad = async ({ params, locals }) => {
 	const articleId = Number(params.id);
@@ -41,7 +51,7 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 	}
 
 	// Upvote check, view tracking and author logo are independent, so run them in parallel
-	const [hasUpvoted, , authorLogo, newspaperLogo] = await Promise.all([
+	const [hasUpvoted, poll, commentList, , authorLogo, newspaperLogo] = await Promise.all([
 		// Check if user has upvoted
 		(async () => {
 			if (!locals.account) return false;
@@ -52,6 +62,9 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 				.limit(1);
 			return !!upvote;
 		})(),
+
+		loadPoll(db, articleId, locals.account?.id),
+		loadComments(db, articleId, locals.account?.id),
 
 		// Track article view
 		// Only track if user is not the author
@@ -80,6 +93,8 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 			minutes: readingMinutes(articleData.content)
 		},
 		hasUpvoted,
+		poll,
+		comments: commentList,
 		isAuthor: locals.account?.id === articleData.authorId
 	};
 };
@@ -90,6 +105,7 @@ export const actions: Actions = {
 
 		const articleId = Number(params.id);
 		if (!Number.isInteger(articleId)) return fail(404, { error: "Article not found" });
+		const [article] = await db.select({ authorId: articles.authorId }).from(articles).where(eq(articles.id, articleId));
 
 		try {
 			// Check if already upvoted
@@ -100,20 +116,52 @@ export const actions: Actions = {
 				.limit(1);
 
 			if (existing) {
-				// Remove upvote
 				await db.delete(upvotes).where(and(eq(upvotes.userId, account.id), eq(upvotes.articleId, articleId)));
+				if (article?.authorId && article?.authorId !== account.id) await adjustKarma(db, article?.authorId, -1);
 				return { success: true, upvoted: false };
 			} else {
-				// Add upvote
-				await db.insert(upvotes).values({
-					userId: account.id,
-					articleId
-				});
+				await db.insert(upvotes).values({ userId: account.id, articleId });
+				if (article?.authorId && article?.authorId !== account.id) await adjustKarma(db, article?.authorId, 1);
 				return { success: true, upvoted: true };
 			}
 		} catch (err) {
 			console.error("Upvote error:", err);
 			return fail(500, { error: "Failed to process upvote" });
+		}
+	},
+	votePoll: async ({ request, locals, params }) => {
+		const f = await request.formData();
+		try {
+			await votePoll(db, locals.account!.id, Number(f.get("pollId")), Number(f.get("optionIndex")));
+			return { success: true, message: "Vote recorded." };
+		} catch (err) {
+			return fail(400, { error: err instanceof SocialError ? err.message : "Vote failed" });
+		}
+	},
+	addComment: async ({ request, locals, params }) => {
+		const f = await request.formData();
+		try {
+			await addComment(db, locals.account!.id, Number(params.id), String(f.get("content") ?? ""));
+			return { success: true, message: "Comment posted." };
+		} catch (err) {
+			return fail(400, { error: err instanceof SocialError ? err.message : "Comment failed" });
+		}
+	},
+	commentVote: async ({ request, locals }) => {
+		const f = await request.formData();
+		try {
+			return { success: true, ...(await toggleCommentVote(db, locals.account!.id, Number(f.get("commentId")))) };
+		} catch (err) {
+			return fail(400, { error: err instanceof SocialError ? err.message : "Vote failed" });
+		}
+	},
+	reportComment: async ({ request, locals }) => {
+		const f = await request.formData();
+		try {
+			await reportComment(db, locals.account!.id, Number(f.get("commentId")), String(f.get("reason") ?? ""));
+			return { success: true, message: "Report sent to the moderators." };
+		} catch (err) {
+			return fail(400, { error: err instanceof SocialError ? err.message : "Report failed" });
 		}
 	}
 };

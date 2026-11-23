@@ -5,6 +5,10 @@
 <script lang="ts">
 	import { settings } from "#lib/settings.svelte.js";
 	import { sanitizeArticleHtml } from "#lib/utils/safe-html.js";
+	import { splitDiagrams } from "#lib/utils/post-diagrams.js";
+	import Mermaid from "#lib/component/Mermaid.svelte";
+	import YouTubeEmbed from "#lib/component/press/YouTubeEmbed.svelte";
+	import LinkPreview from "#lib/component/LinkPreview.svelte";
 	import ExternalLinkWarning from "#lib/component/ExternalLinkWarning.svelte";
 
 	interface Props {
@@ -15,6 +19,7 @@
 	let { html, class: className = "" }: Props = $props();
 
 	const safeHtml = $derived(sanitizeArticleHtml(html, { loadImages: settings.loadImages }));
+	const segments = $derived(splitDiagrams(safeHtml));
 
 	let pendingLink = $state<string | null>(null);
 	let warningOpen = $state(false);
@@ -55,7 +60,18 @@
 </script>
 
 <div class={className} use:externalLinks>
-	{@html safeHtml}
+	{#each segments as segment}
+		{#if segment.kind === "html"}
+			{@html segment.html}
+		{:else if segment.kind === "mermaid"}
+			<Mermaid chart={segment.chart} />
+		{:else if segment.kind === "youtube"}
+			<YouTubeEmbed id={segment.id} />
+		{:else}
+			{@html segment.html}
+			<LinkPreview href={segment.href} />
+		{/if}
+	{/each}
 </div>
 
 <ExternalLinkWarning bind:open={warningOpen} url={pendingLink ?? ""} />

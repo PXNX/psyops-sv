@@ -1,6 +1,6 @@
 // src/routes/(authenticated)/(fullscreen)/posts/new/+page.server.ts
 import { db } from "#lib/server/db.js";
-import { journalists, newspapers, files, articles } from "#lib/server/schema.js";
+import { journalists, newspapers, files, articles, polls } from "#lib/server/schema.js";
 import { and, eq } from "drizzle-orm";
 import { fail, redirect } from "@sveltejs/kit";
 import type { PageServerLoad, Actions } from "./$types";
@@ -103,6 +103,20 @@ export const actions: Actions = {
 				.returning();
 
 			articleId = article.id;
+
+			const pollQuestion = String(formData.get("pollQuestion") ?? "").trim();
+			const pollOptions = String(formData.get("pollOptions") ?? "")
+				.split("\n")
+				.map((o) => o.trim())
+				.filter(Boolean);
+			if (pollQuestion && pollOptions.length >= 2) {
+				await db.insert(polls).values({
+					articleId,
+					question: pollQuestion.slice(0, 200),
+					options: pollOptions.slice(0, 10).map((o) => o.slice(0, 200)),
+					createdBy: account.id
+				});
+			}
 
 			// Send push notifications to newspaper subscribers
 			if (newspaperId) {

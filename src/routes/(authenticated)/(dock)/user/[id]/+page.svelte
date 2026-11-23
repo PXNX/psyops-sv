@@ -497,6 +497,18 @@
 							{data.upvoteCount}
 						</dd>
 					</div>
+					<div class="min-w-0">
+						<dt class="font-mono text-[11px] uppercase tracking-[0.15em] text-fg-muted" title="Earned from community upvotes on posts and comments">Karma</dt>
+						<dd class="text-fg-body border-b border-dotted border-line/40 pb-0.5 font-mono">
+							{data.karma}
+						</dd>
+					</div>
+					<div class="min-w-0">
+						<dt class="font-mono text-[11px] uppercase tracking-[0.15em] text-fg-muted" title="How much civilians in the home region like you">Reputation</dt>
+						<dd class="text-fg-body border-b border-dotted border-line/40 pb-0.5 font-mono">
+							{data.reputation ?? "—"}
+						</dd>
+					</div>
 					<div class="col-span-2 min-w-0">
 						<dt class="font-mono text-[11px] uppercase tracking-[0.15em] text-fg-muted">Medals</dt>
 						<dd class="border-b border-dotted border-line/40 pb-0.5 font-mono">

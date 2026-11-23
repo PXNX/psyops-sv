@@ -21,6 +21,7 @@
 	import ReportMessageModal from "#lib/component/ReportMessageModal.svelte";
 	import BlockUserModal from "#lib/component/BlockUserModal.svelte";
 	import UserLink from "#lib/component/UserLink.svelte";
+	import LinkPreview from "#lib/component/LinkPreview.svelte";
 	import { Button, IconButton, Badge, ActionListItem } from "#lib/component/ui/index.js";
 	import { settings } from "#lib/settings.svelte.js";
 	import { toast, toastResult } from "#lib/ui/toast.svelte.js";
@@ -496,6 +497,9 @@
 															>{/if}{:else}{part.text}{/if}{/each}</span
 											>
 										{/if}
+										{#each linkify(msg.content).filter((part) => part.link && /^\/(posts|user|region|state|bloc|party)\//.test(part.text)) as part, i (i)}
+											<LinkPreview href={part.text} />
+										{/each}
 										<span class="stamp">{clockTime(msg.sentAt)}</span>
 									</div>
 								</div>

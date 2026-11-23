@@ -1,6 +1,8 @@
 <!-- src/routes/(authenticated)/(dock)/posts/[id]/+page.svelte -->
 <script lang="ts">
 	import { page } from "$app/state";
+	import { enhance } from "$app/forms";
+	import { toastResult } from "#lib/ui/toast.svelte.js";
 	import FluentHeart20Regular from "~icons/fluent/heart-20-regular";
 	import FluentHeart20Filled from "~icons/fluent/heart-20-filled";
 	import FluentArrowLeft20Filled from "~icons/fluent/arrow-left-20-filled";
@@ -10,7 +12,7 @@
 	import Logo from "#lib/component/Logo.svelte";
 	import ShareButton from "#lib/component/ShareButton.svelte";
 	import PageContainer from "#lib/component/PageContainer.svelte";
-	import { Button, IconButton } from "#lib/component/ui/index.js";
+	import { Badge, Button, IconButton } from "#lib/component/ui/index.js";
 	import { celebrate } from "#lib/utils/celebrate.js";
 	import { toast } from "#lib/ui/toast.svelte.js";
 	import { stamp } from "#lib/component/press/time.js";
@@ -145,6 +147,36 @@
 			class="article-content drop-cap mx-auto mt-8 max-w-[42rem] text-[1.0625rem] text-fg-body break-words [&_a]:text-ink-link [&_a]:underline [&_a]:underline-offset-2 [&_h1]:text-fg [&_h2]:text-fg [&_h3]:text-fg [&_h1]:font-serif [&_h2]:font-serif [&_h3]:font-serif [&_h1]:text-3xl [&_h2]:text-2xl [&_h3]:text-xl [&_hr]:my-8 [&_hr]:border-ink/20"
 		/>
 
+		{#if data.poll}
+			{@const poll = data.poll}
+			<section class="panel animate-soft-in mx-auto mt-8 max-w-[42rem] rounded-sm p-5">
+				<div class="flex items-center gap-2">
+					<h2 class="section-title text-base">{poll.question}</h2>
+					<Badge tone="blue" size="xs">poll</Badge>
+				</div>
+				<div class="mt-3 space-y-2">
+					{#each poll.options as option, i}
+						{@const pct = poll.total ? Math.round((poll.counts[i] ?? 0) / poll.total * 100) : 0}
+						<form method="POST" action="?/votePoll" use:enhance={() => async ({ result, update }) => { toastResult(result); await update(); }}>
+							<input type="hidden" name="pollId" value={poll.id} />
+							<input type="hidden" name="optionIndex" value={i} />
+							<button
+								type="submit"
+								disabled={poll.closed}
+								class="relative w-full overflow-hidden rounded-sm border px-3 py-2 text-left text-sm transition-colors {poll.myVote === i
+									? 'border-primary/60 bg-primary/12 text-primary-fg'
+									: 'border-line/25 bg-surface-2 hover:border-primary/40'}"
+							>
+								<span class="absolute inset-y-0 left-0 bg-primary/10 transition-all duration-500" style="width:{pct}%"></span>
+								<span class="relative flex items-center justify-between gap-2"><span>{option}</span><span class="font-mono text-xs text-fg-muted">{pct}% · {poll.counts[i] ?? 0}</span></span>
+							</button>
+						</form>
+					{/each}
+				</div>
+				<p class="mt-2 text-[11px] text-fg-muted">{poll.total} votes{poll.closed ? " · closed" : ""}</p>
+			</section>
+		{/if}
+
 		<!-- Reactions -->
 		<footer class="mx-auto mt-10 max-w-[42rem] pt-4 border-t border-ink/20 flex items-center gap-3">
 			<button
@@ -167,5 +199,42 @@
 			</button>
 			<span class="text-sm text-fg-muted">{upvoteCount === 1 ? "like" : "likes"}</span>
 		</footer>
+
+		<!-- Reader comments -->
+		<section class="mx-auto mt-8 max-w-[42rem] space-y-4">
+			<div class="flex items-center gap-2">
+				<h2 class="section-title text-base">Comments</h2>
+				<Badge tone="neutral" size="xs">{data.comments.length}</Badge>
+			</div>
+			<form method="POST" action="?/addComment" use:enhance={() => async ({ result, update }) => { toastResult(result); await update(); }} class="space-y-2">
+				<textarea name="content" rows="3" maxlength="2000" required placeholder="Add a comment…" class="field-control w-full rounded-sm px-3 py-2 text-sm"></textarea>
+				<Button type="submit" size="sm" variant="secondary">Post comment</Button>
+			</form>
+			{#each data.comments as comment (comment.id)}
+				<article class="panel animate-soft-in rounded-sm p-3 text-sm">
+					<div class="flex flex-wrap items-center gap-2 text-xs text-fg-muted">
+						<UserLink id={comment.authorId} name={comment.authorName ?? "Reader"} size="xs" plain />
+						<span>· {stamp(comment.createdAt)}</span>
+					</div>
+					<p class="mt-2 whitespace-pre-wrap text-fg-body">{comment.content}</p>
+					<div class="mt-2 flex items-center gap-2">
+						<form method="POST" action="?/commentVote" use:enhance={() => async ({ result, update }) => { toastResult(result); await update(); }}>
+							<input type="hidden" name="commentId" value={comment.id} />
+							<button type="submit" class="press-spring rounded-sm border px-2 py-1 text-xs {comment.hasVoted ? 'border-primary/50 bg-primary/12 text-primary-fg' : 'border-line/25 text-fg-muted hover:border-primary/40'}">
+								▲ {comment.votes}
+							</button>
+						</form>
+						<details class="ml-auto">
+							<summary class="cursor-pointer text-xs text-fg-muted hover:text-fg">Report</summary>
+							<form method="POST" action="?/reportComment" use:enhance={() => async ({ result, update }) => { toastResult(result); await update(); }} class="mt-2 flex gap-1">
+								<input type="hidden" name="commentId" value={comment.id} />
+								<input name="reason" placeholder="Reason" class="field-control min-w-0 flex-1 rounded-sm px-2 py-1 text-xs" />
+								<Button type="submit" size="xs" variant="ghost">Send</Button>
+							</form>
+						</details>
+					</div>
+				</article>
+			{/each}
+		</section>
 	</article>
 </PageContainer>

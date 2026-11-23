@@ -4,7 +4,9 @@
 <script lang="ts">
 	import { onMount } from "svelte";
 	import { page } from "$app/state";
+	import { browser } from "$app/env";
 	import IconClose from "~icons/fluent/dismiss-20-regular";
+	import IconLink from "~icons/fluent/link-20-regular";
 	import { Button, IconButton } from "#lib/component/ui/index.js";
 
 	/** Only one tour runs at a time; the docs links can launch a specific one. */
@@ -32,6 +34,7 @@
 	let open = $state(false);
 	let index = $state(0);
 	let ready = $state(false);
+	let copied = $state(false);
 	let spotlight = $state<{ x: number; y: number; w: number; h: number } | null>(null);
 	let key = $derived(`psyops-tutorial-${id}`);
 
@@ -77,6 +80,28 @@
 		open = true;
 	}
 
+	/** Copy a link that reopens this exact tutorial step. */
+	async function copyStepLink() {
+		if (!browser) return;
+		const url = new URL(page.url.href);
+		url.searchParams.set("tutorial", id);
+		url.searchParams.set("step", String(index + 1));
+		try {
+			await navigator.clipboard.writeText(url.toString());
+			copied = true;
+			window.setTimeout(() => (copied = false), 1600);
+		} catch {
+			copied = false;
+		}
+	}
+
+	function jumpToLinkedStep() {
+		const raw = page.url.searchParams.get("step");
+		const stepNumber = Number(raw);
+		if (!raw || !Number.isInteger(stepNumber)) return;
+		index = Math.max(0, Math.min(steps.length - 1, stepNumber - 1));
+	}
+
 	onMount(() => {
 		try {
 			const saved = JSON.parse(localStorage.getItem(key) ?? "null") as { index?: number; done?: boolean } | null;
@@ -90,6 +115,7 @@
 			takeOver();
 			open = true;
 		}
+		if (page.url.searchParams.get("tutorial") === id) jumpToLinkedStep();
 		ready = true;
 
 		const onEvent = (e: Event) => {
@@ -112,6 +138,7 @@
 		const request = page.url.searchParams.get("tutorial");
 		if (!ready || !request || (request !== id && request !== "restart" && request !== "start")) return;
 		restart();
+		if (request === id) jumpToLinkedStep();
 	});
 
 	$effect(() => {
@@ -166,7 +193,18 @@
 					<div class="text-[10px] uppercase tracking-[0.18em] text-fg-muted">{title} · {index + 1}/{steps.length}</div>
 					<h3 class="truncate text-sm font-semibold text-heading">{step?.title}</h3>
 				</div>
-				<IconButton icon={IconClose} label="End guide" size="xs" shape="square" variant="ghost" onclick={finish} />
+				<div class="flex shrink-0 items-center gap-0.5">
+					<button
+						type="button"
+						class="rounded-sm p-1 text-fg-muted transition-colors hover:bg-surface-5 hover:text-primary-fg"
+						title="Copy a link to this tutorial step"
+						aria-label="Copy link to this tutorial step"
+						onclick={copyStepLink}
+					>
+						{#if copied}<span class="text-[10px] text-positive-fg">Copied</span>{:else}<IconLink class="size-4" />{/if}
+					</button>
+					<IconButton icon={IconClose} label="End guide" size="xs" shape="square" variant="ghost" onclick={finish} />
+				</div>
 			</div>
 			<p class="mt-2 text-xs leading-relaxed text-fg-soft">{step?.body}</p>
 			<div class="mt-3 flex items-center justify-between gap-2">

@@ -31,11 +31,13 @@
 	import { Button } from "#lib/component/ui/index.js";
 	import { Editor, EditorContent, BubbleMenu } from "svelte-tiptap";
 	import { isSafeHttpUrl, isSafeLinkUrl } from "#lib/utils/url-safety.js";
+	import { youtubeId } from "#lib/utils/post-diagrams.js";
 
 	import MdiFormatBold from "~icons/mdi/format-bold";
 	import MdiFormatItalic from "~icons/mdi/format-italic";
 	import MdiFormatStrikethrough from "~icons/mdi/format-strikethrough";
 	import MdiCodeTags from "~icons/mdi/code-tags";
+	import MdiChartGantt from "~icons/mdi/chart-gantt";
 	import MdiFormatHeader1 from "~icons/mdi/format-header-1";
 	import MdiFormatHeader2 from "~icons/mdi/format-header-2";
 	import MdiFormatHeader3 from "~icons/mdi/format-header-3";
@@ -59,7 +61,7 @@
 	let _transaction = $state(0);
 
 	// Insert-by-URL dialog, used for both remote images and links.
-	type InsertKind = "image" | "link";
+	type InsertKind = "image" | "link" | "video";
 	let insertKind = $state<InsertKind>("image");
 	let insertOpen = $state(false);
 	let urlInput = $state("");
@@ -82,6 +84,16 @@
 				return;
 			}
 			editor.chain().focus().setImage({ src: url, alt: "" }).run();
+		} else if (insertKind === "video") {
+			if (!youtubeId(url)) {
+				urlError = "Enter a YouTube watch or share link.";
+				return;
+			}
+			editor
+				.chain()
+				.focus()
+				.insertContent({ type: "text", text: url, marks: [{ type: "link", attrs: { href: url } }] })
+				.run();
 		} else {
 			if (!isSafeLinkUrl(url)) {
 				urlError = "Enter an http(s), mailto: or relative (/) link.";
@@ -272,6 +284,12 @@
 			active: () => isActive("codeBlock")
 		},
 		{
+			icon: MdiChartGantt,
+			label: "Mermaid diagram",
+			run: () => editor?.chain().focus().toggleCodeBlock({ language: "mermaid" }).run(),
+			active: () => isActive("codeBlock") && editor?.getAttributes("codeBlock").language === "mermaid"
+		},
+		{
 			icon: MdiMinus,
 			label: "Horizontal Rule",
 			run: () => editor?.chain().focus().setHorizontalRule().run()
@@ -285,6 +303,7 @@
 
 	const inserts: ToolbarItem[] = [
 		{ icon: MdiImage, label: "Insert image from URL", run: () => openInsert("image") },
+		{ icon: MdiChartGantt, label: "Embed YouTube video", run: () => openInsert("video") },
 		{ icon: MdiLink, label: "Insert link", run: () => openInsert("link") }
 	];
 
@@ -351,7 +370,7 @@
 </div>
 
 <!-- Remote image / link insertion. Images are embedded by URL only. -->
-<Modal bind:open={insertOpen} title={insertKind === "image" ? "Insert image" : "Insert link"} size="small">
+<Modal bind:open={insertOpen} title={insertKind === "image" ? "Insert image" : insertKind === "video" ? "Embed YouTube video" : "Insert link"} size="small">
 	<form
 		class="space-y-3"
 		onsubmit={(e) => {
@@ -360,7 +379,7 @@
 		}}
 	>
 		<label class="field-label" for="insert-url">
-			{insertKind === "image" ? "Image URL" : "Link URL"}
+			{insertKind === "image" ? "Image URL" : insertKind === "video" ? "YouTube URL" : "Link URL"}
 		</label>
 		<input
 			id="insert-url"
@@ -368,7 +387,11 @@
 			type="url"
 			inputmode="url"
 			bind:value={urlInput}
-			placeholder={insertKind === "image" ? "https://example.com/photo.jpg" : "https://example.com"}
+			placeholder={insertKind === "image"
+				? "https://example.com/photo.jpg"
+				: insertKind === "video"
+					? "https://youtu.be/..."
+					: "https://example.com"}
 			autocomplete="off"
 			oninput={() => (urlError = "")}
 			onkeydown={(e) => {
