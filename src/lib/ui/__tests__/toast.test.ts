@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, rs } from "@rstest/core";
-import { MAX_TOASTS, toast, toastResult } from "../toast.svelte";
-import { confirmAction, confirmStore } from "../confirm.svelte";
+import { MAX_TOASTS, toast, toastResult } from "../toast.svelte.ts";
+import { confirmAction, confirmStore } from "../confirm.svelte.ts";
 
 beforeEach(() => {
 	rs.useFakeTimers();

@@ -30,11 +30,7 @@ jobs:
         run: bun install --frozen-lockfile
 
       - name: Run unit and integration tests
-        # The Svelte rune-module transform behaves differently under Bun on CI
-        # runners; run that one file under Node where it works.
-        run: |
-          bun --bun x rstest run --exclude '**/toast.test.ts'
-          bun x rstest run src/lib/ui/__tests__/toast.test.ts
+        run: bun --bun x rstest run
 
   quality:
     name: typecheck and build
