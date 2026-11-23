@@ -28,6 +28,7 @@ import {
 	type AirMissionKind,
 	type Hex
 } from "#lib/config/index.js";
+import { awardCommanderExperience, commanderFactors, commanderIdsFor } from "./commanders.js";
 import { enemiesOf, sideOf } from "./recon";
 import { navalAuthority } from "./naval";
 
@@ -141,11 +142,18 @@ async function damageRegion(db: Db, regionId: number, field: "infrastructure" | 
 async function applyMission(db: Db, mission: typeof airMissions.$inferSelect, now: Date, rng: () => number): Promise<AirMissionResult> {
 	const def = AIR_MISSIONS[mission.kind as AirMissionKind]!;
 	const hex: Hex | null = mission.q != null && mission.r != null ? { q: mission.q, r: mission.r } : null;
+	// An airgroup commander's traits scale the effect of every sortie.
+	const [flyer] = await db.select().from(militaryUnits).where(eq(militaryUnits.id, mission.unitId));
+	const groupId = flyer?.groupId ?? 0;
+	const factors = groupId ? await commanderFactors(db, [groupId]) : new Map();
+	const factor = factors.get(groupId);
+	const magnitude = Math.max(1, Math.round(def.magnitude * (factor?.attack ?? 1)));
+	const [commanderId] = groupId ? [...(await commanderIdsFor(db, [groupId])).values()] : [];
 
 	switch (mission.kind as AirMissionKind) {
 		case "strategic_bombing": {
-			const infra = await damageRegion(db, mission.targetRegionId!, "infrastructure", def.magnitude);
-			const economy = await damageRegion(db, mission.targetRegionId!, "economy", Math.max(1, def.magnitude - 1));
+			const infra = await damageRegion(db, mission.targetRegionId!, "infrastructure", magnitude);
+			const economy = await damageRegion(db, mission.targetRegionId!, "economy", Math.max(1, magnitude - 1));
 			const message = `Strategic bombing: infrastructure -${infra}, economy -${economy} in region ${mission.targetRegionId}.`;
 			await log(db, mission.stateId, "strategic_bombing", message);
 			return { message, damage: infra + economy };
@@ -155,13 +163,13 @@ async function applyMission(db: Db, mission: typeof airMissions.$inferSelect, no
 				regionId: mission.targetRegionId!,
 				stateId: mission.stateId,
 				kind: "supply",
-				magnitude: def.magnitude,
+				magnitude,
 				startsAt: now,
 				expiresAt: new Date(now.getTime() + 12 * HOUR)
 			});
 			const message = `Logistic strike cut region ${mission.targetRegionId}'s supply for 12 h.`;
 			await log(db, mission.stateId, "logistic_strike", message);
-			return { message, damage: def.magnitude };
+			return { message, damage: magnitude };
 		}
 		case "naval_bombing": {
 			const enemyStates = await enemiesOf(db, await sideOf(db, mission.stateId));
@@ -173,7 +181,7 @@ async function applyMission(db: Db, mission: typeof airMissions.$inferSelect, no
 				return { message };
 			}
 			const target = targets.sort((a, b) => a.health - b.health)[0]!;
-			const damage = rng() < 0.8 ? def.magnitude : Math.floor(def.magnitude / 3);
+			const damage = rng() < 0.8 ? magnitude : Math.floor(magnitude / 3);
 			const health = Math.max(0, target.health - damage);
 			await db
 				.update(fleetShips)
@@ -222,13 +230,13 @@ async function applyMission(db: Db, mission: typeof airMissions.$inferSelect, no
 				regionId: mission.targetRegionId!,
 				stateId: mission.stateId,
 				kind: "supply_boost",
-				magnitude: -def.magnitude,
+				magnitude: -magnitude,
 				startsAt: now,
 				expiresAt: new Date(now.getTime() + 12 * HOUR)
 			});
-			const message = `Airlift delivered ${def.magnitude} supply units to region ${mission.targetRegionId}.`;
+			const message = `Airlift delivered ${magnitude} supply units to region ${mission.targetRegionId}.`;
 			await log(db, mission.stateId, "airlift", message);
-			return { message, supply: def.magnitude };
+			return { message, supply: magnitude };
 		}
 		case "refuel": {
 			const ports = await db.select().from(seaPorts).where(eq(seaPorts.regionId, mission.targetRegionId!));
@@ -237,7 +245,7 @@ async function applyMission(db: Db, mission: typeof airMissions.$inferSelect, no
 				const ships = await db.select().from(fleetShips).where(eq(fleetShips.q, port.q));
 				for (const ship of ships.filter((s) => s.r === port.r && s.stateId === mission.stateId)) {
 					const room = (SHIP_CLASSES[ship.shipClass]?.fuelCapacity ?? 100) - ship.fuel;
-					const amount = Math.min(room, def.magnitude);
+					const amount = Math.min(room, magnitude);
 					if (amount <= 0) continue;
 					await db.update(fleetShips).set({ fuel: ship.fuel + amount }).where(eq(fleetShips.id, ship.id));
 					given += amount;
@@ -252,13 +260,13 @@ async function applyMission(db: Db, mission: typeof airMissions.$inferSelect, no
 				regionId: mission.targetRegionId!,
 				stateId: mission.stateId,
 				kind: "supply_boost",
-				magnitude: -def.magnitude,
+				magnitude: -magnitude,
 				startsAt: now,
 				expiresAt: new Date(now.getTime() + 6 * HOUR)
 			});
 			const message = `Close support eased supply pressure in region ${mission.targetRegionId}.`;
 			await log(db, mission.stateId, "battlefield_support", message);
-			return { message, supply: def.magnitude };
+			return { message, supply: magnitude };
 		}
 	}
 }
@@ -278,6 +286,10 @@ export async function resolveAirMissions(db: Database, now = new Date(), rng: ()
 				.update(militaryUnits)
 				.set({ experience: Math.min(100, (unit.experience ?? 0) + 3) })
 				.where(eq(militaryUnits.id, unit.id));
+			if (unit.groupId) {
+				const ids = await commanderIdsFor(db, [unit.groupId]);
+				await awardCommanderExperience(db, ids.get(unit.groupId), 5);
+			}
 		}
 		await db.update(airMissions).set({ status: "completed", result }).where(eq(airMissions.id, mission.id));
 		resolved++;

@@ -18,10 +18,15 @@ import {
 	reconMissions,
 	seaPorts,
 	fleetShips,
+	fleetHexes,
+	fleets,
 	navalMines
 } from "#lib/server/schema.js";
 import { sql, eq, and, inArray } from "drizzle-orm";
 import { SeaIntelError, launchSeaIntel, seaIntelOptions, seaPicture } from "#lib/server/services/military/sea-intel.js";
+import { fleetActions } from "#lib/server/services/military/fleet-page.js";
+import { fleetAuthority } from "#lib/server/services/military/fleet.js";
+import { amphibiousActions } from "#lib/server/services/military/amphibious-page.js";
 import { fail } from "@sveltejs/kit";
 import type { Actions, PageServerLoad } from "./$types";
 import {
@@ -220,6 +225,10 @@ async function situation(userId: string) {
 }
 
 export const actions: Actions = {
+	// Fleet and group orders are issued from the map overlay as well as the
+	// Forces page. The map's own sea-intel action below overrides the fleet one.
+	...fleetActions,
+	...amphibiousActions,
 	launchRecon: async ({ request, locals }) => {
 		const form = await request.formData();
 		const sensor = String(form.get("sensor") ?? "") as SensorId;
@@ -356,7 +365,13 @@ export const load: PageServerLoad = async ({ locals }) => {
 					db.select().from(fleetShips),
 					db.select().from(navalMines),
 					db
-						.select({ regionId: militaryUnits.regionId, unitType: militaryUnits.unitType, stateId: militaryUnits.stateId, fuel: militaryUnits.fuel })
+						.select({
+							id: militaryUnits.id,
+							regionId: militaryUnits.regionId,
+							unitType: militaryUnits.unitType,
+							stateId: militaryUnits.stateId,
+							fuel: militaryUnits.fuel
+						})
 						.from(militaryUnits)
 						.where(inArray(militaryUnits.unitType, AIRCRAFT_IDS))
 				]).then(([ports, ships, mines, aircraft]) => ({ ports, ships, mines, aircraft }))
@@ -493,6 +508,12 @@ export const load: PageServerLoad = async ({ locals }) => {
 			stateColorMap[state.id] = own && own.toLowerCase() !== "#6366f1" ? own : colors[state.id % colors.length];
 		});
 
+		const command = locals.account ? await fleetAuthority(db, locals.account.id).catch(() => null) : null;
+		const canCommand = !!command;
+		const viewerFleets = command ? await db.select().from(fleets).where(eq(fleets.stateId, command.stateId)) : [];
+		const viewerFleetHexes = viewerFleets.length
+			? await db.select().from(fleetHexes).where(inArray(fleetHexes.fleetId, viewerFleets.map((f) => f.id)))
+			: [];
 		const seaIntel = sa?.side?.stateIds ? await seaPicture(db, sa.side.stateIds) : {};
 		// Sensor menu for the selected-hex intel form (cooldowns are per player).
 		const seaSensorOptions = locals.account
@@ -513,6 +534,7 @@ export const load: PageServerLoad = async ({ locals }) => {
 			warDefenderStateIds,
 			currentUserRegionId,
 			sa,
+			canCommand,
 			// Airstrikes in the last 24 h (public: an air raid is no secret).
 			strikes: Object.fromEntries(await recentlyStruckRegions(db)),
 			sea: {
@@ -523,6 +545,7 @@ export const load: PageServerLoad = async ({ locals }) => {
 				ships: visibleSeaShips.map((s) => ({
 					id: s.id,
 					stateId: s.stateId,
+					fleetId: s.fleetId,
 					shipClass: s.shipClass,
 					q: s.q,
 					r: s.r,
@@ -533,7 +556,9 @@ export const load: PageServerLoad = async ({ locals }) => {
 				regionsForEez: allRegions.map((r) => ({ id: r.id, latitude: Number(r.latitude), longitude: Number(r.longitude) })),
 				coastalRegions: allRegions
 					.filter((r) => r.terrain === "shore" && r.stateId)
-					.map((r) => ({ id: r.id, stateId: r.stateId!, latitude: Number(r.latitude), longitude: Number(r.longitude) }))
+					.map((r) => ({ id: r.id, stateId: r.stateId!, latitude: Number(r.latitude), longitude: Number(r.longitude) })),
+				fleets: viewerFleets,
+				fleetHexes: viewerFleetHexes
 			}
 		};
 	} catch (error) {
@@ -548,8 +573,20 @@ export const load: PageServerLoad = async ({ locals }) => {
 			warDefenderStateIds: new Set<number>(),
 			currentUserRegionId: null,
 			sa: null,
+			canCommand: false,
 			strikes: {},
-			sea: { intel: {}, sensors: [], aircraft: [], ports: [], ships: [], mines: [], regionsForEez: [], coastalRegions: [] }
+			sea: {
+				intel: {},
+				sensors: [],
+				aircraft: [],
+				ports: [],
+				ships: [],
+				mines: [],
+				regionsForEez: [],
+				coastalRegions: [],
+				fleets: [],
+				fleetHexes: []
+			}
 		};
 	}
 };

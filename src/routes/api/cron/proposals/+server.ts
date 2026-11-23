@@ -7,6 +7,7 @@ import { parliamentaryProposals, parliamentaryVotes, stateTaxes, parliamentMembe
 import { eq, and, lte } from "drizzle-orm";
 import { executeProposal } from "#lib/server/services/politics/execute-proposal.js";
 import { completePendingConstructions, ConstructionError } from "#lib/server/services/politics/construction.service.js";
+import { resolveCommanderTrainings } from "#lib/server/services/military/commanders.js";
 import { sendNotificationIfEnabled } from "#lib/server/services/push-notification.service.js";
 
 export const GET: RequestHandler = async ({ request }) => {
@@ -53,6 +54,13 @@ export const GET: RequestHandler = async ({ request }) => {
 
 		// Buildings finish on their own schedule; this job runs every 15 minutes.
 		const buildingsCompleted = await completePendingConstructions(db);
+		let commandersGraduated = 0;
+		try {
+			commandersGraduated = (await resolveCommanderTrainings(db, now)).graduated;
+		} catch (error) {
+			errors++;
+			console.error("❌ Failed to graduate officers:", error);
+		}
 
 		return cronResponse(
 			"proposals",
@@ -61,7 +69,8 @@ export const GET: RequestHandler = async ({ request }) => {
 				proposalsPassed: passed,
 				proposalsRejected: rejected,
 				proposalsFailed: unbuildable,
-				buildingsCompleted
+				buildingsCompleted,
+				commandersGraduated
 			},
 			errors
 		);

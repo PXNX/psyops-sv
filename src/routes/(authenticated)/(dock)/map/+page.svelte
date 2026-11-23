@@ -49,7 +49,9 @@
 		WEATHER_LABEL,
 		COVER_LABEL,
 		regionConditions,
-		weatherAt
+		weatherAt,
+		seaConditionAt,
+		SEA_CONDITION_LABEL
 	} from "#lib/config/index.js";
 	import IconSearch from "~icons/fluent/search-20-regular";
 	import IconZoomIn from "~icons/fluent/zoom-in-20-regular";
@@ -70,6 +72,7 @@
 	import IconDocument from "~icons/fluent/document-search-20-regular";
 	import IconChevronRight from "~icons/fluent/chevron-right-20-regular";
 	import IconSea from "~icons/fluent/water-24-regular";
+	import IconMultiSelect from "~icons/fluent/multiselect-24-regular";
 	import IconNavalMode from "~icons/fluent/vehicle-ship-24-regular";
 	import IconLandMode from "~icons/fluent/map-24-regular";
 	import IconAerialMode from "~icons/fluent/airplane-24-regular";
@@ -169,6 +172,9 @@
 	let cursor = $state<{ x: number; y: number } | null>(null);
 	let selectedId = $state<number | null>(null);
 	let selectedHexKey = $state<string | null>(null);
+	/** Ctrl/Cmd-click (or the pin toggle on touch) adds hexes to a group order. */
+	let selectedHexKeys = $state<Set<string>>(new Set());
+	let multiSelect = $state(false);
 	let seaSensor = $state("");
 	let showSeaImage = $state(false);
 	let showCoastImage = $state(false);
@@ -549,7 +555,16 @@
 		if (!e.isPrimary || Math.hypot(e.clientX - downX, e.clientY - downY) > DRAG_THRESHOLD) return;
 		const hexEl = (e.target as Element | null)?.closest?.("[data-hex]");
 		if (hexEl) {
-			selectedHexKey = hexEl.getAttribute("data-hex");
+			const key = hexEl.getAttribute("data-hex");
+			if (e.ctrlKey || e.metaKey || multiSelect) {
+				const next = new Set(selectedHexKeys);
+				if (next.has(key!)) next.delete(key!);
+				else next.add(key!);
+				selectedHexKeys = next;
+			} else {
+				selectedHexKeys = new Set(key ? [key] : []);
+			}
+			selectedHexKey = key;
 			selectedId = null;
 			sheetOpen = false;
 			window.dispatchEvent(new CustomEvent("psyops:tutorial", { detail: "hex-selected" }));
@@ -576,6 +591,7 @@
 	function openRegion(id: number) {
 		selectedId = id;
 		selectedHexKey = null;
+		selectedHexKeys = new Set();
 		sheetOpen = true;
 	}
 	function closeRegion() {
@@ -821,7 +837,20 @@
 		return owner;
 	});
 	const seaHexes = $derived.by(() => {
-		const out: { key: string; q: number; r: number; points: string; x: number; y: number; active: boolean; color: string; regionId: number | null; inEez: boolean }[] = [];
+		const out: {
+			key: string;
+			q: number;
+			r: number;
+			points: string;
+			x: number;
+			y: number;
+			active: boolean;
+			color: string;
+			regionId: number | null;
+			inEez: boolean;
+			condition: ReturnType<typeof seaConditionAt>;
+			glyph: string;
+		}[] = [];
 		for (let r = HEX_BOUNDS.minR; r <= HEX_BOUNDS.maxR; r++) {
 			for (let q = HEX_BOUNDS.minQ; q <= HEX_BOUNDS.maxQ; q++) {
 				const h = { q, r };
@@ -832,6 +861,7 @@
 				// are water, keep the smaller EEZ-only set so SSR stays lean.
 				if (!owner && (!seaGeometryReady || !waterHexKeys.has(key))) continue;
 				const c = hexCentre(h);
+				const condition = seaConditionAt(q, r, mapToLatLon(c.x, c.y).lat, now);
 				out.push({
 					key,
 					q,
@@ -842,7 +872,9 @@
 					active: activeHexKeys.has(key),
 					color: owner?.color ?? "#38bdf8",
 					regionId: owner?.regionId ?? null,
-					inEez: !!owner
+					inEez: !!owner,
+					condition,
+					glyph: condition === "icy" ? "❄" : condition === "stormy" ? "≋" : ""
 				});
 			}
 		}
@@ -895,6 +927,9 @@
 			intel: data.sea.intel?.[selectedHexKey] ?? null
 		};
 	});
+
+	/** Hexes currently held for a formation order (ctrl/cmd-click adds more). */
+	const assignedHexes = $derived([...selectedHexKeys].map(parseHexKey));
 
 	/** Procedural sensor frame for the selected hex's freshest sea report. */
 	const seaImagery = $derived.by(() => {
@@ -978,22 +1013,30 @@
 	 *  Every cell keeps its coordinate so it can still be tapped. */
 	const worldSvg = $derived.by(() => {
 		if (!showSea || !overlays.sea) return WorldMap;
+		const glyphSize = Math.max(7, mapHexSize() * 1.25);
 		const cells = seaHexes
 			.map((h) => {
-				const picked = h.key === selectedHexKey;
+				const picked = selectedHexKeys.has(h.key);
+				let polygon: string;
 				if (h.inEez) {
-					return `<polygon data-hex='${h.key}' data-tutorial='hex-cell' points='${h.points}' fill='${h.color}' fill-opacity='${
+					polygon = `<polygon data-hex='${h.key}' data-tutorial='hex-cell' points='${h.points}' fill='${h.color}' fill-opacity='${
 						picked ? 0.34 : 0.13
 					}' stroke='${picked ? "#f8fafc" : "none"}' stroke-width='${picked ? 2 : 0}' style='cursor:pointer'/>`;
+				} else {
+					polygon = `<polygon data-hex='${h.key}' data-tutorial='hex-cell' points='${h.points}' fill='${h.color}' fill-opacity='${
+						picked ? 0.36 : h.active ? 0.2 : 0.05
+					}' stroke='${picked ? "#f8fafc" : h.color}' stroke-opacity='${picked ? 1 : h.active ? 0.9 : 0.22}' stroke-width='${
+						picked ? 2 : h.active ? 1 : 0.8
+					}' style='cursor:pointer'/>`;
 				}
-				return `<polygon data-hex='${h.key}' data-tutorial='hex-cell' points='${h.points}' fill='${h.color}' fill-opacity='${
-					picked ? 0.36 : h.active ? 0.2 : 0.05
-				}' stroke='${picked ? "#f8fafc" : h.color}' stroke-opacity='${picked ? 1 : h.active ? 0.9 : 0.22}' stroke-width='${
-					picked ? 2 : h.active ? 1 : 0.8
-				}' style='cursor:pointer'/>`;
+				if (!h.glyph) return polygon;
+				const fill = h.condition === "icy" ? "#bae6fd" : "#fbbf24";
+				return `${polygon}<text x='${h.x.toFixed(1)}' y='${(h.y + glyphSize * 0.35).toFixed(1)}' text-anchor='middle' font-size='${
+					glyphSize.toFixed(1)
+				}' fill='${fill}' fill-opacity='0.7' pointer-events='none'>${h.glyph}</text>`;
 			})
 			.join("");
-		const group = `<g id='world-hex-sea'><title>Hex sea grid · EEZ ${EEZ.radiusHexes} hex rings</title>${cells}</g>`;
+		const group = `<g id='world-hex-sea'><title>Hex sea grid · EEZ ${EEZ.radiusHexes} hex rings · ❄ ice · ≋ storms</title>${cells}</g>`;
 		return WorldMap.replace("</defs>", `</defs>${group}`);
 	});
 
@@ -1384,6 +1427,15 @@
 			/>
 		{/each}
 		<div class="mx-1 my-1 h-px bg-line/20"></div>
+		<IconButton
+			icon={IconMultiSelect}
+			label="Multi-select hexes"
+			size="sm"
+			shape="square"
+			variant={multiSelect ? "soft-blue" : "ghost"}
+			aria-pressed={multiSelect}
+			onclick={() => (multiSelect = !multiSelect)}
+		/>
 		<IconButton icon={IconDocument} label="Intel reports" size="sm" shape="square" variant="ghost" href="/intel" />
 	</nav>
 
@@ -1401,6 +1453,16 @@
 					Outside a coastal EEZ
 				{/if}
 			</div>
+			<div class="mt-1">
+				{seaHexes.find((h) => h.key === selectedHexKey)?.condition === "icy"
+					? "❄ Icy waters"
+					: seaHexes.find((h) => h.key === selectedHexKey)?.condition === "stormy"
+						? "≋ Stormy seas"
+						: "Calm seas"}
+			</div>
+			{#if selectedHexKeys.size > 1}
+				<div class="mt-1 text-primary-fg">{selectedHexKeys.size} hexes selected for a fleet order</div>
+			{/if}
 			{#if selectedHexInfo.port}
 				<div class="mt-2">⚓ <span class="font-medium">{selectedHexInfo.port.name}</span></div>
 			{/if}
@@ -1460,6 +1522,27 @@
 					</form>
 				{/if}
 			</div>
+			{#if data.canCommand && data.sea.fleets?.length && assignedHexes.length}
+				<form
+					method="POST"
+					action="?/assignFleet"
+					use:enhance={() => async ({ result, update }) => {
+						await update();
+						toastResult(result);
+					}}
+					class="mt-2 space-y-1 border-t border-line/20 pt-2"
+				>
+					<div class="font-semibold text-heading">Hold area with a fleet</div>
+					<input type="hidden" name="hexes" value={JSON.stringify(assignedHexes)} />
+					<select name="fleetId" required class="w-full rounded border border-line/30 bg-surface-2 px-2 py-1 text-xs">
+						<option value="">Fleet…</option>
+						{#each data.sea.fleets as fleet (fleet.id)}
+							<option value={fleet.id}>{fleet.name}</option>
+						{/each}
+					</select>
+					<Button type="submit" size="sm" variant="ghost" block>Assign {assignedHexes.length} hex(es)</Button>
+				</form>
+			{/if}
 			<a
 				href="/training?view=navy&hex={selectedHexInfo.q},{selectedHexInfo.r}"
 				class="mt-3 inline-block rounded-sm bg-primary/20 px-2 py-1 text-primary-fg hover:bg-primary/30"
@@ -1534,6 +1617,8 @@
 			</span>
 			{#if showSea && overlays.sea}
 				<span class="inline-flex items-center gap-1"><span class="size-2.5 border border-sky-400"></span>EEZ band · hex grid</span>
+				<span class="inline-flex items-center gap-1">❄ Ice</span>
+				<span class="inline-flex items-center gap-1">≋ Storm</span>
 				<span class="inline-flex items-center gap-1">⚓ Port</span>
 			{/if}
 			{#if mode !== "naval" && overlays.friendly}<span class="inline-flex items-center gap-1"
@@ -1788,6 +1873,33 @@
 							) ?? "landing"}
 						</p>
 					{/each}
+				</section>
+			{/if}
+
+			{#if coastalIds.has(selectedId) && data.canCommand}
+				<section class="mt-3 border-t border-line/20 pt-2">
+					<div class="mb-1 font-semibold text-heading">Beach operations</div>
+					<p class="text-[10px] leading-tight text-fg-muted">
+						Landings need sea dominance; paradrops need air dominance. Beach AA and fortifications raise the failure risk.
+					</p>
+					<form method="POST" action="?/navalLanding" use:enhance={() => async ({ result, update }) => { await update(); toastResult(result); }} class="mt-2 space-y-1">
+						<input type="hidden" name="regionId" value={selectedId} />
+						<div class="max-h-16 overflow-y-auto rounded border border-line/20 p-1">
+							{#each data.sea.ships.filter((s) => sideStates.has(s.stateId)) as ship (ship.id)}
+								<label class="flex items-center gap-1 text-[11px]"><input type="checkbox" name="shipIds" value={ship.id} /> {SHIP_CLASSES[ship.shipClass]?.short ?? ship.shipClass}</label>
+							{/each}
+						</div>
+						<Button type="submit" size="xs" variant="ghost" block>Naval landing</Button>
+					</form>
+					<form method="POST" action="?/paradrop" use:enhance={() => async ({ result, update }) => { await update(); toastResult(result); }} class="mt-1.5 space-y-1">
+						<input type="hidden" name="regionId" value={selectedId} />
+						<div class="max-h-16 overflow-y-auto rounded border border-line/20 p-1">
+							{#each data.sea.aircraft.filter((a) => sideStates.has(a.stateId) && a.fuel > 0) as unit (unit.id)}
+								<label class="flex items-center gap-1 text-[11px]"><input type="checkbox" name="unitIds" value={unit.id} /> {unit.unitType}</label>
+							{/each}
+						</div>
+						<Button type="submit" size="xs" variant="ghost" block>Paradrop</Button>
+					</form>
 				</section>
 			{/if}
 

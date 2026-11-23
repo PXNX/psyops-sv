@@ -107,11 +107,19 @@ in [Map & airspace](/docs/map-modes).
 ## Deep dive: exact numbers
 
 All values below come from `fleet.config.ts` and `naval.config.ts`.
-The sea grid is `q = 0–89`, `r = 0–44` (4,050 cells, about one region per hex);
-`HEX_SIZE = 30` is only the radius of the separate fleet-console view. The grid
+The sea grid is `q = 0–59`, `r = 0–29` (1,800 cells, about 6° per cell);
+`HEX_SIZE = 45` is only the radius of the standalone console helpers. The grid
 is laid out in the world map's 1400×600 space, so `hexToLatLon` reads positions
 off the map projection. An EEZ reaches `EEZ.radiusHexes = 2` rings from the
 sampled coastline and a port sits one hex offshore.
+
+**Fleets and commanders.** Several ships can be formed into a fleet on the
+Navy tab; Ctrl/Cmd-click hexes on `/map` and assign the fleet to hold them. The
+state officer academy graduates commanders (24 h, 75,000 credits and 250
+steel); each has 0–3 traits, ten small experience levels and can be wounded or
+killed when ships under their command are lost. Assign one to a fleet,
+airgroup or division from that group's panel. Coastal regions can be stormed
+by naval landing or paradrop when sea or air dominance is established.
 
 ### Ship classes (`SHIP_CLASSES`)
 

@@ -49,8 +49,8 @@ describe("world-map projection", () => {
 	it("places hex centres in bounds and back on their own hex", () => {
 		for (const hex of [
 			{ q: 0, r: 0 },
-			{ q: 89, r: 44 },
-			{ q: 45, r: 22 }
+			{ q: 59, r: 29 },
+			{ q: 30, r: 15 }
 		]) {
 			const { lat, lon } = hexToLatLon(hex);
 			expect(inBounds(hexFromLatLon(lat, lon))).toBe(true);

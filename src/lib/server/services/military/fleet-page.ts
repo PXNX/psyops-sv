@@ -10,10 +10,13 @@ import { regions } from "#lib/server/schema.js";
 import { launchSeaIntel, seaIntelOptions, seaPicture } from "#lib/server/services/military/sea-intel.js";
 import {
 	FleetError,
+	assignFleet,
 	buildDock,
 	buildPort,
 	cancelDockJob,
+	disbandFleet,
 	fleetAuthority,
+	formFleet,
 	layMines,
 	loadFleetWorld,
 	moveShip,
@@ -26,6 +29,7 @@ import {
 	transferFuel,
 	upgradePort
 } from "#lib/server/services/military/fleet.js";
+import { loadCommanders } from "#lib/server/services/military/commanders.js";
 
 function message(err: unknown) {
 	return err instanceof FleetError ? err.message : err instanceof Error ? err.message : "Something went wrong.";
@@ -79,7 +83,10 @@ export const fleetLoad = async (userId: string) => {
 		jamming: world.jamming,
 		enemyStateIds: world.enemyStateIds,
 		alliedStateIds: world.side?.stateIds ?? [],
-		portCandidates: side ? await portCandidates(db, side.stateId) : []
+		portCandidates: side ? await portCandidates(db, side.stateId) : [],
+		fleets: world.fleets.map((f) => ({ ...f, createdAt: iso(f.createdAt), updatedAt: iso(f.updatedAt) })),
+		fleetHexes: world.fleetHexes.map((h) => ({ ...h, assignedAt: iso(h.assignedAt) })),
+		officers: side ? await loadCommanders(db, side.stateId) : []
 	};
 };
 
@@ -231,6 +238,37 @@ export const fleetActions: import('@sveltejs/kit').Actions = {
 		try {
 			await layMines(db, locals.account!.id, Number(f.get("shipId")));
 			return { success: true, message: "Minefield laid; the area is now blockaded." };
+		} catch (err) {
+			return fail(400, { error: message(err) });
+		}
+	},
+	formFleet: async ({ request, locals }) => {
+		const f = await request.formData();
+		try {
+			const fleet = await formFleet(db, locals.account!.id, {
+				name: String(f.get("name") ?? ""),
+				shipIds: f.getAll("shipIds").map(Number)
+			});
+			return { success: true, message: `Fleet ${fleet.name} formed.`, tutorial: "fleet-formed" };
+		} catch (err) {
+			return fail(400, { error: message(err) });
+		}
+	},
+	assignFleet: async ({ request, locals }) => {
+		const f = await request.formData();
+		try {
+			const hexes = JSON.parse(String(f.get("hexes") ?? "[]")) as { q: number; r: number }[];
+			const result = await assignFleet(db, locals.account!.id, Number(f.get("fleetId")), hexes);
+			return { success: true, message: `Fleet ordered to hold ${result.hexes} hex(es); ${result.sailing} ship(s) under way.` };
+		} catch (err) {
+			return fail(400, { error: message(err) });
+		}
+	},
+	disbandFleet: async ({ request, locals }) => {
+		const f = await request.formData();
+		try {
+			await disbandFleet(db, locals.account!.id, Number(f.get("fleetId")));
+			return { success: true, message: "Fleet disbanded; its ships are independent again." };
 		} catch (err) {
 			return fail(400, { error: message(err) });
 		}

@@ -30,6 +30,7 @@ import { battleIntel, type BattleIntel } from "./recon";
 import { unitIntelFactor, type SideModifiers } from "./intel";
 import { battlePsyops } from "./state-effects";
 import { battleStrikeModifiers, type BattleStrikeModifiers } from "./strike";
+import { commanderFactors, commanderIdsFor, woundCommander } from "./commanders";
 
 /** Frontage per terrain: how much combat width each side may put in the line. */
 export const TERRAIN_DATA = {
@@ -123,6 +124,13 @@ export async function processCombatRound(db: Database, battleId: number): Promis
 		// Airstrikes: supply cut in and around the region, and IHL morale penalties.
 		const strikeMods = await battleStrikeModifiers(tx, battle);
 
+		// A division commander's traits, experience and wounds scale each of
+		// their battalions, just like experience and supply already do.
+		const commanderByGroup = await commanderFactors(
+			tx,
+			[...attackers, ...defenders].map((p) => p.unit.groupId ?? 0)
+		);
+
 		// Each engaged unit's output this round.
 		const output = (
 			p: (typeof attackers)[number],
@@ -133,6 +141,7 @@ export async function processCombatRound(db: Database, battleId: number): Promis
 			Math.floor(
 				(MILITARY_UNIT_TEMPLATES[p.unit.unitType]?.[stat] ?? 0) *
 					getExperienceCombatModifier(p.unit.experience ?? 0) *
+					(commanderByGroup.get(p.unit.groupId ?? 0)?.[stat === "baseAttack" ? "attack" : "defense"] ?? 1) *
 					unitFuelFactor(p.unit.fuel ?? 100) *
 					unitIntelFactor(p.unit.unitType, own, enemy) *
 					unitSupplyModifier(p.unit.supplyLevel ?? 100, regionFactor)
@@ -318,6 +327,14 @@ async function applyDamage(
 			.update(militaryUnits)
 			.set({ health: strength, organization, experience })
 			.where(eq(militaryUnits.id, t.unitId));
+		if (strength === 0) {
+			// A division shares the loss: its commander may be wounded or killed.
+			const [unit] = await tx.select({ groupId: militaryUnits.groupId }).from(militaryUnits).where(eq(militaryUnits.id, t.unitId));
+			if (unit?.groupId) {
+				const ids = await commanderIdsFor(tx, [unit.groupId]);
+				for (const commanderId of ids.values()) await woundCommander(tx, commanderId, 25);
+			}
+		}
 	}
 }
 

@@ -423,6 +423,22 @@ export function weatherAt(regionId: number, at: Date = new Date()): Weather {
 	return "clear";
 }
 
+/** Sea state of one grid cell. Ice follows latitude; storms roll per hex in
+ *  six-hour windows, so a front moves across the sea over time. */
+export type SeaCondition = "calm" | "stormy" | "icy";
+
+export const SEA_CONDITION_LABEL: Record<SeaCondition, string> = {
+	calm: "Calm",
+	stormy: "Stormy",
+	icy: "Icy"
+};
+
+export function seaConditionAt(q: number, r: number, latitude: number, at: Date = new Date()): SeaCondition {
+	if (Math.abs(latitude) >= 60) return "icy";
+	const window = Math.floor(at.getTime() / (6 * 3600_000));
+	return hash32(q, r, window, 0x5ea1) / 4294967296 < 0.18 ? "stormy" : "calm";
+}
+
 /** Local solar hour (0-24) at a longitude. */
 export function localHour(longitude: number, at: Date = new Date()): number {
 	const utc = at.getUTCHours() + at.getUTCMinutes() / 60;

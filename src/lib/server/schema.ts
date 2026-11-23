@@ -1338,6 +1338,8 @@ export const militaryUnits = pgTable("military_units", {
 		.notNull()
 		.references(() => regions.id, { onDelete: "cascade" }),
 	unitType: militaryUnitTypeEnum("unit_type").notNull(),
+	/** Airgroup / division this unit belongs to, if any. */
+	groupId: integer("group_id").references(() => unitGroups.id, { onDelete: "set null" }),
 	organization: integer("organization").default(100).notNull(),
 	supplyLevel: integer("supply_level").default(100).notNull(),
 	/** Fuel for aircraft and other vehicles; restored from the state reserve. */
@@ -4016,11 +4018,126 @@ export const seaDocks = pgTable(
 	})
 );
 
+/** An officer earned through the state's officer academy. Traits and portrait
+ *  are picked once at graduation and stay with the commander. */
+export const commanders = pgTable(
+	"commanders",
+	{
+		id: integer("id").generatedByDefaultAsIdentity().primaryKey(),
+		stateId: integer("state_id")
+			.notNull()
+			.references(() => states.id, { onDelete: "cascade" }),
+		ownerId: text("owner_id")
+			.notNull()
+			.references(() => accounts.id, { onDelete: "cascade" }),
+		name: varchar("name", { length: 100 }).notNull(),
+		traitIds: jsonb("trait_ids").$type<string[]>().notNull().default([]),
+		portrait: integer("portrait").notNull().default(0),
+		/** 0–100; a commander can be wounded and, at zero, is killed in battle. */
+		health: integer("health").default(100).notNull(),
+		/** Lifetime experience, mapped to ten small performance levels. */
+		experience: integer("experience").default(0).notNull(),
+		alive: boolean("alive").default(true).notNull(),
+		graduatedAt: timestamp("graduated_at").defaultNow().notNull(),
+		createdAt: timestamp("created_at").defaultNow().notNull()
+	},
+	(t) => ({
+		stateIdx: index("idx_commander_state").on(t.stateId)
+	})
+);
+
+/** A pending officer-academy course: expensive and slow, resolved by cron. */
+export const commanderTrainings = pgTable(
+	"commander_trainings",
+	{
+		id: integer("id").generatedByDefaultAsIdentity().primaryKey(),
+		stateId: integer("state_id")
+			.notNull()
+			.references(() => states.id, { onDelete: "cascade" }),
+		ownerId: text("owner_id")
+			.notNull()
+			.references(() => accounts.id, { onDelete: "cascade" }),
+		completedAt: timestamp("completed_at"),
+		createdAt: timestamp("created_at").defaultNow().notNull(),
+		completesAt: timestamp("completes_at").notNull()
+	},
+	(t) => ({
+		dueIdx: index("idx_commander_training_due").on(t.completedAt, t.completesAt),
+		stateIdx: index("idx_commander_training_state").on(t.stateId)
+	})
+);
+
+/** A named group of ships that can be ordered to hold an area of the sea. */
+export const fleets = pgTable(
+	"fleets",
+	{
+		id: integer("id").generatedByDefaultAsIdentity().primaryKey(),
+		stateId: integer("state_id")
+			.notNull()
+			.references(() => states.id, { onDelete: "cascade" }),
+		ownerId: text("owner_id")
+			.notNull()
+			.references(() => accounts.id, { onDelete: "cascade" }),
+		name: varchar("name", { length: 100 }).notNull(),
+		commanderId: integer("commander_id").references(() => commanders.id, { onDelete: "set null" }),
+		createdAt: timestamp("created_at").defaultNow().notNull(),
+		updatedAt: timestamp("updated_at").defaultNow().notNull()
+	},
+	(t) => ({
+		stateIdx: index("idx_fleet_state").on(t.stateId)
+	})
+);
+
+/** An airgroup or division: several units under one commander. */
+export const unitGroupKindEnum = pgEnum("unit_group_kind", ["airgroup", "division"]);
+
+export const unitGroups = pgTable(
+	"unit_groups",
+	{
+		id: integer("id").generatedByDefaultAsIdentity().primaryKey(),
+		stateId: integer("state_id")
+			.notNull()
+			.references(() => states.id, { onDelete: "cascade" }),
+		ownerId: text("owner_id")
+			.notNull()
+			.references(() => accounts.id, { onDelete: "cascade" }),
+		kind: unitGroupKindEnum("kind").notNull(),
+		name: varchar("name", { length: 100 }).notNull(),
+		commanderId: integer("commander_id").references(() => commanders.id, { onDelete: "set null" }),
+		createdAt: timestamp("created_at").defaultNow().notNull(),
+		updatedAt: timestamp("updated_at").defaultNow().notNull()
+	},
+	(t) => ({
+		stateIdx: index("idx_unit_group_state").on(t.stateId),
+		commanderIdx: index("idx_unit_group_commander").on(t.commanderId)
+	})
+);
+
+/** The sea area a fleet has been ordered to hold (one row per hex). */
+export const fleetHexes = pgTable(
+	"fleet_hexes",
+	{
+		id: integer("id").generatedByDefaultAsIdentity().primaryKey(),
+		fleetId: integer("fleet_id")
+			.notNull()
+			.references(() => fleets.id, { onDelete: "cascade" }),
+		q: integer("q").notNull(),
+		r: integer("r").notNull(),
+		assignedAt: timestamp("assigned_at").defaultNow().notNull()
+	},
+	(t) => ({
+		hexUnique: uniqueIndex("uq_fleet_hex").on(t.fleetId, t.q, t.r),
+		hexIdx: index("idx_fleet_hex_hex").on(t.q, t.r)
+	})
+);
+
 /** One ship: its class, hex position, condition, fuel and current cargo. */
 export const fleetShips = pgTable(
 	"fleet_ships",
 	{
 		id: integer("id").generatedByDefaultAsIdentity().primaryKey(),
+		/** Null while the hull is unassigned or the fleet is disbanded. */
+		fleetId: integer("fleet_id").references(() => fleets.id, { onDelete: "set null" }),
 		stateId: integer("state_id")
 			.notNull()
 			.references(() => states.id, { onDelete: "cascade" }),
@@ -4048,7 +4165,8 @@ export const fleetShips = pgTable(
 	},
 	(t) => ({
 		stateIdx: index("idx_fleet_ship_state").on(t.stateId),
-		hexIdx: index("idx_fleet_ship_hex").on(t.q, t.r)
+		hexIdx: index("idx_fleet_ship_hex").on(t.q, t.r),
+		fleetIdx: index("idx_fleet_ship_fleet").on(t.fleetId)
 	})
 );
 

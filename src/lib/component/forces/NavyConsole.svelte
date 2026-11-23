@@ -11,6 +11,8 @@
 	import PageHeader from "#lib/component/PageHeader.svelte";
 	import EmptyState from "#lib/component/EmptyState.svelte";
 	import Tutorial from "#lib/component/Tutorial.svelte";
+	import CommanderPortrait from "#lib/component/CommanderPortrait.svelte";
+	import { COMMANDER_TRAITS, commanderLevel } from "#lib/config/index.js";
 	import { Button, Badge } from "#lib/component/ui/index.js";
 	import { toastResult } from "#lib/ui/toast.svelte.js";
 	import FluentMap from "~icons/fluent/map-24-regular";
@@ -522,17 +524,63 @@
 		<!-- ── Below the map: fleet, queues and log ─────────────────────────── -->
 		<div class="mt-4 grid gap-4 lg:grid-cols-3">
 			<section class="rounded-lg border border-line/20 bg-surface-1 p-3">
-				<h2 class="text-sm font-semibold text-heading">Your fleet <span class="text-fg-muted">({myShips.length})</span></h2>
+				<h2 class="text-sm font-semibold text-heading">Fleets <span class="text-fg-muted">({data.fleets.length})</span></h2>
+				{#each data.fleets as fleet (fleet.id)}
+					{@const officer = data.officers.find((o) => o.id === fleet.commanderId)}
+					<div class="mt-2 rounded-sm border border-line/20 p-2">
+						<div class="flex items-center gap-2">
+							{#if officer}
+								<CommanderPortrait seed={officer.portrait} alive={officer.alive} size={28} />
+							{/if}
+							<span class="min-w-0 flex-1 truncate text-xs font-medium">{fleet.name}</span>
+							<span class="text-[10px] text-fg-muted"
+								>{myShips.filter((s) => s.fleetId === fleet.id).length} hulls · {data.fleetHexes.filter((h) => h.fleetId === fleet.id).length} hexes</span
+							>
+						</div>
+						{#if officer}
+							<div class="mt-1 text-[10px] text-fg-muted">
+								{officer.name} · L{commanderLevel(officer.experience)} · {officer.alive ? `${officer.health}hp` : "killed"} ·
+								{officer.traitIds.map((id) => COMMANDER_TRAITS[id as keyof typeof COMMANDER_TRAITS]?.label ?? id).join(", ") || "no traits"}
+							</div>
+						{/if}
+						<div class="mt-1 flex items-center gap-1">
+							<form method="POST" action="?/assignCommander" use:enhance={enhanceForm} class="flex min-w-0 flex-1 gap-1">
+								<input type="hidden" name="kind" value="fleet" />
+								<input type="hidden" name="id" value={fleet.id} />
+								<select name="commanderId" class="min-w-0 flex-1 rounded border border-line/30 bg-surface-2 px-1 py-1 text-[11px]">
+									<option value="">No commander</option>
+									{#each data.officers.filter((o) => o.alive) as o (o.id)}
+										<option value={o.id} selected={o.id === fleet.commanderId}>{o.name}</option>
+									{/each}
+								</select>
+								<Button type="submit" size="xs" variant="ghost">Set</Button>
+							</form>
+							<form method="POST" action="?/disbandFleet" use:enhance={enhanceForm}>
+								<input type="hidden" name="fleetId" value={fleet.id} />
+								<Button type="submit" size="xs" variant="ghost">Disband</Button>
+							</form>
+						</div>
+					</div>
+				{/each}
+				{#if data.canCommand}
+					<form method="POST" action="?/formFleet" use:enhance={enhanceForm} class="mt-2 space-y-1 border-t border-line/20 pt-2">
+						<input name="name" required maxlength="100" placeholder="New fleet name" class="w-full rounded border border-line/30 bg-surface-2 px-2 py-1 text-xs" />
+						<div class="max-h-20 space-y-0.5 overflow-y-auto rounded border border-line/20 p-1">
+							{#each myShips.filter((s) => !s.fleetId) as ship (ship.id)}
+								<label class="flex items-center gap-1 text-[11px]"><input type="checkbox" name="shipIds" value={ship.id} /> {ship.name}</label>
+							{/each}
+						</div>
+						<Button type="submit" size="xs" variant="secondary" block>Form fleet</Button>
+					</form>
+				{/if}
+				<h3 class="mt-3 text-xs font-semibold text-heading">Your ships <span class="text-fg-muted">({myShips.length})</span></h3>
 				{#if myShips.length === 0}
-					<p class="mt-2 text-xs text-fg-muted">No ships yet. Build a dock and order a hull.</p>
+					<p class="mt-1 text-xs text-fg-muted">No ships yet. Build a dock and order a hull.</p>
 				{:else}
-					<ul class="mt-2 space-y-1 text-xs">
+					<ul class="mt-1 space-y-1 text-xs">
 						{#each myShips as ship}
 							<li>
-								<button
-									class="flex w-full items-center justify-between rounded px-2 py-1 text-left hover:bg-surface-3"
-									onclick={() => hexClicked({ q: ship.q, r: ship.r })}
-								>
+								<button class="flex w-full items-center justify-between rounded px-2 py-1 text-left hover:bg-surface-3" onclick={() => hexClicked({ q: ship.q, r: ship.r })}>
 									<span><span class="font-medium">{ship.name}</span> <span class="text-fg-muted">· {ship.q},{ship.r}</span></span>
 									<span class="text-fg-muted">{ship.status} · {ship.health}hp · {ship.fuel}fuel</span>
 								</button>

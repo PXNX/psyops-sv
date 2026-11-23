@@ -26,6 +26,7 @@ import {
 } from "#lib/config/index.js";
 import { manpowerCheck, regionManpower, reserveManpower } from "#lib/server/services/military/manpower.js";
 import { fleetLoad, fleetActions } from "#lib/server/services/military/fleet-page.js";
+import { commanderActions, commanderPageLoad } from "#lib/server/services/military/commander-page.js";
 
 type ResourceType =
 	| "iron"
@@ -126,7 +127,7 @@ export const load: PageServerLoad = async ({ locals }) => {
 	const account = locals.account!;
 
 	// All lookups are independent; getUserResidence still redirects if there is no residence
-	const [residence, inventory, activeTravel, units, navy] = await Promise.all([
+	const [residence, inventory, activeTravel, units, navy, officerData] = await Promise.all([
 		getUserResidence(account.id),
 		getUserInventory(account.id),
 		db.query.userTravels.findFirst({
@@ -137,6 +138,7 @@ export const load: PageServerLoad = async ({ locals }) => {
 				id: militaryUnits.id,
 				name: militaryUnits.name,
 				unitType: militaryUnits.unitType,
+				groupId: militaryUnits.groupId,
 				organization: militaryUnits.organization,
 				health: militaryUnits.health,
 				supplyLevel: militaryUnits.supplyLevel,
@@ -152,7 +154,8 @@ export const load: PageServerLoad = async ({ locals }) => {
 			.from(militaryUnits)
 			.where(eq(militaryUnits.ownerId, account.id))
 			.orderBy(militaryUnits.createdAt),
-		fleetLoad(account.id)
+		fleetLoad(account.id),
+		commanderPageLoad(account.id)
 	]);
 
 	const isIndependentRegion = !residence.stateId;
@@ -162,6 +165,10 @@ export const load: PageServerLoad = async ({ locals }) => {
 	return {
 		// The fleet console used to be its own page; it is now the Navy tab.
 		navy,
+		officers: officerData.officers,
+		commanderTrainings: officerData.trainings,
+		unitGroups: officerData.groups,
+		officerUnits: officerData.units,
 		units,
 		templates: MILITARY_UNIT_TEMPLATES,
 		availableManpower,
@@ -363,6 +370,7 @@ async function deductResources(
 export const actions: Actions = {
 	// Fleet orders are issued from the Navy tab of this page.
 	...fleetActions,
+	...commanderActions,
 	train: async ({ request, locals }) => {
 		const account = locals.account!;
 		const formData = await request.formData();

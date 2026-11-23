@@ -11,6 +11,8 @@ import type { Database } from "../../db";
 import {
 	accounts,
 	fleetDockQueue,
+	fleetHexes,
+	fleets,
 	militaryUnits,
 	fleetEvents,
 	fleetShips,
@@ -63,6 +65,12 @@ import {
 	type WeaponId
 } from "#lib/config/index.js";
 import { navalAuthority } from "./naval";
+import {
+	commanderFactors,
+	commanderIdsFor,
+	awardCommanderExperience,
+	woundCommander
+} from "./commanders";
 import { resolveSeaIntelMissions } from "./sea-intel";
 import { resolveAirMissions } from "./air-missions";
 import { enemiesOf, sideOf } from "./recon";
@@ -804,6 +812,13 @@ export async function resolveCombats(db: Database, now: Date, rng: () => number 
 	const ships = await db.select().from(fleetShips).where(and(ne(fleetShips.status, "sunk"), sql`${fleetShips.health} > 0`));
 	if (ships.length < 2) return { engagements, hits, sunk };
 
+	// A fleet commander's traits change how hard its ships hit and how well
+	// they withstand fire. Unassigned ships stay neutral.
+	const fleetIds = ships.map((s) => s.fleetId ?? 0);
+	const factors = await commanderFactors(db, fleetIds, true);
+	const commandersByFleet = await commanderIdsFor(db, fleetIds, true);
+	const factorFor = (ship: (typeof ships)[number]) => factors.get(ship.fleetId ?? 0);
+	const commanderFor = (ship: (typeof ships)[number]) => commandersByFleet.get(ship.fleetId ?? 0) ?? null;
 	const stateIds = [...new Set(ships.map((s) => s.stateId))];
 	const enemySets = new Map<number, Set<number>>();
 	await Promise.all(
@@ -840,7 +855,8 @@ export async function resolveCombats(db: Database, now: Date, rng: () => number 
 				const weapon = FLEET_WEAPONS[weaponId];
 				if (!weapon || distance > weapon.range) continue;
 				if (!weaponCanTarget(weaponId, targetKind(target.shipClass), detected)) continue;
-				const expected = weapon.damage * hitChance(weaponId, distance, {
+				const offense = factorFor(attacker)?.attack ?? 1;
+				const expected = weapon.damage * offense * hitChance(weaponId, distance, {
 					shipClass: target.shipClass,
 					aa: targetDef.aa,
 					stealth: targetDef.stealth,
@@ -861,8 +877,10 @@ export async function resolveCombats(db: Database, now: Date, rng: () => number 
 			detected
 		}, jam);
 		if (rng() < chance) {
-			const dealt = FLEET_WEAPONS[best.weapon].damage;
+			const defense = factorFor(best.target)?.defense ?? 1;
+			const dealt = Math.max(1, Math.round((FLEET_WEAPONS[best.weapon].damage * (factorFor(attacker)?.attack ?? 1)) / defense));
 			damage.set(best.target.id, (damage.get(best.target.id) ?? 0) + dealt);
+			await awardCommanderExperience(db, commanderFor(attacker), 4);
 			hits++;
 			await log(db, attacker.stateId, "fleet_fire", { q: best.target.q, r: best.target.r }, `${attacker.name} hit ${best.target.name} with ${best.weapon} for ${dealt}.`, {
 				attackerId: attacker.id,
@@ -882,6 +900,7 @@ export async function resolveCombats(db: Database, now: Date, rng: () => number 
 				.set({ health: 0, status: "sunk", orderPath: [], legArrivesAt: null, updatedAt: now })
 				.where(eq(fleetShips.id, shipId));
 			await log(db, ship.stateId, "ship_sunk", { q: ship.q, r: ship.r }, `${ship.name} was sunk in combat.`);
+			await woundCommander(db, commandersByFleet.get(ship.fleetId ?? 0), 25);
 			sunk++;
 		} else {
 			await db.update(fleetShips).set({ health, updatedAt: now }).where(eq(fleetShips.id, shipId));
@@ -1097,18 +1116,98 @@ export async function processFleetTick(db: Database, now: Date = new Date(), rng
 	};
 }
 
+// ── Fleet groups ────────────────────────────────────────────────────────────
+
+/** Bundle ready ships into a named fleet that can be ordered to hold an area. */
+export async function formFleet(db: Database, userId: string, input: { name: string; shipIds: number[] }) {
+	const authority = await fleetAuthority(db, userId);
+	const name = input.name.trim();
+	if (!name) throw new FleetError("Give the fleet a name.");
+	const ids = [...new Set(input.shipIds)].filter((id) => Number.isInteger(id));
+	if (!ids.length) throw new FleetError("Select at least one ship.");
+	if (ids.length > 50) throw new FleetError("A fleet can hold at most 50 ships.");
+	return db.transaction(async (tx) => {
+		const rows = await tx.select().from(fleetShips).where(inArray(fleetShips.id, ids));
+		const byId = new Map(rows.map((s) => [s.id, s]));
+		for (const id of ids) {
+			const ship = byId.get(id);
+			if (!ship || ship.stateId !== authority.stateId) throw new FleetError("One of those ships is not yours.");
+			if (ship.status === "sunk" || ship.status === "repairing") throw new FleetError("Only ready ships can join a fleet.");
+		}
+		const [fleet] = await tx
+			.insert(fleets)
+			.values({ stateId: authority.stateId, ownerId: userId, name: name.slice(0, 100) })
+			.returning();
+		await tx.update(fleetShips).set({ fleetId: fleet!.id }).where(inArray(fleetShips.id, ids));
+		await log(tx, authority.stateId, "fleet_formed", null, `Fleet ${name} formed with ${ids.length} ship(s).`);
+		return fleet!;
+	});
+}
+
+/** Order a fleet to hold a set of hexes; each ready member steams to one of them. */
+export async function assignFleet(db: Database, userId: string, fleetId: number, hexes: Hex[]) {
+	const authority = await fleetAuthority(db, userId);
+	if (!hexes.length) throw new FleetError("Select at least one hex to hold.");
+	if (hexes.length > 60) throw new FleetError("A fleet can hold at most 60 hexes.");
+	for (const h of hexes) if (!inBounds(h)) throw new FleetError("Some of those hexes are outside the sea grid.");
+	return db.transaction(async (tx) => {
+		const [fleet] = await tx.select().from(fleets).where(eq(fleets.id, fleetId));
+		if (!fleet || fleet.stateId !== authority.stateId) throw new FleetError("That fleet is not yours.");
+		await tx.delete(fleetHexes).where(eq(fleetHexes.fleetId, fleetId));
+		await tx.insert(fleetHexes).values(hexes.map((h) => ({ fleetId, q: h.q, r: h.r })));
+		const members = await tx
+			.select()
+			.from(fleetShips)
+			.where(and(eq(fleetShips.fleetId, fleetId), eq(fleetShips.stateId, authority.stateId)));
+		let sailing = 0;
+		for (const [i, ship] of members.entries()) {
+			if (ship.status === "sunk" || ship.status === "repairing") continue;
+			await moveShip(tx, userId, ship.id, hexes[i % hexes.length]!);
+			sailing++;
+		}
+		await log(
+			tx,
+			authority.stateId,
+			"fleet_assigned",
+			hexes[0]!,
+			`Fleet ${fleet.name} ordered to hold ${hexes.length} hex(es); ${sailing} ship(s) under way.`
+		);
+		return { fleetId, hexes: hexes.length, sailing };
+	});
+}
+
+/** Release every ship and held hex of a fleet. */
+export async function disbandFleet(db: Database, userId: string, fleetId: number) {
+	const authority = await fleetAuthority(db, userId);
+	return db.transaction(async (tx) => {
+		const [fleet] = await tx.select().from(fleets).where(eq(fleets.id, fleetId));
+		if (!fleet || fleet.stateId !== authority.stateId) throw new FleetError("That fleet is not yours.");
+		await tx
+			.update(fleetShips)
+			.set({ fleetId: null })
+			.where(and(eq(fleetShips.fleetId, fleetId), eq(fleetShips.stateId, authority.stateId)));
+		await tx.delete(fleetHexes).where(eq(fleetHexes.fleetId, fleetId));
+		await tx.delete(fleets).where(eq(fleets.id, fleetId));
+		await log(tx, authority.stateId, "fleet_disbanded", null, `Fleet ${fleet.name} disbanded.`);
+	});
+}
+
 // ── Read models for the map UI ─────────────────────────────────────────────
 
 /** Everything the navy page needs, in one place. */
 export async function loadFleetWorld(db: Database, viewerStateId?: number) {
-	const [ports, docks, ships, mines, queue, events] = await Promise.all([
+	const [ports, docks, ships, mines, queue, events, stateFleets] = await Promise.all([
 		db.select().from(seaPorts),
 		db.select().from(seaDocks),
 		db.select().from(fleetShips),
 		db.select().from(navalMines),
 		db.select().from(fleetDockQueue).where(inArray(fleetDockQueue.status, ["queued", "building"])).orderBy(fleetDockQueue.id),
-		db.select().from(fleetEvents).orderBy(desc(fleetEvents.createdAt)).limit(40)
+		db.select().from(fleetEvents).orderBy(desc(fleetEvents.createdAt)).limit(40),
+		viewerStateId ? db.select().from(fleets).where(eq(fleets.stateId, viewerStateId)) : Promise.resolve([])
 	]);
+	const heldHexes = stateFleets.length
+		? await db.select().from(fleetHexes).where(inArray(fleetHexes.fleetId, stateFleets.map((f) => f.id)))
+		: [];
 	const side = viewerStateId ? await sideOf(db, viewerStateId) : null;
 	const enemies = side ? await enemiesOf(db, side) : new Set<number>();
 	const blockedPorts: Record<number, boolean> = {};
@@ -1119,7 +1218,20 @@ export async function loadFleetWorld(db: Database, viewerStateId?: number) {
 		const readings = await Promise.all(own.map((s) => gnssJammingAt(db, { q: s.q, r: s.r }, viewerStateId)));
 		own.forEach((s, i) => (jamming[s.id] = readings[i]!));
 	}
-	return { ports, docks, ships, mines, queue, events, side, enemyStateIds: [...enemies], blockedPorts, jamming };
+	return {
+		ports,
+		docks,
+		ships,
+		mines,
+		queue,
+		events,
+		side,
+		enemyStateIds: [...enemies],
+		blockedPorts,
+		jamming,
+		fleets: stateFleets,
+		fleetHexes: heldHexes
+	};
 }
 
 /** Recent fleet log for a state (or everyone, for admins). */

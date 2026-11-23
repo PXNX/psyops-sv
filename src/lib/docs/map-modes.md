@@ -63,10 +63,11 @@ sea is blank.
 
 ## Deep dive: exact numbers
 
-- Sea grid (`fleet.config.ts`): `HEX_BOUNDS` q **0–89**, r **0–44** = **4,050**
-  hexes, about 4° per cell and roughly the size of one region. The grid lives
-  in the 1400×600 map's own coordinates; `HEX_SIZE = 30` is only the radius used
-  by the separate fleet console view.
+- Sea grid (`fleet.config.ts`): `HEX_BOUNDS` q **0–59**, r **0–29** = **1,800**
+  hexes, about 6° per cell — large enough to pick out individual cells on the
+  1400×600 map. The grid lives in the map's own coordinates; `HEX_SIZE = 45` is
+  only the radius used by the standalone console helpers. Each cell carries a
+  sea state: ❄ icy at high latitude, ≋ stormy on a rolling six-hour roll.
 - EEZ (`EEZ`): `radiusHexes = 2`. A coastal region's claim is grown from the
   **sampled outline of its actual shoreline**, not from its centroid: the
   nearest coastline owns each water hex. Those two rings form the EEZ band —
@@ -84,9 +85,13 @@ sea is blank.
 - Fog of war (`SEA_INTEL_VALID_HOURS`): a sea report is fresh for **12 h**; only
   hexes covered by a fresh report reveal enemy ships.
 - Ship positions come from `hexFromLatLon(lat, lon)`, which projects the
-  position into the map and then reads the hex under that point (q 0…89,
-  r 0…44).
+  position into the map and then reads the hex under that point (q 0…59,
+  r 0…29).
 
-Example: a region at 45°N, 10°E projects to about map point (736, 155), which
-  falls on hex **54,9**; its EEZ covers the water hexes within two steps of
-  the nearest sampled point of its coastline.
+Ctrl/Cmd-click (or the multi-select rail button) holds several hexes for a
+fleet order. A fleet formed in the Navy console can then be ordered to hold
+that area; its commander's traits affect every ship in it.
+
+Coastal regions remain visible in naval mode. With sea dominance you can make a
+**naval landing** there; with air dominance a **paradrop**. Coastal air
+defence and fortifications raise the failure risk of both.

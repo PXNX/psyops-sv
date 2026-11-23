@@ -14,6 +14,8 @@
 	import IconClock from "~icons/fluent/clock-24-filled";
 	import FluentWarning20Filled from "~icons/fluent/warning-20-filled";
 	import * as m from "#lib/paraglide/messages.js";
+	import CommanderPortrait from "#lib/component/CommanderPortrait.svelte";
+	import { ACADEMY, AIRCRAFT_IDS, COMMANDER_TRAITS, DOMAIN_UNITS, commanderLevel } from "#lib/config/index.js";
 	import { canCoverManpower, getExperienceLevel, manpowerCostOf } from "#lib/config/index.js";
 	import { toastResult } from "#lib/ui/toast.svelte.js";
 	import { confirmSubmit } from "#lib/ui/confirm-submit.js";
@@ -254,6 +256,80 @@
 			{trainingDisabledReason}
 		</p>
 	{/if}
+
+	<!-- ── Officers, academy and formations ──────────────────────────────── -->
+	<section class="panel rounded-sm p-5 space-y-3">
+		<div class="flex flex-wrap items-center justify-between gap-2">
+			<h2 class="section-title">Commanders & formations</h2>
+			{#if data.navy.canCommand}
+				<form method="POST" action="?/startTraining" use:enhance>
+					<Button type="submit" size="sm" variant="secondary">
+						Academy · ${ACADEMY.money.toLocaleString()} + {ACADEMY.steel} steel · {ACADEMY.durationHours}h
+					</Button>
+				</form>
+			{/if}
+		</div>
+		{#if data.commanderTrainings.length}
+			<div class="text-xs text-fg-muted">
+				In training: {data.commanderTrainings.map((t) => new Date(t.completesAt).toLocaleString()).join(", ")}
+			</div>
+		{/if}
+		{#if data.officers.length}
+			<div class="flex flex-wrap gap-2">
+				{#each data.officers as officer (officer.id)}
+					<div class="flex items-center gap-2 rounded-sm border border-line/20 bg-surface-1 px-2 py-1">
+						<CommanderPortrait seed={officer.portrait} alive={officer.alive} size={32} />
+						<div class="text-[11px]">
+							<div class="font-medium">{officer.name} {officer.alive ? "" : "†"}</div>
+							<div class="text-fg-muted">L{commanderLevel(officer.experience)} · {officer.alive ? `${officer.health}hp` : "killed"}</div>
+							<div class="text-fg-muted">
+								{officer.traitIds.map((id) => COMMANDER_TRAITS[id as keyof typeof COMMANDER_TRAITS]?.label ?? id).join(", ") || "no traits"}
+							</div>
+						</div>
+					</div>
+				{/each}
+			</div>
+		{/if}
+		{#each (["airgroup", "division"] as const) as kind}
+			{@const pool = data.officerUnits.filter((u) => !u.groupId && (kind === "airgroup" ? (AIRCRAFT_IDS as readonly string[]).includes(u.unitType) : (DOMAIN_UNITS.land as readonly string[]).includes(u.unitType)))}
+			<div class="rounded-sm border border-line/20 p-3">
+				<div class="text-xs font-semibold text-heading">{kind === "airgroup" ? "Airgroups" : "Divisions"}</div>
+				{#each data.unitGroups.filter((g) => g.kind === kind) as group (group.id)}
+					<div class="mt-2 flex flex-wrap items-center gap-2 border-t border-line/15 pt-2 text-[11px]">
+						<span class="font-medium">{group.name}</span>
+						<span class="text-fg-muted">{data.officerUnits.filter((u) => u.groupId === group.id).length} units</span>
+						<form method="POST" action="?/assignCommander" use:enhance class="flex items-center gap-1">
+							<input type="hidden" name="kind" value={kind} />
+							<input type="hidden" name="id" value={group.id} />
+							<select name="commanderId" class="rounded border border-line/30 bg-surface-2 px-1 py-0.5">
+								<option value="">No commander</option>
+								{#each data.officers.filter((o) => o.alive) as o (o.id)}
+									<option value={o.id} selected={o.id === group.commanderId}>{o.name}</option>
+								{/each}
+							</select>
+							<Button type="submit" size="xs" variant="ghost">Set</Button>
+						</form>
+						<form method="POST" action="?/disbandUnitGroup" use:enhance>
+							<input type="hidden" name="groupId" value={group.id} />
+							<Button type="submit" size="xs" variant="ghost">Disband</Button>
+						</form>
+					</div>
+				{/each}
+				{#if pool.length}
+					<form method="POST" action="?/formUnitGroup" use:enhance class="mt-2 space-y-1">
+						<input type="hidden" name="kind" value={kind} />
+						<input name="name" required maxlength="100" placeholder="New {kind} name" class="w-full rounded border border-line/30 bg-surface-2 px-2 py-1 text-xs" />
+						<div class="max-h-16 space-y-0.5 overflow-y-auto rounded border border-line/20 p-1">
+							{#each pool as unit (unit.id)}
+								<label class="flex items-center gap-1"><input type="checkbox" name="unitIds" value={unit.id} /> {unit.name} · {unit.unitType}</label>
+							{/each}
+						</div>
+						<Button type="submit" size="xs" variant="secondary">Form {kind}</Button>
+					</form>
+				{/if}
+			</div>
+		{/each}
+	</section>
 
 	{#if view === "navy"}
 		<!-- Ships trained as military units are not fleet hulls: show both, so a
