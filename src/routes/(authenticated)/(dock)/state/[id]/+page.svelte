@@ -367,6 +367,15 @@
 				"See the breakdown and compare every state"
 			)}
 			{@render fact(
+				"Energy usage",
+				`${data.energy?.usedProduction ?? 0} MW`,
+				FluentLightbulb20Filled,
+				"text-primary-fg",
+				`/state/${data.state.id}/energyusage`,
+				undefined,
+				"See where the state's power goes and compare every state"
+			)}
+			{@render fact(
 				"State debt",
 				data.debt.toLocaleString(),
 				FluentMoney20Filled,

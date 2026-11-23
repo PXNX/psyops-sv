@@ -382,3 +382,166 @@ export async function stateDebtCreditors(db: Database, stateId: number): Promise
 		.sort((a, b) => b.principal - a.principal);
 	return { creditors, total: creditors.reduce((sum, c) => sum + c.principal, 0) };
 }
+
+// ── Energy usage: where a state's power goes ──────────────────────────────
+
+export interface EnergyUsageComponent {
+	key: string;
+	label: string;
+	detail: string;
+	mw: number;
+	share: number;
+}
+
+export interface StateEnergyUsage {
+	production: number;
+	used: number;
+	population: number;
+	perCapita: number;
+	components: EnergyUsageComponent[];
+	fuel: { civilian: number; military: number; exported: number };
+	factors: { fuel: number; maintenance: number };
+	plants: number;
+	plantOutput: number;
+	gridLevels: number;
+	storageLevels: number;
+	regions: number;
+	lastTick: string | null;
+}
+
+export interface EnergyRankingRow {
+	id: number;
+	name: string;
+	production: number;
+	used: number;
+	perCapita: number;
+	population: number;
+	regions: number;
+}
+
+/**
+ * Explain a state's energy consumption: how the used MW split between homes,
+ * the military and exports, how much refined fuel each pool received, and how
+ * fuel/upkeep shortfalls cut the network. Mirrors the power-rating report so
+ * the two dossier pages tell the same story from different angles.
+ */
+export async function stateEnergyUsageReport(db: Database, focusStateId: number): Promise<{
+	focus: StateEnergyUsage | null;
+	ranking: EnergyRankingRow[];
+}> {
+	const [stateRows, regionRows, energyRows, plantRows] = await Promise.all([
+		db.select({ id: states.id, name: states.name }).from(states),
+		db
+			.select({
+				id: regions.id,
+				stateId: regions.stateId,
+				population: regions.population,
+				terrain: regions.terrain,
+				infrastructure: regions.infrastructure,
+				economy: regions.economy,
+				education: regions.education,
+				hospitals: regions.hospitals,
+				grid: regions.grid,
+				storage: regions.storage
+			})
+			.from(regions),
+		db.select().from(stateEnergy),
+		db.select({ stateId: powerPlants.stateId, output: powerPlants.powerOutput }).from(powerPlants)
+	]);
+
+	const regionStats = new Map<number, { population: number; regions: number; grid: number; storage: number }>();
+	const derived = new Map<number, number>();
+	for (const r of regionRows) {
+		if (r.stateId == null) continue;
+		const s = regionStats.get(r.stateId) ?? { population: 0, regions: 0, grid: 0, storage: 0 };
+		s.regions++;
+		s.grid += r.grid ?? 0;
+		s.storage += r.storage ?? 0;
+		regionStats.set(r.stateId, s);
+		const d = regionPopulation(r);
+		derived.set(r.stateId, (derived.get(r.stateId) ?? 0) + d);
+	}
+
+	const plantStats = new Map<number, { count: number; output: number }>();
+	for (const p of plantRows) {
+		if (p.stateId == null) continue;
+		const s = plantStats.get(p.stateId) ?? { count: 0, output: 0 };
+		s.count++;
+		s.output += p.output ?? 0;
+		plantStats.set(p.stateId, s);
+	}
+
+	const energyByState = new Map(energyRows.map((e) => [e.stateId, e]));
+	const populationOf = (id: number) => {
+		const s = regionStats.get(id);
+		return Math.max(s?.population ?? 0, derived.get(id) ?? 0);
+	};
+
+	const ranking: EnergyRankingRow[] = stateRows
+		.map((s) => {
+			const energy = energyByState.get(s.id);
+			const population = populationOf(s.id);
+			const used = energy?.usedProduction ?? 0;
+			return {
+				id: s.id,
+				name: s.name,
+				production: energy?.totalProduction ?? 0,
+				used,
+				perCapita: population > 0 ? Math.round((used / population) * 10000) / 10 : 0,
+				population,
+				regions: regionStats.get(s.id)?.regions ?? 0
+			};
+		})
+		.sort((a, b) => b.used - a.used || b.perCapita - a.perCapita || a.name.localeCompare(b.name));
+
+	const focusEnergy = energyByState.get(focusStateId);
+	let focus: StateEnergyUsage | null = null;
+	if (focusEnergy) {
+		const population = populationOf(focusStateId);
+		const used = focusEnergy.usedProduction;
+		const split = (share: number) => Math.round((used * share) / 100);
+		focus = {
+			production: focusEnergy.totalProduction,
+			used,
+			population,
+			perCapita: population > 0 ? Math.round((used / population) * 10000) / 10 : 0,
+			components: [
+				{
+					key: "civilian",
+					label: "Homes & civilians",
+					detail: "Light, heat, water and household demand set by civilianShare.",
+					mw: split(focusEnergy.civilianShare),
+					share: focusEnergy.civilianShare
+				},
+				{
+					key: "military",
+					label: "Forces & industry",
+					detail: "Units, bases and factories running on militaryShare.",
+					mw: split(focusEnergy.militaryShare),
+					share: focusEnergy.militaryShare
+				},
+				{
+					key: "export",
+					label: "Exported power",
+					detail: "Sold to neighbours through the grid under exportShare.",
+					mw: split(focusEnergy.exportShare),
+					share: focusEnergy.exportShare
+				}
+			],
+			fuel: {
+				civilian: focusEnergy.civilianFuel,
+				military: focusEnergy.militaryFuel,
+				exported: focusEnergy.exportedFuel
+			},
+			factors: { fuel: focusEnergy.fuelFactor, maintenance: focusEnergy.maintenanceFactor },
+			plants: plantStats.get(focusStateId)?.count ?? 0,
+			plantOutput: plantStats.get(focusStateId)?.output ?? 0,
+			gridLevels: regionStats.get(focusStateId)?.grid ?? 0,
+			storageLevels: regionStats.get(focusStateId)?.storage ?? 0,
+			regions: regionStats.get(focusStateId)?.regions ?? 0,
+			lastTick: focusEnergy.lastEnergyTickAt?.toISOString() ?? null
+		};
+	}
+
+	return { focus, ranking };
+}

@@ -23,6 +23,12 @@
 		backLabel={data.state.name}
 	/>
 
+	<div class="mt-3 text-xs">
+		<a href="/state/{data.state.id}/energyusage" class="text-fg-muted hover:text-primary-hover transition-colors">
+			See energy usage →
+		</a>
+	</div>
+
 	<section class="panel rounded-sm p-4 sm:p-5 space-y-3">
 		<p class="text-sm text-fg-body">
 			The rating is an explainable score from the state's territory, people, forces, fleet, industry,

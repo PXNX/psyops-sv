@@ -171,7 +171,18 @@ tactical symbol, so every unit has a visible glyph.
 - Passport **stamps** use speckled ink, rough edges and a multiply blend, so
   they read as rubber-stamped rather than as flat text.
 
-## 9. Animated consoles
+## 9. Energy usage, explained like the power rating
+
+The state dossier now has an **Energy usage** page next to the power rating.
+It opens the energy ledger and shows how consumed power splits between homes,
+the forces and exports (with the minister's policy shares), the refined-fuel
+pools, the fuel and maintenance factors that throttle the network, and the
+plant/grid/storage figures behind it all. Two sparklines plot 90 days of
+generation and consumption, and a ranking compares every state by total and
+per-capita use. The figures are derived from the same live tables as the energy
+desk, so the two pages never disagree.
+
+## 10. Animated consoles
 
 The Domains and Intel pages were rebuilt as visual consoles: small theme-aware
 SVG vignettes (rolling convoys, sweeping radars, orbiting satellites, pulsing
