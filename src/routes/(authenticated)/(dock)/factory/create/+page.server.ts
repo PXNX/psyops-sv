@@ -13,7 +13,7 @@ import {
 	productInventory,
 	userWallets
 } from "#lib/server/schema.js";
-import { ECONOMY_CONFIG, EQUIPMENT, EQUIPMENT_PRODUCTS, FACTORY_EQUIPMENT, MINEABLE_RESOURCES, equipmentForFactory } from "#lib/config/index.js";
+import { ECONOMY_CONFIG, EQUIPMENT, EQUIPMENT_PRODUCTS, FACTORY_EQUIPMENT, MINEABLE_RESOURCES, equipmentForFactory, factoryEnergyRequirement } from "#lib/config/index.js";
 import { getRegionName, formatDateTime } from "#lib/utils/formatting.js";
 import { effectiveEnergy } from "#lib/server/services/military/state-effects.js";
 import { withStrikeEnergy } from "#lib/server/services/military/strike.js";
@@ -26,13 +26,12 @@ const OUTPUTS: Record<string, readonly string[]> = {
 	mine: MINEABLE_RESOURCES,
 	refinery: ["steel", "gunpowder", "fuel", "enriched_uranium"],
 	armaments: ["rifles", "ammunition", "artillery", "vehicles", "explosives"],
-	fabrication: ["chips", "electronics"],
+	fabrication: ["chips", "electronics", "hardware", "datacenter"],
 	equipment: EQUIPMENT_PRODUCTS
 };
 /** Factory types whose output is a manufactured product rather than a resource. */
 const PRODUCT_FACTORY_TYPES = new Set(["armaments", "fabrication", "equipment"]);
 const COOLDOWN_DAYS = 7;
-const ENERGY_REQUIRED = 50;
 
 export const load: PageServerLoad = async ({ locals }) => {
 	const account = locals.account!;
@@ -353,13 +352,15 @@ export const actions: Actions = {
 			}
 		}
 
-		// Check state energy
+		// Check state energy. Fabs — and the hardware/datacenter chain in
+		// particular — reserve far more of the grid than an ordinary line.
+		const energyRequired = factoryEnergyRequirement(output);
 		const [storedEnergy] = await db.select().from(stateEnergy).where(eq(stateEnergy.stateId, region.stateId));
 		const energy =
 			storedEnergy &&
 			(await withStrikeEnergy(db, region.stateId, await effectiveEnergy(db, region.stateId, storedEnergy)));
 
-		if (!energy || energy.totalProduction - energy.usedProduction < ENERGY_REQUIRED) {
+		if (!energy || energy.totalProduction - energy.usedProduction < energyRequired) {
 			return fail(400, {
 				error: energy?.gridDegraded
 					? `Insufficient state energy capacity: the grid is down ${energy.gridDegraded}% after a cyber attack.`
@@ -440,7 +441,7 @@ export const actions: Actions = {
 			await tx
 				.update(stateEnergy)
 				.set({
-					usedProduction: sql`${stateEnergy.usedProduction} + ${ENERGY_REQUIRED}`,
+					usedProduction: sql`${stateEnergy.usedProduction} + ${energyRequired}`,
 					updatedAt: new Date()
 				})
 				.where(eq(stateEnergy.stateId, region.stateId!));

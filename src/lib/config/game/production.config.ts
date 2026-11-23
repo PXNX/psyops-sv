@@ -1,5 +1,6 @@
 // Production recipes for personal (player) manufacturing.
 // Shared between the production page and the premium automation service.
+import { FABRICATION, FAB_PRODUCTS } from "./industry.config.js";
 
 export const PRODUCTION_RECIPES = {
 	rifles: {
@@ -61,9 +62,14 @@ export const SHIFT_RECIPES: Record<string, { inputs: Partial<Record<string, numb
 	gunpowder: { inputs: { coal: 5, wood: 5 }, output: 5 },
 	fuel: { inputs: { oil: 10 }, output: 10 },
 	enriched_uranium: { inputs: { uranium: 10 }, output: 1 },
-	// Fabrication
-	chips: { inputs: { silicon: 8, rare_earth: 3, copper: 2 }, output: 5 },
-	electronics: { inputs: { chips: 5, copper: 3, rare_earth: 1 }, output: 3 },
+	// Fabrication: chips → electronics → hardware → datacenter. Derived from
+	// the same specs the factory cost/UI uses so the chain cannot drift.
+	...Object.fromEntries(
+		FAB_PRODUCTS.map((product) => [
+			product,
+			{ inputs: FABRICATION[product].inputs, output: FABRICATION[product].output }
+		])
+	),
 	// Armaments: one production batch per shift
 	...Object.fromEntries(
 		Object.entries(PRODUCTION_RECIPES).map(([product, r]) => [product, { inputs: r.inputs, output: r.output }])

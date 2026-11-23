@@ -277,10 +277,13 @@
 					recon +{Math.round((p?.ai.recon ?? 0) * 100)}% · production ×{p?.ai.production ?? 1} ·
 					detection +{Math.round((p?.ai.detection ?? 0) * 100)}% · {p?.ai.researchPerDay ?? 0} research/day
 				</p>
+				<p class="mt-1 text-xs text-fg-muted">
+					Computing base: {p?.ai.hardware ?? 0} server hardware · {p?.ai.datacenters ?? 0} datacenters — built in a fabrication line, they run on electricity and cooling water.
+				</p>
 				{#if p?.roles.ai && p.aiNextCost}
 					<form method="POST" action="?/upgradeAi" use:enhance={handleSubmit} class="mt-3">
 						<Button type="submit" size="sm">
-							Upgrade — {p.aiNextCost.cost.toLocaleString()} · {p.aiNextCost.chips} chips · {p.aiNextCost.rareEarth} rare earths
+							Upgrade — {p.aiNextCost.cost.toLocaleString()} · {p.aiNextCost.chips} chips · {p.aiNextCost.rareEarth} rare earths{#if p.aiNextCost.hardware} · {p.aiNextCost.hardware} hardware{/if}{#if p.aiNextCost.datacenters} · {p.aiNextCost.datacenters} datacenter{p.aiNextCost.datacenters === 1 ? "" : "s"}{/if}
 						</Button>
 					</form>
 				{/if}

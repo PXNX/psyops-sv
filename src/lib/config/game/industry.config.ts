@@ -1,19 +1,25 @@
-// Industry: fabrication, chips and the electronics chain.
+// Industry: fabrication, chips and the electronics/computing chain.
 //
 // The old economy stopped at rifles and vehicles. A modern state also needs
 // semiconductors: chips run AI programmes, satellites, guided weapons and
 // radar. Chips are made in fabrication plants from silicon, rare earths and
-// copper, using a lot of energy; electronics are assembled from chips.
+// copper, using a lot of energy; electronics are assembled from chips. The
+// last two links are the computing chain: electronics and chips become server
+// hardware, and hardware becomes the datacenters that sharpen cyber operations
+// and AI. Both are power- and water-hungry, so a state that wants to think has
+// to keep the lights on and the cooling towers running.
 //
 // The chain is deliberately short and legible:
 //   silicon + rare earths + copper → chips → electronics
+//   electronics + chips → hardware → datacenter
 //   oil → fuel (refinery)
 //   uranium → enriched uranium (refinery) → nuclear/fusion power
 //
 // Pure data and pure functions only: factory creation and the production
 // page import this; the shift engine uses SHIFT_RECIPES in production.config.
+import { ENERGY_CONFIG } from "./energy.config.js";
 
-export type FabProduct = "chips" | "electronics";
+export type FabProduct = "chips" | "electronics" | "hardware" | "datacenter";
 
 export interface FabSpec {
 	label: string;
@@ -40,10 +46,38 @@ export const FABRICATION: Record<FabProduct, FabSpec> = {
 		energyDraw: 60,
 		inputs: { chips: 5, copper: 3, rare_earth: 1 },
 		blurb: "Radar, avionics and secure radios assembled from chips."
+	},
+	hardware: {
+		label: "Server hardware",
+		output: 2,
+		energyDraw: 180,
+		inputs: { electronics: 3, chips: 4, copper: 4, rare_earth: 2 },
+		blurb: "Rack-mounted servers, switches and crypto gear. The physical edge that makes cyber operations and AI sharper — and a voracious draw on power and cooling water."
+	},
+	datacenter: {
+		label: "Datacenter",
+		output: 1,
+		energyDraw: 320,
+		inputs: { hardware: 4, machine_tools: 2, fab_equipment: 1, steel: 12, copper: 10 },
+		blurb: "A full computing site: halls of hardware, substations and cooling plant. Each one lifts a state's cyber reach and research rate, but needs a huge, steady supply of electricity and water."
 	}
 };
 
 export const FAB_PRODUCTS = Object.keys(FABRICATION) as FabProduct[];
+
+/** Is this output from a fabrication line (and so charged the fab's energy draw)? */
+export const isFabProduct = (output: string | null | undefined): output is FabProduct =>
+	!!output && output in FABRICATION;
+
+/**
+ * MW reserved on the state grid when a factory of this output is built.
+ * Ordinary lines draw the standard factory share; fabs, and especially the
+ * hardware and datacenter chain, reserve much more of the grid for themselves.
+ */
+export function factoryEnergyRequirement(output: string | null | undefined): number {
+	if (!output) return ENERGY_CONFIG.FACTORY_DRAW;
+	return isFabProduct(output) ? FABRICATION[output].energyDraw : ENERGY_CONFIG.FACTORY_DRAW;
+}
 
 /** Strategic stockpiles a state is expected to hold for its programmes. */
 export const STRATEGIC_STOCK = {

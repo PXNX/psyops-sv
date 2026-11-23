@@ -16,6 +16,7 @@
 	import PageContainer from "#lib/component/PageContainer.svelte";
 	import PageHeader from "#lib/component/PageHeader.svelte";
 	import { Button } from "#lib/component/ui/index.js";
+	import { factoryEnergyRequirement } from "#lib/config/index.js";
 
 	let { data } = $props();
 
@@ -52,7 +53,7 @@
 			value: "fabrication",
 			label: "Fabrication",
 			icon: FluentFactory20Filled,
-			desc: "Makes chips and electronics",
+			desc: "Makes chips, electronics, server hardware and datacenters",
 			costs: { currency: data.factoryCost, energy: 100 } as Record<string, number>
 		},
 		{
@@ -68,7 +69,7 @@
 		mine: ["iron", "copper", "coal", "wood", "oil", "gas", "uranium", "rare_earth", "silicon"],
 		refinery: ["steel", "gunpowder", "fuel", "enriched_uranium"],
 		armaments: ["rifles", "ammunition", "artillery", "vehicles", "explosives"],
-		fabrication: ["chips", "electronics"],
+		fabrication: ["chips", "electronics", "hardware", "datacenter"],
 		equipment: ["machine_tools", "fab_equipment"]
 	};
 
@@ -82,9 +83,10 @@
 	const hasEnoughCurrency = $derived(
 		selectedFactoryTypeData ? data.userBalance >= selectedFactoryTypeData.costs.currency : false
 	);
-	const hasEnoughEnergy = $derived(
-		!!data.stateEnergy && !!selectedFactoryTypeData && energyFree >= selectedFactoryTypeData.costs.energy
-	);
+	// A fab's grid reservation depends on what it makes: the hardware and
+	// datacenter chain draws several times an ordinary line's share.
+	const energyRequired = $derived(Math.max(selectedFactoryTypeData?.costs.energy ?? 0, factoryEnergyRequirement(selectedOutput)));
+	const hasEnoughEnergy = $derived(!!data.stateEnergy && energyFree >= energyRequired);
 
 	function canMine(resource: string) {
 		return regionResources.some((r) => r.resourceType === resource && r.amount > 0);
@@ -318,7 +320,10 @@
 			{#if selectedFactoryTypeData}
 				<fieldset class="space-y-2">
 					<legend class="field-label">4 · Fees &amp; materials</legend>
-					<ResourceRequirements costs={selectedFactoryTypeData.costs} available={availableResources} />
+					<ResourceRequirements
+						costs={{ ...selectedFactoryTypeData.costs, energy: energyRequired }}
+						available={availableResources}
+					/>
 				</fieldset>
 			{/if}
 

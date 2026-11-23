@@ -8,9 +8,11 @@
 //   - industry (factory shifts waste less material);
 //   - customs (smuggling and blockade-running are spotted sooner).
 //
-// Raising the level needs money, chips and rare earths: the same fabrication
-// base that builds satellites and precision weapons. A state that sells all
-// its chips abroad stays clever but poor.
+// Raising the level needs money, chips and rare earths — and from level three
+// onward, server hardware and whole datacenters. The higher tiers are built on
+// the computing chain (industry.config.ts), so a state that sells all its
+// chips abroad stays clever but poor, and one without power or cooling water
+// cannot think at all.
 //
 // Pure data and pure functions only: the client imports this for the AI page,
 // the server for resolution (services/military/ai.ts).
@@ -26,6 +28,10 @@ export interface AiLevelSpec {
 	chips: number;
 	/** Rare earths taken from the state stockpile. */
 	rareEarth: number;
+	/** Server hardware consumed to reach this level (computing base). */
+	hardware: number;
+	/** Datacenters consumed to reach this level; the top tiers need real sites. */
+	datacenters: number;
 	/** Cyber operation success bonus (fraction). */
 	cyberOffence: number;
 	/** Cyber defence bonus (fraction; lowers enemy success). */
@@ -47,6 +53,8 @@ export const AI_LEVELS: AiLevelSpec[] = [
 		cost: 0,
 		chips: 0,
 		rareEarth: 0,
+		hardware: 0,
+		datacenters: 0,
 		cyberOffence: 0,
 		cyberDefence: 0,
 		reconFusion: 0,
@@ -60,6 +68,8 @@ export const AI_LEVELS: AiLevelSpec[] = [
 		cost: 250_000,
 		chips: 40,
 		rareEarth: 5,
+		hardware: 0,
+		datacenters: 0,
 		cyberOffence: 0.04,
 		cyberDefence: 0.04,
 		reconFusion: 0.03,
@@ -73,6 +83,8 @@ export const AI_LEVELS: AiLevelSpec[] = [
 		cost: 600_000,
 		chips: 120,
 		rareEarth: 15,
+		hardware: 20,
+		datacenters: 0,
 		cyberOffence: 0.08,
 		cyberDefence: 0.08,
 		reconFusion: 0.06,
@@ -86,6 +98,8 @@ export const AI_LEVELS: AiLevelSpec[] = [
 		cost: 1_400_000,
 		chips: 300,
 		rareEarth: 40,
+		hardware: 50,
+		datacenters: 1,
 		cyberOffence: 0.13,
 		cyberDefence: 0.12,
 		reconFusion: 0.1,
@@ -99,6 +113,8 @@ export const AI_LEVELS: AiLevelSpec[] = [
 		cost: 3_000_000,
 		chips: 700,
 		rareEarth: 90,
+		hardware: 120,
+		datacenters: 2,
 		cyberOffence: 0.18,
 		cyberDefence: 0.17,
 		reconFusion: 0.14,
@@ -112,6 +128,8 @@ export const AI_LEVELS: AiLevelSpec[] = [
 		cost: 6_000_000,
 		chips: 1_500,
 		rareEarth: 200,
+		hardware: 250,
+		datacenters: 3,
 		cyberOffence: 0.24,
 		cyberDefence: 0.22,
 		reconFusion: 0.18,
@@ -126,10 +144,18 @@ export function aiLevelSpec(level: number): AiLevelSpec {
 }
 
 /** Cost of the next level, or null at the cap. */
-export function aiUpgradeCost(level: number): { cost: number; chips: number; rareEarth: number } | null {
+export function aiUpgradeCost(
+	level: number
+): { cost: number; chips: number; rareEarth: number; hardware: number; datacenters: number } | null {
 	if (level >= AI_MAX_LEVEL) return null;
 	const next = aiLevelSpec(level + 1);
-	return { cost: next.cost, chips: next.chips, rareEarth: next.rareEarth };
+	return {
+		cost: next.cost,
+		chips: next.chips,
+		rareEarth: next.rareEarth,
+		hardware: next.hardware,
+		datacenters: next.datacenters
+	};
 }
 
 /** AI's multiplier on a factory shift's output. */

@@ -228,6 +228,10 @@ export interface OddsInput {
 	defenderAiLevel?: number;
 	/** Active infiltration assets your network holds in the target (0 when none). */
 	networkAssets?: number;
+	/** Attacker's computing base from hardware/datacenters (datacenter.config.ts). */
+	attackerDatacenter?: { offence: number; defence: number; attribution: number };
+	/** Target's computing base, which makes its cyber defence harder to beat. */
+	defenderDatacenter?: { offence: number; defence: number; attribution: number };
 }
 
 /**
@@ -294,6 +298,20 @@ export function operationOdds(input: OddsInput): Odds {
 				label: `AI capability (attacker ${attack}, defender ${defend})`,
 				success: offence - defence,
 				attribution: defence * 0.5
+			});
+		}
+	}
+	// The physical computing base (industry.config.ts → datacenter.config.ts).
+	// Hardware and datacenters find exploits on offence, spot anomalies on
+	// defence, and make the attacker's traffic harder to attribute.
+	if (input.spec.domain === "cyber") {
+		const attack = input.attackerDatacenter;
+		const defend = input.defenderDatacenter;
+		if (attack || defend) {
+			factors.push({
+				label: "Datacenter computing base",
+				success: (attack?.offence ?? 0) - (defend?.defence ?? 0),
+				attribution: (attack?.attribution ?? 0) + (defend?.defence ?? 0) * 0.5
 			});
 		}
 	}

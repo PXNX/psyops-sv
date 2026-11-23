@@ -33,6 +33,7 @@ import {
 	PSYOPS,
 	covertOdds,
 	cyberDefenceUpgradeCost,
+	datacenterCyberBonus,
 	moraleMagnitude,
 	postureMagnitude,
 	rollOperation,
@@ -44,7 +45,7 @@ import {
 } from "#lib/config/index.js";
 import { enemiesOf, sideOf } from "./recon";
 import { activeEffects, hasCasusBelli, isResilient } from "./state-effects";
-import { aiLevel } from "./ai";
+import { aiLevel, datacenterStocks } from "./ai";
 import { statePopulation, statePopulations } from "../population";
 
 type Tx = Parameters<Parameters<Database["transaction"]>[0]>[0];
@@ -325,13 +326,16 @@ export async function launchOperation(db: Database, input: LaunchInput): Promise
 			createdAt: now
 		});
 
-		// Roll.
-		const [defenceLevel, recent, resilient, attackerAi, defenderAi, networkAssets] = await Promise.all([
+		// Roll. The computing base (stocked hardware and datacenters) is read
+		// alongside AI capability: both states' machines shape the odds.
+		const [defenceLevel, recent, resilient, attackerAi, defenderAi, attackerDc, defenderDc, networkAssets] = await Promise.all([
 			spec.self ? 0 : cyberDefenceLevel(tx, target.id),
 			spec.self ? 0 : recentOps(tx, stateId, target.id, now),
 			spec.self || spec.domain !== "psyops" ? false : isResilient(tx, target.id, now),
 			spec.self ? 0 : aiLevel(tx, stateId),
 			spec.self ? 0 : aiLevel(tx, target.id),
+			spec.self ? { hardware: 0, datacenters: 0 } : datacenterStocks(tx, stateId),
+			spec.self ? { hardware: 0, datacenters: 0 } : datacenterStocks(tx, target.id),
 			spec.self
 				? Promise.resolve(0)
 				: tx
@@ -353,6 +357,8 @@ export async function launchOperation(db: Database, input: LaunchInput): Promise
 			targetResilient: resilient,
 			attackerAiLevel: attackerAi,
 			defenderAiLevel: defenderAi,
+			attackerDatacenter: datacenterCyberBonus(attackerDc.hardware, attackerDc.datacenters),
+			defenderDatacenter: datacenterCyberBonus(defenderDc.hardware, defenderDc.datacenters),
 			networkAssets: networkAssets + Math.max(0, input.extraFootholds ?? 0)
 		});
 		const roll = spec.self

@@ -25,6 +25,7 @@ export * from "./game/smuggling.config";
 export * from "./game/energy.config";
 export * from "./game/allocation.config";
 export * from "./game/industry.config";
+export * from "./game/datacenter.config";
 export * from "./game/logistics.config";
 export * from "./game/equipment.config";
 export * from "./game/trade.config";

@@ -55,6 +55,10 @@ export const productTypeEnum = pgEnum("product_type", [
 	"explosives",
 	"chips",
 	"electronics",
+	// Computing chain (industry.config.ts): hardware feeds datacenters, which
+	// sharpen cyber operations and AI. Both are heavy grid and water users.
+	"hardware",
+	"datacenter",
 	// Industrial equipment (equipment.config.ts): built before other plants.
 	"machine_tools",
 	"fab_equipment"

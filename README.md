@@ -102,6 +102,18 @@ It adds a little cyber offence and defence, intel fusion, factory efficiency
 and customs detection at every level. See `ai.config.ts` and
 `services/military/ai.ts`.
 
+**Computing chain.** Fabrication runs one step past electronics: chips and
+electronics become **server hardware**, and hardware — with machine tools,
+fab equipment, steel and copper — becomes a **datacenter**. Both are made in
+ordinary company factories, but each line reserves much more grid capacity
+than a normal plant and draws far more cooling water, so they compete with
+households for power and water and throttle when either runs short. A stocked
+computing base adds a capped bonus to cyber-operation success, makes traffic
+harder to attribute, hardens your own cyber defence and banks extra research
+each day; the top three AI levels also consume hardware and datacenters
+directly. See `industry.config.ts`, `datacenter.config.ts` and
+`civilian-supply.config.ts`.
+
 **State debt and bailouts.** Bond principal is carried as state debt until it is
 repaid. A president or economy minister can bail out another state from their own
 treasury: the aid lands in the recipient's account, clears its debt first, and

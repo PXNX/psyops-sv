@@ -246,6 +246,10 @@ export const FACTORY_WATER_DRAW: Record<string, number> = {
 	enriched_uranium: 22_000,
 	chips: 30_000,
 	electronics: 18_000,
+	// The computing chain is the thirstiest industry of all: fabs already need
+	// ultrapure water, and a datacenter's cooling towers evaporate far more.
+	hardware: 45_000,
+	datacenter: 60_000,
 	machine_tools: 10_000,
 	fab_equipment: 20_000
 };

@@ -16,6 +16,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Added
 
+- Computing chain: fabrication now builds server hardware from chips and
+  electronics, and datacenters from hardware, machine tools and fab equipment.
+  Both reserve far more grid capacity and draw far more cooling water than
+  ordinary lines, so a brownout or a poisoned water supply throttles them. A
+  stocked computing base gives a capped boost to cyber attacks, cyber defence,
+  attribution resistance and daily research, and the top three AI levels now
+  require hardware and datacenters to buy
 - Research: fourteen fields across public health, bio-defence, power efficiency,
   production, AI, trade, land/air/naval defence, space and interior security.
   Fields have rising costs and prerequisites, are paid from the treasury and
