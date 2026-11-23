@@ -1,10 +1,12 @@
 import { db } from "#lib/server/db.js";
 import { marketListings, resourceInventory, productInventory, userWallets } from "#lib/server/schema.js";
 import { eq, min, sql } from "drizzle-orm";
-import type { PageServerLoad } from "./$types";
+import { fail } from "@sveltejs/kit";
+import type { Actions, PageServerLoad } from "./$types";
 import { loadCandles, loadLastPricesBefore } from "./price-history.server";
 import { buildSeries, changePct, DAY, HOUR, type SeriesPoint } from "./series";
 import { earningsPulse } from "#lib/server/services/economy/earnings.js";
+import { StockError, buyShares, listShares, stockBoard } from "#lib/server/services/economy/stock-market.js";
 
 const RESOURCES = ["iron", "copper", "steel", "gunpowder", "wood", "coal"] as const;
 const PRODUCTS = ["rifles", "ammunition", "artillery", "vehicles", "explosives"] as const;
@@ -77,10 +79,45 @@ export const load: PageServerLoad = async ({ locals }) => {
 	return {
 		now,
 		earnings: await earningsPulse(db),
+		stocks: await stockBoard(db, account.id),
 		wallet: wallet || { balance: 10000, userId: account.id },
 		groups: [
 			{ title: "Raw materials", quotes: RESOURCES.map(quote) },
 			{ title: "Goods", quotes: PRODUCTS.map(quote) }
 		]
 	};
+};
+
+export const actions: Actions = {
+	// Buy a slice of a company's cheapest sell order.
+	buyStock: async ({ locals, request }) => {
+		const form = await request.formData();
+		try {
+			return await buyShares(db, {
+				userId: locals.account!.id,
+				listingId: Number(form.get("listingId")),
+				quantity: Number(form.get("quantity"))
+			});
+		} catch (err) {
+			if (err instanceof StockError) return fail(400, { error: err.message });
+			throw err;
+		}
+	},
+
+	// Offer shares you hold for sale on the market.
+	listStock: async ({ locals, request }) => {
+		const form = await request.formData();
+		try {
+			await listShares(db, {
+				userId: locals.account!.id,
+				companyId: Number(form.get("companyId")),
+				quantity: Number(form.get("quantity")),
+				pricePerUnit: Number(form.get("pricePerUnit"))
+			});
+			return { success: true, message: "Shares listed on the market." };
+		} catch (err) {
+			if (err instanceof StockError) return fail(400, { error: err.message });
+			throw err;
+		}
+	}
 };

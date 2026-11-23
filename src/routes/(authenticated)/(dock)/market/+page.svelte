@@ -2,15 +2,31 @@
 <!-- The market: the biggest movers on a large chart, then every commodity
      with its last price, 24h move and a week sparkline. -->
 <script lang="ts">
+	import { enhance } from "$app/forms";
 	import PageContainer from "#lib/component/PageContainer.svelte";
 	import PageHeader from "#lib/component/PageHeader.svelte";
 	import ResourceIcon from "#lib/component/ResourceIcon.svelte";
+	import { Button } from "#lib/component/ui/index.js";
+	import { toastResult } from "#lib/ui/toast.svelte.js";
 	import PriceChart from "./PriceChart.svelte";
 	import Sparkline from "./Sparkline.svelte";
 	import { DAY, HOUR, money, type SeriesPoint } from "./series";
 	import { dtgDate, dtgShortDate, dtgTime } from "#lib/utils/dtg.js";
 
-	let { data } = $props();
+	let { data, form } = $props();
+	let buyingStock = $state<number | null>(null);
+	let listingStock = $state<number | null>(null);
+
+	const stockEnhance = (kind: "buy" | "list", companyId: number) => {
+		if (kind === "buy") buyingStock = companyId;
+		else listingStock = companyId;
+		return async ({ update, result }: { update: () => Promise<void>; result: unknown }) => {
+			await update();
+			buyingStock = null;
+			listingStock = null;
+			toastResult(result);
+		};
+	};
 
 	const all = $derived(data.groups.flatMap((g) => g.quotes));
 
@@ -219,4 +235,108 @@
 			</ul>
 		</section>
 	{/if}
+
+	<!-- Stocks: shares of public companies, bought and sold from the order book. -->
+	<section class="panel rounded-sm p-4 mt-4">
+		<div class="flex flex-wrap items-baseline justify-between gap-2">
+			<h2 class="section-title">Stocks</h2>
+			<a href="/company" class="text-xs text-fg-muted hover:text-primary-fg">Browse companies →</a>
+		</div>
+		<p class="mt-1 text-xs text-fg-muted">
+			Public company shares trade here. Buy the cheapest open offer or post your own; a company's shares only
+			trade 72 hours after its IPO.
+		</p>
+		{#if form?.error}
+			<p class="field-error mt-2">{form.error}</p>
+		{/if}
+		{#if data.stocks.length === 0}
+			<p class="mt-3 text-sm text-fg-muted">No public companies yet — shares appear here once one files for an IPO.</p>
+		{:else}
+			<div class="mt-3 overflow-x-auto">
+				<table class="w-full text-sm">
+					<thead class="text-left text-[10px] uppercase tracking-wide text-fg-muted">
+						<tr>
+							<th class="py-1.5 pr-3 font-medium">Company</th>
+							<th class="py-1.5 pr-3 text-right font-medium">Quote</th>
+							<th class="py-1.5 pr-3 text-right font-medium">Best ask</th>
+							<th class="py-1.5 pr-3 text-right font-medium">On offer</th>
+							<th class="py-1.5 pr-3 text-right font-medium">Yours</th>
+							<th class="py-1.5 font-medium text-right">Trade</th>
+						</tr>
+					</thead>
+					<tbody class="divide-y divide-line/15">
+						{#each data.stocks as stock (stock.companyId)}
+							<tr>
+								<td class="py-2 pr-3">
+									<a href="/company/{stock.companyId}" class="font-semibold text-fg hover:text-primary-fg">
+										{stock.name}
+									</a>
+								</td>
+								<td class="py-2 pr-3 text-right font-mono text-xs">{money(stock.price)}</td>
+								<td class="py-2 pr-3 text-right font-mono text-xs text-fg-muted">
+									{stock.ask === null ? "—" : money(stock.ask)}
+								</td>
+								<td class="py-2 pr-3 text-right font-mono text-xs">{stock.unitsOnOffer.toLocaleString()}</td>
+								<td class="py-2 pr-3 text-right font-mono text-xs text-primary-fg">{stock.held.toLocaleString()}</td>
+								<td class="py-2 text-right">
+									<div class="flex flex-wrap justify-end gap-1.5">
+										{#if stock.bestAskId !== null}
+											<form method="POST" action="?/buyStock" use:enhance={() => stockEnhance("buy", stock.companyId)}>
+												<input type="hidden" name="listingId" value={stock.bestAskId} />
+												<input
+													type="number"
+													name="quantity"
+													min="1"
+													max={stock.unitsOnOffer}
+													value="1"
+													aria-label="Shares to buy"
+													class="field-control w-16 rounded-sm px-1.5 py-1 text-xs font-mono"
+												/>
+												<Button
+													type="submit"
+													size="xs"
+													variant="primary"
+													loading={buyingStock === stock.companyId}
+												>Buy</Button
+												>
+											</form>
+										{/if}
+										{#if stock.held > 0}
+											<form method="POST" action="?/listStock" use:enhance={() => stockEnhance("list", stock.companyId)}>
+												<input type="hidden" name="companyId" value={stock.companyId} />
+												<input
+													type="number"
+													name="quantity"
+													min="1"
+													max={stock.held}
+													value="1"
+													aria-label="Shares to sell"
+													class="field-control w-16 rounded-sm px-1.5 py-1 text-xs font-mono"
+												/>
+												<input
+													type="number"
+													name="pricePerUnit"
+													min="1"
+													value={stock.ask ?? stock.price}
+													aria-label="Price per share"
+													class="field-control w-20 rounded-sm px-1.5 py-1 text-xs font-mono"
+												/>
+												<Button
+													type="submit"
+													size="xs"
+													variant="secondary"
+													loading={listingStock === stock.companyId}
+												>Sell</Button
+												>
+											</form>
+										{/if}
+									</div>
+								</td>
+							</tr>
+						{/each}
+					</tbody>
+				</table>
+			</div>
+		{/if}
+	</section>
 </PageContainer>

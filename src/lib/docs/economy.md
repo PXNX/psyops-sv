@@ -51,7 +51,9 @@ Going public files an IPO at a **determined price**: the company's cash plus
 the book value of its factories (`stocks.config.ts`), divided across 1,000
 shares. The float does not trade immediately — it takes **72 hours** to be
 listed on the market, after which the hourly listing cron places it on the
-order book automatically.
+order book automatically. Once listed, shares trade on the **market page**
+alongside goods: buy the cheapest open offer or post your own, and the order
+book on the company page shows the same live offers.
 
 Expanding a factory costs **20,000 per added post** from the company budget
 and takes **24 hours** before the new posts come online. Wages have to stay

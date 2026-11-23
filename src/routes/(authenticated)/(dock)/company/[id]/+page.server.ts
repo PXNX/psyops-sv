@@ -49,6 +49,7 @@ import {
 	setDividendPolicy
 } from "#lib/server/services/economy/dividends.js";
 import { companyEarnings } from "#lib/server/services/economy/earnings.js";
+import { StockError, buyShares, cancelShareListing, listShares } from "#lib/server/services/economy/stock-market.js";
 import { takeFirstTimeDetail } from "#lib/server/services/politics/first-time.js";
 import type { PageServerLoad, Actions } from "./$types";
 
@@ -776,202 +777,48 @@ export const actions: Actions = {
 	// List shares for sale. The founder can never list below their locked block.
 	createShareListing: async ({ params, locals, request }) => {
 		const account = locals.account!;
-		const companyId = parseInt(params.id);
-		const formData = await request.formData();
-		const quantity = parseInt(formData.get("quantity") as string);
-		const pricePerUnit = parseInt(formData.get("pricePerUnit") as string);
-
-		if (!quantity || quantity < 1 || !pricePerUnit || pricePerUnit < ECONOMY_CONFIG.MIN_SHARE_PRICE) {
-			return fail(400, { error: "Invalid listing data" });
-		}
-
-		const [company] = await db
-			.select({ ownerId: companies.ownerId })
-			.from(companies)
-			.where(eq(companies.id, companyId));
-		if (!company) return fail(404, { error: "Company not found" });
-
-		const [shares] = await db.select().from(companyShares).where(eq(companyShares.companyId, companyId));
-		if (!shares) return fail(400, { error: "Company is not public" });
-		if (shares.listedAt === null) {
-			return fail(400, { error: `Shares list in ${STOCKS.LISTING_HOURS} hours; trading is not open yet` });
-		}
-
-		const [holding] = await db
-			.select()
-			.from(shareHoldings)
-			.where(and(eq(shareHoldings.companyId, companyId), eq(shareHoldings.userId, account.id)));
-
-		if (!holding || holding.quantity < quantity) {
-			return fail(400, { error: "You don't own enough shares" });
-		}
-
-		if (account.id === company.ownerId && holding.quantity - quantity < shares.founderLockedShares) {
-			return fail(400, {
-				error: `As the founder you must keep at least ${shares.founderLockedShares.toLocaleString()} locked shares`
+		const form = await request.formData();
+		try {
+			await listShares(db, {
+				userId: account.id,
+				companyId: parseInt(params.id),
+				quantity: parseInt(form.get("quantity") as string),
+				pricePerUnit: parseInt(form.get("pricePerUnit") as string)
 			});
+			return { success: true, message: "Share listing created" };
+		} catch (err) {
+			if (err instanceof StockError) return fail(400, { error: err.message });
+			throw err;
 		}
-
-		await db.transaction(async (tx) => {
-			await tx
-				.update(shareHoldings)
-				.set({ quantity: holding.quantity - quantity, updatedAt: new Date() })
-				.where(and(eq(shareHoldings.companyId, companyId), eq(shareHoldings.userId, account.id)));
-
-			await tx.insert(shareListings).values({ companyId, sellerId: account.id, quantity, pricePerUnit });
-		});
-
-		return { success: true, message: "Share listing created" };
 	},
 
 	// Cancel one of your own share listings, returning the shares to your holding.
 	removeShareListing: async ({ locals, request }) => {
 		const account = locals.account!;
-		const formData = await request.formData();
-		const listingId = parseInt(formData.get("listingId") as string);
-
-		const [listing] = await db.select().from(shareListings).where(eq(shareListings.id, listingId));
-		if (!listing) return fail(404, { error: "Listing not found" });
-		if (listing.sellerId !== account.id) return fail(403, { error: "Not your listing" });
-
-		await db.transaction(async (tx) => {
-			const [holding] = await tx
-				.select()
-				.from(shareHoldings)
-				.where(and(eq(shareHoldings.companyId, listing.companyId), eq(shareHoldings.userId, account.id)));
-
-			if (holding) {
-				await tx
-					.update(shareHoldings)
-					.set({ quantity: holding.quantity + listing.quantity, updatedAt: new Date() })
-					.where(and(eq(shareHoldings.companyId, listing.companyId), eq(shareHoldings.userId, account.id)));
-			} else {
-				await tx
-					.insert(shareHoldings)
-					.values({ companyId: listing.companyId, userId: account.id, quantity: listing.quantity });
-			}
-
-			await tx.delete(shareListings).where(eq(shareListings.id, listingId));
-		});
-
-		return { success: true, message: "Listing removed" };
+		const listingId = parseInt((await request.formData()).get("listingId") as string);
+		try {
+			await cancelShareListing(db, { userId: account.id, listingId });
+			return { success: true, message: "Listing removed" };
+		} catch (err) {
+			if (err instanceof StockError) return fail(400, { error: err.message });
+			throw err;
+		}
 	},
 
 	// Buy shares from another shareholder's listing.
 	buyShareListing: async ({ locals, request }) => {
 		const account = locals.account!;
-		const formData = await request.formData();
-		const listingId = parseInt(formData.get("listingId") as string);
-		const quantity = parseInt(formData.get("quantity") as string);
-
-		const [listing] = await db.select().from(shareListings).where(eq(shareListings.id, listingId));
-		if (!listing) return fail(404, { error: "Listing not found" });
-		if (listing.sellerId === account.id) return fail(400, { error: "Cannot buy your own listing" });
-		if (!quantity || quantity < 1 || quantity > listing.quantity) return fail(400, { error: "Invalid quantity" });
-
-		const [company] = await db
-			.select({ stateId: regions.stateId })
-			.from(companies)
-			.leftJoin(regions, eq(companies.regionId, regions.id))
-			.where(eq(companies.id, listing.companyId));
-
-		const embargoReason = await getEmbargoReason(company?.stateId ?? null, account.id);
-		if (embargoReason) {
-			return fail(403, { error: embargoReason });
-		}
-
-		const totalPrice = Number(listing.pricePerUnit) * quantity;
-
-		const [buyerWallet] = await db.select().from(userWallets).where(eq(userWallets.userId, account.id));
-		if (!buyerWallet || Number(buyerWallet.balance) < totalPrice) {
-			return fail(400, { error: "Insufficient funds" });
-		}
-
-		await db.transaction(async (tx) => {
-			const [sellerWallet] = await tx.select().from(userWallets).where(eq(userWallets.userId, listing.sellerId));
-
-			const buyerBalanceAfter = Number(buyerWallet.balance) - totalPrice;
-			const sellerBalanceAfter = Number(sellerWallet?.balance ?? 0) + totalPrice;
-
-			await tx
-				.update(userWallets)
-				.set({ balance: buyerBalanceAfter, updatedAt: new Date() })
-				.where(eq(userWallets.userId, account.id));
-
-			if (sellerWallet) {
-				await tx
-					.update(userWallets)
-					.set({ balance: sellerBalanceAfter, updatedAt: new Date() })
-					.where(eq(userWallets.userId, listing.sellerId));
-			}
-
-			const [buyerHolding] = await tx
-				.select()
-				.from(shareHoldings)
-				.where(and(eq(shareHoldings.companyId, listing.companyId), eq(shareHoldings.userId, account.id)));
-
-			if (buyerHolding) {
-				await tx
-					.update(shareHoldings)
-					.set({ quantity: buyerHolding.quantity + quantity, updatedAt: new Date() })
-					.where(and(eq(shareHoldings.companyId, listing.companyId), eq(shareHoldings.userId, account.id)));
-			} else {
-				await tx.insert(shareHoldings).values({ companyId: listing.companyId, userId: account.id, quantity });
-			}
-
-			if (quantity === listing.quantity) {
-				await tx.delete(shareListings).where(eq(shareListings.id, listingId));
-			} else {
-				await tx
-					.update(shareListings)
-					.set({ quantity: listing.quantity - quantity })
-					.where(eq(shareListings.id, listingId));
-			}
-
-			await tx.insert(shareTransactions).values({
-				companyId: listing.companyId,
-				listingId: listing.id,
-				buyerId: account.id,
-				sellerId: listing.sellerId,
-				quantity,
-				totalPrice
-			});
-
-			await tx.insert(transactionHistory).values({
+		const form = await request.formData();
+		try {
+			return await buyShares(db, {
 				userId: account.id,
-				transactionType: "share_purchase",
-				amount: -totalPrice,
-				balanceAfter: buyerBalanceAfter,
-				description: `Bought ${quantity.toLocaleString()} share${quantity > 1 ? "s" : ""} for $${totalPrice.toLocaleString()}`,
-				relatedUserId: listing.sellerId,
-				relatedEntityType: "company",
-				relatedEntityId: listing.companyId
+				listingId: parseInt(form.get("listingId") as string),
+				quantity: parseInt(form.get("quantity") as string)
 			});
-
-			await tx.insert(transactionHistory).values({
-				userId: listing.sellerId,
-				transactionType: "share_sale",
-				amount: totalPrice,
-				balanceAfter: sellerBalanceAfter,
-				description: `Sold ${quantity.toLocaleString()} share${quantity > 1 ? "s" : ""} for $${totalPrice.toLocaleString()}`,
-				relatedUserId: account.id,
-				relatedEntityType: "company",
-				relatedEntityId: listing.companyId
-			});
-		});
-
-		sendNotificationIfEnabled(listing.sellerId, "notifyMarketSales", {
-			title: "📈 Shares Sold",
-			body: `Someone bought ${quantity.toLocaleString()} of your shares for $${totalPrice.toLocaleString()}.`,
-			icon: "/favicon.png",
-			badge: "/badge.png",
-			data: {
-				url: `/company/${listing.companyId}`,
-				tag: `share-sale-${listing.id}`
-			}
-		}).catch((err) => console.error("Failed to send share sale notification:", err));
-
-		return { success: true, message: "Purchase successful" };
+		} catch (err) {
+			if (err instanceof StockError) return fail(400, { error: err.message });
+			throw err;
+		}
 	},
 
 	// Pay a dividend per share from the company budget to every shareholder.
