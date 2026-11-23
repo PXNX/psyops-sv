@@ -11,8 +11,8 @@
 	import PageHeader from "#lib/component/PageHeader.svelte";
 	import EmptyState from "#lib/component/EmptyState.svelte";
 	import Tutorial from "#lib/component/Tutorial.svelte";
-	import CommanderPortrait from "#lib/component/CommanderPortrait.svelte";
-	import { COMMANDER_TRAITS, commanderLevel } from "#lib/config/index.js";
+	import CommanderBadge from "#lib/component/CommanderBadge.svelte";
+	
 	import { Button, Badge } from "#lib/component/ui/index.js";
 	import { toastResult } from "#lib/ui/toast.svelte.js";
 	import FluentMap from "~icons/fluent/map-24-regular";
@@ -529,19 +529,13 @@
 					{@const officer = data.officers.find((o) => o.id === fleet.commanderId)}
 					<div class="soft-lift mt-2 rounded-sm border border-line/20 p-2">
 						<div class="flex items-center gap-2">
-							{#if officer}
-								<CommanderPortrait seed={officer.portrait} alive={officer.alive} size={28} />
-							{/if}
 							<span class="min-w-0 flex-1 truncate text-xs font-medium">{fleet.name}</span>
 							<span class="text-[10px] text-fg-muted"
 								>{myShips.filter((s) => s.fleetId === fleet.id).length} hulls · {data.fleetHexes.filter((h) => h.fleetId === fleet.id).length} hexes</span
 							>
 						</div>
 						{#if officer}
-							<div class="mt-1 text-[10px] text-fg-muted">
-								{officer.name} · L{commanderLevel(officer.experience)} · {officer.alive ? `${officer.health}hp` : "killed"} ·
-								{officer.traitIds.map((id) => COMMANDER_TRAITS[id as keyof typeof COMMANDER_TRAITS]?.label ?? id).join(", ") || "no traits"}
-							</div>
+							<div class="mt-1"><CommanderBadge {officer} size="sm" /></div>
 						{/if}
 						<div class="mt-1 flex items-center gap-1">
 							<form method="POST" action="?/assignCommander" use:enhance={enhanceForm} class="flex min-w-0 flex-1 gap-1">
@@ -606,7 +600,7 @@
 									<span class="text-fg-muted">{item.status} · {timeLeft(item.completesAt)}</span>
 								</div>
 								{#if item.status === "building"}
-									<div class="mt-1 h-1 rounded bg-surface-4"><div class="h-full rounded bg-primary" style="width:{progress(item)}%"></div></div>
+									<div class="mt-1 h-1 rounded bg-surface-4"><div class="progress-shine h-full rounded bg-primary transition-all duration-500" style="width:{progress(item)}%"></div></div>
 								{/if}
 								{#if data.canCommand && item.stateId === data.myStateId && item.status === "queued"}
 									<form method="POST" action="?/cancelJob" use:enhance={enhanceForm} class="mt-1">

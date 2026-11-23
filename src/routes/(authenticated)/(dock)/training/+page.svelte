@@ -14,8 +14,8 @@
 	import IconClock from "~icons/fluent/clock-24-filled";
 	import FluentWarning20Filled from "~icons/fluent/warning-20-filled";
 	import * as m from "#lib/paraglide/messages.js";
-	import CommanderPortrait from "#lib/component/CommanderPortrait.svelte";
-	import { ACADEMY, AIRCRAFT_IDS, COMMANDER_TRAITS, DOMAIN_UNITS, commanderLevel } from "#lib/config/index.js";
+	import CommanderBadge from "#lib/component/CommanderBadge.svelte";
+	import { ACADEMY, AIRCRAFT_IDS, DOMAIN_UNITS } from "#lib/config/index.js";
 	import { canCoverManpower, getExperienceLevel, manpowerCostOf } from "#lib/config/index.js";
 	import { toastResult } from "#lib/ui/toast.svelte.js";
 	import { confirmSubmit } from "#lib/ui/confirm-submit.js";
@@ -277,15 +277,8 @@
 		{#if (data.officers ?? []).length}
 			<div class="flex flex-wrap gap-2">
 				{#each (data.officers ?? []) as officer (officer.id)}
-					<div class="soft-lift flex items-center gap-2 rounded-sm border border-line/20 bg-surface-1 px-2 py-1">
-						<CommanderPortrait seed={officer.portrait} alive={officer.alive} size={32} />
-						<div class="text-[11px]">
-							<div class="font-medium">{officer.name} {officer.alive ? "" : "†"}</div>
-							<div class="text-fg-muted">L{commanderLevel(officer.experience)} · {officer.alive ? `${officer.health}hp` : "killed"}</div>
-							<div class="text-fg-muted">
-								{officer.traitIds.map((id) => COMMANDER_TRAITS[id as keyof typeof COMMANDER_TRAITS]?.label ?? id).join(", ") || "no traits"}
-							</div>
-						</div>
+					<div class="soft-lift rounded-sm border border-line/20 bg-surface-1 px-2 py-1">
+						<CommanderBadge {officer} size="sm" />
 					</div>
 				{/each}
 			</div>

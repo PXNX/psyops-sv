@@ -18,6 +18,7 @@
 	import { stamp } from "#lib/component/press/time.js";
 	import { dtgDate } from "#lib/utils/dtg.js";
 	import SafeHtml from "#lib/component/press/SafeHtml.svelte";
+	import { countUp } from "#lib/utils/count-up.js";
 
 	const { data } = $props();
 
@@ -195,7 +196,7 @@
 				{:else}
 					<FluentHeart20Regular class="size-4" />
 				{/if}
-				<span class="font-mono">{upvoteCount}</span>
+				<span class="font-mono" use:countUp={upvoteCount}>{upvoteCount}</span>
 			</button>
 			<span class="text-sm text-fg-muted">{upvoteCount === 1 ? "like" : "likes"}</span>
 		</footer>

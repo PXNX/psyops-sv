@@ -220,6 +220,47 @@
 	}
 }
 
+/* Animated sheen for progress bars and meters. */
+@utility progress-shine {
+	position: relative;
+	overflow: hidden;
+	&::after {
+		content: "";
+		position: absolute;
+		inset: 0;
+		background: linear-gradient(90deg, transparent, rgb(255 255 255 / 0.18), transparent);
+		transform: translateX(-100%);
+		animation: progress-sheen 2.4s ease-in-out infinite;
+		pointer-events: none;
+	}
+}
+@keyframes progress-sheen {
+	60%,
+	100% {
+		transform: translateX(100%);
+	}
+}
+
+/* Gentle floating for celebration badges and highlights. */
+@keyframes soft-float {
+	0%,
+	100% {
+		transform: translateY(0);
+	}
+	50% {
+		transform: translateY(-4px);
+	}
+}
+.animate-float {
+	animation: soft-float 3.2s ease-in-out infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+	.animate-float,
+	.progress-shine::after {
+		animation: none;
+	}
+}
+
 /* Quiet hover lift for cards and list rows — small enough to feel playful
    without making the UI jumpy. */
 @utility soft-lift {
