@@ -18,8 +18,14 @@ import {
 	intrusionSessions,
 	powerPlants,
 	stateTreasury,
-	states
+	states,
+	companies,
+	factories,
+	politicalParties,
+	regions,
+	residences
 } from "../../schema";
+import { getRegionName } from "#lib/utils/formatting.js";
 import {
 	INFILTRATION,
 	INFILTRATION_ACTION_KINDS,
@@ -141,11 +147,7 @@ export interface KnownSite extends Site {
 
 /** The target's site catalogue, annotated with what this network has learned. */
 export async function sitesFor(db: Db, stateId: number, targetStateId: number, now = new Date()): Promise<KnownSite[]> {
-	const [plantRows, actionRows, fileRows] = await Promise.all([
-		db
-			.select({ id: powerPlants.id, name: powerPlants.name, plantType: powerPlants.plantType })
-			.from(powerPlants)
-			.where(eq(powerPlants.stateId, targetStateId)),
+	const [actionRows, fileRows] = await Promise.all([
 		db
 			.select({
 				siteId: infiltrationActions.siteId,
@@ -166,10 +168,7 @@ export async function sitesFor(db: Db, stateId: number, targetStateId: number, n
 			.from(infiltrationFiles)
 			.where(and(eq(infiltrationFiles.stateId, stateId), eq(infiltrationFiles.targetStateId, targetStateId)))
 	]);
-	const sites = sitesForTarget(
-		targetStateId,
-		plantRows.map((p) => ({ id: p.id, name: p.name, plantType: p.plantType }))
-	);
+	const sites = await sitesIn(db, targetStateId);
 	const filesBySite = new Map<string, number>();
 	for (const f of fileRows) filesBySite.set(f.siteId, (filesBySite.get(f.siteId) ?? 0) + 1);
 	return sites.map((site) => {
@@ -330,14 +329,7 @@ export async function flipAsset(
 				.where(eq(infiltrationAssets.id, asset.id));
 
 			// The new double agent hands over what it can reach in its old state.
-			const plantRows = await tx
-				.select({ id: powerPlants.id, name: powerPlants.name, plantType: powerPlants.plantType })
-				.from(powerPlants)
-				.where(eq(powerPlants.stateId, asset.stateId));
-			const sites = sitesForTarget(
-				asset.stateId,
-				plantRows.map((p) => ({ id: p.id, name: p.name, plantType: p.plantType }))
-			);
+			const sites = await sitesIn(tx, asset.stateId);
 			for (let i = 0; i < INFILTRATION.FLIP_SECRETS && sites.length; i++) {
 				const site = sites[i % sites.length]!;
 				const dossier = fileFor(site, row.owner, Math.floor(rng() * 1_000_000), now);
@@ -501,14 +493,7 @@ export async function runAction(
 		if (input.action !== "cover") {
 			if (!input.siteId) throw new InfiltrationError("Choose a site.");
 			targetName = await assertTarget(tx, stateId, asset.targetStateId);
-			const plantRows = await tx
-				.select({ id: powerPlants.id, name: powerPlants.name, plantType: powerPlants.plantType })
-				.from(powerPlants)
-				.where(eq(powerPlants.stateId, asset.targetStateId));
-			const sites = sitesForTarget(
-				asset.targetStateId,
-				plantRows.map((p) => ({ id: p.id, name: p.name, plantType: p.plantType }))
-			);
+			const sites = await sitesIn(tx, asset.targetStateId);
 			site = sites.find((s) => s.id === input.siteId) ?? null;
 			if (!site) throw new InfiltrationError("That site is not in the target's catalogue.");
 			if (effectiveAccess < site.accessRequired) {
@@ -646,14 +631,43 @@ export async function intelDepth(db: Db, userId: string, targetStateId: number):
 
 export type IntrusionStep = IntrusionStage | "reset";
 
+/** Every hackable object inside a target: plants, companies, factories and parties. */
 async function sitesIn(db: Db, targetStateId: number): Promise<Site[]> {
-	const plants = await db
-		.select({ id: powerPlants.id, name: powerPlants.name, plantType: powerPlants.plantType })
-		.from(powerPlants)
-		.where(eq(powerPlants.stateId, targetStateId));
+	const [plants, companyRows, factoryRows, partyRows] = await Promise.all([
+		db
+			.select({ id: powerPlants.id, name: powerPlants.name, plantType: powerPlants.plantType, regionId: powerPlants.regionId })
+			.from(powerPlants)
+			.where(eq(powerPlants.stateId, targetStateId)),
+		db
+			.select({ id: companies.id, name: companies.name, regionId: companies.regionId })
+			.from(companies)
+			.innerJoin(regions, eq(companies.regionId, regions.id))
+			.where(eq(regions.stateId, targetStateId)),
+		db
+			.select({ id: factories.id, name: factories.name, regionId: factories.regionId })
+			.from(factories)
+			.innerJoin(regions, eq(factories.regionId, regions.id))
+			.where(eq(regions.stateId, targetStateId)),
+		db
+			.select({ id: politicalParties.id, name: politicalParties.name, regionId: residences.regionId })
+			.from(politicalParties)
+			.leftJoin(residences, eq(residences.userId, politicalParties.founderId))
+			.where(eq(politicalParties.stateId, targetStateId))
+	]);
+	const regionName = (id: number | null) => (id == null ? undefined : getRegionName(id));
 	return sitesForTarget(
 		targetStateId,
-		plants.map((p) => ({ id: p.id, name: p.name, plantType: p.plantType }))
+		plants.map((p) => ({
+			id: p.id,
+			name: p.name,
+			plantType: p.plantType,
+			region: regionName(p.regionId)
+		})),
+		{
+			companies: companyRows.map((c) => ({ id: c.id, name: c.name, region: regionName(c.regionId) })),
+			factories: factoryRows.map((f) => ({ id: f.id, name: f.name, region: regionName(f.regionId) })),
+			parties: partyRows.map((p) => ({ id: p.id, name: p.name, region: regionName(p.regionId) }))
+		}
 	);
 }
 

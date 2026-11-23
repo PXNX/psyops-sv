@@ -50,20 +50,38 @@
 		| "martial_law";
 	type BuildingType = "hospital" | "school" | "power_plant" | "infrastructure" | "fortifications" | "radar";
 
-	const PROPOSAL_TYPES: { type: ProposalType; label: string }[] = [
-		{ type: "tax", label: "Taxation" },
-		{ type: "hospital", label: "Hospital" },
-		{ type: "school", label: "School" },
-		{ type: "power_plant", label: "Power plant" },
-		{ type: "infrastructure", label: "Infrastructure" },
-		{ type: "fortifications", label: "Fortifications" },
-		{ type: "radar", label: "Air-defence radar" },
-		{ type: "border_control", label: "Border control" },
-		{ type: "exploitation", label: "Resource law" },
-		{ type: "declare_war", label: "Declaration of war" },
-		{ type: "salary", label: "Official salaries" },
-		{ type: "martial_law", label: "Martial law" }
+	type ProposalGroup = { label: string; hint: string; types: { type: ProposalType; label: string }[] };
+	const PROPOSAL_GROUPS: ProposalGroup[] = [
+		{
+			label: "State policy",
+			hint: "laws that change how the state is run",
+			types: [
+				{ type: "tax", label: "Taxation" },
+				{ type: "exploitation", label: "Resource law" },
+				{ type: "border_control", label: "Border control" },
+				{ type: "salary", label: "Official salaries" },
+				{ type: "martial_law", label: "Martial law" }
+			]
+		},
+		{
+			label: "Construction laws",
+			hint: "drafts for public works, built one level at a time",
+			types: [
+				{ type: "hospital", label: "Hospital" },
+				{ type: "school", label: "School" },
+				{ type: "power_plant", label: "Power plant" },
+				{ type: "infrastructure", label: "Infrastructure" },
+				{ type: "fortifications", label: "Fortifications" },
+				{ type: "radar", label: "Air-defence radar" }
+			]
+		},
+		{
+			label: "War and peace",
+			hint: "decisions that reach beyond the border",
+			types: [{ type: "declare_war", label: "Declaration of war" }]
+		}
 	];
+	const PROPOSAL_TYPES = PROPOSAL_GROUPS.flatMap((g) => g.types);
 	const typeLabel = (t: string | undefined) => PROPOSAL_TYPES.find((p) => p.type === t)?.label ?? "";
 
 	const TAX_TYPES: { type: "mining" | "production" | "market_transaction" | "income"; label: string; hint: string }[] =
@@ -209,26 +227,36 @@
 				<legend class="field-label">
 					<span class="font-serif text-fg-muted mr-1">§ 1</span> Subject <span class="text-red-400">*</span>
 				</legend>
-				<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
-					{#each PROPOSAL_TYPES as { type, label } (type)}
-						{@const on = $formData.proposalType === type}
-						<button
-							type="button"
-							class={option(on)}
-							onclick={() => ($formData.proposalType = type)}
-							disabled={$submitting}
-							aria-pressed={on}
-						>
-							<span class={box(on)}><FluentCheckmark20Filled class="size-4" /></span>
-							<span
-								class="flex-1 min-w-0 text-sm font-semibold truncate {type === 'declare_war'
-									? 'text-red-300'
-									: 'text-fg'}">{label}</span
-							>
-							{#if autoFor(type)}
-								<span class="shrink-0 text-[10px] uppercase tracking-wide text-positive-fg">Decree</span>
-							{/if}
-						</button>
+				<div class="space-y-4">
+					{#each PROPOSAL_GROUPS as group (group.label)}
+						<div>
+							<div class="mb-1.5 flex flex-wrap items-baseline gap-x-2">
+								<h3 class="text-[11px] font-semibold uppercase tracking-[0.14em] text-fg-soft">{group.label}</h3>
+								<span class="text-[10px] text-fg-faint">{group.hint}</span>
+							</div>
+							<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
+								{#each group.types as { type, label } (type)}
+									{@const on = $formData.proposalType === type}
+									<button
+										type="button"
+										class={option(on)}
+										onclick={() => ($formData.proposalType = type)}
+										disabled={$submitting}
+										aria-pressed={on}
+									>
+										<span class={box(on)}><FluentCheckmark20Filled class="size-4" /></span>
+										<span
+											class="flex-1 min-w-0 text-sm font-semibold truncate {type === 'declare_war'
+												? 'text-red-300'
+												: 'text-fg'}">{label}</span
+										>
+										{#if autoFor(type)}
+											<span class="shrink-0 text-[10px] uppercase tracking-wide text-positive-fg">Decree</span>
+										{/if}
+									</button>
+								{/each}
+							</div>
+						</div>
 					{/each}
 				</div>
 				<input type="hidden" name="proposalType" value={$formData.proposalType} />

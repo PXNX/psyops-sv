@@ -113,7 +113,10 @@ const HOSTS: Record<Site["kind"], string[]> = {
 	datacenter: ["fs-02", "vault-db", "badge-srv", "backup-01"],
 	telecom: ["switch-03", "intercept-gw", "diameter-01", "nms-02"],
 	lab: ["test-rig", "eng-share", "cleanroom-01", "lab-db"],
-	command: ["ops-floor", "comms-01", "sip-gw", "archive-srv"]
+	command: ["ops-floor", "comms-01", "sip-gw", "archive-srv"],
+	company: ["books-01", "hr-share", "contracts-db", "board-gw"],
+	factory: ["line-03", "shift-plc", "stores-db", "qa-01"],
+	party: ["canvass-01", "donors-db", "mailroom", "member-srv"]
 };
 const OS = ["Ubuntu 22.04 LTS", "Debian 12", "Windows Server 2019", "CentOS 7", "VxWorks 7"];
 

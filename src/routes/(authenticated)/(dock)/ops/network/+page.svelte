@@ -47,6 +47,8 @@
 	import IconFingerprint from "~icons/mdi/fingerprint";
 	import IconCover from "~icons/mdi/incognito";
 	import IconClock from "~icons/mdi/clock-alert";
+	import IconOffice from "~icons/mdi/office-building";
+	import IconGroup from "~icons/mdi/account-group";
 
 	type Outcome = {
 		success: boolean;
@@ -106,7 +108,10 @@
 		datacenter: IconServer,
 		telecom: IconNetwork,
 		lab: IconPulse,
-		command: IconShield
+		command: IconShield,
+		company: IconOffice,
+		factory: IconFactory,
+		party: IconGroup
 	};
 	const ASSET_ICON: Record<AssetKind, typeof IconAgent> = {
 		relay: IconNetwork,

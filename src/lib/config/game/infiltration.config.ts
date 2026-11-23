@@ -15,7 +15,16 @@ import { hash32, seededRandom } from "./recon.config";
 
 export type AssetKind = "agent" | "implant" | "relay" | "insider" | "botnet";
 export type InfiltrationActionKind = "probe" | "camera" | "files" | "cover";
-export type SiteKind = "powerplant" | "airbase" | "datacenter" | "telecom" | "lab" | "command";
+export type SiteKind =
+	| "powerplant"
+	| "airbase"
+	| "datacenter"
+	| "telecom"
+	| "lab"
+	| "command"
+	| "company"
+	| "factory"
+	| "party";
 
 export interface AssetSpec {
 	label: string;
@@ -285,6 +294,27 @@ export const SITE_TYPES: Record<SiteKind, SiteSpec> = {
 		security: 5,
 		accessRequired: 4,
 		camera: "OPS FLOOR / ACCESS CONTROL"
+	},
+	company: {
+		label: "Company office",
+		blurb: "A firm's head office in the region: contracts, payroll and the correspondence of its owner.",
+		security: 3,
+		accessRequired: 2,
+		camera: "FRONT DESK / BOARDROOM"
+	},
+	factory: {
+		label: "Factory floor",
+		blurb: "Production lines, shift rotas and the books that show what the plant really makes.",
+		security: 2,
+		accessRequired: 1,
+		camera: "ASSEMBLY HALL / TIME CLOCK"
+	},
+	party: {
+		label: "Party office",
+		blurb: "A local party bureau: membership lists, donations and the machinery behind the campaign.",
+		security: 3,
+		accessRequired: 2,
+		camera: "CANVASS DESK / MAIL ROOM"
 	}
 };
 
@@ -308,7 +338,10 @@ const SITE_NAMES: Record<SiteKind, string[]> = {
 	datacenter: ["Archive", "Vault", "Ledger", "Cipher", "Ledger House", "Coldstore"],
 	telecom: ["Exchange", "Crossroads", "Relay", "Switchyard", "Junction", "Beacon"],
 	lab: ["Apollo", "Foundry", "Helix", "Aurora", "Forge", "Meridian"],
-	command: ["Citadel", "Bastion", "Keystone", "Garrison", "Watchtower", "Bulwark"]
+	command: ["Citadel", "Bastion", "Keystone", "Garrison", "Watchtower", "Bulwark"],
+	company: ["Meridian", "Northbank", "Ashfield", "Vale", "Harbour", "Redwater"],
+	factory: ["Ashfield", "Highbridge", "Southgate", "Riverside", "Forge", "Foundry"],
+	party: ["Citadel", "Crossroads", "Beacon", "Junction", "Marigold", "Ledger"]
 };
 
 const SITE_SUFFIX: Record<SiteKind, string> = {
@@ -317,7 +350,10 @@ const SITE_SUFFIX: Record<SiteKind, string> = {
 	datacenter: "Data Centre",
 	telecom: "Telecom Exchange",
 	lab: "Research Institute",
-	command: "Regional Command"
+	command: "Regional Command",
+	company: "Company Office",
+	factory: "Works",
+	party: "Party Bureau"
 };
 
 const PLANT_LABEL: Record<string, string> = {
@@ -337,9 +373,22 @@ const PLANT_LABEL: Record<string, string> = {
  * deterministic installations of every other kind. Stable for a given state,
  * so a site's codename, security and camera view never change between visits.
  */
+export interface SiteEntity {
+	id: number;
+	name: string;
+	region?: string;
+}
+
+export interface SiteEntities {
+	companies?: SiteEntity[];
+	factories?: SiteEntity[];
+	parties?: SiteEntity[];
+}
+
 export function sitesForTarget(
 	stateId: number,
-	plants: { id: number; plantType: string; name?: string; region?: string }[] = []
+	plants: { id: number; plantType: string; name?: string; region?: string }[] = [],
+	entities: SiteEntities = {}
 ): Site[] {
 	const rng = seededRandom(hash32(stateId, 0x5717e));
 	const sites: Site[] = plants.map((p, i) => {
@@ -358,6 +407,33 @@ export function sitesForTarget(
 			seed: hash32(stateId, p.id, 0x5a1)
 		};
 	});
+	// Real organisations in the target's regions are just as hackable as its
+	// infrastructure. Their names and region come from the database; the
+	// security profile comes from the site type.
+	const entityKinds: { kind: SiteKind; rows: SiteEntity[] | undefined; prefix: string }[] = [
+		{ kind: "company", rows: entities.companies, prefix: "CO" },
+		{ kind: "factory", rows: entities.factories, prefix: "FA" },
+		{ kind: "party", rows: entities.parties, prefix: "PA" }
+	];
+	for (const { kind, rows, prefix } of entityKinds) {
+		const spec = SITE_TYPES[kind];
+		for (const entity of rows ?? []) {
+			const seed = hash32(stateId, kind.length, entity.id, 0x9e1);
+			sites.push({
+				id: `${kind}-${entity.id}`,
+				kind,
+				name: entity.name,
+				code: `${prefix}-${String(entity.id).padStart(3, "0")}`,
+				region: entity.region || "unknown district",
+				security: clamp(spec.security + (entity.id % 2), 1, 5),
+				accessRequired: spec.accessRequired,
+				blurb: spec.blurb,
+				camera: spec.camera,
+				seed
+			});
+		}
+	}
+
 	const kinds: SiteKind[] = ["airbase", "datacenter", "telecom", "lab", "command"];
 	const DISTRICTS = ["Northern", "Eastern", "Southern", "Western", "Central", "Riverside"];
 	kinds.forEach((kind, i) => {
@@ -460,6 +536,30 @@ const FILE_TEMPLATES: Record<SiteKind, FileTemplate[]> = {
 			classification: "TOP SECRET",
 			body: (v) =>
 				`${v.site.name} is the alternate seat of command for the ${v.site.region} district. The plan names ${(v.n % 5) + 3} relocation sites and a succession order that has not been briefed to the public.\n\nCommunication procedures rely on the telecom hub and a satellite terminal whose keys are stored in the same safe as the paper copies of this plan. Duty rosters for the operations floor are attached.\n\nAn annex from ${v.day} records a failed access-control test: the alarm was acknowledged but never investigated.`
+		}
+	],
+	company: [
+		{
+			title: "Client ledger and contracts",
+			classification: "RESTRICTED",
+			body: (v) =>
+				`The ${v.site.region} office of ${v.site.name} keeps ${(v.n % 6) + 2} active supply contracts in this drawer. Two of them name ${v.state} ministries as the end buyer.\n\nPayments are routed through an account that does not appear in the public filing. The memo from ${v.day} asks the bookkeeper to describe the same line as "consultancy" in the next statement.`
+		}
+	],
+	factory: [
+		{
+			title: "Shift book and output returns",
+			classification: "RESTRICTED",
+			body: (v) =>
+				`${v.site.name} reports ${(v.n % 9) + 3} lines running at full shift, but the maintenance log shows only ${(v.n % 4) + 1} crews certified for the night watch.\n\nA sealed return from ${v.day} records output above the declared capacity. The spare stock is signed for by a forwarding agent, not by the plant manager.`
+		}
+	],
+	party: [
+		{
+			title: "Membership and canvass returns",
+			classification: "INTERNAL",
+			body: (v) =>
+				`The ${v.site.region} bureau of ${v.site.name} lists ${(v.n % 40) + 20} paid members and a canvass plan for the next election cycle.\n\nA confidential annex from ${v.day} notes which donors asked for their names to be left off the public filing, and who signed the receipts instead.`
 		}
 	]
 };
