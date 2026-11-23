@@ -16,7 +16,7 @@ import { sendNotificationIfEnabled } from "#lib/server/services/push-notificatio
 import { and, eq, sql } from "drizzle-orm";
 import { extractFromDeposit, isMineable } from "#lib/server/services/economy/mining.js";
 import { addUserItem, takeUserItem } from "#lib/server/services/economy/inventory.js";
-import { SHIFT_RECIPES, gridFactor, supplyFactor } from "#lib/config/index.js";
+import { SHIFT_RECIPES, gridFactor, productivityFactor, strikeOutputFactor, supplyFactor } from "#lib/config/index.js";
 import { gridDegradation, supplyDisruption } from "#lib/server/services/military/state-effects.js";
 import { strikeProductionFactor } from "#lib/server/services/military/strike.js";
 import { aiLevel } from "#lib/server/services/military/ai.js";
@@ -239,6 +239,8 @@ export async function collectWages(userId: string, factoryId: number): Promise<C
 			efficiency: factories.efficiency,
 			quality: factories.quality,
 			shiftsCompleted: factories.shiftsCompleted,
+			strikeSeverity: factories.strikeSeverity,
+			uninterruptedShifts: factories.uninterruptedShifts,
 			regionId: factories.regionId,
 			stateId: regions.stateId
 		})
@@ -330,6 +332,8 @@ export async function collectWages(userId: string, factoryId: number): Promise<C
 			const waterSufficiency =
 				(await regionsCivilianNeeds(tx, [factory.regionId])).get(factory.regionId)?.water.sufficiency ?? 1;
 			const disruptionFactors = [
+				// An active walkout caps output; a long clean run raises it.
+				strikeOutputFactor(factory.strikeSeverity) * productivityFactor(factory.uninterruptedShifts),
 				gridFactor(await gridDegradation(tx, factory.stateId)),
 				supplyFactor(await supplyDisruption(tx, factory.stateId)),
 				await strikeProductionFactor(tx, factory.stateId, factory.regionId),
@@ -476,7 +480,9 @@ export async function collectWages(userId: string, factoryId: number): Promise<C
 				.set({
 					efficiency: newEfficiency,
 					quality: newQuality,
-					shiftsCompleted
+					shiftsCompleted,
+					// A productive shift extends the clean run; a dry one breaks it.
+					uninterruptedShifts: produced ? (factory.uninterruptedShifts ?? 0) + 1 : 0
 				})
 				.where(eq(factories.id, factory.id));
 

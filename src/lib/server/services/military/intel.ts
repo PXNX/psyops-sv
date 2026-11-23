@@ -23,7 +23,6 @@ import {
 	seesThrough,
 	signalBonus,
 	PSYOPS,
-	UNIT_CATEGORIES,
 	type Deception,
 	type SensorId,
 	type UnitCategory,

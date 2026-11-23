@@ -24,7 +24,15 @@ import {
 } from "#lib/server/schema.js";
 import { eq, and, desc, count, sum, sql, inArray } from "drizzle-orm";
 import { error, fail } from "@sveltejs/kit";
-import { ECONOMY_CONFIG, STOCKS, ipoSharePrice, listingDueAt } from "#lib/config/index.js";
+import {
+	ECONOMY_CONFIG,
+	STOCKS,
+	factoryEbitda,
+	ipoSharePrice,
+	listingDueAt,
+	productivityFactor,
+	strikeOutputFactor
+} from "#lib/config/index.js";
 import { getRegionName } from "#lib/utils/formatting.js";
 import { getEmbargoReason } from "#lib/server/embargo.js";
 import { getLogoUrl, getSignedDownloadUrl, uploadFileFromForm } from "#lib/server/backblaze.js";
@@ -161,6 +169,10 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 				productOutput: factories.productOutput,
 				maxWorkers: factories.maxWorkers,
 				workerWage: factories.workerWage,
+				strikeActive: factories.strikeActive,
+				strikeSeverity: factories.strikeSeverity,
+				demandedWage: factories.demandedWage,
+				uninterruptedShifts: factories.uninterruptedShifts,
 				productionRate: factories.productionRate,
 				regionId: factories.regionId,
 				stateId: regions.stateId,
@@ -240,16 +252,27 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 			null as Date | null
 		);
 
+		const wage = Number(factory.workerWage);
+		const outputFactor = strikeOutputFactor(factory.strikeSeverity) * productivityFactor(factory.uninterruptedShifts);
+		const finance = factoryEbitda({
+			good: factory.productOutput ?? factory.resourceOutput,
+			outputUnits: factory.productionRate * outputFactor,
+			wageCost: wage
+		});
 		return {
 			...factory,
 			workerCount,
-			lastWorked: lastWorked?.toISOString() || null
+			lastWorked: lastWorked?.toISOString() || null,
+			onStrike: factory.strikeActive,
+			ebitda: finance.ebitda
 		};
 	});
 
 	// Calculate aggregate statistics (all in memory)
 	const totalWorkers = factoriesWithDetails.reduce((sum, f) => sum + f.workerCount, 0);
 	const totalWageCost = factoriesWithDetails.reduce((sum, f) => sum + Number(f.workerWage) * f.workerCount, 0);
+	// Operating earnings across all works, before financing, tax and depreciation.
+	const ebitda = factoriesWithDetails.reduce((sum, f) => sum + f.ebitda, 0);
 
 	// Calculate resource production breakdown by type
 	const resourceProduction = factoriesWithDetails.reduce(
@@ -407,6 +430,7 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 		factories: factoriesWithDetails,
 		totalWorkers,
 		totalWageCost,
+		ebitda,
 		resourceProduction: Object.values(resourceProduction),
 		uniqueStates,
 		uniqueRegions,

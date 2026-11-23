@@ -10,23 +10,18 @@ import type { Database } from "../../db";
 import { companies, companyShares, dividendPayouts, factories, factoryWorkers } from "../../schema";
 import { companyEarningsReports } from "../../schema-investments";
 import { INVESTMENTS_CONFIG } from "#lib/config/game/investments.config.js";
+import { SHIFT_RECIPES, goodValue, productivityFactor, strikeOutputFactor } from "#lib/config/index.js";
 
 const DAY = 86_400_000;
 const { EARNINGS_PERIOD_DAYS, BIWEEKLY_ANCHOR } = INVESTMENTS_CONFIG;
 
-const BASE_VALUES: Record<string, number> = {
-	iron: 10,
-	copper: 15,
-	steel: 50,
-	gunpowder: 30,
-	wood: 5,
-	coal: 8,
-	rifles: 100,
-	ammunition: 5,
-	artillery: 500,
-	vehicles: 1000,
-	explosives: 200
-};
+/** Material cost of one unit of a product, from its shift recipe. */
+function inputCostPerUnit(good: string | null | undefined): number {
+	const recipe = good ? SHIFT_RECIPES[good] : undefined;
+	if (!recipe?.output) return 0;
+	const cost = Object.entries(recipe.inputs).reduce((sum, [input, qty]) => sum + goodValue(input) * (qty ?? 0), 0);
+	return cost / recipe.output;
+}
 
 /**
  * True on every other Monday since the anchor. The Vercel schedule fires
@@ -80,22 +75,33 @@ export async function generateEarningsReports(db: Database, now = new Date()) {
 	const rows = companyIds.map((companyId) => {
 		let revenue = 0;
 		let expenses = 0;
+		let materials = 0;
 		for (const factory of allFactories.filter((f) => f.companyId === companyId)) {
 			const workers = workersByFactory.get(factory.id) ?? [];
 			// A worker on the payroll for the window runs one shift a day.
 			const shifts = workers.filter((w) => new Date(w.hiredAt) <= periodEnd).length * EARNINGS_PERIOD_DAYS;
-			const output = factory.productionRate * shifts;
+			// A walkout caps output; an uninterrupted run lifts it.
+			const output =
+				factory.productionRate *
+				shifts *
+				strikeOutputFactor(factory.strikeSeverity) *
+				productivityFactor(factory.uninterruptedShifts);
+			const good = factory.productOutput ?? factory.resourceOutput;
+			revenue += goodValue(good) * output;
+			materials += inputCostPerUnit(good) * output;
 			for (const worker of workers) expenses += (worker.wageAtShiftStart ?? 0) * EARNINGS_PERIOD_DAYS;
-			revenue += (BASE_VALUES[factory.resourceOutput ?? ""] ?? 0) * output;
-			if (factory.productOutput) revenue += (BASE_VALUES[factory.productOutput] ?? 0) * output;
 		}
+		const roundedRevenue = Math.round(revenue);
+		const operatingCosts = Math.round(expenses + materials);
 		return {
 			companyId,
 			periodStart,
 			periodEnd,
-			revenue,
-			expenses,
-			profit: revenue - expenses,
+			revenue: roundedRevenue,
+			expenses: Math.round(expenses),
+			profit: roundedRevenue - Math.round(expenses),
+			// EBITDA: operating earnings before financing, tax and depreciation.
+			ebitda: roundedRevenue - operatingCosts,
 			dividendsPaid: dividendsByCompany.get(companyId) ?? 0,
 			sharesOutstanding: sharesByCompany.get(companyId) ?? 0
 		};
@@ -121,6 +127,7 @@ export async function earningsPulse(db: Database, limit = 8) {
 			revenue: companyEarningsReports.revenue,
 			expenses: companyEarningsReports.expenses,
 			profit: companyEarningsReports.profit,
+			ebitda: companyEarningsReports.ebitda,
 			dividendsPaid: companyEarningsReports.dividendsPaid,
 			sharesOutstanding: companyEarningsReports.sharesOutstanding
 		})

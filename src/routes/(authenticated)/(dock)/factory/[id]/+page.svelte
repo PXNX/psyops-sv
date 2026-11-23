@@ -5,7 +5,7 @@
 	import { enhance } from "$app/forms";
 	import type { SubmitFunction } from "$app/forms";
 	import { refreshAll } from "$app/navigation";
-	import { getRegionName, regionCoatUrl } from "#lib/utils/formatting.js";
+	import { formatDate, getRegionName, regionCoatUrl } from "#lib/utils/formatting.js";
 	import { dtgTime } from "#lib/utils/dtg.js";
 	import { celebrate } from "#lib/utils/celebrate.js";
 	import { toastResult } from "#lib/ui/toast.svelte.js";
@@ -28,6 +28,7 @@
 	let showEditFactorySheet = $state(false);
 	let timeCard = $state<HTMLElement>();
 	let busy = $state(false);
+	let expanding = $state(false);
 	let justPaid = $state(false);
 	let gaugeReady = $state(false);
 	let now = $state(Date.now());
@@ -264,7 +265,35 @@
 					<p class="text-[10px] text-fg-muted uppercase tracking-wide">Wage / shift</p>
 					<p class="mt-0.5 text-sm font-bold text-positive-fg font-mono">{data.factory.workerWage.toLocaleString()}</p>
 				</div>
+				<div class="panel-muted rounded-sm p-3">
+					<p class="text-[10px] text-fg-muted uppercase tracking-wide">EBITDA / shift</p>
+					<p
+						class="mt-0.5 text-sm font-bold font-mono {data.finance.ebitda >= 0
+							? 'text-positive-fg'
+							: 'text-hostile-fg'}"
+						title="Output value minus wages and materials, before interest, tax and depreciation"
+					>
+						${data.finance.ebitda.toLocaleString()}
+					</p>
+				</div>
+				<div class="panel-muted rounded-sm p-3">
+					<p class="text-[10px] text-fg-muted uppercase tracking-wide">Margin</p>
+					<p class="mt-0.5 text-sm font-bold text-fg font-mono">{data.finance.margin}%</p>
+				</div>
 			</div>
+
+			{#if data.strike.active}
+				<p class="mt-3 w-full text-xs text-warning flex items-center gap-1.5">
+					<FluentWarning20Filled class="size-3.5 shrink-0" />
+					Strike (severity {data.strike.severity}%) — output at {Math.round(100 - data.strike.severity)}%.
+					Pay {data.strike.demandedWage?.toLocaleString()} to settle; it becomes the minimum wage.
+				</p>
+			{:else if data.productivity.bonusPercent > 0}
+				<p class="mt-3 w-full text-xs text-positive-fg flex items-center gap-1.5">
+					<FluentCheckmark20Filled class="size-3.5 shrink-0" />
+					{data.productivity.shifts} uninterrupted shifts · +{data.productivity.bonusPercent}% productivity
+				</p>
+			{/if}
 
 			{#if data.stateEnergy}
 				<div class="mt-3 w-full">
@@ -380,6 +409,47 @@
 			{/if}
 		</section>
 	</div>
+
+	{#if data.isOwner}
+		<section class="panel rounded-sm p-4 mt-4">
+			<div class="flex flex-wrap items-center justify-between gap-3">
+				<div>
+					<h2 class="section-title">Expand the floor</h2>
+					<p class="mt-1 text-xs text-fg-muted">
+						Add {data.expansion.posts} posts for ${data.expansion.cost.toLocaleString()} from the company budget ·
+						{data.expansion.hours}h of works.
+					</p>
+					{#if data.expansion.pendingPosts > 0 && data.expansion.completesAt}
+						<p class="mt-1 text-xs text-warning">
+							{data.expansion.pendingPosts} posts under construction — online {formatDate(data.expansion.completesAt)}.
+						</p>
+					{/if}
+				</div>
+				<form
+					method="POST"
+					action="?/expandFactory"
+					use:enhance={() => {
+						expanding = true;
+						return async ({ update, result }) => {
+							await update();
+							toastResult(result);
+							expanding = false;
+						};
+					}}
+				>
+					<Button
+						type="submit"
+						variant="secondary"
+						size="sm"
+						loading={expanding}
+						disabled={data.expansion.pendingPosts > 0 || !data.canAffordExpansion}
+					>
+						Expand · ${data.expansion.cost.toLocaleString()}
+					</Button>
+				</form>
+			</div>
+		</section>
+	{/if}
 </PageContainer>
 
 <!-- Edit Factory Bottom Sheet -->

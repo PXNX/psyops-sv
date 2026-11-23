@@ -53,6 +53,17 @@ shares. The float does not trade immediately — it takes **72 hours** to be
 listed on the market, after which the hourly listing cron places it on the
 order book automatically.
 
+Expanding a factory costs **20,000 per added post** from the company budget
+and takes **24 hours** before the new posts come online. Wages have to stay
+fair: a weekly cycle (`/api/cron/strikes`) compares the posted wage with a
+1,500 living wage, other factories in the region, local hardship and what the
+company can afford. The bigger the gap, the harder the strike and the more
+output is lost. A strike ends only when the owner pays the demanded wage, which
+then becomes that factory's minimum. Each clean, uninterrupted shift adds a
+small productivity bonus, capped at +50%; a strike resets the run. Factory and
+company pages show **EBITDA** — output value minus wages and materials, before
+interest, tax and depreciation.
+
 ## 4. Market
 
 The market keeps a **price history** and **orders**. Buy when many are selling
@@ -96,6 +107,12 @@ These values come straight from `economy.config.ts`, `production.config.ts`,
 | `MIN_SHARE_PRICE` | 1 |
 | `STOCKS.LISTING_HOURS` | 72 (filing → listing) |
 | `STOCKS.FACTORY_BOOK_VALUE` | 100,000 per factory |
+| `FACTORY_FINANCE.EXPANSION_POSTS` | 5 per works |
+| `FACTORY_FINANCE.EXPANSION_COST_PER_POST` | 20,000 |
+| `FACTORY_FINANCE.EXPANSION_HOURS` | 24 |
+| `FACTORY_FINANCE.LIVING_WAGE` | 1,500 |
+| `FACTORY_FINANCE.STRIKE_MIN_INTERVAL_DAYS` | 7 |
+| `FACTORY_FINANCE.PRODUCTIVITY_PER_SHIFT` | +0.5% per clean shift (cap +50%) |
 
 Default tax rates (`DEFAULT_TAX_RATES`): mining **10%**, production **15%**,
 market transactions **5%**, income **20%**.

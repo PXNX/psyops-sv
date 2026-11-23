@@ -74,6 +74,8 @@ export const companyEarningsReports = pgTable(
 		revenue: integer("revenue").default(0).notNull(),
 		expenses: integer("expenses").default(0).notNull(),
 		profit: integer("profit").default(0).notNull(),
+		// Operating profit before interest, tax, depreciation and amortisation.
+		ebitda: integer("ebitda").default(0).notNull(),
 		dividendsPaid: integer("dividends_paid").default(0).notNull(),
 		sharesOutstanding: integer("shares_outstanding").default(0).notNull(),
 		createdAt: timestamp("created_at").defaultNow().notNull()

@@ -15,9 +15,19 @@ import {
 } from "#lib/server/schema.js";
 import { getSignedDownloadUrl } from "#lib/server/backblaze.js";
 import { calculateShiftStatus, collectWages, startWorkShift } from "#lib/server/service/factoryWork.js";
+import { wageUpdateFields } from "#lib/server/services/economy/strikes.js";
 import { getEmbargoReason } from "#lib/server/embargo.js";
 import { error, fail } from "@sveltejs/kit";
 import { and, desc, eq, sql } from "drizzle-orm";
+import {
+	FACTORY_FINANCE,
+	expansionCost,
+	expansionDueAt,
+	factoryEbitda,
+	goodValue,
+	productivityFactor,
+	strikeOutputFactor
+} from "#lib/config/index.js";
 import type { Actions, PageServerLoad } from "./$types";
 import { superValidate, message } from "sveltekit-superforms";
 import { valibot } from "sveltekit-superforms/adapters";
@@ -49,6 +59,14 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 			efficiency: factories.efficiency,
 			quality: factories.quality,
 			shiftsCompleted: factories.shiftsCompleted,
+			expansionPosts: factories.expansionPosts,
+			expansionCompletesAt: factories.expansionCompletesAt,
+			minimumWage: factories.minimumWage,
+			strikeActive: factories.strikeActive,
+			strikeSeverity: factories.strikeSeverity,
+			demandedWage: factories.demandedWage,
+			lastStrikeAt: factories.lastStrikeAt,
+			uninterruptedShifts: factories.uninterruptedShifts,
 			createdAt: factories.createdAt,
 			companyId: factories.companyId,
 			companyName: companies.name,
@@ -237,10 +255,38 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 				}
 			: null;
 
+	const wage = Number(factory.workerWage);
+	const outputFactor = strikeOutputFactor(factory.strikeSeverity) * productivityFactor(factory.uninterruptedShifts);
+	const expansion = {
+		posts: FACTORY_FINANCE.EXPANSION_POSTS,
+		cost: expansionCost(FACTORY_FINANCE.EXPANSION_POSTS),
+		hours: FACTORY_FINANCE.EXPANSION_HOURS,
+		pendingPosts: factory.expansionPosts ?? 0,
+		completesAt: factory.expansionCompletesAt?.toISOString() ?? null
+	};
+
 	return {
 		factory,
 		owner,
 		output,
+		strike: {
+			active: factory.strikeActive,
+			severity: factory.strikeSeverity,
+			demandedWage: factory.demandedWage,
+			minimumWage: factory.minimumWage,
+			livingWage: FACTORY_FINANCE.LIVING_WAGE
+		},
+		productivity: {
+			shifts: factory.uninterruptedShifts,
+			bonusPercent: Math.round((productivityFactor(factory.uninterruptedShifts) - 1) * 100)
+		},
+		finance: factoryEbitda({
+			good: factory.productOutput ?? factory.resourceOutput,
+			outputUnits: factory.productionRate * outputFactor,
+			wageCost: wage
+		}),
+		expansion,
+		canAffordExpansion: (companyBudget?.balance ?? 0) >= expansion.cost,
 		workers: workerCount.count,
 		maxWorkers: factory.maxWorkers,
 		currentUserJob,
@@ -316,6 +362,61 @@ export const actions: Actions = {
 		};
 	},
 
+	// Pay the company treasury to add posts; the cron brings them online after
+	// the works period instead of instantly enlarging the floor.
+	expandFactory: async ({ params, locals }) => {
+		const account = locals.account!;
+		const factoryId = parseInt(params.id);
+		const [factory] = await db
+			.select({
+				name: factories.name,
+				ownerId: companies.ownerId,
+				companyId: factories.companyId,
+				expansionPosts: factories.expansionPosts,
+				expansionCompletesAt: factories.expansionCompletesAt
+			})
+			.from(factories)
+			.innerJoin(companies, eq(factories.companyId, companies.id))
+			.where(eq(factories.id, factoryId));
+
+		if (!factory) return fail(404, { error: "Factory not found" });
+		if (factory.ownerId !== account.id) return fail(403, { error: "Only the company owner can expand the factory" });
+		if (factory.expansionPosts && factory.expansionCompletesAt && factory.expansionCompletesAt > new Date()) {
+			return fail(400, { error: "An expansion is already under way" });
+		}
+
+		const posts = FACTORY_FINANCE.EXPANSION_POSTS;
+		const cost = expansionCost(posts);
+		const [budget] = await db
+			.select({ balance: companyBudgets.balance })
+			.from(companyBudgets)
+			.where(eq(companyBudgets.companyId, factory.companyId));
+		if (!budget || Number(budget.balance) < cost) {
+			return fail(400, { error: `The company needs ${cost.toLocaleString()} to expand` });
+		}
+
+		const dueAt = expansionDueAt();
+		await db.transaction(async (tx) => {
+			await tx
+				.update(companyBudgets)
+				.set({
+					balance: sql`${companyBudgets.balance} - ${cost}`,
+					totalSpent: sql`${companyBudgets.totalSpent} + ${cost}`,
+					updatedAt: new Date()
+				})
+				.where(eq(companyBudgets.companyId, factory.companyId));
+			await tx
+				.update(factories)
+				.set({ expansionPosts: posts, expansionCompletesAt: dueAt })
+				.where(eq(factories.id, factoryId));
+		});
+
+		return {
+			success: true,
+			message: `${posts} new posts are being built at ${factory.name} for ${cost.toLocaleString()} — online in ${FACTORY_FINANCE.EXPANSION_HOURS} hours`
+		};
+	},
+
 	updateFactory: async ({ request, params, locals }) => {
 		const account = locals.account!;
 		const factoryId = parseInt(params.id);
@@ -330,6 +431,7 @@ export const actions: Actions = {
 		}
 
 		const { name, workerWage } = form.data;
+		let strikeUpdate: ReturnType<typeof wageUpdateFields> = {};
 
 		// Get factory and verify ownership
 		const factory = await db.query.factories.findFirst({
@@ -346,6 +448,18 @@ export const actions: Actions = {
 		if (factory.company.ownerId !== account.id) {
 			return message(form, "Only the company owner can edit the factory", { status: 403 });
 		}
+
+		// A resolved strike fixes a floor; meeting a live demand ends the strike.
+		const resolved = wageUpdateFields(workerWage, {
+			strikeActive: factory.strikeActive,
+			demandedWage: factory.demandedWage,
+			minimumWage: factory.minimumWage
+		});
+		if (resolved === null) {
+			const floor = Math.max(factory.minimumWage ?? 0, factory.demandedWage ?? 0);
+			return message(form, `The agreed minimum wage is ${floor.toLocaleString()}`, { status: 400 });
+		}
+		strikeUpdate = resolved;
 
 		// Check cooldown
 		const cooldown = await db.query.factoryCreationCooldown.findFirst({
@@ -401,7 +515,8 @@ export const actions: Actions = {
 					.update(factories)
 					.set({
 						name,
-						workerWage
+						workerWage,
+						...strikeUpdate
 					})
 					.where(eq(factories.id, factoryId));
 

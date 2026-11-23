@@ -19,7 +19,9 @@ import {
 	civilianRevenue,
 	civilianWage,
 	employableCivilians,
-	regionPopulation
+	productivityFactor,
+	regionPopulation,
+	strikeOutputFactor
 } from "#lib/config/index.js";
 
 export interface CivilianWorkResult {
@@ -48,6 +50,8 @@ export async function runCivilianWork(
 				regionId: factories.regionId,
 				productionRate: factories.productionRate,
 				workerWage: factories.workerWage,
+				strikeSeverity: factories.strikeSeverity,
+				uninterruptedShifts: factories.uninterruptedShifts,
 				maxWorkers: factories.maxWorkers,
 				resourceOutput: factories.resourceOutput,
 				productOutput: factories.productOutput
@@ -120,7 +124,12 @@ export async function runCivilianWork(
 		if (workers <= 0) continue;
 
 		const wages = wagePerWorker * workers;
-		const revenue = civilianRevenue(factory.productionRate, factory.productOutput ?? factory.resourceOutput, workers, days);
+		// A walkout caps what civilian shifts produce; a long clean run lifts it.
+		const revenue = Math.round(
+			civilianRevenue(factory.productionRate, factory.productOutput ?? factory.resourceOutput, workers, days) *
+				strikeOutputFactor(factory.strikeSeverity) *
+				productivityFactor(factory.uninterruptedShifts)
+		);
 		const stateId = stateOfRegion.get(factory.regionId) ?? null;
 		const ownerId = owners.get(factory.companyId) ?? "state";
 

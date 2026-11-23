@@ -207,7 +207,7 @@
 				</dd>
 			</div>
 
-			<div class="py-3 sm:pr-4 border-b sm:border-b-0 border-line/10 grid grid-cols-2 gap-3">
+			<div class="py-3 sm:pr-4 border-b sm:border-b-0 border-line/10 grid grid-cols-3 gap-3">
 				<div>
 					<dt class="text-[10px] uppercase tracking-wide text-fg-muted">Established</dt>
 					<dd class="text-sm font-semibold text-fg">{formatDate(data.company.foundedAt)}</dd>
@@ -217,6 +217,17 @@
 					<dd class="text-sm font-semibold text-fg">
 						{data.totalWorkers} in {data.factories.length}
 						{data.factories.length === 1 ? "factory" : "factories"}
+					</dd>
+				</div>
+				<div>
+					<dt
+						class="text-[10px] uppercase tracking-wide text-fg-muted"
+						title="Operating earnings per shift before interest, tax and depreciation"
+					>
+						EBITDA / shift
+					</dt>
+					<dd class="text-sm font-semibold font-mono {data.ebitda >= 0 ? 'text-positive-fg' : 'text-hostile-fg'}">
+						${data.ebitda.toLocaleString()}
 					</dd>
 				</div>
 			</div>
@@ -667,6 +678,12 @@
 							<th class="py-1.5 pr-3 font-medium text-right">Revenue</th>
 							<th class="py-1.5 pr-3 font-medium text-right">Costs</th>
 							<th class="py-1.5 pr-3 font-medium text-right">Profit</th>
+							<th
+								class="py-1.5 pr-3 font-medium text-right"
+								title="Earnings before interest, taxes, depreciation and amortisation"
+							>
+								EBITDA
+							</th>
 							<th class="py-1.5 font-medium text-right">Dividends</th>
 						</tr>
 					</thead>
@@ -682,6 +699,13 @@
 										: 'text-hostile-fg'}"
 								>
 									{report.profit.toLocaleString()}
+								</td>
+								<td
+									class="py-2 pr-3 text-right font-mono text-xs {report.ebitda >= 0
+										? 'text-positive-fg'
+										: 'text-hostile-fg'}"
+								>
+									{report.ebitda.toLocaleString()}
 								</td>
 								<td class="py-2 text-right font-mono text-xs">{report.dividendsPaid.toLocaleString()}</td>
 							</tr>
@@ -753,9 +777,14 @@
 									{getRegionName(factory.regionId)}, {factory.stateName}
 								</p>
 							</div>
-							<Badge tone="purple" size="xs" class="capitalize shrink-0">
-								{factory.resourceOutput || factory.productOutput}
-							</Badge>
+							<div class="flex flex-col items-end gap-1 shrink-0">
+								<Badge tone="purple" size="xs" class="capitalize">
+									{factory.resourceOutput || factory.productOutput}
+								</Badge>
+								{#if factory.onStrike}
+									<Badge tone="amber" size="xs">Strike</Badge>
+								{/if}
+							</div>
 						</div>
 
 						<div class="mt-3">

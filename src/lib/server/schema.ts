@@ -937,6 +937,20 @@ export const factories = pgTable("factories", {
 	efficiency: integer("efficiency").default(50).notNull(),
 	quality: integer("quality").default(90).notNull(),
 	shiftsCompleted: integer("shifts_completed").default(0).notNull(),
+	// An expansion adds posts after a works period; both fields are set together
+	// and cleared by the expansion cron when the new posts come online.
+	expansionPosts: integer("expansion_posts"),
+	expansionCompletesAt: timestamp("expansion_completes_at"),
+	// Fair-pay strikes: a weekly cycle can start one at most every 7 days, its
+	// severity caps output, and paying the demanded wage resolves it and makes
+	// that wage the floor from then on.
+	minimumWage: integer("minimum_wage"),
+	strikeActive: boolean("strike_active").default(false).notNull(),
+	strikeSeverity: integer("strike_severity").default(0).notNull(),
+	demandedWage: integer("demanded_wage"),
+	lastStrikeAt: timestamp("last_strike_at"),
+	// Consecutive completed shifts: a longer clean run makes more per shift.
+	uninterruptedShifts: integer("uninterrupted_shifts").default(0).notNull(),
 	createdAt: timestamp("created_at").defaultNow().notNull()
 });
 

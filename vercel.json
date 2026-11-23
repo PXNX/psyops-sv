@@ -68,6 +68,16 @@
 			"path": "/api/cron/share-listings",
 			"requestMethod": "GET"
 		},
+		"factory-expansion": {
+			"schedule": "0 * * * *",
+			"path": "/api/cron/factory-expansion",
+			"requestMethod": "GET"
+		},
+		"strikes": {
+			"schedule": "0 4 * * 1",
+			"path": "/api/cron/strikes",
+			"requestMethod": "GET"
+		},
 		"trade": {
 			"schedule": "0 */6 * * *",
 			"path": "/api/cron/trade",
