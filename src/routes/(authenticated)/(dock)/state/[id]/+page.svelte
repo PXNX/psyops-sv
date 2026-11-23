@@ -29,6 +29,7 @@
 	import ResourceIcon from "#lib/component/ResourceIcon.svelte";
 	import UserLink from "#lib/component/UserLink.svelte";
 	import Modal from "#lib/component/Modal.svelte";
+	import DossierArt from "./DossierArt.svelte";
 	import Button from "#lib/component/ui/Button.svelte";
 	import IconButton from "#lib/component/ui/IconButton.svelte";
 	import Badge from "#lib/component/ui/Badge.svelte";
@@ -182,6 +183,9 @@
 		</aside>
 	{/if}
 
+	<div class="panel relative mb-4 overflow-hidden rounded-sm">
+		<DossierArt class="pointer-events-none absolute inset-x-0 top-0 h-full w-full opacity-70" />
+		<div class="relative">
 	<!-- Dossier cover -->
 	<header
 		class="panel rounded-sm p-5 relative overflow-hidden border-t-4"
@@ -306,6 +310,8 @@
 			</div>
 		{/if}
 	</header>
+		</div>
+	</div>
 
 	{#if data.state.martialLawUntil && new Date(data.state.martialLawUntil) > new Date()}
 		<div class="panel mb-4 border border-red-500/40 bg-red-500/10 p-3 text-sm text-red-200">
@@ -314,97 +320,213 @@
 		</div>
 	{/if}
 
-	<!-- Key figures: an almanac fact sheet -->
-	<section class="panel rounded-sm p-4 sm:p-5">
-		<h2 class="section-title mb-3">Key Figures</h2>
-		<dl class="grid grid-cols-1 sm:grid-cols-2 gap-x-8">
-			{#snippet fact(label: string, value: string, Icon: typeof FluentPeople20Filled, tone: string, href?: string, onclick?: () => void, hint?: string)}
-				<svelte:element
-					this={onclick ? "button" : href ? "a" : "div"}
-					{href}
-					{onclick}
-					type={onclick ? "button" : undefined}
-					title={hint}
-					class="group flex w-full items-center gap-2 py-2 border-b border-dashed border-line/15 text-left {(href ||
-						onclick) ? 'hover:text-primary-hover' : ''}"
-				>
-					<Icon class="size-4 shrink-0 {tone}" />
-					<dt class="text-sm text-fg-muted {(href || onclick) ? 'group-hover:text-primary-hover' : ''} transition-colors">
-						{label}
-					</dt>
-					<span class="flex-1 border-b border-dotted border-line/20 translate-y-1" aria-hidden="true"></span>
-					<dd class="text-sm font-bold font-mono text-fg">{value}</dd>
-					{#if onclick}<FluentChevronRight20Filled class="size-3.5 shrink-0 text-fg-faint" />{/if}
-				</svelte:element>
-			{/snippet}
-			{@render fact(
-				"Civilians",
-				formatPopulation(data.civilians),
-				FluentPeople20Filled,
-				"text-friendly",
-				`/state/${data.state.id}/civilians`
-			)}
-			{@render fact(
-				"Residents",
-				data.state.population.toLocaleString(),
-				FluentPeople20Filled,
-				"text-friendly",
-				`/state/${data.state.id}/residents`
-			)}
-			{@render fact(
-				"Regions",
-				String(data.regions.length),
-				FluentHome20Filled,
-				"text-politics",
-				`/state/${data.state.id}/region`
-			)}
-			{@render fact(
-				"Power rating",
-				(data.power?.score ?? 0).toLocaleString(),
-				FluentShield20Filled,
-				"text-positive",
-				`/state/${data.state.id}/power`,
-				undefined,
-				"See the breakdown and compare every state"
-			)}
-			{@render fact(
-				"Energy usage",
-				`${data.energy?.usedProduction ?? 0} MW`,
-				FluentLightbulb20Filled,
-				"text-primary-fg",
-				`/state/${data.state.id}/energyusage`,
-				undefined,
-				"See where the state's power goes and compare every state"
-			)}
-			{@render fact(
-				"State debt",
-				data.debt.toLocaleString(),
-				FluentMoney20Filled,
-				"text-amber-300",
-				`/state/${data.state.id}/debt`,
-				undefined,
-				"See the lenders and the debt-to-GDP ratio"
-			)}
-			{@render fact(
-				"GDP (est.)",
-				data.gdp.gdp.toLocaleString(),
-				FluentBuilding20Filled,
-				"text-friendly",
-				`/state/${data.state.id}/debt`
-			)}
-			{@render fact(
-				"Debt / GDP",
-				data.gdp.debtToGdp == null ? "—" : `${data.gdp.debtToGdp}%`,
-				FluentReceiptMoney20Filled,
-				"text-amber-300",
-				`/state/${data.state.id}/debt`
-			)}
-			{#if data.energy}
-				{@render fact("Energy available", `${data.energy.available} MW`, FluentLightbulb20Filled, "text-primary-fg")}
-			{/if}
-		</dl>
+	<!-- Vital statistics: a small set of cards, each opening its own desk -->
+	<section aria-label="Key figures">
+		{#snippet statCard(
+			label: string,
+			value: string,
+			Icon: typeof FluentPeople20Filled,
+			tone: string,
+			href: string,
+			hint?: string
+		)}
+			<a
+				{href}
+				title={hint}
+				class="panel-interactive group rounded-sm p-3 sm:p-4 no-underline"
+			>
+				<span class="flex items-center gap-1.5 text-[10px] uppercase tracking-[0.14em] text-fg-muted">
+					<Icon class="size-3.5 {tone}" />{label}
+				</span>
+				<span class="mt-1 block truncate font-mono text-lg font-bold text-fg group-hover:text-primary-hover sm:text-xl">
+					{value}
+				</span>
+			</a>
+		{/snippet}
+		<div class="grid grid-cols-2 gap-2 sm:grid-cols-4">
+			{@render statCard("Civilians", formatPopulation(data.civilians), FluentPeople20Filled, "text-friendly", `/state/${data.state.id}/civilians`)}
+			{@render statCard("Residents", data.state.population.toLocaleString(), FluentPeople20Filled, "text-friendly", `/state/${data.state.id}/residents`)}
+			{@render statCard("Power", (data.power?.score ?? 0).toLocaleString(), FluentShield20Filled, "text-positive", `/state/${data.state.id}/power`, "Breakdown and ranking")}
+			{@render statCard("State debt", data.debt.toLocaleString(), FluentMoney20Filled, "text-amber-300", `/state/${data.state.id}/debt`, "Lenders and debt-to-GDP")}
+		</div>
+		<div class="mt-2 flex flex-wrap gap-2">
+			<a href="/state/{data.state.id}/region" class="panel-muted rounded-sm px-2.5 py-1.5 text-xs text-fg-soft hover:text-primary-fg">
+				<span class="text-fg-muted">Regions</span> <strong class="font-mono text-fg">{data.regions.length}</strong>
+			</a>
+			<a href="/state/{data.state.id}/debt" class="panel-muted rounded-sm px-2.5 py-1.5 text-xs text-fg-soft hover:text-primary-fg">
+				<span class="text-fg-muted">GDP (est.)</span> <strong class="font-mono text-fg">{data.gdp.gdp.toLocaleString()}</strong>
+			</a>
+			<a href="/state/{data.state.id}/debt" class="panel-muted rounded-sm px-2.5 py-1.5 text-xs text-fg-soft hover:text-primary-fg">
+				<span class="text-fg-muted">Debt / GDP</span> <strong class="font-mono text-fg">{data.gdp.debtToGdp == null ? "—" : `${data.gdp.debtToGdp}%`}</strong>
+			</a>
+			<a href="/state/{data.state.id}/energyusage" class="panel-muted rounded-sm px-2.5 py-1.5 text-xs text-fg-soft hover:text-primary-fg">
+				<span class="text-fg-muted">Energy</span> <strong class="font-mono text-fg">{data.energy?.usedProduction ?? 0} / {data.energy?.available ?? 0} MW</strong>
+			</a>
+		</div>
 	</section>
 
+	<div class="mt-5 grid items-start gap-6 lg:grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)]">
+		<div class="space-y-6">
+	<!-- Head of state & cabinet -->
+	{#if hasGovernment || data.nextElection}
+		<section class="panel rounded-sm p-4 sm:p-5 space-y-4">
+			<div class="flex flex-wrap items-center justify-between gap-2">
+				<h2 class="section-title">Government</h2>
+				<a
+					href="/state/{data.state.id}/ministry"
+					class="text-xs text-fg-muted hover:text-primary-hover transition-colors"
+				>
+					All ministries →
+				</a>
+			</div>
+
+			{#if data.president}
+				<div class="flex items-center gap-3">
+					<UserLink
+						id={data.president.userId}
+						name={data.president.name}
+						avatar={data.president.logo}
+						party={{ abbreviation: data.president.partyAbbreviation, color: data.president.partyColor }}
+						subtitle="President · Term {data.president.term} · since {formatDate(data.president.electedAt)}"
+						size="md"
+						class="min-w-0"
+					/>
+				</div>
+			{/if}
+
+			{#if data.ministers.length > 0}
+				<ul class="grid sm:grid-cols-2 gap-x-6 gap-y-3 pt-3 border-t border-line/10">
+					{#each data.ministers as minister (minister.userId)}
+						<li class="min-w-0">
+							<UserLink
+								id={minister.userId}
+								name={minister.name}
+								avatar={minister.logo}
+								party={{ abbreviation: minister.partyAbbreviation, color: minister.partyColor }}
+								subtitle="Minister of {ministryNames[minister.ministry] ?? minister.ministry.replace(/_/g, ' ')}"
+							/>
+						</li>
+					{/each}
+				</ul>
+			{/if}
+
+			{#if data.parliamentMembers.length > 0}
+				<a href="/state/{data.state.id}/parliament" class="group flex items-center gap-3 pt-3 border-t border-line/10">
+					<div class="flex -space-x-2 shrink-0">
+						{#each data.parliamentMembers.slice(0, 5) as member (member.userId)}
+							<Logo
+								src={member.logo}
+								alt=""
+								class="size-7 rounded-full ring-2 ring-surface-6"
+								placeholderGradient="from-surface-13 to-surface-6"
+							/>
+						{/each}
+					</div>
+					<span class="flex-1 min-w-0 text-sm text-fg-soft group-hover:text-primary-hover transition-colors">
+						{data.parliamentMembers.length}{data.parliamentMembers.length >= 20 ? "+" : ""} seats in parliament
+					</span>
+					<FluentChevronRight20Filled class="size-4 shrink-0 text-fg-muted group-hover:text-primary-hover" />
+				</a>
+			{/if}
+
+			{#if data.nextElection && electionState}
+				{@const isActive = electionState === "active"}
+				<a
+					href="/state/{data.state.id}/election/{data.nextElection.id}"
+					class="group flex items-center gap-3 rounded-sm p-3 border transition-colors {isActive
+						? 'bg-primary/12 border-primary/35 hover:border-primary/60'
+						: 'bg-surface-4/60 border-line/15 hover:border-primary/40'}"
+				>
+					<FluentVote20Filled class="size-5 shrink-0 {isActive ? 'text-primary-fg' : 'text-friendly'}" />
+					<div class="flex-1 min-w-0">
+						<p class="text-sm font-bold text-fg flex items-center gap-2 flex-wrap">
+							{data.nextElection.isInaugural ? "Founding election" : "Parliamentary election"}
+							{#if isActive}<Badge tone="amber" size="xs">Polls open</Badge>{/if}
+						</p>
+						<p class="text-xs text-fg-muted truncate">
+							{data.nextElection.totalSeats} seats ·
+							{#if isActive}
+								closes in {getTimeRemaining(data.nextElection.endDate) ?? "moments"}
+							{:else}
+								opens in {getTimeRemaining(data.nextElection.startDate) ?? "moments"}
+							{/if}
+						</p>
+					</div>
+					{#if isActive}
+						<span class="shrink-0 text-xs font-semibold text-primary-fg group-hover:text-primary-soft">Vote →</span>
+					{:else}
+						<FluentChevronRight20Filled class="size-4 shrink-0 text-fg-muted group-hover:text-primary-hover" />
+					{/if}
+				</a>
+				{#if data.nextElection.isInaugural && !isActive}
+					<Button href="/party/create" variant="secondary" size="sm">Found a Party</Button>
+				{/if}
+			{/if}
+		</section>
+	{/if}
+
+	<!-- Offices of state -->
+	<nav class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2" aria-label="State offices">
+		{#each offices as office (office.href)}
+			<a href={office.href} class="group panel-interactive rounded-sm p-3 flex items-center gap-2 min-w-0">
+				<office.icon class="size-5 shrink-0 {office.tone}" />
+				<span class="text-sm font-semibold text-fg-body group-hover:text-primary-hover transition-colors truncate">
+					{office.label}
+				</span>
+			</a>
+		{/each}
+	</nav>
+
+	<!-- Regions -->
+	{#if sortedRegions.length > 0}
+		<section class="space-y-3">
+			<div class="flex items-baseline justify-between gap-3">
+				<h2 class="section-title">Regions</h2>
+				<a href="/state/{data.state.id}/region" class="text-xs text-fg-muted hover:text-primary-hover">All →</a>
+			</div>
+			<ul class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
+				{#each sortedRegions.slice(0, 9) as region (region.id)}
+					<li>
+						<a
+							href="/region/{region.id}"
+							class="group panel-interactive rounded-sm p-2.5 flex items-center gap-3 min-w-0"
+						>
+							<Logo
+								src={region.logo}
+								alt=""
+								class="size-9 shrink-0 rounded-sm"
+								placeholderIcon={FluentShield20Filled}
+							/>
+							<span class="flex-1 min-w-0">
+								<span
+									class="block text-sm font-semibold text-fg truncate group-hover:text-primary-hover transition-colors"
+								>
+									{region.name}
+								</span>
+								<span class="block text-xs text-fg-muted">
+									{region.population.toLocaleString()} residents · rating {region.rating ?? 0}
+								</span>
+							</span>
+						</a>
+					</li>
+				{/each}
+			</ul>
+		</section>
+	{/if}
+
+	{#if data.warHistory.length > 0}
+		<section class="space-y-3">
+			<h2 class="section-title">War Record</h2>
+			<WarHistory wars={data.warHistory} />
+		</section>
+	{/if}
+
+	<div class="mt-4">
+		<Button href="/state/{data.state.id}/history" size="sm" variant="secondary">Full history →</Button>
+	</div>
+
+		</div>
+		<div class="space-y-6">
 	<!-- Conduct in war: public international humanitarian law record -->
 	<IhlRecord record={data.ihl} />
 
@@ -568,164 +690,6 @@
 		</section>
 	{/if}
 
-	<!-- Head of state & cabinet -->
-	{#if hasGovernment || data.nextElection}
-		<section class="panel rounded-sm p-4 sm:p-5 space-y-4">
-			<div class="flex flex-wrap items-center justify-between gap-2">
-				<h2 class="section-title">Government</h2>
-				<a
-					href="/state/{data.state.id}/ministry"
-					class="text-xs text-fg-muted hover:text-primary-hover transition-colors"
-				>
-					All ministries →
-				</a>
-			</div>
-
-			{#if data.president}
-				<div class="flex items-center gap-3">
-					<UserLink
-						id={data.president.userId}
-						name={data.president.name}
-						avatar={data.president.logo}
-						party={{ abbreviation: data.president.partyAbbreviation, color: data.president.partyColor }}
-						subtitle="President · Term {data.president.term} · since {formatDate(data.president.electedAt)}"
-						size="md"
-						class="min-w-0"
-					/>
-				</div>
-			{/if}
-
-			{#if data.ministers.length > 0}
-				<ul class="grid sm:grid-cols-2 gap-x-6 gap-y-3 pt-3 border-t border-line/10">
-					{#each data.ministers as minister (minister.userId)}
-						<li class="min-w-0">
-							<UserLink
-								id={minister.userId}
-								name={minister.name}
-								avatar={minister.logo}
-								party={{ abbreviation: minister.partyAbbreviation, color: minister.partyColor }}
-								subtitle="Minister of {ministryNames[minister.ministry] ?? minister.ministry.replace(/_/g, ' ')}"
-							/>
-						</li>
-					{/each}
-				</ul>
-			{/if}
-
-			{#if data.parliamentMembers.length > 0}
-				<a href="/state/{data.state.id}/parliament" class="group flex items-center gap-3 pt-3 border-t border-line/10">
-					<div class="flex -space-x-2 shrink-0">
-						{#each data.parliamentMembers.slice(0, 5) as member (member.userId)}
-							<Logo
-								src={member.logo}
-								alt=""
-								class="size-7 rounded-full ring-2 ring-surface-6"
-								placeholderGradient="from-surface-13 to-surface-6"
-							/>
-						{/each}
-					</div>
-					<span class="flex-1 min-w-0 text-sm text-fg-soft group-hover:text-primary-hover transition-colors">
-						{data.parliamentMembers.length}{data.parliamentMembers.length >= 20 ? "+" : ""} seats in parliament
-					</span>
-					<FluentChevronRight20Filled class="size-4 shrink-0 text-fg-muted group-hover:text-primary-hover" />
-				</a>
-			{/if}
-
-			{#if data.nextElection && electionState}
-				{@const isActive = electionState === "active"}
-				<a
-					href="/state/{data.state.id}/election/{data.nextElection.id}"
-					class="group flex items-center gap-3 rounded-sm p-3 border transition-colors {isActive
-						? 'bg-primary/12 border-primary/35 hover:border-primary/60'
-						: 'bg-surface-4/60 border-line/15 hover:border-primary/40'}"
-				>
-					<FluentVote20Filled class="size-5 shrink-0 {isActive ? 'text-primary-fg' : 'text-friendly'}" />
-					<div class="flex-1 min-w-0">
-						<p class="text-sm font-bold text-fg flex items-center gap-2 flex-wrap">
-							{data.nextElection.isInaugural ? "Founding election" : "Parliamentary election"}
-							{#if isActive}<Badge tone="amber" size="xs">Polls open</Badge>{/if}
-						</p>
-						<p class="text-xs text-fg-muted truncate">
-							{data.nextElection.totalSeats} seats ·
-							{#if isActive}
-								closes in {getTimeRemaining(data.nextElection.endDate) ?? "moments"}
-							{:else}
-								opens in {getTimeRemaining(data.nextElection.startDate) ?? "moments"}
-							{/if}
-						</p>
-					</div>
-					{#if isActive}
-						<span class="shrink-0 text-xs font-semibold text-primary-fg group-hover:text-primary-soft">Vote →</span>
-					{:else}
-						<FluentChevronRight20Filled class="size-4 shrink-0 text-fg-muted group-hover:text-primary-hover" />
-					{/if}
-				</a>
-				{#if data.nextElection.isInaugural && !isActive}
-					<Button href="/party/create" variant="secondary" size="sm">Found a Party</Button>
-				{/if}
-			{/if}
-		</section>
-	{/if}
-
-	<!-- Offices of state -->
-	<nav class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2" aria-label="State offices">
-		{#each offices as office (office.href)}
-			<a href={office.href} class="group panel-interactive rounded-sm p-3 flex items-center gap-2 min-w-0">
-				<office.icon class="size-5 shrink-0 {office.tone}" />
-				<span class="text-sm font-semibold text-fg-body group-hover:text-primary-hover transition-colors truncate">
-					{office.label}
-				</span>
-			</a>
-		{/each}
-	</nav>
-
-	<!-- Regions -->
-	{#if sortedRegions.length > 0}
-		<section class="space-y-3">
-			<div class="flex items-baseline justify-between gap-3">
-				<h2 class="section-title">Regions</h2>
-				<a href="/state/{data.state.id}/region" class="text-xs text-fg-muted hover:text-primary-hover">All →</a>
-			</div>
-			<ul class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
-				{#each sortedRegions.slice(0, 9) as region (region.id)}
-					<li>
-						<a
-							href="/region/{region.id}"
-							class="group panel-interactive rounded-sm p-2.5 flex items-center gap-3 min-w-0"
-						>
-							<Logo
-								src={region.logo}
-								alt=""
-								class="size-9 shrink-0 rounded-sm"
-								placeholderIcon={FluentShield20Filled}
-							/>
-							<span class="flex-1 min-w-0">
-								<span
-									class="block text-sm font-semibold text-fg truncate group-hover:text-primary-hover transition-colors"
-								>
-									{region.name}
-								</span>
-								<span class="block text-xs text-fg-muted">
-									{region.population.toLocaleString()} residents · rating {region.rating ?? 0}
-								</span>
-							</span>
-						</a>
-					</li>
-				{/each}
-			</ul>
-		</section>
-	{/if}
-
-	{#if data.warHistory.length > 0}
-		<section class="space-y-3">
-			<h2 class="section-title">War Record</h2>
-			<WarHistory wars={data.warHistory} />
-		</section>
-	{/if}
-
-	<div class="mt-4">
-		<Button href="/state/{data.state.id}/history" size="sm" variant="secondary">Full history →</Button>
-	</div>
-
 	<!-- Natural resources + tax schedule side by side on wide screens -->
 	{#if resourceEntries.length > 0 || data.taxes.length > 0}
 		<div class="grid md:grid-cols-2 gap-4">
@@ -761,7 +725,8 @@
 				</section>
 			{/if}
 		</div>
-	{/if}
+	{/if}		</div>
+	</div>
 </PageContainer>
 
 {#if data.isPresident && data.editForm}
