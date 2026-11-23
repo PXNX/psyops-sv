@@ -1,5 +1,6 @@
 import { relations, sql } from "drizzle-orm";
 import {
+	type AnyPgColumn,
 	bigint,
 	boolean,
 	check,
@@ -741,7 +742,7 @@ export const comments = pgTable(
 			.notNull()
 			.references(() => accounts.id, { onDelete: "cascade" }),
 		/** Parent comment for reddit-style threaded replies. */
-		parentId: integer("parent_id").references(() => comments.id, { onDelete: "cascade" }),
+		parentId: integer("parent_id").references((): AnyPgColumn => comments.id, { onDelete: "cascade" }),
 		content: text("content").notNull(),
 		createdAt: timestamp("created_at").defaultNow().notNull()
 	},
@@ -4673,19 +4674,25 @@ export interface MapSnapshotRegion {
 	stateId: number | null;
 	blocId: number | null;
 	terrain: string | null;
+	population?: number;
 }
 
 export interface MapSnapshotState {
 	id: number;
 	name: string;
 	blocId: number | null;
-	population: number;
 	regionCount: number;
 	army: number;
 	ships: number;
 	aircraft: number;
 	steel: number;
+	/** Legacy figure; civilian population is on regions. */
+	population: number;
+	civilians: number;
 	power: number;
+	usedPower: number;
+	fuelFactor: number;
+	maintenanceFactor: number;
 	treasury: number;
 	debt: number;
 }

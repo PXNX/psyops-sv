@@ -28,6 +28,7 @@ import {
 	setFuelShares
 } from "#lib/server/services/economy/energy.js";
 import { blockadeEffectsOn } from "#lib/server/services/military/naval.js";
+import { stateSeries } from "#lib/server/services/snapshot-history.js";
 
 export const load: PageServerLoad = async ({ params, locals }) => {
 	const account = locals.account!;
@@ -100,7 +101,9 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 	});
 
 	const regionById = new Map(regionRows.map((r) => [r.id, r]));
+	const history = await stateSeries(stateId, 90);
 	return {
+		history,
 		state: { id: state.id, name: state.name },
 		role: authority.role,
 		blockaded,

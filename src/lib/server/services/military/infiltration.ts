@@ -46,7 +46,7 @@ import {
 	findRecords
 } from "#lib/config/index.js";
 import { opsAuthority } from "./covert-ops";
-import { sideOf } from "./recon";
+import { sideOf, viewerSide } from "./recon";
 import { dtg } from "#lib/utils/military.js";
 
 type Tx = Parameters<Parameters<Database["transaction"]>[0]>[0];
@@ -468,6 +468,23 @@ export const canRunNetworks = (role: string) =>
 /** Number of live footholds, for the odds preview and the network console. */
 export function liveFootholds(assets: { status: string; heat: number }[]): number {
 	return assets.filter((a) => a.status === "active" && a.heat < INFILTRATION.HEAT_MAX).length;
+}
+
+/** How deeply a viewer's network sits inside another state, 0–4 footholds. */
+export async function intelDepth(db: Db, userId: string, targetStateId: number): Promise<number> {
+	const viewer = await viewerSide(db, userId);
+	const ownStateId = viewer?.stateId ?? (await opsAuthority(db, userId).catch(() => null))?.stateId;
+	if (!ownStateId || ownStateId === targetStateId || viewer?.stateIds.includes(targetStateId)) return 0;
+	const assets = await db
+		.select({ status: infiltrationAssets.status, heat: infiltrationAssets.heat })
+		.from(infiltrationAssets)
+		.where(
+			and(
+				eq(infiltrationAssets.stateId, ownStateId),
+				eq(infiltrationAssets.targetStateId, targetStateId)
+			)
+		);
+	return Math.min(INFILTRATION.MAX_ASSETS_PER_TARGET, liveFootholds(assets));
 }
 
 // ── Interactive intrusion ───────────────────────────────────────────────────

@@ -67,6 +67,8 @@ import {
 	strikeOptions
 } from "#lib/server/services/military/strike.js";
 import { regionCivilianNeeds } from "#lib/server/services/civilians/supply.js";
+import { regionPopulationReport } from "#lib/server/services/population-report.js";
+import { populationHistory } from "#lib/server/services/snapshot-history.js";
 
 export const load: PageServerLoad = async ({ params, locals }) => {
 	const account = locals.account!;
@@ -550,7 +552,11 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 
 	// What this region's civilians can actually get today: food from the land
 	// and imports, power and heat from the grid, water from the local supply.
-	const civilianNeeds = await regionCivilianNeeds(db, regionId);
+	const [civilianNeeds, populationReport, populationTrend] = await Promise.all([
+		regionCivilianNeeds(db, regionId),
+		regionPopulationReport(db, regionId),
+		populationHistory(regionId)
+	]);
 
 	const result = {
 		strike: {
@@ -565,7 +571,12 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 				expiresAt: e.expiresAt.toISOString()
 			}))
 		},
-		civilians: { population: regionPopulation(region), density: Math.round(regionDensity(region)) },
+		civilians: {
+			population: regionPopulation(region),
+			density: Math.round(regionDensity(region)),
+			report: populationReport,
+			trend: populationTrend.map((p) => p.value)
+		},
 		civilianNeeds: civilianNeeds
 			? {
 					hardship: civilianNeeds.hardship,

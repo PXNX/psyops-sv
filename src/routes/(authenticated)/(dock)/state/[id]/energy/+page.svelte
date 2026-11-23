@@ -10,6 +10,7 @@
 	import PageContainer from "#lib/component/PageContainer.svelte";
 	import PageHeader from "#lib/component/PageHeader.svelte";
 	import { Badge, Button } from "#lib/component/ui/index.js";
+	import Sparkline from "#lib/component/charts/Sparkline.svelte";
 
 	let { data } = $props();
 
@@ -88,6 +89,28 @@
 		</div>
 		<p class="text-xs text-fg-muted">
 			{data.energy.exportedFuel.toLocaleString()} fuel exported to date. Refined fuel is divided by the policy below on the daily tick.
+		</p>
+	</section>
+
+	<section class="panel mt-4 rounded-sm p-5">
+		<h2 class="section-title text-base">Power history</h2>
+		<div class="grid gap-4 sm:grid-cols-2">
+			<Sparkline
+				values={data.history.map((h) => h.power)}
+				label="Available capacity (MW)"
+				color="var(--color-primary)"
+			/>
+			<Sparkline
+				values={data.history.map((h) => h.usedPower)}
+				label="Industry reserved (MW)"
+				color="var(--color-warning)"
+			/>
+		</div>
+		<p class="mt-2 text-xs text-fg-muted">
+			Every day at midnight the grid is recorded with the rest of the world. Factors such as blockade,
+			grid degradation, fuel deliveries and unpaid upkeep reduce what the plants can actually provide.
+			Current factors: fuel {data.energy.fuelFactor}% · upkeep {data.energy.maintenanceFactor}% ·
+			{data.blockaded ? "blockade active" : "no blockade"}.
 		</p>
 	</section>
 

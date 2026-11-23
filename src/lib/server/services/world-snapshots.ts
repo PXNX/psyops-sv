@@ -14,13 +14,13 @@ import {
 	states,
 	type MapSnapshotState
 } from "#lib/server/schema.js";
-import { AIRCRAFT_IDS } from "#lib/config/index.js";
+import { AIRCRAFT_IDS, regionPopulation } from "#lib/config/index.js";
 
 /** Capture one snapshot at midnight UTC, idempotent per day. */
 export async function captureWorldSnapshot(db: Database, at: Date = new Date()) {
 	const day = new Date(Date.UTC(at.getUTCFullYear(), at.getUTCMonth(), at.getUTCDate()));
 	const [allRegions, allStates, allBlocs, ships, units, steelRows, energyRows, treasuries] = await Promise.all([
-		db.select({ id: regions.id, stateId: regions.stateId, terrain: regions.terrain }).from(regions),
+		db.select().from(regions),
 		db.select().from(states),
 		db.select().from(blocs),
 		db.select({ stateId: fleetShips.stateId, id: fleetShips.id }).from(fleetShips),
@@ -37,7 +37,16 @@ export async function captureWorldSnapshot(db: Database, at: Date = new Date()) 
 		id: r.id,
 		stateId: r.stateId,
 		blocId: allStates.find((s) => s.id === r.stateId)?.blocId ?? null,
-		terrain: r.terrain
+		terrain: r.terrain,
+		population: regionPopulation({
+			id: r.id,
+			terrain: r.terrain,
+			infrastructure: r.infrastructure,
+			economy: r.economy,
+			education: r.education,
+			hospitals: r.hospitals,
+			population: r.population
+		})
 	}));
 
 	const stateSnapshots: MapSnapshotState[] = allStates.map((s) => {
@@ -52,7 +61,13 @@ export async function captureWorldSnapshot(db: Database, at: Date = new Date()) 
 			ships: ships.filter((ship) => ship.stateId === s.id).length,
 			aircraft: units.filter((u) => u.stateId === s.id && AIRCRAFT_IDS.includes(u.unitType as never)).length,
 			steel: steelRows.find((r) => r.stateId === s.id)?.quantity ?? 0,
+			civilians: regionSnapshots
+				.filter((r) => r.stateId === s.id)
+				.reduce((sum, r) => sum + (r.population ?? 0), 0),
 			power: energy?.totalProduction ?? 0,
+			usedPower: energy?.usedProduction ?? 0,
+			fuelFactor: energy?.fuelFactor ?? 100,
+			maintenanceFactor: energy?.maintenanceFactor ?? 100,
 			treasury: Number(treasuries.find((t) => t.stateId === s.id)?.balance ?? 0),
 			debt: Number(treasuries.find((t) => t.stateId === s.id)?.debt ?? 0)
 		};

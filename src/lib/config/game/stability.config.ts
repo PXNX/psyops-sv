@@ -306,6 +306,50 @@ export interface PopulationPressure {
  * and instability-driven emigration. Rounded once at the end so small regions
  * keep their people until the change really adds up to a body.
  */
+/** A labelled explanation of every force moving a region's population. */
+export function populationBreakdown(
+	population: number,
+	p: PopulationPressure
+): { contributions: { label: string; value: number }[]; annualRate: number; net: number } {
+	const d = POPULATION_DYNAMICS;
+	const care = p.hospital ?? 1;
+	const perYear = (rate: number) => Math.round(population * rate * (p.days / 365));
+	const births = d.BIRTHS_PER_YEAR * (p.replicationFactor ?? 1) * hospitalReplication(care);
+	const natural = -d.DEATHS_PER_YEAR;
+	const conscription = -(p.conscriptionMortality ?? Math.max(0, p.conscription) * d.CONSCRIPTION_DEATHS_PER_PERMILLE);
+	const emigration =
+		p.stability < d.EMIGRATION_BELOW_STABILITY
+			? -d.EMIGRATION_PER_YEAR * ((d.EMIGRATION_BELOW_STABILITY - p.stability) / d.EMIGRATION_BELOW_STABILITY)
+			: 0;
+	const raw =
+		births +
+		natural +
+		(p.atWar ? -d.WAR_DEATHS_PER_YEAR : 0) +
+		-(d.ENVIRONMENT_DEATHS_PER_YEAR[p.environment] ?? 0) +
+		conscription -
+		hospitalDeaths(care) +
+		emigration -
+		hardshipExtraDeaths(p.hardship) -
+		hardshipExtraEmigration(p.hardship);
+	const annualRate = clamp(raw, -d.MAX_ANNUAL_CHANGE, d.MAX_ANNUAL_CHANGE);
+	const contributions = [
+		{ label: "Births", value: perYear(births) },
+		{ label: "Natural mortality", value: perYear(natural) },
+		...(p.atWar ? [{ label: "War deaths", value: perYear(-d.WAR_DEATHS_PER_YEAR) }] : []),
+		...(d.ENVIRONMENT_DEATHS_PER_YEAR[p.environment]
+			? [{ label: `Environment (${p.environment})`, value: perYear(-d.ENVIRONMENT_DEATHS_PER_YEAR[p.environment]!) }]
+			: []),
+		{ label: "Conscription", value: perYear(conscription) },
+		{ label: "Healthcare shortfall", value: perYear(-hospitalDeaths(care)) },
+		...(emigration ? [{ label: "Emigration (instability)", value: perYear(emigration) }] : []),
+		...(hardshipExtraDeaths(p.hardship) ? [{ label: "Hardship mortality", value: perYear(-hardshipExtraDeaths(p.hardship)) }] : []),
+		...(hardshipExtraEmigration(p.hardship)
+			? [{ label: "Hardship emigration", value: perYear(-hardshipExtraEmigration(p.hardship)) }]
+			: [])
+	];
+	return { contributions, annualRate, net: Math.round(population * annualRate * (p.days / 365)) };
+}
+
 export function populationDelta(population: number, p: PopulationPressure): number {
 	if (!Number.isFinite(population) || population <= 0 || p.days <= 0) return 0;
 	const d = POPULATION_DYNAMICS;

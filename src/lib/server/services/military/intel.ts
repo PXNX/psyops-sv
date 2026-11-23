@@ -26,9 +26,52 @@ import {
 	type Deception,
 	type SensorId,
 	type UnitCategory,
-	type ViewConditions
+	type ViewConditions,
+	visibleFields,
+	type IntelVisibleField
 } from "#lib/config/index.js";
 import type { IntelFindings } from "../../schema";
+
+/** Strip what the viewer's network has not yet reached from a fused picture. */
+export function redactPicture(
+	picture: IntelPicture,
+	fields: ReadonlySet<IntelVisibleField> = visibleFields(Number.MAX_SAFE_INTEGER)
+): IntelPicture {
+	const out: IntelPicture = { ...picture };
+	if (!fields.has("unitCounts")) {
+		out.categories = {} as IntelPicture["categories"];
+		out.knownUnits = 0;
+		out.confidence = 0;
+		out.level = "none";
+	}
+	if (!fields.has("unitTypes")) out.unitTypes = null;
+	if (!fields.has("installations")) {
+		out.buildings = null;
+		out.firingPositions = null;
+	}
+	if (!fields.has("battleDetail")) out.battle = null;
+	return out;
+}
+
+/** Strip what the viewer's network has not yet reached. */
+export function redactFindings(
+	findings: IntelFindings,
+	fields: ReadonlySet<IntelVisibleField> = visibleFields(Number.MAX_SAFE_INTEGER)
+): IntelFindings {
+	const out: IntelFindings = { ...findings };
+	if (!fields.has("unitCounts")) {
+		out.coverage = {};
+		out.categories = [];
+	}
+	if (!fields.has("unitTypes")) out.unitTypes = null;
+	if (!fields.has("installations")) {
+		out.buildings = null;
+		out.airDefence = null;
+		out.firingPositions = null;
+	}
+	if (!fields.has("battleDetail")) out.battle = null;
+	return out;
+}
 
 const round2 = (n: number) => Math.round(n * 100) / 100;
 

@@ -15,6 +15,9 @@ import {
 	viewerSide
 } from "#lib/server/services/military/recon.js";
 import { imageryContexts } from "#lib/server/services/military/imagery.js";
+import { intelDepth } from "#lib/server/services/military/infiltration.js";
+import { redactFindings, redactPicture } from "#lib/server/services/military/intel.js";
+import { visibleFields } from "#lib/config/index.js";
 import { getRegionName } from "#lib/utils/formatting.js";
 
 export const load: PageServerLoad = async ({ locals }) => {
@@ -63,6 +66,20 @@ export const load: PageServerLoad = async ({ locals }) => {
 	const people = new Map(
 		await Promise.all(profiles.map(async (p) => [p.id, { name: p.name, avatar: await getLogoUrl(p.logo) }] as const))
 	);
+	// A deeper spy network reveals more of what reconnaissance actually saw.
+	const targetIds = [
+		...new Set([
+			...reports.map((r) => r.targetStateId).filter((id): id is number => id != null),
+			...regionRows.map((r) => r.stateId).filter((id): id is number => id != null)
+		])
+	];
+	const depths = new Map<number, number>();
+	await Promise.all(targetIds.map(async (id) => depths.set(id, await intelDepth(db, account.id, id))));
+	const depthFor = (regionId: number) => {
+		const r = regionById.get(regionId);
+		return r?.stateId ? (depths.get(r.stateId) ?? 0) : 0;
+	};
+
 	const where = (regionId: number) => {
 		const r = regionById.get(regionId);
 		return {
@@ -82,13 +99,16 @@ export const load: PageServerLoad = async ({ locals }) => {
 			region: where(r.regionId),
 			ownState: stateName.get(r.stateId) ?? null,
 			filedBy: r.filedBy ? { id: r.filedBy, ...(people.get(r.filedBy) ?? { name: null, avatar: null }) } : null,
-			findings: r.findings,
+			findings: redactFindings(r.findings, visibleFields(depthFor(r.regionId))),
 			imagery: imagery.get(r.id)!,
 			observedAt: r.observedAt.toISOString(),
 			expiresAt: r.expiresAt.toISOString(),
 			fresh: isFresh(r, now)
 		})),
-		pictures: [...pictures].map(([regionId, p]) => ({ region: where(regionId), picture: p })),
+		pictures: [...pictures].map(([regionId, p]) => {
+			const depth = depthFor(regionId);
+			return { region: where(regionId), depth, picture: redactPicture(p, visibleFields(depth)) };
+		}),
 		inFlight: inFlight.map((m) => ({
 			id: m.id,
 			sensor: m.sensor,

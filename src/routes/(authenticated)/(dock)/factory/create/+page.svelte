@@ -16,7 +16,7 @@
 	import PageContainer from "#lib/component/PageContainer.svelte";
 	import PageHeader from "#lib/component/PageHeader.svelte";
 	import { Button } from "#lib/component/ui/index.js";
-	import { factoryEnergyRequirement } from "#lib/config/index.js";
+	import { equipmentForFactory, factoryEnergyRequirement } from "#lib/config/index.js";
 
 	let { data } = $props();
 
@@ -321,8 +321,20 @@
 				<fieldset class="space-y-2">
 					<legend class="field-label">4 · Fees &amp; materials</legend>
 					<ResourceRequirements
-						costs={{ ...selectedFactoryTypeData.costs, energy: energyRequired }}
-						available={availableResources}
+						costs={{
+							...selectedFactoryTypeData.costs,
+							energy: energyRequired,
+							...Object.fromEntries(
+								Object.entries(equipmentForFactory(selectedFactoryType as never)).map(([tool, needed]) => [
+									tool,
+									needed
+								])
+							),
+							...(selectedFactoryType === "armaments"
+								? { iron: 100, steel: 50, gunpowder: 25 }
+								: {})
+						}}
+						available={{ ...availableResources, ...(data.userEquipment ?? {}) }}
 					/>
 				</fieldset>
 			{/if}

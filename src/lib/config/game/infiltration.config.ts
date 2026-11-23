@@ -126,6 +126,29 @@ export const INFILTRATION = {
 /** Cap the visible odds factor at the same place the planner caps its bonus. */
 export const networkFootholdCap = NETWORK_ASSET_BONUS.CAP;
 
+// ── What a spy network reveals about another state ──────────────────────────
+
+export type IntelVisibleField =
+	| "unitCounts"
+	| "unitTypes"
+	| "installations"
+	| "battleDetail"
+	| "economy"
+	| "resources"
+	| "stances"
+	| "treasury";
+
+/** Each additional live foothold inside a state opens another layer of its file. */
+export function visibleFields(depth: number): ReadonlySet<IntelVisibleField> {
+	const d = Math.max(0, Math.floor(depth));
+	const fields: IntelVisibleField[] = [];
+	if (d >= 1) fields.push("unitCounts");
+	if (d >= 2) fields.push("installations");
+	if (d >= 3) fields.push("unitTypes", "battleDetail", "economy");
+	if (d >= 4) fields.push("resources", "stances", "treasury");
+	return new Set(fields);
+}
+
 const clamp = (n: number, lo: number, hi: number) => Math.min(hi, Math.max(lo, n));
 const pick = <T>(rng: () => number, xs: readonly T[]): T => xs[Math.floor(rng() * xs.length) % xs.length]!;
 

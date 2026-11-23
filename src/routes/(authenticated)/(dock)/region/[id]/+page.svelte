@@ -34,6 +34,7 @@
 	import TravelBanner from "./TravelBanner.svelte";
 	import RegionSituation from "./RegionSituation.svelte";
 	import CivilianNeeds from "./CivilianNeeds.svelte";
+	import Sparkline from "#lib/component/charts/Sparkline.svelte";
 	import { StrikeLog, StrikePlanner } from "#lib/component/strike/index.js";
 	import { formatPopulation } from "#lib/config/index.js";
 	import { countdown } from "#lib/utils/military.js";
@@ -496,6 +497,28 @@
 
 		<!-- What the civilians here live on -->
 		<CivilianNeeds needs={data.civilianNeeds} />
+
+		<section class="panel rounded-sm p-4">
+			<div class="flex flex-wrap items-center justify-between gap-3">
+				<h2 class="section-title text-base">Population</h2>
+				{#if data.civilians.report}
+					<span class="font-mono text-xs {data.civilians.report.annualRate < 0 ? 'text-error' : 'text-positive-fg'}">
+						{data.civilians.report.annualRate >= 0 ? "+" : ""}{(data.civilians.report.annualRate * 100).toFixed(1)}% / year
+					</span>
+				{/if}
+			</div>
+			<Sparkline values={data.civilians.trend ?? []} label="Civilian population over the last 90 days" color="var(--color-positive)" />
+			{#if data.civilians.report?.contributions.length}
+				<div class="mt-2 grid gap-1 text-xs sm:grid-cols-2">
+					{#each data.civilians.report.contributions as c}
+						<div class="flex justify-between gap-2 border-b border-line/10 py-1">
+							<span class="text-fg-muted">{c.label}</span>
+							<span class="font-mono {c.value < 0 ? 'text-error' : 'text-positive-fg'}">{c.value >= 0 ? "+" : ""}{c.value.toLocaleString()}</span>
+						</div>
+					{/each}
+				</div>
+			{/if}
+		</section>
 
 		<!-- Natural resources -->
 		{#if resourceEntries.length > 0}
