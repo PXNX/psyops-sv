@@ -4,17 +4,11 @@
 // The rules and the service calls live outside SvelteKit (see the config and
 // services imports below), so this file is only permission checks and forms.
 import { fail } from "@sveltejs/kit";
-import { eq } from "drizzle-orm";
+import { eq, isNotNull } from "drizzle-orm";
 import { getRegionName } from "#lib/utils/formatting.js";
 import type { Actions, PageServerLoad } from "./$types";
 import { db } from "#lib/server/db.js";
-import {
-	regions,
-	productInventory,
-	resourceInventory,
-	states,
-	userWallets
-} from "#lib/server/schema.js";
+import { regions, productInventory, resourceInventory, states, userWallets } from "#lib/server/schema.js";
 import {
 	NAVAL_OPS,
 	NAVAL_OP_KINDS,
@@ -69,7 +63,7 @@ import {
 	launchSupplyConvoy,
 	repairInfrastructure
 } from "#lib/server/services/military/convoys.js";
-import { REPAIR, convoyCost, convoyCargoLimit, repairCost, TRADE_LANES, CLOSURES } from "#lib/config/index.js";
+import { TRADE_LANES, CLOSURES, isCoastal } from "#lib/config/index.js";
 import {
 	TradeError,
 	tradeAuthority,
@@ -101,63 +95,121 @@ export const load: PageServerLoad = async ({ locals }) => {
 
 	const stateRows = await db.select({ id: states.id, name: states.name }).from(states);
 	const state = stateRows.find((s) => s.id === stateId) ?? null;
-	const [fleet, seaControl, blockades, navalOps, sats, bonuses, defence, spaceOps, aiInfo, routes, runs, wallet, resources, products, supply, convoys, ownRegions, lanes, zones, factors, autonomy] =
-		await Promise.all([
-			navalFleet(db, stateId),
-			seaControlOf(db, stateId),
-			blockadesOn(db, stateId),
-			navalLedger(db, stateId),
-			satelliteFleet(db, stateId),
-			spaceBonuses(db, stateId),
-			spaceDefenceLevel(db, stateId),
-			spaceLedger(db, stateId),
-			aiBonuses(db, stateId),
-			routesForState(db, stateId),
-			runsByUser(db, account.id),
-			db.select({ balance: userWallets.balance }).from(userWallets).where(eq(userWallets.userId, account.id)),
-			db.select().from(resourceInventory).where(eq(resourceInventory.userId, account.id)),
-			db.select().from(productInventory).where(eq(productInventory.userId, account.id)),
-			stateSupply(db, stateId),
-			convoyLedger(db, stateId),
-			db.select({ id: regions.id, infrastructure: regions.infrastructure }).from(regions).where(eq(regions.stateId, stateId)).limit(60),
-			lanesOf(db, stateId),
-			closuresBy(db, stateId),
-			tradeFactors(db, stateId),
-			stateAutonomy(db, stateId)
-		]);
+	const [
+		fleet,
+		seaControl,
+		blockades,
+		navalOps,
+		sats,
+		bonuses,
+		defence,
+		spaceOps,
+		aiInfo,
+		routes,
+		runs,
+		wallet,
+		resources,
+		products,
+		supply,
+		convoys,
+		ownRegions,
+		lanes,
+		zones,
+		factors,
+		autonomy,
+		mapRegions
+	] = await Promise.all([
+		navalFleet(db, stateId),
+		seaControlOf(db, stateId),
+		blockadesOn(db, stateId),
+		navalLedger(db, stateId),
+		satelliteFleet(db, stateId),
+		spaceBonuses(db, stateId),
+		spaceDefenceLevel(db, stateId),
+		spaceLedger(db, stateId),
+		aiBonuses(db, stateId),
+		routesForState(db, stateId),
+		runsByUser(db, account.id),
+		db.select({ balance: userWallets.balance }).from(userWallets).where(eq(userWallets.userId, account.id)),
+		db.select().from(resourceInventory).where(eq(resourceInventory.userId, account.id)),
+		db.select().from(productInventory).where(eq(productInventory.userId, account.id)),
+		stateSupply(db, stateId),
+		convoyLedger(db, stateId),
+		db
+			.select({ id: regions.id, infrastructure: regions.infrastructure })
+			.from(regions)
+			.where(eq(regions.stateId, stateId))
+			.limit(60),
+		lanesOf(db, stateId),
+		closuresBy(db, stateId),
+		tradeFactors(db, stateId),
+		stateAutonomy(db, stateId),
+		// Naval operations against a coast need every coastal region, not just our own.
+		naval
+			? db
+					.select({
+						id: regions.id,
+						stateId: regions.stateId,
+						terrain: regions.terrain,
+						infrastructure: regions.infrastructure
+					})
+					.from(regions)
+					.where(isNotNull(regions.stateId))
+			: Promise.resolve([])
+	]);
+	const stateName = (id: number | null | undefined) => nameOfState(stateRows, id);
+	const coastalRegions = mapRegions
+		.filter((r) => isCoastal(r))
+		.map((r) => ({
+			id: r.id,
+			name: getRegionName(r.id),
+			hint: r.stateId === stateId ? "own coast" : stateName(r.stateId)
+		}));
 
 	return {
 		state: { id: stateId, name: state?.name ?? "Unknown state" },
-		planner: naval || space || ai || smuggler || convoy || trade || closure
-			? {
-					roles: { naval, space, ai, smuggler, convoy, trade, closure },
-					trade: { lanes, zones, factors, laneSpecs: TRADE_LANES, closureSpecs: CLOSURES },
-					autonomy,
-					convoys,
-					ownRegions: ownRegions.map((r) => ({ ...r, name: getRegionName(r.id) })),
-					supply,
-					fleet,
-					seaControl,
-					blockades: blockades.map((b) => ({
-						...b,
-						blockader: nameOfState(stateRows, b.blockaderStateId)
-					})),
-					navalOps: navalOps.map((o) => ({ ...o, target: nameOfState(stateRows, o.targetStateId) })),
-					satellites: sats,
-					space: bonuses,
-					spaceDefence: defence,
-					spaceOps: spaceOps.map((o) => ({ ...o, target: nameOfState(stateRows, o.targetStateId) })),
-					ai: aiInfo,
-					aiNextCost: aiUpgradeCost(aiInfo.level),
-					spaceNextCost: spaceDefenceUpgradeCost(defence),
-					routes: routes.map((r) => ({
-						...r,
-						origin: nameOfState(stateRows, r.originStateId),
-						target: nameOfState(stateRows, r.targetStateId)
-					})),
-					targets: stateRows.filter((s) => s.id !== stateId)
-				}
-			: null,
+		planner:
+			naval || space || ai || smuggler || convoy || trade || closure
+				? {
+						roles: { naval, space, ai, smuggler, convoy, trade, closure },
+						trade: {
+							lanes: lanes.map((l) => ({ ...l, partner: stateName(l.partnerStateId) })),
+							zones: zones.map((z) => ({ ...z, target: z.targetStateId ? stateName(z.targetStateId) : null })),
+							factors,
+							laneSpecs: TRADE_LANES,
+							closureSpecs: CLOSURES
+						},
+						autonomy,
+						convoys: convoys.map((c) => ({
+							...c,
+							origin: getRegionName(c.originRegionId),
+							target: getRegionName(c.targetRegionId)
+						})),
+						coastalRegions,
+						ownRegions: ownRegions.map((r) => ({ ...r, name: getRegionName(r.id) })),
+						supply,
+						fleet,
+						seaControl,
+						blockades: blockades.map((b) => ({
+							...b,
+							blockader: stateName(b.blockaderStateId)
+						})),
+						navalOps: navalOps.map((o) => ({ ...o, target: stateName(o.targetStateId) })),
+						satellites: sats,
+						space: bonuses,
+						spaceDefence: defence,
+						spaceOps: spaceOps.map((o) => ({ ...o, target: stateName(o.targetStateId) })),
+						ai: aiInfo,
+						aiNextCost: aiUpgradeCost(aiInfo.level),
+						spaceNextCost: spaceDefenceUpgradeCost(defence),
+						routes: routes.map((r) => ({
+							...r,
+							origin: stateName(r.originStateId),
+							target: stateName(r.targetStateId)
+						})),
+						targets: stateRows.filter((s) => s.id !== stateId)
+					}
+				: null,
 		civilian: {
 			wallet: Number(wallet[0]?.balance ?? 0),
 			resources: Object.fromEntries(resources.map((r) => [r.resourceType, r.quantity])),
@@ -203,7 +255,11 @@ export const actions: Actions = {
 				kind,
 				name: form(fd, "name")
 			});
-			return { success: true, message: `${form(fd, "name")} launched; operational with ${SATELLITE_KINDS[kind].launchHours} h.`, cost: result.cost };
+			return {
+				success: true,
+				message: `${form(fd, "name")} launched; operational with ${SATELLITE_KINDS[kind].launchHours} h.`,
+				cost: result.cost
+			};
 		} catch (e) {
 			return fail(400, { error: e instanceof SpaceError ? e.message : "The launch failed." });
 		}
@@ -313,7 +369,11 @@ export const actions: Actions = {
 				kind: form(fd, "kind") as "air" | "sea",
 				capacity: int(fd, "capacity")
 			});
-			return { success: true, message: `Trade lane opened at ${Math.round(result.flow * 100)}% flow.`, cost: result.cost };
+			return {
+				success: true,
+				message: `Trade lane opened at ${Math.round(result.flow * 100)}% flow.`,
+				cost: result.cost
+			};
 		} catch (e) {
 			return fail(400, { error: e instanceof TradeError ? e.message : "The lane could not be opened." });
 		}

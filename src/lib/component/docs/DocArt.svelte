@@ -61,7 +61,7 @@
 	h: number,
 	title: string,
 	sub: string,
-	tone: "primary" | "friendly" | "warning" | "error" | "neutral" = "neutral"
+	tone: "primary" | "friendly" | "warning" | "error" | "neutral" | "politics" = "neutral"
 )}
 	<g>
 		<rect
