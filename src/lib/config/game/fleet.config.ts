@@ -73,7 +73,10 @@ function gridMetrics() {
 	const rows = spanR + 1;
 	// Axial rows skew to the right by r/2 columns. The widest row spans
 	// spanQ + spanR/2 hexes, so size the grid against that, not just `cols`.
-	const size = Math.min(WORLD_MAP_SIZE.width / (spanQ + spanR / 2 + 1) / Math.sqrt(3), WORLD_MAP_SIZE.height / rows / 1.5);
+	const size = Math.min(
+		WORLD_MAP_SIZE.width / (spanQ + spanR / 2 + 1) / Math.sqrt(3),
+		WORLD_MAP_SIZE.height / rows / 1.5
+	);
 	return {
 		size,
 		colStep: Math.sqrt(3) * size,
@@ -197,7 +200,14 @@ export function parseHexKey(key: string): Hex {
 }
 
 export function inBounds(h: Hex): boolean {
-	return Number.isInteger(h.q) && Number.isInteger(h.r) && h.q >= HEX_BOUNDS.minQ && h.q <= HEX_BOUNDS.maxQ && h.r >= HEX_BOUNDS.minR && h.r <= HEX_BOUNDS.maxR;
+	return (
+		Number.isInteger(h.q) &&
+		Number.isInteger(h.r) &&
+		h.q >= HEX_BOUNDS.minQ &&
+		h.q <= HEX_BOUNDS.maxQ &&
+		h.r >= HEX_BOUNDS.minR &&
+		h.r <= HEX_BOUNDS.maxR
+	);
 }
 
 /** Distance in hex steps. */
@@ -256,7 +266,12 @@ export function hexMapViewBox(size = HEX_SIZE): { minX: number; minY: number; wi
 	const maxX = Math.max(...corners.map((c) => c.x)) + pad;
 	const minY = Math.min(...corners.map((c) => c.y)) - pad;
 	const maxY = Math.max(...corners.map((c) => c.y)) + pad;
-	return { minX: Math.floor(minX), minY: Math.floor(minY), width: Math.ceil(maxX - minX), height: Math.ceil(maxY - minY) };
+	return {
+		minX: Math.floor(minX),
+		minY: Math.floor(minY),
+		width: Math.ceil(maxX - minX),
+		height: Math.ceil(maxY - minY)
+	};
 }
 
 function cubeLerp(a: Hex, b: Hex, t: number): { x: number; y: number; z: number } {
@@ -414,7 +429,8 @@ export const SHIP_CLASSES: Record<ShipClassId, ShipClassDef> = {
 		short: "CV",
 		category: "capital",
 		role: "Air wing · extended aerial range",
-		blurb: "Its fighters reach three hexes, scouting the sea and striking surface ships and aircraft far beyond gun range.",
+		blurb:
+			"Its fighters reach three hexes, scouting the sea and striking surface ships and aircraft far beyond gun range.",
 		hp: 220,
 		moveHours: 2,
 		fuelCapacity: 240,
@@ -458,7 +474,8 @@ export const SHIP_CLASSES: Record<ShipClassId, ShipClassDef> = {
 		short: "LH",
 		category: "capital",
 		role: "Helicopters · anti-submarine",
-		blurb: "A flight deck for ASW helicopters: it finds and hunts submarines two hexes out and guards the fleet's belly.",
+		blurb:
+			"A flight deck for ASW helicopters: it finds and hunts submarines two hexes out and guards the fleet's belly.",
 		hp: 170,
 		moveHours: 1.8,
 		fuelCapacity: 190,
@@ -570,7 +587,8 @@ export const SHIP_CLASSES: Record<ShipClassId, ShipClassDef> = {
 		short: "EW",
 		category: "escort",
 		role: "Electronic warfare · GNSS denial",
-		blurb: "Blinds satellite navigation for every hostile ship within three hexes: they steam slower and their guided weapons miss more often. The same trick is flown by fighter squadrons and dug in with air-defence battalions.",
+		blurb:
+			"Blinds satellite navigation for every hostile ship within three hexes: they steam slower and their guided weapons miss more often. The same trick is flown by fighter squadrons and dug in with air-defence battalions.",
 		hp: 95,
 		moveHours: 1.2,
 		fuelCapacity: 140,
@@ -718,7 +736,11 @@ export function shipClass(id: string): ShipClassDef | undefined {
 
 /** A ship's bare hull type for combat targeting. */
 export function targetKind(id: ShipClassId): TargetKind {
-	return SHIP_CLASSES[id].category === "submarine" ? "sub" : SHIP_CLASSES[id].category === "civilian" ? "surface" : "surface";
+	return SHIP_CLASSES[id].category === "submarine"
+		? "sub"
+		: SHIP_CLASSES[id].category === "civilian"
+			? "surface"
+			: "surface";
 }
 
 // ── Exclusive economic zones ────────────────────────────────────────────────
@@ -742,9 +764,7 @@ type GeoRegion = { id: number; latitude: unknown; longitude: unknown };
 export function eezHexes(region: GeoRegion, allRegions: GeoRegion[]): Hex[] {
 	const centre = hexFromLatLon(Number(region.latitude), Number(region.longitude));
 	const land = new Set(allRegions.map((r) => hexKey(hexFromLatLon(Number(r.latitude), Number(r.longitude)))));
-	return hexesInRange(centre, EEZ.radiusHexes).filter(
-		(h) => hexKey(h) !== hexKey(centre) && !land.has(hexKey(h))
-	);
+	return hexesInRange(centre, EEZ.radiusHexes).filter((h) => hexKey(h) !== hexKey(centre) && !land.has(hexKey(h)));
 }
 
 /** Pick a port hex inside the region's EEZ that no other port occupies. */
@@ -760,7 +780,7 @@ export function portHexForRegion(region: GeoRegion, allRegions: GeoRegion[], tak
 // Aerial mode thinks in sectors, not single hexes: several sea hexes and the
 // regions above them are grouped into one airspace block for planning.
 
-export const AIRSPACE = { cols: 4, rows: 3 } as const;
+export const AIRSPACE = { cols: 10, rows: 5 } as const;
 
 export function airspaceSectorOf(h: Hex): string {
 	const qSpan = HEX_BOUNDS.maxQ - HEX_BOUNDS.minQ + 1;
@@ -830,7 +850,10 @@ export function shipRepairCost(id: ShipClassId, missingHealth: number): number {
 /** Hours a repair takes at a dock of the given level. */
 export function repairHours(id: ShipClassId, missingHealth: number, dockLevel: number): number {
 	const work = Math.max(1, Math.ceil(missingHealth));
-	return Math.max(1, Math.round((work / SHIP_CLASSES[id].hp) * SHIP_CLASSES[id].build.hours * (1 / Math.max(1, dockLevel))));
+	return Math.max(
+		1,
+		Math.round((work / SHIP_CLASSES[id].hp) * SHIP_CLASSES[id].build.hours * (1 / Math.max(1, dockLevel)))
+	);
 }
 
 /** Hours a new hull takes at a dock of the given level. */
@@ -867,7 +890,9 @@ export const GNSS = {
 } as const;
 
 export function gnssAccuracyPenalty(strength: number): number {
-	return Math.round(Math.min(GNSS.maxAccuracyPenalty, Math.max(0, strength) * GNSS.accuracyPenaltyPerPoint) * 1000) / 1000;
+	return (
+		Math.round(Math.min(GNSS.maxAccuracyPenalty, Math.max(0, strength) * GNSS.accuracyPenaltyPerPoint) * 1000) / 1000
+	);
 }
 
 /** Multiplier on a ship's leg time: 1 = clear skies, <1 = slowed. */

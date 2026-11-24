@@ -35,7 +35,6 @@
 		HEX_BOUNDS,
 		SHIP_CLASSES,
 		airspaceSectorOf,
-		airspaceSectors,
 		eezHexes,
 		hexFromLatLon,
 		hexKey,
@@ -208,6 +207,11 @@
 		{ regionId: number; stateId: number; color: string; d: string; points: { x: number; y: number }[] }[]
 	>([]);
 	let seaGeometryReady = $state(false);
+	/** Each region's outline `d`, read once at mount (the shapes never change). */
+	const regionPathD = new Map<number, string>();
+	/** Aerial mode: the air sector under the pointer and the one picked. */
+	let hoverSectorId = $state<string | null>(null);
+	let selectedSectorId = $state<string | null>(null);
 	let highlightedId = $state<number | null>(null);
 	let highlightTimeout: ReturnType<typeof setTimeout> | null = null;
 	let now = $state(new Date());
@@ -230,6 +234,14 @@
 	const sideStates = $derived(new Set(sa?.side?.stateIds ?? []));
 	const enemyStates = $derived(new Set(sa?.enemyStateIds ?? []));
 	const coastalIds = $derived(new Set(data.sea.coastalRegions.map((r) => r.id)));
+	/** Every region on the shore, owned or not: the ones naval mode deals with. */
+	const shoreIds = $derived(
+		new Set(
+			Object.entries(data.regionMap)
+				.filter(([, r]) => r.terrain === "shore")
+				.map(([id]) => Number(id))
+		)
+	);
 	const showSea = $derived(mode !== "land");
 	const showLand = $derived(mode !== "naval");
 	const stateById = $derived(new Map(data.states.map((s) => [s.id, s])));
@@ -332,10 +344,22 @@
 			}
 			const r = data.regionMap[id];
 			// Regions stay visible in naval mode: the sea overlays sit on the
-			// world map rather than replacing the political/base layer.
-			el.style.fill = r ? fillFor(id, r, maxHeat) : LAND;
+			// world map rather than replacing the political/base layer. Inland
+			// regions have nothing to do with the sea, so they dim and stop
+			// taking clicks there.
+			const inland = mode === "naval" && !shoreIds.has(id);
+			let fill = r ? fillFor(id, r, maxHeat) : LAND;
+			// Aerial mode tints each region with its air sector's hue.
+			const sector = mode === "aerial" ? regionSector.get(id) : undefined;
+			if (sector) {
+				const hot = sector === selectedSectorId || sector === hoverSectorId;
+				fill = `color-mix(in oklab, ${sectorHue(sector)} ${hot ? 55 : 32}%, ${fill})`;
+			}
+			// Stay opaque: the EEZ shapes beneath must not show through the land.
+			el.style.fill = inland ? `color-mix(in oklab, ${fill} 45%, var(--color-surface-0))` : fill;
 			el.style.opacity = "1";
 			el.style.stroke = BORDER;
+			el.classList.toggle("region-inland", inland);
 			const flash = id === highlightedId;
 			el.classList.toggle("region-highlight", flash);
 			if (id === selectedId) {
@@ -368,6 +392,10 @@
 		void sideStates;
 		void mode;
 		void coastalIds;
+		void shoreIds;
+		void regionSector;
+		void hoverSectorId;
+		void selectedSectorId;
 		if (instance && sceneEl) colorRegions(sceneEl);
 	});
 
@@ -415,6 +443,7 @@
 			c[id] = { x: b.x + b.width / 2, y: b.y + b.height / 2, r: Math.max(2, Math.hypot(b.width, b.height) / 2) };
 			landBoxes.push({ el, x0: b.x - 0.5, y0: b.y - 0.5, x1: b.x + b.width + 0.5, y1: b.y + b.height + 0.5 });
 			pathById.set(id, el);
+			regionPathD.set(id, el.getAttribute("d") ?? "");
 		});
 		centroids = c;
 
@@ -594,8 +623,31 @@
 		const p = mapPoint(e);
 		return hexKey(mapToHex(p.x, p.y));
 	}
+	/** Aerial mode: the air sector under the pointer. A region, its EEZ band
+	 *  and a sea cell each resolve to their sector; anything else (open map)
+	 *  falls back to the sector grid. */
+	function sectorAt(e: PointerEvent): string | null {
+		if (!viewportEl) return null;
+		const target = e.target as Element | null;
+		const eez = target?.closest?.("[data-eez]")?.getAttribute("data-eez");
+		if (eez) return regionSector.get(Number(eez)) ?? null;
+		const cell = target?.closest?.("[data-hex]")?.getAttribute("data-hex");
+		if (cell) return hexSector(cell);
+		const id = target instanceof SVGPathElement ? parseInt(target.id, 10) : NaN;
+		if (!isNaN(id) && regionSector.has(id)) return regionSector.get(id)!;
+		const p = mapPoint(e);
+		return airspaceSectorOf(mapToHex(p.x, p.y));
+	}
 	function onPointerUp(e: PointerEvent) {
 		if (!e.isPrimary || Math.hypot(e.clientX - downX, e.clientY - downY) > DRAG_THRESHOLD) return;
+		if (mode === "aerial") {
+			selectedSectorId = sectorAt(e);
+			selectedId = null;
+			selectedHexKey = null;
+			selectedHexKeys = new Set();
+			sheetOpen = !!selectedSectorId;
+			return;
+		}
 		const key = hexKeyAt(e);
 		if (key) {
 			if (e.ctrlKey || e.metaKey || multiSelect) {
@@ -616,6 +668,8 @@
 		for (let d = 0; el && d < 5; d++, el = el.parentElement) {
 			const id = parseInt(el.id, 10);
 			if (!isNaN(id) && id > 0 && data.regionMap[id]) {
+				// Naval mode only deals with the coast.
+				if (mode === "naval" && !shoreIds.has(id)) return;
 				openRegion(id);
 				return;
 			}
@@ -623,7 +677,12 @@
 	}
 	function onPointerMove(e: PointerEvent) {
 		if (!viewportEl) return;
-		hoverHexKey = hexKeyAt(e);
+		if (mode === "aerial") {
+			hoverHexKey = null;
+			hoverSectorId = sectorAt(e);
+		} else {
+			hoverHexKey = hexKeyAt(e);
+		}
 		cursor = mapPoint(e);
 	}
 
@@ -638,7 +697,17 @@
 		sheetOpen = false;
 	}
 	$effect(() => {
-		if (!sheetOpen && !isDesktop) selectedId = null;
+		if (!sheetOpen && !isDesktop) {
+			selectedId = null;
+			selectedSectorId = null;
+		}
+	});
+	$effect(() => {
+		// Sectors only exist in aerial mode.
+		if (mode !== "aerial") {
+			selectedSectorId = null;
+			hoverSectorId = null;
+		}
 	});
 
 	// ── Search ───────────────────────────────────────────────────────────────
@@ -831,6 +900,27 @@
 		return { grid, cell };
 	});
 
+	/** The coastline (index into `coastlines`) closest to a map point. */
+	function nearestCoast(p: { x: number; y: number }): { index: number; distance: number } {
+		const { grid, cell } = coastGrid;
+		const bx = Math.floor(p.x / cell);
+		const by = Math.floor(p.y / cell);
+		let index = -1;
+		let distance = Infinity;
+		for (let dx = -2; dx <= 2; dx++) {
+			for (let dy = -2; dy <= 2; dy++) {
+				for (const item of grid.get(`${bx + dx},${by + dy}`) ?? []) {
+					const d = Math.hypot(p.x - item.x, p.y - item.y);
+					if (d < distance) {
+						distance = d;
+						index = item.index;
+					}
+				}
+			}
+		}
+		return { index, distance };
+	}
+
 	/** EEZs are claimed by the nearest *coastline*, not by a region centroid.
 	 *  Candidates are the water hexes within a couple of rings of any coast
 	 *  sample; a hex belongs to the coastal region whose outline is closest.
@@ -866,33 +956,47 @@
 			}
 		}
 
-		const { grid, cell } = coastGrid;
-		// A hex whose centre lies under the band belongs to the EEZ; the grid
-		// proper starts with the first cell beyond the band's seaward edge.
+		// A hex whose centre lies within reach of a coast belongs to the EEZ;
+		// the open grid starts with the first cell beyond.
 		const maxDistance = eezBandWidth();
 		for (const key of candidates) {
-			const centre = hexToMap(parseHexKey(key));
-			const bx = Math.floor(centre.x / cell);
-			const by = Math.floor(centre.y / cell);
-			let best = -1;
-			let bestDistance = Infinity;
-			for (let dx = -2; dx <= 2; dx++) {
-				for (let dy = -2; dy <= 2; dy++) {
-					for (const item of grid.get(`${bx + dx},${by + dy}`) ?? []) {
-						const d = Math.hypot(centre.x - item.x, centre.y - item.y);
-						if (d < bestDistance) {
-							bestDistance = d;
-							best = item.index;
-						}
-					}
-				}
-			}
+			const { index: best, distance: bestDistance } = nearestCoast(hexToMap(parseHexKey(key)));
 			if (best < 0 || bestDistance > maxDistance) continue;
 			const coast = coastlines[best]!;
 			owner.set(key, { regionId: coast.regionId, stateId: coast.stateId, color: coast.color, distance: bestDistance });
 		}
 		return owner;
 	});
+	/** Each coastal region's EEZ as one filled shape: the union of its claimed
+	 *  sea cells plus the land-centred cells along its shore. Drawn beneath
+	 *  the opaque land, the shape fills the water exactly from the coastline
+	 *  out to the edge of the open hex grid, so no gap is left between them. */
+	const eezPieces = $derived.by(() => {
+		const byRegion = new Map<number, { color: string; hexes: { q: number; r: number }[] }>();
+		const add = (regionId: number, color: string, h: { q: number; r: number }) => {
+			const entry = byRegion.get(regionId) ?? { color, hexes: [] };
+			entry.hexes.push(h);
+			byRegion.set(regionId, entry);
+		};
+		for (const [key, o] of eezByHex) add(o.regionId, o.color, parseHexKey(key));
+		if (coastlines.length) {
+			// Shore cells: centred on land but touching a claimed cell. The land
+			// covers their inland part; their water slivers join the EEZ.
+			for (const key of landHexKeys) {
+				const h = parseHexKey(key);
+				if (eezByHex.has(key) || !hexNeighborsSafe(h).some((n) => eezByHex.has(hexKey(n)))) continue;
+				const { index } = nearestCoast(hexToMap(h));
+				const coast = index >= 0 ? coastlines[index] : undefined;
+				if (coast) add(coast.regionId, coast.color, h);
+			}
+		}
+		return [...byRegion.entries()].map(([regionId, v]) => ({
+			regionId,
+			color: v.color,
+			d: hexUnionPath(v.hexes)
+		}));
+	});
+
 	const seaHexes = $derived.by(() => {
 		const out: {
 			key: string;
@@ -1047,25 +1151,32 @@
 
 	/** The hex map is part of the world SVG itself, not a second floating canvas.
 	 *  Drawn in order before the region paths, so the opaque land clips both:
-	 *   1. the open-sea hex grid (cells under the band are skipped);
-	 *   2. the EEZ band: each coastal region's outline stroked twice as wide as
-	 *      the claim reaches — an edge pass, then an opaque tinted fill pass.
-	 *      The land covers the inland half, leaving a smooth band of water that
-	 *      follows the real coastline. The hex grid starts at its seaward edge.
-	 *  Stroke styles go in `style`: the page CSS sets path stroke widths, and
-	 *  CSS colour variables only resolve there. */
+	 *   1. the open-sea hex grid (cells claimed by an EEZ are skipped);
+	 *   2. the EEZs: one filled shape per coastal region (see `eezPieces`).
+	 *      The land covers its inland part, so what shows is exactly the water
+	 *      from the coastline out to the first open-sea cell.
+	 *  Styles go in `style`: the page CSS sets path stroke widths, and CSS
+	 *  colour variables only resolve there. */
 	const worldSvg = $derived.by(() => {
 		if (!showSea || !overlays.sea) return WorldMap;
+		// Aerial mode washes each cell and coast in its air sector's hue.
+		const aerial = mode === "aerial";
 		const cells = seaHexes
 			.filter((h) => !h.inEez)
 			.map((h) => {
-				const fill = h.condition === "stormy" ? "url(#sea-storm)" : h.condition === "icy" ? "url(#sea-ice)" : "#38bdf8";
-				const opacity = h.condition !== "calm" ? 1 : h.active ? 0.1 : 0;
-				return `<polygon data-hex='${h.key}' data-tutorial='hex-cell' points='${h.points}' fill='${fill}' fill-opacity='${opacity}' stroke='#7dd3fc' stroke-opacity='${
-					h.active ? 0.45 : 0.16
+				const hue = aerial ? sectorHue(hexSector(h.key)) : null;
+				const fill =
+					h.condition === "stormy" ? "url(#sea-storm)" : h.condition === "icy" ? "url(#sea-ice)" : (hue ?? "#38bdf8");
+				const opacity = h.condition !== "calm" ? 1 : hue ? 0.08 : h.active ? 0.1 : 0;
+				return `<polygon data-hex='${h.key}' data-tutorial='hex-cell' points='${h.points}' fill='${fill}' fill-opacity='${opacity}' stroke='${hue ?? "#7dd3fc"}' stroke-opacity='${
+					h.active ? 0.45 : hue ? 0.22 : 0.16
 				}' stroke-width='0.6' stroke-linejoin='round' style='cursor:pointer'/>`;
 			})
 			.join("");
+		const coastColor = (c: { regionId: number; color: string }) => {
+			const sector = aerial ? regionSector.get(c.regionId) : undefined;
+			return sector ? sectorHue(sector) : c.color;
+		};
 		const patterns =
 			"<defs>" +
 			"<pattern id='sea-storm' width='3' height='3' patternUnits='userSpaceOnUse' patternTransform='rotate(45)'>" +
@@ -1075,34 +1186,22 @@
 			"<rect width='4' height='4' fill='#e0f2fe' fill-opacity='0.08'/>" +
 			"<circle cx='2' cy='2' r='0.45' fill='#e0f2fe' fill-opacity='0.45'/></pattern>" +
 			"</defs>";
-		const width = eezBandWidth() * 2;
-		const coasts = coastlines.filter((c) => c.d);
-		const edge = coasts
-			.map(
-				(c) =>
-					`<path d='${c.d}' style='fill:none;stroke:${c.color};stroke-opacity:0.8;stroke-width:${(width + 1.2).toFixed(
-						1
-					)}px;stroke-linejoin:round;stroke-linecap:round;pointer-events:none'/>`
-			)
-			.join("");
-		const band = coasts
-			.map(
-				(c) =>
-					`<path data-eez='${c.regionId}' d='${c.d}' style='fill:none;stroke:color-mix(in oklab, ${c.color} 22%, var(--color-surface-0));stroke-width:${width.toFixed(
-						1
-					)}px;stroke-linejoin:round;stroke-linecap:round;pointer-events:stroke;cursor:pointer'/>`
-			)
+		const pieces = eezPieces
+			.map((c) => {
+				const color = coastColor(c);
+				return `<path data-eez='${c.regionId}' d='${c.d}' style='fill:color-mix(in oklab, ${color} 22%, var(--color-surface-0));stroke:${color};stroke-opacity:${aerial ? 0.3 : 0.55};stroke-width:0.6px;stroke-linejoin:round;cursor:pointer'/>`;
+			})
 			.join("");
 		const group =
 			`<g id='world-hex-sea'><title>Open sea · hex grid</title>${patterns}${cells}</g>` +
-			`<g id='world-eez'><title>Exclusive economic zones · coast to hex grid</title>${edge}${band}</g>`;
+			`<g id='world-eez'><title>Exclusive economic zones · coast to hex grid</title>${pieces}</g>`;
 		return WorldMap.replace("</defs>", `</defs>${group}`);
 	});
 
 	/** Hex outlines for the selection and the cell under the pointer. They sit
 	 *  in the overlay so they also show inside the EEZ band. */
 	const hexHighlights = $derived.by(() => {
-		if (!showSea || !overlays.sea) return [];
+		if (!showSea || !overlays.sea || mode === "aerial") return [];
 		const keys = new Set(selectedHexKeys);
 		if (selectedHexKey) keys.add(selectedHexKey);
 		const out = [...keys].map((key) => ({ key, points: hexPoints(parseHexKey(key)), picked: true }));
@@ -1111,28 +1210,121 @@
 		return out;
 	});
 
-	/** Aerial mode: the grid is split into Luftraum sectors. Each sector is
-	 *  the union of its hexes; the label tab sits at its centre. */
+	/** Aerial mode: air sectors (Luftraum). The map is cut into a coarse grid,
+	 *  but a sector takes whole regions, never half of one: each region goes
+	 *  to the sector its centre lies in, its EEZ waters follow it, and the
+	 *  open sea goes by the grid. So one sector is a block of neighbouring
+	 *  regions plus their coast and the sea beyond. */
+	const regionSector = $derived.by(() => {
+		const out = new Map<number, string>();
+		for (const [id, c] of Object.entries(centroids)) out.set(Number(id), airspaceSectorOf(mapToHex(c.x, c.y)));
+		return out;
+	});
+	function hexSector(key: string): string {
+		const owner = eezByHex.get(key);
+		return (owner && regionSector.get(owner.regionId)) || airspaceSectorOf(parseHexKey(key));
+	}
+	/** Four alternating hues so neighbouring sectors never share a tint. */
+	const SECTOR_HUES = ["#38bdf8", "#a78bfa", "#34d399", "#f59e0b"];
+	function sectorHue(id: string): string {
+		const m = /^LR-([A-Z])(\d+)$/.exec(id);
+		if (!m) return SECTOR_HUES[0]!;
+		const row = m[1]!.charCodeAt(0) - 65;
+		const col = Number(m[2]) - 1;
+		return SECTOR_HUES[(row % 2) * 2 + ((col + row) % 2)]!;
+	}
+
 	const airspaces = $derived.by(() => {
 		if (mode !== "aerial") return [];
+		type Sector = {
+			id: string;
+			hue: string;
+			regions: number[];
+			eezHexes: string[];
+			openHexes: string[];
+			xs: number;
+			ys: number;
+			n: number;
+		};
+		const byId = new Map<string, Sector>();
+		const get = (id: string) => {
+			let s = byId.get(id);
+			if (!s) {
+				s = { id, hue: sectorHue(id), regions: [], eezHexes: [], openHexes: [], xs: 0, ys: 0, n: 0 };
+				byId.set(id, s);
+			}
+			return s;
+		};
+		for (const [id, sector] of regionSector) {
+			const s = get(sector);
+			const c = centroids[id]!;
+			s.regions.push(id);
+			s.xs += c.x;
+			s.ys += c.y;
+			s.n++;
+		}
+		for (const h of seaHexes) {
+			const s = get(h.regionId != null ? (regionSector.get(h.regionId) ?? airspaceSectorOf(h)) : airspaceSectorOf(h));
+			(h.inEez ? s.eezHexes : s.openHexes).push(h.key);
+			// Sea pulls the label only where a sector has no land of its own.
+			if (!s.regions.length) {
+				s.xs += h.x;
+				s.ys += h.y;
+				s.n++;
+			}
+		}
 		const ownAir = data.sea.aircraft.filter((a) => sideStates.has(a.stateId) && a.fuel > 0);
-		return airspaceSectors().map((sector) => {
-			const hexSet = new Set(sector.hexes.map(hexKey));
-			const centres = sector.hexes.map(hexCentre);
-			const anchor = {
-				x: centres.reduce((sum, p) => sum + p.x, 0) / centres.length,
-				y: centres.reduce((sum, p) => sum + p.y, 0) / centres.length
-			};
-			const regions = data.sea.regionsForEez.filter((r) => hexSet.has(hexKeyFromCoords(r))).length;
-			const ships = data.sea.ships.filter((s) => s.status !== "sunk" && hexSet.has(hexKey(s))).length;
-			const air = ownAir.filter((a) => {
-				const region = data.sea.regionsForEez.find((r) => r.id === a.regionId);
-				return region && hexSet.has(hexKeyFromCoords(region));
-			}).length;
-			return { id: sector.id, path: hexUnionPath(sector.hexes), x: anchor.x, y: anchor.y, regions, ships, air };
-		});
+		const ships = data.sea.ships.filter((x) => x.status !== "sunk");
+		return [...byId.values()]
+			.filter((s) => s.n > 0)
+			.map((s) => {
+				const stateCounts = new Map<number, number>();
+				for (const id of s.regions) {
+					const st = data.regionMap[id]?.stateId;
+					if (st) stateCounts.set(st, (stateCounts.get(st) ?? 0) + 1);
+				}
+				const states = [...stateCounts.entries()]
+					.sort((a, b) => b[1] - a[1])
+					.map(([stateId, count]) => ({ stateId, count, name: stateById.get(stateId)?.name ?? `State #${stateId}` }));
+				const own = states.some((x) => sideStates.has(x.stateId));
+				const hostile = states.some((x) => enemyStates.has(x.stateId));
+				const regionSet = new Set(s.regions);
+				return {
+					...s,
+					x: s.xs / s.n,
+					y: s.ys / s.n,
+					states,
+					control:
+						own && hostile
+							? ("contested" as const)
+							: own
+								? ("ours" as const)
+								: hostile
+									? ("hostile" as const)
+									: ("neutral" as const),
+					air: ownAir.filter((a) => regionSet.has(a.regionId)).length,
+					ships: ships.filter((x) => hexSector(hexKey(x)) === s.id).length,
+					ports: data.sea.ports.filter((x) => hexSector(hexKey(x)) === s.id).length
+				};
+			});
 	});
-	const hoverSector = $derived(mode === "aerial" && cursor ? airspaceSectorOf(mapToHex(cursor.x, cursor.y)) : null);
+	const hoverSector = $derived(hoverSectorId);
+	const selSector = $derived(selectedSectorId ? (airspaces.find((x) => x.id === selectedSectorId) ?? null) : null);
+	/** Outline of the hovered and picked sectors: their regions' shapes plus
+	 *  the union of their sea cells. */
+	const sectorOutlines = $derived.by(() => {
+		const ids = [...new Set([selectedSectorId, hoverSectorId].filter((x): x is string => !!x))];
+		return ids
+			.map((id) => airspaces.find((x) => x.id === id))
+			.filter((x) => !!x)
+			.map((s) => ({
+				id: s.id,
+				hue: s.hue,
+				picked: s.id === selectedSectorId,
+				land: s.regions.map((r) => regionPathD.get(r) ?? "").join(" "),
+				sea: hexUnionPath([...s.eezHexes, ...s.openHexes].map(parseHexKey))
+			}));
+	});
 
 	function hexKeyFromCoords(r: { latitude: number; longitude: number }) {
 		return hexKey(hexFromLatLon(r.latitude, r.longitude));
@@ -1196,7 +1388,10 @@
 		bind:this={viewportEl}
 		class="map-viewport absolute inset-0 touch-none"
 		onpointermove={onPointerMove}
-		onpointerleave={() => (cursor = null)}
+		onpointerleave={() => {
+			cursor = null;
+			hoverSectorId = null;
+		}}
 		role="presentation"
 	>
 		<!-- Panned scene: world map + tactical overlay in the same 1400×600 space -->
@@ -1231,42 +1426,51 @@
 				</g>
 
 				{#if mode === "aerial"}
-					<!-- Luftraum sectors: thin solid boundaries, a tab label per sector -->
+					<!-- Air sectors: the hovered/picked one outlined (its regions and its
+					     sea cells), a tab label per sector -->
 					<g pointer-events="none">
-						{#each airspaces as sector (sector.id)}
-							{@const hot = sector.id === hoverSector}
+						{#each sectorOutlines as o (o.id)}
 							<path
-								d={sector.path}
-								style:stroke="var(--color-primary)"
-								style:fill="var(--color-primary)"
-								stroke-opacity={hot ? 0.8 : 0.4}
-								fill-opacity={hot ? 0.07 : 0.015}
-								stroke-width={(hot ? 1.4 : 1) * k}
+								d={o.sea}
+								style:fill={o.hue}
+								style:stroke={o.hue}
+								style:stroke-width="{(o.picked ? 1.6 : 1.1) * k}px"
+								fill-opacity={o.picked ? 0.12 : 0.06}
+								stroke-opacity={o.picked ? 0.9 : 0.6}
+								stroke-linejoin="round"
+							/>
+							<path
+								d={o.land}
+								style:fill="none"
+								style:stroke={o.hue}
+								style:stroke-width="{(o.picked ? 1 : 0.7) * k}px"
+								stroke-opacity={o.picked ? 0.9 : 0.6}
 								stroke-linejoin="round"
 							/>
 						{/each}
 						{#each airspaces as sector (sector.id)}
-							{@const hot = sector.id === hoverSector}
+							{@const hot = sector.id === hoverSector || sector.id === selectedSectorId}
 							<g transform="translate({sector.x} {sector.y}) scale({k})">
 								<rect
-									x="-20"
+									x="-19"
 									y="-7"
-									width="40"
+									width="38"
 									height="14"
 									rx="2"
-									style:fill={hot ? "var(--color-primary)" : "var(--color-surface-0)"}
-									style:stroke="var(--color-primary)"
-									stroke-opacity={hot ? 1 : 0.5}
+									style:fill={hot ? sector.hue : "var(--color-surface-0)"}
+									style:stroke={sector.hue}
+									fill-opacity={hot ? 1 : 0.85}
+									stroke-opacity={hot ? 1 : 0.6}
 								/>
 								<text
 									y="3"
 									text-anchor="middle"
-									font-size="8"
+									font-size="7.5"
 									font-weight="600"
 									class="data"
-									style:fill={hot ? "var(--color-primary-content)" : "var(--color-primary)"}
+									style:fill={hot ? "var(--color-surface-0)" : sector.hue}
 								>
-									{sector.id}
+									{sector.id.replace("LR-", "")}
 								</text>
 							</g>
 						{/each}
@@ -1962,8 +2166,8 @@
 		{#if hoverSector}
 			{@const sector = airspaces.find((x) => x.id === hoverSector)}
 			{#if sector}
-				<span class="hidden text-primary sm:inline">
-					{sector.id} · {sector.regions} regions · {sector.air} own air · {sector.ships} ships
+				<span class="hidden sm:inline" style:color={sector.hue}>
+					{sector.id} · {sector.regions.length} regions · {sector.air} own air · {sector.ships} ships
 				</span>
 			{/if}
 		{/if}
@@ -1990,16 +2194,111 @@
 		>
 			{@render regionPanel()}
 		</aside>
+	{:else if isDesktop && selSector}
+		<aside
+			class="panel absolute right-14 top-14 bottom-9 z-10 w-80 overflow-y-auto rounded-sm p-4 animate-pop-in"
+			aria-label="Air sector {selSector.id}"
+		>
+			{@render sectorPanel(selSector)}
+		</aside>
 	{/if}
 </div>
 
 {#if !isDesktop}
 	<BottomSheet bind:open={sheetOpen}>
 		<div bind:this={panelEl}>
-			{#if sel && selectedId != null}{@render regionPanel()}{/if}
+			{#if sel && selectedId != null}{@render regionPanel()}
+			{:else if selSector}{@render sectorPanel(selSector)}{/if}
 		</div>
 	</BottomSheet>
 {/if}
+
+{#snippet sectorPanel(s: (typeof airspaces)[number])}
+	{@const tone = { contested: "amber", ours: "blue", hostile: "red", neutral: "neutral" } as const}
+	{@const label = { contested: "Contested", ours: "Our airspace", hostile: "Hostile airspace", neutral: "Neutral" }}
+	<div class="flex items-start gap-3">
+		<span
+			class="grid size-10 shrink-0 place-items-center rounded-sm border font-mono text-sm font-semibold"
+			style:border-color={s.hue}
+			style:color={s.hue}
+			style:background="color-mix(in oklab, {s.hue} 14%, transparent)"
+		>
+			{s.id.replace("LR-", "")}
+		</span>
+		<div class="min-w-0 flex-1">
+			<p class="section-title">Air sector</p>
+			<h2 class="truncate text-lg font-bold text-fg">{s.id}</h2>
+		</div>
+		{#if isDesktop}
+			<IconButton icon={IconDismiss} label="Close" size="xs" shape="square" onclick={() => (selectedSectorId = null)} />
+		{/if}
+	</div>
+	<div class="mt-2"><Badge tone={tone[s.control]} size="xs">{label[s.control]}</Badge></div>
+
+	<dl class="mt-3 grid grid-cols-3 gap-px overflow-hidden rounded-sm border border-line/15 bg-line/15 text-center">
+		{#each [{ k: "Regions", v: s.regions.length }, { k: "EEZ cells", v: s.eezHexes.length }, { k: "Open sea", v: s.openHexes.length }, { k: "Own air", v: s.air }, { k: "Ships", v: s.ships }, { k: "Ports", v: s.ports }] as st (st.k)}
+			<div class="bg-surface-1 px-2 py-2">
+				<dd class="data text-base text-fg">{st.v}</dd>
+				<dt class="text-[10px] tracking-wide text-fg-muted uppercase">{st.k}</dt>
+			</div>
+		{/each}
+	</dl>
+
+	{#if s.states.length}
+		<h3 class="section-title mt-4 mb-1.5">Who holds the ground</h3>
+		<ul class="space-y-1.5">
+			{#each s.states.slice(0, 5) as st (st.stateId)}
+				<li class="text-xs">
+					<div class="flex items-center justify-between gap-2">
+						<span class="flex min-w-0 items-center gap-1.5 text-fg-soft">
+							<span
+								class="size-2 shrink-0 rounded-full"
+								style:background={data.stateColorMap[st.stateId] ?? "var(--color-fg-muted)"}
+							></span>
+							<span class="truncate">{st.name}</span>
+						</span>
+						<span class="data text-fg-muted">{st.count}</span>
+					</div>
+					<div class="mt-0.5 h-1 rounded-full bg-surface-6">
+						<div
+							class="h-full rounded-full"
+							style:width="{Math.round((st.count / s.regions.length) * 100)}%"
+							style:background={data.stateColorMap[st.stateId] ?? "var(--color-fg-muted)"}
+						></div>
+					</div>
+				</li>
+			{/each}
+		</ul>
+	{/if}
+
+	{#if s.regions.length}
+		<h3 class="section-title mt-4 mb-1.5">Regions in sector</h3>
+		<ul class="max-h-64 divide-y divide-line/10 overflow-y-auto rounded-sm border border-line/15">
+			{#each s.regions
+				.map((id) => ({ id, name: getRegionName(id), stateId: data.regionMap[id]?.stateId ?? null }))
+				.sort((a, b) => a.name.localeCompare(b.name)) as r (r.id)}
+				<li>
+					<button
+						type="button"
+						class="flex w-full items-center gap-2 px-2.5 py-1.5 text-left text-xs text-fg-soft hover:bg-surface-5 hover:text-fg"
+						onclick={() => focusRegion(r.id)}
+					>
+						<span
+							class="size-1.5 shrink-0 rounded-full"
+							style:background={r.stateId
+								? (data.stateColorMap[r.stateId] ?? "var(--color-fg-faint)")
+								: "var(--color-fg-faint)"}
+						></span>
+						<span class="min-w-0 flex-1 truncate">{r.name}</span>
+						{#if coastalIds.has(r.id)}<span class="text-[10px] text-sky-300/80">coast</span>{/if}
+					</button>
+				</li>
+			{/each}
+		</ul>
+	{:else}
+		<p class="mt-4 text-xs text-fg-muted">Open sea only: no land in this sector.</p>
+	{/if}
+{/snippet}
 
 {#snippet regionPanel()}
 	{#if sel && selectedId != null}
@@ -2281,6 +2580,12 @@
 	:global(#panzoom-element path:hover) {
 		filter: brightness(1.3);
 		cursor: pointer;
+	}
+	/* Naval mode: inland regions still cover the EEZ shapes beneath them (so
+	   a click there never reaches the sea) but do not react themselves. */
+	:global(#panzoom-element path.region-inland:hover) {
+		filter: none;
+		cursor: default;
 	}
 	:global(#panzoom-element path.region-highlight) {
 		animation: region-pulse 900ms ease-in-out 3;
