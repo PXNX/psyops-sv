@@ -118,8 +118,10 @@
 											? 'bg-primary/20 text-primary-fg'
 											: 'text-fg-muted hover:text-fg'}"
 										aria-pressed={irPalette === p}
-										onclick={() => (irPalette = p as IrPalette)}>{l}</button
+										onclick={() => (irPalette = p as IrPalette)}
 									>
+										{l}
+									</button>
 								{/each}
 							</div>
 						{/if}

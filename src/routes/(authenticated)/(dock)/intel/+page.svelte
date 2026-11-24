@@ -1,21 +1,26 @@
 <!-- src/routes/(authenticated)/(dock)/intel/+page.svelte -->
-<!-- The intelligence archive as a stack of INTREPs: report number, DTG,
-     region and grid, the sensor and conditions it flew in, and a findings
-     table. Above it, passes still in flight and the fused picture per region. -->
+<!-- J2 console: key figures, the regions under watch with their fused
+     picture, the recon imagery and the report archive; passes in flight and
+     the sensor table sit in the side rail. -->
 <script lang="ts">
 	import PageContainer from "#lib/component/PageContainer.svelte";
-	import UserLink from "#lib/component/UserLink.svelte";
-	import { Badge, Button } from "#lib/component/ui/index.js";
-	import { Conditions, UnitBadge } from "#lib/component/tactical/index.js";
-	import { ImageryStrip, type ImageryItem } from "#lib/component/recon/index.js";
+	import { Button, IconButton } from "#lib/component/ui/index.js";
+	import { ImageryGallery, type ImageryItem } from "#lib/component/recon/index.js";
 	import { toImageryInput } from "#lib/utils/sensor-image.js";
-	import { SENSORS, UNIT_CATEGORIES, type Cover, type SensorId, type Weather } from "#lib/config/index.js";
-	import { ageLabel, countdown, dtg, formatLatLon } from "#lib/utils/military.js";
-	import IconMap from "~icons/fluent/map-20-regular";
+	import { SENSORS, type SensorId } from "#lib/config/index.js";
+	import { countdown } from "#lib/utils/military.js";
+	import { countUp } from "#lib/utils/count-up.js";
 	import IconRadar from "~icons/fluent/radar-20-regular";
+	import IconInfo from "~icons/fluent/info-20-regular";
+	import IconEye from "~icons/fluent/eye-20-regular";
 	import IconImage from "~icons/fluent/image-multiple-20-regular";
-	import DocArt from "#lib/component/docs/DocArt.svelte";
-	import IntelArt from "./IntelArt.svelte";
+	import IconArchive from "~icons/fluent/archive-20-regular";
+	import IconSend from "~icons/fluent/send-20-regular";
+	import IconNetwork from "~icons/fluent/plug-connected-20-regular";
+	import RegionWatch from "./RegionWatch.svelte";
+	import ReportArchive from "./ReportArchive.svelte";
+	import SensorMatrix from "./SensorMatrix.svelte";
+	import { LEVEL_LABEL, pct } from "./labels";
 
 	const { data } = $props();
 
@@ -35,380 +40,182 @@
 			regionName: r.region.name
 		}))
 	);
-	let strip: ImageryStrip | undefined = $state();
+	let gallery: ImageryGallery | undefined = $state();
 
-	const sensorLabel = (s: string) => SENSORS[s as SensorId]?.label ?? s;
+	const freshCount = $derived(data.reports.filter((r) => r.fresh).length);
+	const avgConfidence = $derived(
+		data.pictures.length ? data.pictures.reduce((s, p) => s + p.picture.confidence, 0) / data.pictures.length : 0
+	);
+	const avgLevel = $derived(
+		avgConfidence >= 0.75 ? "high" : avgConfidence >= 0.5 ? "medium" : avgConfidence >= 0.25 ? "low" : "none"
+	);
+	const hostiles = $derived(data.pictures.reduce((s, p) => s + p.picture.knownUnits, 0));
+	const hostileRegions = $derived(data.pictures.filter((p) => p.picture.knownUnits > 0).length);
+	// Hostile regions where a deeper spy network would add installations and exact types.
+	const shallow = $derived(data.pictures.filter((p) => !p.own && p.depth < 3).length);
+
 	const sensorShort = (s: string) => SENSORS[s as SensorId]?.short ?? s;
-	const pct = (n: number) => `${Math.round(n * 100)}%`;
-	const reportNo = (id: number) => `INTREP ${String(id).padStart(5, "0")}`;
-	const levelTone = { none: "neutral", low: "amber", medium: "blue", high: "green" } as const;
-	const TYPE_LABEL: Record<string, string> = {
-		infantry: "Infantry",
-		armor: "Armour",
-		mechanized: "Mechanised",
-		artillery: "Artillery",
-		air_defence: "Air defence",
-		fighter_squadron: "Fighters",
-		bomber_squadron: "Bombers",
-		vehicle: "Vehicles",
-		air: "Aircraft"
-	};
-	const typeLabel = (t: string) => TYPE_LABEL[t] ?? t;
 </script>
 
 <svelte:head>
 	<title>Intelligence · PsyOps</title>
 </svelte:head>
 
-<PageContainer maxWidth="5xl">
-	<header class="flex flex-wrap items-end justify-between gap-3">
-		<div>
-			<p class="font-mono text-[11px] uppercase tracking-[0.2em] text-fg-muted">J2 · Intelligence</p>
-			<h1 class="text-2xl font-bold text-fg">Intel reports</h1>
+<PageContainer maxWidth="6xl">
+	<header class="flex flex-wrap items-end justify-between gap-x-4 gap-y-3">
+		<div class="min-w-0">
+			<p class="section-title">J2 · Intelligence</p>
+			<h1 class="mt-0.5 text-2xl font-semibold text-fg">Intelligence</h1>
 			{#if data.side}
 				<p class="text-sm text-fg-muted">
-					Shared within {data.side.stateName}{data.side.partners
+					Shared with {data.side.stateName}{data.side.partners
 						? ` and ${data.side.partners} bloc partner${data.side.partners === 1 ? "" : "s"}`
-						: ""}. Reports stay fresh for 24 h.
+						: ""} · reports stay fresh for 24 h
 				</p>
 			{/if}
 		</div>
-		<Button href="/map" variant="secondary" size="sm" icon={IconMap}>Situation map</Button>
+		<div class="flex items-center gap-2">
+			<IconButton href="/docs/intel" icon={IconInfo} label="How recon works" variant="ghost" size="sm" />
+			<Button href="/map" size="sm" icon={IconSend} title="Pick a hostile region on the map to launch a pass">
+				Order recon
+			</Button>
+		</div>
 	</header>
 
-	<div class="animate-rise-in panel rounded-sm p-2" style="--rise-delay: 60ms">
-		<DocArt
-			kind="intel"
-			label="Detection matrix"
-			caption="No sensor sees everything — combine passes to raise confidence in the fused picture."
-			compact
-		/>
-	</div>
-
 	{#if !data.side}
-		<section class="panel rounded-sm p-5 text-sm text-fg-muted">
-			You need to live in a state to receive intelligence. Recon is launched from an enemy region's page or the map.
+		<section class="panel flex flex-wrap items-center justify-between gap-3 p-5">
+			<p class="text-sm text-fg-muted">You need to live in a state to receive intelligence.</p>
+			<Button href="/map" variant="secondary" size="sm">Open the map</Button>
 		</section>
 	{:else}
-		<!-- Passes in flight -->
-		{#if data.inFlight.length}
-			<section class="animate-rise-in panel rounded-sm p-4" style="--rise-delay: 120ms">
-				<div class="mb-3 flex flex-wrap items-center justify-between gap-3">
-					<h2 class="section-title flex items-center gap-2"><IconRadar class="size-5 text-primary-fg" /> Tasked</h2>
-					<IntelArt kind="tasked" label="Pass en route" class="w-44" />
-				</div>
-				<ul class="divide-y divide-line/15">
-					{#each data.inFlight as m (m.id)}
-						<li class="flex flex-wrap items-center gap-x-3 gap-y-1 py-2 text-sm">
-							<span class="font-mono text-xs text-primary-fg w-16">{sensorShort(m.sensor)}</span>
-							<a href="/region/{m.region.id}" class="font-semibold text-fg hover:text-primary-fg">{m.region.name}</a>
-							<span class="text-fg-muted text-xs">{m.region.ownerName ?? "—"}</span>
-							<span class="ml-auto font-mono text-xs text-fg-soft">
-								{countdown(m.completesAt, now) ? `ETA ${countdown(m.completesAt, now)}` : "landing…"}
-							</span>
-						</li>
-					{/each}
-				</ul>
-			</section>
-		{/if}
+		<!-- Status strip -->
+		<section
+			class="panel grid grid-cols-2 divide-line/15 sm:grid-cols-4 sm:divide-x [&>div]:px-4 [&>div]:py-3"
+			aria-label="Intelligence status"
+		>
+			<div>
+				<p class="section-title">Fresh reports</p>
+				{#key freshCount}<p class="data text-2xl text-fg" use:countUp={freshCount}>{freshCount}</p>{/key}
+				<p class="text-[11px] text-fg-faint">of {data.reports.length} archived</p>
+			</div>
+			<div>
+				<p class="section-title">Regions watched</p>
+				{#key data.pictures.length}<p class="data text-2xl text-fg" use:countUp={data.pictures.length}>
+						{data.pictures.length}
+					</p>{/key}
+				<p class="text-[11px] text-fg-faint">
+					{data.inFlight.length
+						? `${data.inFlight.length} pass${data.inFlight.length === 1 ? "" : "es"} en route`
+						: "no pass en route"}
+				</p>
+			</div>
+			<div>
+				<p class="section-title">Avg confidence</p>
+				<p class="data text-2xl text-fg">{data.pictures.length ? pct(avgConfidence) : "—"}</p>
+				<p class="text-[11px] text-fg-faint">{data.pictures.length ? LEVEL_LABEL[avgLevel] : "no fresh picture"}</p>
+			</div>
+			<div>
+				<p class="section-title">Hostile contacts</p>
+				{#key hostiles}<p class="data text-2xl {hostiles ? 'text-hostile-fg' : 'text-fg'}" use:countUp={hostiles}>
+						{hostiles}
+					</p>{/key}
+				<p class="text-[11px] text-fg-faint">
+					{hostileRegions ? `in ${hostileRegions} region${hostileRegions === 1 ? "" : "s"}` : "none seen"}
+				</p>
+			</div>
+		</section>
 
-		<!-- Current picture per region -->
-		{#if data.pictures.length}
-			<section class="animate-rise-in panel rounded-sm p-4" style="--rise-delay: 180ms">
-				<div class="mb-3 flex flex-wrap items-center justify-between gap-3">
-					<h2 class="section-title">Current picture</h2>
-					<IntelArt kind="picture" label="Fused confidence" class="w-44" />
-				</div>
-				<div class="overflow-x-auto">
-					<table class="w-full text-sm">
-						<thead>
-							<tr class="text-left text-[10px] uppercase tracking-wide text-fg-muted">
-								<th class="py-1.5 pr-3 font-medium">Region</th>
-								<th class="py-1.5 pr-3 font-medium">Confidence</th>
-								<th class="py-1.5 pr-3 font-medium">Known forces</th>
-								<th class="py-1.5 pr-3 font-medium">Sensors</th>
-								<th class="py-1.5 font-medium text-right">Last seen</th>
-							</tr>
-						</thead>
-						<tbody class="divide-y divide-line/15">
-							{#each data.pictures as { region, picture } (region.id)}
-								<tr>
-									<td class="py-2 pr-3">
-										<a href="/region/{region.id}" class="font-semibold text-fg hover:text-primary-fg">{region.name}</a>
-										<div class="text-xs text-fg-muted">{region.ownerName ?? "—"}</div>
-									</td>
-									<td class="py-2 pr-3">
-										<Badge tone={levelTone[picture.level]} size="xs">{picture.level}</Badge>
-										<span class="ml-1 font-mono text-xs text-fg-soft">{pct(picture.confidence)}</span>
-									</td>
-									<td class="py-2 pr-3">
-										<div class="flex flex-wrap items-center gap-1.5">
-											{#each UNIT_CATEGORIES as c}
-												{@const cat = picture.categories[c]}
-												{#if cat.coverage === 0}
-													<UnitBadge affiliation="unknown" size={16} title="{typeLabel(c)}: not observed" />
-												{:else if cat.count}
-													<UnitBadge
-														affiliation="hostile"
-														unitType={c}
-														count={cat.count}
-														estimated={cat.estimated}
-														size={16}
-														title="{typeLabel(c)}: {cat.estimated ? '~' : ''}{cat.count}"
-													/>
-												{/if}
-											{/each}
-										</div>
-									</td>
-									<td class="py-2 pr-3 font-mono text-xs text-fg-soft">
-										{picture.sensors.map((s) => sensorShort(s.sensor)).join(" · ")}
-									</td>
-									<td class="py-2 text-right font-mono text-xs text-fg-soft">
-										{picture.latestObservedAt ? ageLabel(picture.latestObservedAt, now) : "—"}
-									</td>
-								</tr>
-							{/each}
-						</tbody>
-					</table>
-				</div>
-			</section>
-		{/if}
-
-		{#if imagery.length}
-			<section class="animate-rise-in panel rounded-sm p-4" style="--rise-delay: 240ms">
-				<div class="mb-3 flex flex-wrap items-center justify-between gap-3">
-					<h2 class="section-title flex items-center gap-2"><IconImage class="size-5 text-primary-fg" /> Imagery</h2>
-					<IntelArt kind="scan" label="Scanning the frame" class="w-44" />
-				</div>
-				<ImageryStrip bind:this={strip} items={imagery} showRegion />
-			</section>
-		{/if}
-
-		<div class="flex flex-wrap items-center justify-between gap-3">
-			<h2 class="section-title flex items-center gap-3">
-				Archive <span class="font-mono text-fg-muted">({data.reports.length})</span>
-				<IntelArt kind="archive" label="INTREP stack" class="hidden w-40 sm:flex" />
-			</h2>
-			<label class="flex items-center gap-2 text-xs text-fg-muted">
-				<input type="checkbox" class="checkbox checkbox-xs" bind:checked={showStale} /> Show stale
-			</label>
-		</div>
-
-		{#if !reports.length}
-			<section class="panel rounded-sm p-5 text-sm text-fg-muted">
-				No reports yet. Open an enemy region (or tap it on the map) and launch a recon pass.
-			</section>
-		{/if}
-
-		{#each reports as r (r.id)}
-			{@const f = r.findings}
-			<article
-				id="report-{r.id}"
-				class="intel-report panel animate-rise-in rounded-sm overflow-hidden border-error/25 {r.fresh
-					? ''
-					: 'opacity-70'}"
-				style="--rise-delay: {300 + (r.id % 5) * 55}ms"
-			>
-				<!-- Classification banner, top and bottom, like a printed INTREP. -->
-				<div
-					class="flex flex-wrap items-center justify-between gap-2 border-b border-error/25 bg-error/10 px-4 py-1 font-mono text-[10px] font-bold uppercase tracking-[0.2em] text-hostile-fg"
-				>
-					<span>Restricted // Eyes only</span>
-					<span>J2 · {reportNo(r.id)}</span>
-				</div>
-				<!-- Message header -->
-				<header class="flex flex-wrap items-center gap-x-3 gap-y-1 border-b border-line/15 bg-surface-3 px-4 py-2">
-					<span class="font-mono text-sm font-bold tracking-wider text-fg">{reportNo(r.id)}</span>
-					<Badge tone={r.fresh ? "green" : "neutral"} size="xs">{r.fresh ? "FRESH" : "STALE"}</Badge>
-					{#if f.outcome === "intercepted"}
-						<Badge tone="red" size="xs">PLATFORM LOST</Badge>
-					{:else if f.outcome === "obscured"}
-						<Badge tone="amber" size="xs">NO OBSERVATION</Badge>
-					{/if}
-					<span class="ml-auto font-mono text-xs text-fg-soft">
-						DTG {dtg(r.observedAt)}
-					</span>
-				</header>
-
-				<div class="grid gap-4 p-4 md:grid-cols-[minmax(0,15rem)_1fr]">
-					<!-- Particulars -->
-					<dl class="grid grid-cols-[5.5rem_1fr] gap-x-3 gap-y-1.5 text-sm self-start">
-						<dt class="text-[10px] uppercase tracking-wide text-fg-muted pt-0.5">Region</dt>
-						<dd>
-							<a href="/region/{r.region.id}" class="font-semibold text-fg hover:text-primary-fg">{r.region.name}</a>
-							<div class="text-xs text-fg-muted">{f.ownerStateName ?? r.region.ownerName ?? "Unclaimed"}</div>
-						</dd>
-						<dt class="text-[10px] uppercase tracking-wide text-fg-muted pt-0.5">Grid</dt>
-						<dd class="font-mono text-xs text-fg-soft">
-							{r.region.lat != null && r.region.lon != null ? formatLatLon(r.region.lat, r.region.lon) : "—"}
-						</dd>
-						<dt class="text-[10px] uppercase tracking-wide text-fg-muted pt-0.5">Sensor</dt>
-						<dd class="text-fg-soft">{sensorLabel(r.sensor)}</dd>
-						<dt class="text-[10px] uppercase tracking-wide text-fg-muted pt-0.5">Conditions</dt>
-						<dd>
-							<Conditions
-								weather={f.conditions.weather as Weather}
-								night={f.conditions.night}
-								cover={f.conditions.cover as Cover}
-								compact
-							/>
-						</dd>
-						<dt class="text-[10px] uppercase tracking-wide text-fg-muted pt-0.5">Filed by</dt>
-						<dd>
-							{#if r.filedBy}
-								<UserLink id={r.filedBy.id} name={r.filedBy.name} avatar={r.filedBy.avatar} size="xs" />
-							{:else}<span class="text-fg-muted">—</span>{/if}
-						</dd>
-						<dt class="text-[10px] uppercase tracking-wide text-fg-muted pt-0.5">Valid to</dt>
-						<dd class="font-mono text-xs text-fg-soft">{dtg(r.expiresAt)}</dd>
-						<dt class="sr-only">Imagery</dt>
-						<dd class="col-span-2">
-							<Button variant="secondary" size="xs" icon={IconImage} onclick={() => strip?.show(r.id)}>
-								View imagery
-							</Button>
-						</dd>
-					</dl>
-
-					<!-- Findings -->
-					<div class="min-w-0 space-y-3">
-						{#if f.outcome === "intercepted"}
-							<p class="text-sm text-hostile-fg">
-								Drone shot down over the target by {f.airDefence?.units ?? "?"} air-defence unit{f.airDefence?.units ===
-								1
-									? ""
-									: "s"} ({pct(f.airDefence?.interceptChance ?? 0)} intercept chance). No imagery returned.
-							</p>
-						{:else if f.outcome === "obscured"}
-							<p class="text-sm text-warning">
-								Sensor could not see the ground ({f.conditions.weather}{f.conditions.night ? ", night" : ""}). Try SAR
-								or a thermal pass.
-							</p>
-						{:else}
-							<div class="overflow-x-auto">
-								<table class="w-full text-sm">
-									<thead>
-										<tr class="text-left text-[10px] uppercase tracking-wide text-fg-muted">
-											<th class="py-1 pr-3 font-medium">Hostile</th>
-											<th class="py-1 pr-3 font-medium text-right">Count</th>
-											<th class="py-1 font-medium text-right">Detection</th>
-										</tr>
-									</thead>
-									<tbody class="divide-y divide-line/15 font-mono">
-										{#each UNIT_CATEGORIES as c}
-											{@const seen = f.categories.find((x) => x.category === c)}
-											{@const types =
-												f.unitTypes?.filter(
-													(t) =>
-														t.unitType === c ||
-														(c === "vehicle" && ["armor", "mechanized", "air_defence"].includes(t.unitType)) ||
-														(c === "air" && ["fighter_squadron", "bomber_squadron"].includes(t.unitType))
-												) ?? []}
-											<tr>
-												<td class="py-1.5 pr-3 font-sans">
-													<span class="inline-flex items-center gap-2">
-														<UnitBadge affiliation={f.coverage[c] ? "hostile" : "unknown"} unitType={c} size={16} />
-														{typeLabel(c)}
-													</span>
-													{#if types.length && !(types.length === 1 && types[0].unitType === c)}
-														<div class="pl-8 text-xs text-fg-muted">
-															{types
-																.map((t) => `${typeLabel(t.unitType)} ${t.estimated ? "~" : ""}${t.count}`)
-																.join(" · ")}
-														</div>
-													{/if}
-												</td>
-												<td class="py-1.5 pr-3 text-right {seen ? 'text-hostile-fg font-bold' : 'text-fg-muted'}">
-													{#if !f.coverage[c]}?{:else if seen}{seen.estimated ? "~" : ""}{seen.count}{:else}0{/if}
-												</td>
-												<td class="py-1.5 text-right text-fg-soft">{f.coverage[c] ? pct(f.coverage[c]) : "blind"}</td>
-											</tr>
-										{/each}
-									</tbody>
-								</table>
-							</div>
-
-							{#if f.firingPositions}
-								<p class="text-xs text-fg-soft">
-									<span class="font-semibold text-fg">Firing positions (thermal):</span>
-									<span class="font-mono">{f.firingPositions.count}</span>
-									· {pct(f.firingPositions.confidence)} fix
-								</p>
-							{/if}
-							{#if f.airDefence && f.airDefence.units}
-								<p class="text-xs text-fg-soft">
-									<span class="font-semibold text-fg">Air defence encountered:</span>
-									<span class="font-mono">{f.airDefence.units}</span> unit{f.airDefence.units === 1 ? "" : "s"}
-								</p>
-							{/if}
-							{#if f.buildings}
-								<p class="font-mono text-xs text-fg-soft">
-									<span class="font-sans font-semibold text-fg">Installations:</span>
-									FORT {f.buildings.fortifications} · INFRA {f.buildings.infrastructure} · PWR {f.buildings.economy} · EDU
-									{f.buildings.education} · MED {f.buildings.hospitals} · RADAR {f.buildings.radar ?? 0}{f.buildings
-										.underConstruction
-										? ` · ${f.buildings.underConstruction} under construction`
-										: ""}
-								</p>
-							{/if}
-							{#if f.battle}
-								<a
-									href="/battle/{f.battle.id}"
-									class="block rounded-sm border border-error/30 bg-error/10 px-3 py-2 text-xs hover:border-error/60"
-								>
-									<span class="font-semibold text-hostile-fg">Battle ({f.battle.phase})</span>
-									<span class="font-mono text-fg-soft">
-										· {f.battle.attackerStateName}: {f.battle.attacker.units} units / {f.battle.attacker.strength} str · {f
-											.battle.defenderStateName}: {f.battle.defender.units} units / {f.battle.defender.strength} str
-									</span>
-								</a>
-							{/if}
-						{/if}
-					</div>
-				</div>
-
-				<div
-					class="flex flex-wrap items-center justify-between gap-2 border-t border-error/25 bg-error/10 px-4 py-1 font-mono text-[10px] uppercase tracking-[0.2em] text-hostile-fg"
-				>
-					<span>End of report · {reportNo(r.id)}</span>
-					{#if !r.fresh}
-						<span class="stamp" style="--stamp-tilt: -6deg">Superseded</span>
+		<div class="grid gap-4 lg:grid-cols-[minmax(0,1fr)_17rem]">
+			<!-- Main work area -->
+			<div class="min-w-0 space-y-4">
+				<section class="panel px-4 pt-3 pb-1">
+					<h2 class="section-title"><IconEye class="size-4 text-primary-fg" /> Regions under watch</h2>
+					{#if data.pictures.length}
+						<RegionWatch pictures={data.pictures} {now} />
 					{:else}
-						<span class="opacity-70">Distribution: J2 · allied cells</span>
+						<div class="flex flex-wrap items-center justify-between gap-3 py-4">
+							<p class="text-sm text-fg-muted">No fresh passes — pick a hostile region and send a sensor.</p>
+							<Button href="/map" size="sm" variant="secondary" icon={IconSend}>Order recon</Button>
+						</div>
 					{/if}
-				</div>
-			</article>
-		{/each}
+				</section>
+
+				{#if imagery.length}
+					<section class="panel p-4">
+						<h2 class="section-title mb-3">
+							<IconImage class="size-4 text-primary-fg" /> Imagery
+							<span class="data font-normal text-fg-faint">{imagery.length}</span>
+						</h2>
+						<ImageryGallery bind:this={gallery} items={imagery} {now} />
+					</section>
+				{/if}
+
+				<section class="panel px-4 pt-3 pb-2">
+					<div class="flex flex-wrap items-center justify-between gap-2">
+						<h2 class="section-title">
+							<IconArchive class="size-4 text-primary-fg" /> Report archive
+							<span class="data font-normal text-fg-faint">{reports.length}</span>
+						</h2>
+						<label class="flex items-center gap-2 text-xs text-fg-muted">
+							<input type="checkbox" class="checkbox checkbox-xs" bind:checked={showStale} /> Show stale
+						</label>
+					</div>
+					{#if reports.length}
+						<div class="mt-2">
+							<ReportArchive {reports} {now} onImagery={(id) => gallery?.show(id)} />
+						</div>
+					{:else}
+						<p class="py-4 text-sm text-fg-muted">
+							{data.reports.length ? "No fresh reports — tick “Show stale” for older ones." : "No reports filed yet."}
+						</p>
+					{/if}
+				</section>
+			</div>
+
+			<!-- Side rail -->
+			<aside class="space-y-4">
+				<section class="panel p-4">
+					<h2 class="section-title mb-2"><IconRadar class="size-4 text-primary-fg" /> En route</h2>
+					{#if data.inFlight.length}
+						<ul class="divide-y divide-line/15">
+							{#each data.inFlight as m (m.id)}
+								{@const eta = countdown(m.completesAt, now)}
+								<li class="flex items-center gap-2 py-2 text-sm">
+									<span class="relative flex size-2 shrink-0" aria-hidden="true">
+										<span class="absolute inset-0 rounded-full bg-primary motion-safe:animate-ping"></span>
+										<span class="relative size-2 rounded-full bg-primary"></span>
+									</span>
+									<span class="min-w-0 flex-1">
+										<a href="/region/{m.region.id}" class="block truncate font-medium text-fg hover:text-primary-fg">
+											{m.region.name}
+										</a>
+										<span class="data text-[11px] text-fg-faint">{sensorShort(m.sensor)}</span>
+									</span>
+									<span class="data shrink-0 text-xs text-fg-soft">{eta ? `ETA ${eta}` : "landing…"}</span>
+								</li>
+							{/each}
+						</ul>
+					{:else}
+						<p class="text-xs text-fg-muted">No passes in flight.</p>
+						<a href="/map" class="mt-1 inline-block text-xs text-primary-fg hover:underline">Order one on the map</a>
+					{/if}
+				</section>
+
+				<section class="panel p-4">
+					<SensorMatrix />
+				</section>
+
+				{#if shallow}
+					<section class="panel p-4">
+						<h2 class="section-title mb-1.5"><IconNetwork class="size-4 text-primary-fg" /> Spy network</h2>
+						<p class="text-xs text-fg-muted">
+							{shallow} watched region{shallow === 1 ? "" : "s"} without a deep network: installations and exact unit types
+							stay hidden.
+						</p>
+						<a href="/ops/network" class="mt-1 inline-block text-xs text-primary-fg hover:underline">Build footholds</a>
+					</section>
+				{/if}
+			</aside>
+		</div>
 	{/if}
 </PageContainer>
-
-<style>
-	/* A single declassifying scan passes over each report as it arrives. */
-	.intel-report::after {
-		content: "";
-		position: absolute;
-		left: 0;
-		right: 0;
-		top: 0;
-		height: 2px;
-		pointer-events: none;
-		background: linear-gradient(90deg, transparent, var(--color-primary), transparent);
-		box-shadow: 0 0 12px color-mix(in oklab, var(--color-primary) 50%, transparent);
-		animation: intel-decrypt 1.5s ease-in-out 1 backwards;
-		animation-delay: var(--rise-delay, 0ms);
-	}
-	@keyframes intel-decrypt {
-		from {
-			transform: translateY(0);
-			opacity: 0.8;
-		}
-		to {
-			transform: translateY(520px);
-			opacity: 0;
-		}
-	}
-	@media (prefers-reduced-motion: reduce) {
-		.intel-report::after {
-			display: none;
-		}
-	}
-</style>

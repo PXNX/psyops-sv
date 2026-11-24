@@ -55,7 +55,14 @@
 		animate?: boolean;
 		class?: string;
 	}
-	let { input, scene: sceneProp, variant = "full", irPalette = "white", animate = false, class: className = "" }: Props = $props();
+	let {
+		input,
+		scene: sceneProp,
+		variant = "full",
+		irPalette = "white",
+		animate = false,
+		class: className = ""
+	}: Props = $props();
 
 	const uid = $props.id();
 	const scene = $derived(sceneProp ?? buildScene(input));
@@ -397,9 +404,9 @@
 				<g>
 					<rect x={lx} y={ly} width={lw} height="11" fill="#000" opacity="0.62" />
 					<Icon x={lx + 1.5} y={ly + 1.5} width="8" height="8" color={c} />
-					<text x={lx + 12} y={ly + 8.3} font-size="8" fill={c}
-						>{d.label}{#if d.detail}<tspan fill="#e8f0e8" opacity="0.85">{"\u00a0" + d.detail}</tspan>{/if}</text
-					>
+					<text x={lx + 12} y={ly + 8.3} font-size="8" fill={c}>
+						{d.label}{#if d.detail}<tspan fill="#e8f0e8" opacity="0.85">{"\u00a0" + d.detail}</tspan>{/if}
+					</text>
 				</g>
 			{/if}
 		{/each}
@@ -407,20 +414,20 @@
 		{#if full}
 			<!-- Classification banner -->
 			<rect x={FRAME_W / 2 - 78} y="0" width="156" height="12" fill="#000" opacity="0.6" />
-			<text x={FRAME_W / 2} y="9" font-size="8" fill="#ff8a7a" text-anchor="middle" letter-spacing="1.5"
-				>SECRET // REL BLOC</text
-			>
+			<text x={FRAME_W / 2} y="9" font-size="8" fill="#ff8a7a" text-anchor="middle" letter-spacing="1.5">
+				SECRET // REL BLOC
+			</text>
 			<!-- Sensor and platform -->
 			<g fill={hud} font-size="9">
 				<PlatformIcon x="16" y="15" width="11" height="11" color={hud} />
 				<text x="31" y="24">{sensor?.short ?? input.sensor} · {modeTag}</text>
-				<text x="16" y="36" font-size="7.5" opacity="0.75"
-					>FRM {String(input.reportId).padStart(6, "0")}{scene.platform === "drone"
+				<text x="16" y="36" font-size="7.5" opacity="0.75">
+					FRM {String(input.reportId).padStart(6, "0")}{scene.platform === "drone"
 						? ` · ALT ${1200 + (input.reportId % 7) * 150} M · HDG ${String((scene.heading + 360) % 360).padStart(3, "0")}`
 						: scene.platform === "satellite"
 							? ` · REV ${(input.reportId * 37) % 9000}`
-							: ""}</text
-				>
+							: ""}
+				</text>
 				{#if scene.mode === "ir"}<IconThermal x="16" y="40" width="10" height="10" color={hud} />{/if}
 				<!-- Time and conditions -->
 				<text x={FRAME_W - 16} y="24" text-anchor="end">{stamp(input.observedAt)}</text>
@@ -437,13 +444,15 @@
 					y="36.5"
 					text-anchor="end"
 					font-size="7.5"
-					opacity="0.75">VIS {Math.round(scene.visibility * 100)}%</text
+					opacity="0.75"
 				>
+					VIS {Math.round(scene.visibility * 100)}%
+				</text>
 				<!-- Position -->
 				<text x="16" y={FRAME_H - 16}>{latlon}</text>
-				<text x="16" y={FRAME_H - 28} font-size="7.5" opacity="0.75"
-					>GSD {scene.platform === "drone" ? "0.1" : "0.5"} M · {input.findings.conditions.cover.toUpperCase()}</text
-				>
+				<text x="16" y={FRAME_H - 28} font-size="7.5" opacity="0.75">
+					GSD {scene.platform === "drone" ? "0.1" : "0.5"} M · {input.findings.conditions.cover.toUpperCase()}
+				</text>
 			</g>
 			<!-- Scale bar and north arrow -->
 			{@const sx = FRAME_W - 26 - scene.scale.px}
@@ -453,9 +462,9 @@
 				/>
 				<path d="M{sx + scene.scale.px / 2} {FRAME_H - 21}v-3" stroke-width="0.8" />
 			</g>
-			<text x={sx + scene.scale.px / 2} y={FRAME_H - 28} font-size="7.5" fill={hud} text-anchor="middle"
-				>{scene.scale.meters} M</text
-			>
+			<text x={sx + scene.scale.px / 2} y={FRAME_H - 28} font-size="7.5" fill={hud} text-anchor="middle">
+				{scene.scale.meters} M
+			</text>
 			<g transform="translate({FRAME_W - 24} 58) rotate({-scene.heading})">
 				<path d="M0 -11L4 4L0 1L-4 4Z" fill={hud} opacity="0.85" />
 				<text y="-14" font-size="7.5" fill={hud} text-anchor="middle">N</text>
@@ -485,15 +494,15 @@
 					stroke-width="1.5"
 				/>
 				<StatusIcon x="-110" y="-14" width="28" height="28" color={lost ? hostileBox : box} />
-				<text x="-74" y="-2" font-size={full ? 13 : 20} fill={lost ? hostileBox : box} font-weight="bold"
-					>{lost ? "LINK LOST" : "NO USABLE IMAGERY"}</text
-				>
+				<text x="-74" y="-2" font-size={full ? 13 : 20} fill={lost ? hostileBox : box} font-weight="bold">
+					{lost ? "LINK LOST" : "NO USABLE IMAGERY"}
+				</text>
 				{#if full}
-					<text x="-74" y="13" font-size="8" fill="#e8f0e8"
-						>{lost
+					<text x="-74" y="13" font-size="8" fill="#e8f0e8">
+						{lost
 							? `PLATFORM DOWN · ${input.findings.airDefence?.units ?? "?"} AD ENGAGED`
-							: `${input.findings.conditions.night ? "NIGHT" : ""}${input.findings.conditions.night && w !== "clear" ? " · " : ""}${w !== "clear" ? w.toUpperCase() : ""} · SENSOR BLIND`}</text
-					>
+							: `${input.findings.conditions.night ? "NIGHT" : ""}${input.findings.conditions.night && w !== "clear" ? " · " : ""}${w !== "clear" ? w.toUpperCase() : ""} · SENSOR BLIND`}
+					</text>
 				{/if}
 			</g>
 		{/if}

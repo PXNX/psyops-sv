@@ -17,7 +17,7 @@ import {
 import { imageryContexts } from "#lib/server/services/military/imagery.js";
 import { intelDepth } from "#lib/server/services/military/infiltration.js";
 import { redactFindings, redactPicture } from "#lib/server/services/military/intel.js";
-import { visibleFields } from "#lib/config/index.js";
+import { visibleFields, type IntelVisibleField } from "#lib/config/index.js";
 import { getRegionName } from "#lib/utils/formatting.js";
 
 export const load: PageServerLoad = async ({ locals }) => {
@@ -79,6 +79,15 @@ export const load: PageServerLoad = async ({ locals }) => {
 		const r = regionById.get(regionId);
 		return r?.stateId ? (depths.get(r.stateId) ?? 0) : 0;
 	};
+	// What the viewer may read of a pass over a region. The sensor's own unit
+	// counts are always shown (that is what the pass was flown for); a spy
+	// network inside the owner adds installations, exact types and battle
+	// detail on top. Passes over the viewer's own side are never redacted.
+	const fieldsFor = (regionId: number): ReadonlySet<IntelVisibleField> => {
+		const owner = regionById.get(regionId)?.stateId;
+		if (owner != null && side.stateIds.includes(owner)) return visibleFields(Number.MAX_SAFE_INTEGER);
+		return new Set<IntelVisibleField>(["unitCounts", ...visibleFields(depthFor(regionId))]);
+	};
 
 	const where = (regionId: number) => {
 		const r = regionById.get(regionId);
@@ -99,7 +108,7 @@ export const load: PageServerLoad = async ({ locals }) => {
 			region: where(r.regionId),
 			ownState: stateName.get(r.stateId) ?? null,
 			filedBy: r.filedBy ? { id: r.filedBy, ...(people.get(r.filedBy) ?? { name: null, avatar: null }) } : null,
-			findings: redactFindings(r.findings, visibleFields(depthFor(r.regionId))),
+			findings: redactFindings(r.findings, fieldsFor(r.regionId)),
 			imagery: imagery.get(r.id)!,
 			observedAt: r.observedAt.toISOString(),
 			expiresAt: r.expiresAt.toISOString(),
@@ -107,7 +116,9 @@ export const load: PageServerLoad = async ({ locals }) => {
 		})),
 		pictures: [...pictures].map(([regionId, p]) => {
 			const depth = depthFor(regionId);
-			return { region: where(regionId), depth, picture: redactPicture(p, visibleFields(depth)) };
+			const owner = regionById.get(regionId)?.stateId;
+			const own = owner != null && side.stateIds.includes(owner);
+			return { region: where(regionId), depth, own, picture: redactPicture(p, fieldsFor(regionId)) };
 		}),
 		inFlight: inFlight.map((m) => ({
 			id: m.id,
