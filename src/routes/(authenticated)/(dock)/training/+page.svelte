@@ -333,6 +333,7 @@
 						<Formations
 							kind={groupKind}
 							{groups}
+							allGroups={data.unitGroups ?? []}
 							units={data.officerUnits ?? []}
 							officers={data.officers ?? []}
 							{unassigned}

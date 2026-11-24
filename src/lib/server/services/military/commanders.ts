@@ -11,6 +11,7 @@ import {
 	fleets,
 	governmentBudgetTransactions,
 	militaryUnits,
+	regions,
 	stateResourceInventory,
 	stateTreasury,
 	unitGroups
@@ -20,7 +21,10 @@ import {
 	AIRCRAFT_IDS,
 	COMMANDER_TRAITS,
 	DOMAIN_UNITS,
+	airSupportFactor,
 	commanderModifiers,
+	hexDistance,
+	hexFromLatLon,
 	rollCommanderName,
 	rollPortrait,
 	rollTraits,
@@ -53,13 +57,17 @@ export async function startCommanderTraining(db: Database, userId: string) {
 			.from(stateTreasury)
 			.where(eq(stateTreasury.stateId, authority.stateId))
 			.for("update");
-		if (!treasury || treasury.balance < ACADEMY.money) throw new CommanderError("The treasury cannot cover the academy fee.");
+		if (!treasury || treasury.balance < ACADEMY.money)
+			throw new CommanderError("The treasury cannot cover the academy fee.");
 		const [steel] = await tx
 			.select({ quantity: stateResourceInventory.quantity })
 			.from(stateResourceInventory)
-			.where(and(eq(stateResourceInventory.stateId, authority.stateId), eq(stateResourceInventory.resourceType, "steel")))
+			.where(
+				and(eq(stateResourceInventory.stateId, authority.stateId), eq(stateResourceInventory.resourceType, "steel"))
+			)
 			.for("update");
-		if (!steel || steel.quantity < ACADEMY.steel) throw new CommanderError("The state needs 250 steel for the academy.");
+		if (!steel || steel.quantity < ACADEMY.steel)
+			throw new CommanderError("The state needs 250 steel for the academy.");
 		await tx
 			.update(stateTreasury)
 			.set({
@@ -71,7 +79,9 @@ export async function startCommanderTraining(db: Database, userId: string) {
 		await tx
 			.update(stateResourceInventory)
 			.set({ quantity: sql`${stateResourceInventory.quantity} - ${ACADEMY.steel}`, updatedAt: new Date() })
-			.where(and(eq(stateResourceInventory.stateId, authority.stateId), eq(stateResourceInventory.resourceType, "steel")));
+			.where(
+				and(eq(stateResourceInventory.stateId, authority.stateId), eq(stateResourceInventory.resourceType, "steel"))
+			);
 		const [row] = await tx
 			.insert(commanderTrainings)
 			.values({
@@ -139,17 +149,16 @@ export async function formUnitGroup(
 	return db.transaction(async (tx) => {
 		const units = await tx.select().from(militaryUnits).where(inArray(militaryUnits.id, ids));
 		for (const unit of units) {
-			if (unit.stateId !== authority.stateId || unit.ownerId !== userId) throw new CommanderError("One of those units is not yours.");
-			if (!allowed.includes(unit.unitType as never)) throw new CommanderError("That unit cannot join this kind of group.");
+			if (unit.stateId !== authority.stateId || unit.ownerId !== userId)
+				throw new CommanderError("One of those units is not yours.");
+			if (!allowed.includes(unit.unitType as never))
+				throw new CommanderError("That unit cannot join this kind of group.");
 			if (unit.isTraining || unit.health <= 0) throw new CommanderError("Only ready units can join a group.");
 		}
 		if (units.length !== ids.length) throw new CommanderError("One of those units does not exist.");
 		let commanderId: number | null = null;
 		if (input.commanderId != null) {
-			const [officer] = await tx
-				.select()
-				.from(commanders)
-				.where(eq(commanders.id, input.commanderId));
+			const [officer] = await tx.select().from(commanders).where(eq(commanders.id, input.commanderId));
 			if (!officer || officer.stateId !== authority.stateId) throw new CommanderError("That commander is not yours.");
 			commanderId = officer.id;
 		}
@@ -176,7 +185,8 @@ export async function setUnitGroup(db: Database, userId: string, unitIds: number
 	await db.transaction(async (tx) => {
 		const units = await tx.select().from(militaryUnits).where(inArray(militaryUnits.id, ids));
 		for (const unit of units) {
-			if (unit.stateId !== authority.stateId || unit.ownerId !== userId) throw new CommanderError("One of those units is not yours.");
+			if (unit.stateId !== authority.stateId || unit.ownerId !== userId)
+				throw new CommanderError("One of those units is not yours.");
 		}
 		if (groupId != null) {
 			const [group] = await tx.select().from(unitGroups).where(eq(unitGroups.id, groupId));
@@ -196,6 +206,25 @@ export async function disbandUnitGroup(db: Database, userId: string, groupId: nu
 	});
 }
 
+/** Attach an airgroup to a division it will fly support for, or detach it
+ *  with `divisionId = null`. One wing supports one division; a division can
+ *  be backed by several wings. */
+export async function assignAirSupport(db: Database, userId: string, wingId: number, divisionId: number | null) {
+	const authority = await commandAuthority(db, userId);
+	const [wing] = await db.select().from(unitGroups).where(eq(unitGroups.id, wingId));
+	if (!wing || wing.stateId !== authority.stateId || wing.kind !== "airgroup")
+		throw new CommanderError("That airgroup is not yours.");
+	if (divisionId != null) {
+		const [division] = await db.select().from(unitGroups).where(eq(unitGroups.id, divisionId));
+		if (!division || division.stateId !== authority.stateId || division.kind !== "division")
+			throw new CommanderError("That division is not yours.");
+	}
+	await db
+		.update(unitGroups)
+		.set({ supportsGroupId: divisionId, updatedAt: new Date() })
+		.where(eq(unitGroups.id, wingId));
+}
+
 /** Attach or remove a commander on a fleet, airgroup or division. */
 export async function assignCommander(
 	db: Database,
@@ -210,11 +239,18 @@ export async function assignCommander(
 	if (target.kind === "fleet") {
 		const [fleet] = await db.select().from(fleets).where(eq(fleets.id, target.id));
 		if (!fleet || fleet.stateId !== authority.stateId) throw new CommanderError("That fleet is not yours.");
-		await db.update(fleets).set({ commanderId: target.commanderId, updatedAt: new Date() }).where(eq(fleets.id, target.id));
+		await db
+			.update(fleets)
+			.set({ commanderId: target.commanderId, updatedAt: new Date() })
+			.where(eq(fleets.id, target.id));
 	} else {
 		const [group] = await db.select().from(unitGroups).where(eq(unitGroups.id, target.id));
-		if (!group || group.stateId !== authority.stateId || group.kind !== target.kind) throw new CommanderError("That group is not yours.");
-		await db.update(unitGroups).set({ commanderId: target.commanderId, updatedAt: new Date() }).where(eq(unitGroups.id, target.id));
+		if (!group || group.stateId !== authority.stateId || group.kind !== target.kind)
+			throw new CommanderError("That group is not yours.");
+		await db
+			.update(unitGroups)
+			.set({ commanderId: target.commanderId, updatedAt: new Date() })
+			.where(eq(unitGroups.id, target.id));
 	}
 }
 
@@ -240,17 +276,81 @@ export async function commanderFactors(
 	if (!ids.length) return out;
 	const rows = fromFleets
 		? await db.select({ id: fleets.id, commanderId: fleets.commanderId }).from(fleets).where(inArray(fleets.id, ids))
-		: await db.select({ id: unitGroups.id, commanderId: unitGroups.commanderId }).from(unitGroups).where(inArray(unitGroups.id, ids));
+		: await db
+				.select({ id: unitGroups.id, commanderId: unitGroups.commanderId })
+				.from(unitGroups)
+				.where(inArray(unitGroups.id, ids));
 	const officerIds = rows.map((r) => r.commanderId).filter((id): id is number => id != null);
-	const officers = officerIds.length ? await db.select().from(commanders).where(inArray(commanders.id, officerIds)) : [];
+	const officers = officerIds.length
+		? await db.select().from(commanders).where(inArray(commanders.id, officerIds))
+		: [];
 	const byId = new Map(officers.map((o) => [o.id, o]));
 	for (const row of rows) {
 		const officer = row.commanderId ? byId.get(row.commanderId) : null;
 		out.set(
 			row.id,
-			commanderModifiers(officer?.traitIds ?? [], officer?.experience ?? 0, officer?.health ?? 100, officer?.alive ?? true)
+			commanderModifiers(
+				officer?.traitIds ?? [],
+				officer?.experience ?? 0,
+				officer?.health ?? 100,
+				officer?.alive ?? true
+			)
 		);
 	}
+	return out;
+}
+
+/** Battle multiplier per division from the airgroups attached to it. Each
+ *  aircraft counts only if it can reach the battle region from its base.
+ *  Divisions without support are absent (callers default to 1). */
+export async function airSupportFactors(
+	db: Db,
+	divisionIds: number[],
+	battleRegion: { latitude: string | number; longitude: string | number }
+): Promise<Map<number, number>> {
+	const out = new Map<number, number>();
+	const ids = [...new Set(divisionIds)].filter((id) => Number.isInteger(id) && id > 0);
+	if (!ids.length) return out;
+	const wings = await db
+		.select({ id: unitGroups.id, divisionId: unitGroups.supportsGroupId })
+		.from(unitGroups)
+		.where(and(eq(unitGroups.kind, "airgroup"), inArray(unitGroups.supportsGroupId, ids)));
+	if (!wings.length) return out;
+	const aircraftRows = await db
+		.select({
+			groupId: militaryUnits.groupId,
+			unitType: militaryUnits.unitType,
+			health: militaryUnits.health,
+			fuel: militaryUnits.fuel,
+			isTraining: militaryUnits.isTraining,
+			latitude: regions.latitude,
+			longitude: regions.longitude
+		})
+		.from(militaryUnits)
+		.innerJoin(regions, eq(regions.id, militaryUnits.regionId))
+		.where(
+			inArray(
+				militaryUnits.groupId,
+				wings.map((w) => w.id)
+			)
+		);
+	const target = hexFromLatLon(Number(battleRegion.latitude), Number(battleRegion.longitude));
+	const divisionOf = new Map(wings.map((w) => [w.id, w.divisionId!]));
+	const byDivision = new Map<number, Parameters<typeof airSupportFactor>[0]>();
+	for (const a of aircraftRows) {
+		const division = a.groupId != null ? divisionOf.get(a.groupId) : undefined;
+		if (division == null) continue;
+		const list = byDivision.get(division) ?? [];
+		list.push({
+			unitType: a.unitType,
+			health: a.health,
+			fuel: a.fuel,
+			isTraining: a.isTraining,
+			distanceHexes: hexDistance(hexFromLatLon(Number(a.latitude), Number(a.longitude)), target)
+		});
+		byDivision.set(division, list);
+	}
+	for (const [division, wing] of byDivision) out.set(division, airSupportFactor(wing));
 	return out;
 }
 
@@ -274,7 +374,10 @@ export async function commanderIdsFor(db: Db, ids: number[], fromFleets = false)
 	if (!unique.length) return new Map();
 	const rows = fromFleets
 		? await db.select({ id: fleets.id, commanderId: fleets.commanderId }).from(fleets).where(inArray(fleets.id, unique))
-		: await db.select({ id: unitGroups.id, commanderId: unitGroups.commanderId }).from(unitGroups).where(inArray(unitGroups.id, unique));
+		: await db
+				.select({ id: unitGroups.id, commanderId: unitGroups.commanderId })
+				.from(unitGroups)
+				.where(inArray(unitGroups.id, unique));
 	return new Map(rows.filter((r) => r.commanderId != null).map((r) => [r.id, r.commanderId!]));
 }
 

@@ -13,13 +13,7 @@ export type AircraftId =
 	| "helicopter";
 
 export type AirRole =
-	| "transport"
-	| "bombing"
-	| "refuel"
-	| "air_superiority"
-	| "close_support"
-	| "naval_strike"
-	| "utility";
+	"transport" | "bombing" | "refuel" | "air_superiority" | "close_support" | "naval_strike" | "utility";
 
 export interface AircraftDef {
 	id: AircraftId;
@@ -151,7 +145,15 @@ export const AIRCRAFT: Record<AircraftId, AircraftDef> = {
 };
 
 export const AIRCRAFT_IDS = Object.keys(AIRCRAFT) as AircraftId[];
-export const AIR_ROLES: AirRole[] = ["transport", "bombing", "refuel", "air_superiority", "close_support", "naval_strike", "utility"];
+export const AIR_ROLES: AirRole[] = [
+	"transport",
+	"bombing",
+	"refuel",
+	"air_superiority",
+	"close_support",
+	"naval_strike",
+	"utility"
+];
 
 export const AIR_ROLE_LABEL: Record<AirRole, string> = {
 	transport: "Airlift",
@@ -174,13 +176,7 @@ export function aircraft(id: string): AircraftDef | undefined {
 // flying crew experience.
 
 export type AirMissionKind =
-	| "strategic_bombing"
-	| "logistic_strike"
-	| "naval_bombing"
-	| "transport"
-	| "recon"
-	| "refuel"
-	| "battlefield_support";
+	"strategic_bombing" | "logistic_strike" | "naval_bombing" | "transport" | "recon" | "refuel" | "battlefield_support";
 
 export type AirTargetKind = "region" | "hex" | "friendly_region";
 
@@ -269,4 +265,41 @@ export function roleStrength(types: string[], role: AirRole): number {
 		const def = aircraft(t);
 		return sum + (def?.roles.includes(role) ? def.attack : 0);
 	}, 0);
+}
+
+// ── Air support for a division ──────────────────────────────────────────────
+// An airgroup can be attached to a division. While its aircraft are fit,
+// fuelled and the battle lies within their reach, every battalion of that
+// division fights harder. Close-support airframes count fully, every other
+// type at half weight.
+
+export const AIR_SUPPORT = {
+	/** Battle bonus per point of effective attack. */
+	perAttack: 0.002,
+	/** The bonus never exceeds this, however big the wing. */
+	maxBonus: 0.3
+} as const;
+
+export interface SupportingAircraft {
+	unitType: string;
+	health: number;
+	fuel: number;
+	isTraining?: boolean;
+	/** Hex distance from the aircraft's base to the battle. */
+	distanceHexes: number;
+}
+
+/** How much one aircraft adds to its division's battle output (0 if it cannot fly there). */
+export function airSupportContribution(a: SupportingAircraft): number {
+	const def = aircraft(a.unitType);
+	if (!def || a.isTraining || a.health <= 0 || a.fuel <= 0) return 0;
+	if (a.distanceHexes > def.rangeHexes) return 0;
+	const weight = def.roles.includes("close_support") ? 1 : 0.5;
+	return def.attack * weight * (a.health / 100) * AIR_SUPPORT.perAttack;
+}
+
+/** Output multiplier for a division backed by these aircraft (1 = no support). */
+export function airSupportFactor(wing: SupportingAircraft[]): number {
+	const bonus = wing.reduce((sum, a) => sum + airSupportContribution(a), 0);
+	return 1 + Math.min(AIR_SUPPORT.maxBonus, bonus);
 }

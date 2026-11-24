@@ -71,6 +71,15 @@ describe("intrusion artefacts", () => {
 		expect(a.subnet).toMatch(/^10\.\d+\.\d+\.0\/24$/);
 	});
 
+	it("scans every kind of site, not just the military ones", () => {
+		const kinds = ["powerplant", "airbase", "datacenter", "telecom", "lab", "command", "company", "factory", "party"];
+		for (const kind of kinds) {
+			const report = scanFor({ ...site, kind: kind as typeof site.kind }, "Empire of Sylvania");
+			expect(report.ports.length).toBeGreaterThan(2);
+			expect(report.ports.some((p) => p.vector && ATTACK_VECTORS[p.vector])).toBe(true);
+		}
+	});
+
 	it("prints a plausible nmap-style transcript for the scan", () => {
 		const report = scanFor(site, "Empire of Sylvania");
 		const lines = stageLines("scan", report, undefined, true, "Empire of Sylvania", "21 NOV 2026 12:00");

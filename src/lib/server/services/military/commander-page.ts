@@ -7,6 +7,7 @@ import { commanders, commanderTrainings, militaryUnits } from "#lib/server/schem
 import { navalAuthority } from "./naval.js";
 import { loadUnitGroups } from "./commanders.js";
 import {
+	assignAirSupport,
 	assignCommander,
 	CommanderError,
 	disbandUnitGroup,
@@ -63,6 +64,16 @@ export const commanderActions: import("@sveltejs/kit").Actions = {
 			return fail(400, { error: message(err) });
 		}
 	},
+	assignAirSupport: async ({ request, locals }) => {
+		const f = await request.formData();
+		try {
+			const raw = String(f.get("divisionId") ?? "");
+			await assignAirSupport(db, locals.account!.id, Number(f.get("wingId")), raw ? Number(raw) : null);
+			return { success: true, message: raw ? "Air wing now supports the division." : "Air wing released." };
+		} catch (err) {
+			return fail(400, { error: message(err) });
+		}
+	},
 	assignCommander: async ({ request, locals }) => {
 		const f = await request.formData();
 		try {
@@ -84,7 +95,9 @@ export async function commanderPageLoad(userId: string) {
 	await resolveCommanderTrainings(db);
 	const stateId = (await navalAuthority(db, userId).catch(() => null))?.stateId;
 	const [officers, trainings] = await Promise.all([
-		stateId ? db.select().from(commanders).where(eq(commanders.stateId, stateId)).orderBy(commanders.id) : Promise.resolve([]),
+		stateId
+			? db.select().from(commanders).where(eq(commanders.stateId, stateId)).orderBy(commanders.id)
+			: Promise.resolve([]),
 		db
 			.select()
 			.from(commanderTrainings)

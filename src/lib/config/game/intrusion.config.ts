@@ -161,9 +161,24 @@ export function scanFor(site: Site, target: string): ScanReport {
 			{ port: 445, service: "smb", version: "Samba 4.19", vector: "exposed_share" },
 			{ port: 3389, service: "rdp", version: "MS-TDS", vector: "phished_operator" },
 			{ port: 5060, service: "sip", version: "Asterisk 21", vector: "vpn_cve" }
+		],
+		company: [
+			{ port: 445, service: "smb", version: "Samba 4.16", vector: "exposed_share" },
+			{ port: 1433, service: "mssql", version: "SQL Server 2019", vector: "phished_operator" },
+			{ port: 3389, service: "rdp", version: "MS-TDS", vector: "vpn_cve" }
+		],
+		factory: [
+			{ port: 502, service: "modbus", version: "Siemens S7-1200", vector: "default_creds" },
+			{ port: 4840, service: "opc-ua", version: "open62541 1.3", vector: "firmware_key" },
+			{ port: 5900, service: "vnc", version: "RealVNC 6.11", vector: "exposed_share" }
+		],
+		party: [
+			{ port: 25, service: "smtp", version: "Postfix 3.7", vector: "phished_operator" },
+			{ port: 3306, service: "mysql", version: "MySQL 8.0", vector: "default_creds" },
+			{ port: 8080, service: "http-alt", version: "WordPress 6.4", vector: "vpn_cve" }
 		]
 	};
-	const ports = [...common, ...byKind[site.kind]].sort((a, b) => a.port - b.port);
+	const ports = [...common, ...(byKind[site.kind] ?? [])].sort((a, b) => a.port - b.port);
 	const notes = [
 		`${ports.length} ports open; ${ports.filter((p) => p.vector).length} with a known way in`,
 		`OS guess: ${os}`,

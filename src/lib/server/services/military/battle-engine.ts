@@ -30,7 +30,7 @@ import { battleIntel, type BattleIntel } from "./recon";
 import { unitIntelFactor, type SideModifiers } from "./intel";
 import { battlePsyops } from "./state-effects";
 import { battleStrikeModifiers, type BattleStrikeModifiers } from "./strike";
-import { commanderFactors, commanderIdsFor, woundCommander } from "./commanders";
+import { airSupportFactors, commanderFactors, commanderIdsFor, woundCommander } from "./commanders";
 
 /** Frontage per terrain: how much combat width each side may put in the line. */
 export const TERRAIN_DATA = {
@@ -131,6 +131,14 @@ export async function processCombatRound(db: Database, battleId: number): Promis
 			[...attackers, ...defenders].map((p) => p.unit.groupId ?? 0)
 		);
 
+		// Airgroups attached to a division fly support over its battles, if the
+		// battle lies within their aircraft's reach (aircraft.config.ts).
+		const airSupportByGroup = await airSupportFactors(
+			tx,
+			[...attackers, ...defenders].map((p) => p.unit.groupId ?? 0),
+			battle.region
+		);
+
 		// Each engaged unit's output this round.
 		const output = (
 			p: (typeof attackers)[number],
@@ -142,6 +150,7 @@ export async function processCombatRound(db: Database, battleId: number): Promis
 				(MILITARY_UNIT_TEMPLATES[p.unit.unitType]?.[stat] ?? 0) *
 					getExperienceCombatModifier(p.unit.experience ?? 0) *
 					(commanderByGroup.get(p.unit.groupId ?? 0)?.[stat === "baseAttack" ? "attack" : "defense"] ?? 1) *
+					(airSupportByGroup.get(p.unit.groupId ?? 0) ?? 1) *
 					unitFuelFactor(p.unit.fuel ?? 100) *
 					unitIntelFactor(p.unit.unitType, own, enemy) *
 					unitSupplyModifier(p.unit.supplyLevel ?? 100, regionFactor)
@@ -166,7 +175,10 @@ export async function processCombatRound(db: Database, battleId: number): Promis
 		);
 		const defenderOutput = defenders.map((p) =>
 			Math.floor(
-				output(p, "baseDefense", intel.defender, intel.attacker) * psy.defender.factor * strikeMods.defender * defenderDomain
+				output(p, "baseDefense", intel.defender, intel.attacker) *
+					psy.defender.factor *
+					strikeMods.defender *
+					defenderDomain
 			)
 		);
 		const roundIntel = { attacker: intel.attacker, defender: intel.defender };
@@ -329,7 +341,10 @@ async function applyDamage(
 			.where(eq(militaryUnits.id, t.unitId));
 		if (strength === 0) {
 			// A division shares the loss: its commander may be wounded or killed.
-			const [unit] = await tx.select({ groupId: militaryUnits.groupId }).from(militaryUnits).where(eq(militaryUnits.id, t.unitId));
+			const [unit] = await tx
+				.select({ groupId: militaryUnits.groupId })
+				.from(militaryUnits)
+				.where(eq(militaryUnits.id, t.unitId));
 			if (unit?.groupId) {
 				const ids = await commanderIdsFor(tx, [unit.groupId]);
 				for (const commanderId of ids.values()) await woundCommander(tx, commanderId, 25);

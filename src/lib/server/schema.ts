@@ -4318,6 +4318,10 @@ export const unitGroups = pgTable(
 		kind: unitGroupKindEnum("kind").notNull(),
 		name: varchar("name", { length: 100 }).notNull(),
 		commanderId: integer("commander_id").references(() => commanders.id, { onDelete: "set null" }),
+		/** Airgroups only: the division this air wing flies support for. */
+		supportsGroupId: integer("supports_group_id").references((): AnyPgColumn => unitGroups.id, {
+			onDelete: "set null"
+		}),
 		createdAt: timestamp("created_at").defaultNow().notNull(),
 		updatedAt: timestamp("updated_at").defaultNow().notNull()
 	},
@@ -4828,4 +4832,3 @@ export interface MapSnapshotBloc {
 	color: string;
 	memberStateIds: number[];
 }
-

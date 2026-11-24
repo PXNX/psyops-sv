@@ -8,6 +8,7 @@
 	import { Badge, Button } from "#lib/component/ui/index.js";
 	import FluentDismiss12Filled from "~icons/fluent/dismiss-12-filled";
 	import FluentArrowEnter20Regular from "~icons/fluent/arrow-enter-20-regular";
+	import FluentAirplane20Regular from "~icons/fluent/airplane-20-regular";
 	import ForceSymbol from "./ForceSymbol.svelte";
 	import { act, unitLabel } from "./forces";
 
@@ -20,7 +21,13 @@
 		health: number;
 		traitIds: string[];
 	};
-	type Group = { id: number; name: string; kind: string; commanderId: number | null };
+	type Group = {
+		id: number;
+		name: string;
+		kind: string;
+		commanderId: number | null;
+		supportsGroupId?: number | null;
+	};
 	type Unit = {
 		id: number;
 		name: string;
@@ -33,6 +40,8 @@
 	interface Props {
 		kind: "division" | "airgroup";
 		groups: Group[];
+		/** Every formation of the state, both kinds: air wings ↔ divisions. */
+		allGroups?: Group[];
 		units: Unit[];
 		officers: Officer[];
 		/** Units ticked in the roster. */
@@ -40,7 +49,11 @@
 		/** Units that could join but have no formation yet. */
 		unassigned: number;
 	}
-	let { kind, groups, units, officers, selected = $bindable(), unassigned }: Props = $props();
+	let { kind, groups, allGroups = [], units, officers, selected = $bindable(), unassigned }: Props = $props();
+
+	const divisions = $derived(allGroups.filter((g) => g.kind === "division"));
+	const wingsFor = (divisionId: number) =>
+		allGroups.filter((g) => g.kind === "airgroup" && g.supportsGroupId === divisionId);
 
 	let busy = $state(false);
 	let root = $state<HTMLElement>();
@@ -173,6 +186,59 @@
 								</form>
 							</div>
 						</div>
+
+						<!-- Air support: wing → division, shown on both sides -->
+						{#if kind === "airgroup"}
+							<form
+								method="POST"
+								action="?/assignAirSupport"
+								use:enhance={act()}
+								class="mt-1.5 flex flex-wrap items-center gap-1.5 text-[11px] text-fg-muted"
+							>
+								<input type="hidden" name="wingId" value={group.id} />
+								<FluentAirplane20Regular class="size-3.5 text-primary-fg" />
+								<label for="support-{group.id}">Supports</label>
+								<select
+									id="support-{group.id}"
+									name="divisionId"
+									class="field-control max-w-44 rounded-sm px-1.5 py-1 text-[11px]"
+									onchange={(e) => e.currentTarget.form?.requestSubmit()}
+									disabled={!divisions.length}
+								>
+									<option value="">{divisions.length ? "No division" : "No divisions formed"}</option>
+									{#each divisions as dv (dv.id)}
+										<option value={dv.id} selected={dv.id === group.supportsGroupId}>{dv.name}</option>
+									{/each}
+								</select>
+							</form>
+						{:else}
+							{@const wings = wingsFor(group.id)}
+							{#if wings.length}
+								<div class="mt-1.5 flex flex-wrap items-center gap-1.5 text-[11px] text-fg-muted">
+									<FluentAirplane20Regular class="size-3.5 text-primary-fg" />
+									Air cover
+									{#each wings as w (w.id)}
+										<form method="POST" action="?/assignAirSupport" use:enhance={act()}>
+											<input type="hidden" name="wingId" value={w.id} />
+											<input type="hidden" name="divisionId" value="" />
+											<span
+												class="inline-flex items-center gap-1 rounded-sm border border-primary/30 bg-primary/10 py-0.5 pr-0.5 pl-1.5 text-primary-fg"
+											>
+												{w.name}
+												<button
+													type="submit"
+													class="grid size-4 place-items-center rounded-sm hover:bg-error/15 hover:text-error"
+													title="Release {w.name} from {group.name}"
+													aria-label="Release {w.name} from {group.name}"
+												>
+													<FluentDismiss12Filled class="size-2.5" />
+												</button>
+											</span>
+										</form>
+									{/each}
+								</div>
+							{/if}
+						{/if}
 
 						<!-- Units -->
 						{#if members.length}
