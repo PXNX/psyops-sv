@@ -26,6 +26,7 @@
 		Conditions,
 		RangeRing,
 		ReconSector,
+		TACTICAL,
 		UnitBadge,
 		UnitSymbol
 	} from "#lib/component/tactical/index.js";
@@ -33,6 +34,7 @@
 		EEZ,
 		HEX_BOUNDS,
 		SHIP_CLASSES,
+		airspaceSectorOf,
 		airspaceSectors,
 		eezHexes,
 		hexFromLatLon,
@@ -41,6 +43,7 @@
 		hexesInRange,
 		hexToMap,
 		mapHexSize,
+		mapToHex,
 		hexPolygonMap,
 		hexUnionPath,
 		parseHexKey,
@@ -201,7 +204,9 @@
 	/** Hexes with at least one water sample: coastal hexes count too. */
 	let waterHexKeys = $state<Set<string>>(new Set());
 	/** Outline samples of each coastal region, in world-map units. */
-	let coastlines = $state<{ regionId: number; stateId: number; color: string; points: { x: number; y: number }[] }[]>([]);
+	let coastlines = $state<
+		{ regionId: number; stateId: number; color: string; d: string; points: { x: number; y: number }[] }[]
+	>([]);
 	let seaGeometryReady = $state(false);
 	let highlightedId = $state<number | null>(null);
 	let highlightTimeout: ReturnType<typeof setTimeout> | null = null;
@@ -460,7 +465,13 @@
 				const centre = hexToMap(hexFromLatLon(region.latitude, region.longitude));
 				points.push(centre);
 			}
-			return { regionId: region.id, stateId: region.stateId, color: data.stateColorMap[region.stateId] ?? "#38bdf8", points };
+			return {
+				regionId: region.id,
+				stateId: region.stateId,
+				color: data.stateColorMap[region.stateId] ?? "#38bdf8",
+				d: path?.getAttribute("d") ?? "",
+				points
+			};
 		});
 		seaGeometryReady = true;
 
@@ -565,18 +576,35 @@
 		downX = e.clientX;
 		downY = e.clientY;
 	}
+	/** Pointer position in world-map units (the 1400×600 SVG space). */
+	function mapPoint(e: PointerEvent) {
+		const rect = viewportEl!.getBoundingClientRect();
+		return {
+			x: (e.clientX - rect.left - transform.x) / transform.scale,
+			y: (e.clientY - rect.top - transform.y) / transform.scale
+		};
+	}
+	/** The sea hex under the pointer: a grid cell carries its key, and the EEZ
+	 *  band (which covers the inner cells) is resolved from the map position. */
+	function hexKeyAt(e: PointerEvent): string | null {
+		const target = e.target as Element | null;
+		const cell = target?.closest?.("[data-hex]")?.getAttribute("data-hex");
+		if (cell) return cell;
+		if (!viewportEl || !target?.closest?.("[data-eez]")) return null;
+		const p = mapPoint(e);
+		return hexKey(mapToHex(p.x, p.y));
+	}
 	function onPointerUp(e: PointerEvent) {
 		if (!e.isPrimary || Math.hypot(e.clientX - downX, e.clientY - downY) > DRAG_THRESHOLD) return;
-		const hexEl = (e.target as Element | null)?.closest?.("[data-hex]");
-		if (hexEl) {
-			const key = hexEl.getAttribute("data-hex");
+		const key = hexKeyAt(e);
+		if (key) {
 			if (e.ctrlKey || e.metaKey || multiSelect) {
 				const next = new Set(selectedHexKeys);
-				if (next.has(key!)) next.delete(key!);
-				else next.add(key!);
+				if (next.has(key)) next.delete(key);
+				else next.add(key);
 				selectedHexKeys = next;
 			} else {
-				selectedHexKeys = new Set(key ? [key] : []);
+				selectedHexKeys = new Set([key]);
 			}
 			selectedHexKey = key;
 			selectedId = null;
@@ -595,12 +623,8 @@
 	}
 	function onPointerMove(e: PointerEvent) {
 		if (!viewportEl) return;
-		hoverHexKey = (e.target as Element | null)?.closest?.("[data-hex]")?.getAttribute("data-hex") ?? null;
-		const rect = viewportEl.getBoundingClientRect();
-		cursor = {
-			x: (e.clientX - rect.left - transform.x) / transform.scale,
-			y: (e.clientY - rect.top - transform.y) / transform.scale
-		};
+		hoverHexKey = hexKeyAt(e);
+		cursor = mapPoint(e);
 	}
 
 	function openRegion(id: number) {
@@ -674,7 +698,10 @@
 					unitType: types.length === 1 ? types[0][0] : types[0]?.[0]
 				};
 			})
-			.filter((m): m is Marker & { total: number; ally: boolean; unitType: string } => !!m && (showLand || coastalIds.has(m.id)))
+			.filter(
+				(m): m is Marker & { total: number; ally: boolean; unitType: string } =>
+					!!m && (showLand || coastalIds.has(m.id))
+			)
 	);
 	const hostileMarkers = $derived.by(() => {
 		const out: (Marker & { known: boolean; count: number; estimated: boolean; dominant: string | null })[] = [];
@@ -749,14 +776,22 @@
 	};
 	const domainUnitMarkers = $derived.by(() => {
 		if (mode === "land") return [];
-		const out: { id: number; x: number; y: number; glyph: string; count: number }[] = [];
+		const out: { id: number; x: number; y: number; glyph: string; count: number; slot: number }[] = [];
 		for (const [regionId, force] of Object.entries(sa?.friendly ?? {})) {
 			const c = centroids[Number(regionId)];
 			if (!c) continue;
+			let slot = 0;
 			for (const [type, count] of Object.entries(force.byType)) {
 				const domain = MILITARY_UNIT_TEMPLATES[type as keyof typeof MILITARY_UNIT_TEMPLATES]?.domain;
 				if (mode === "naval" ? domain !== "sea" : domain !== "air") continue;
-				out.push({ id: Number(regionId), x: c.x, y: c.y, glyph: UNIT_GLYPH[type] ?? type.slice(0, 3).toUpperCase(), count });
+				out.push({
+					id: Number(regionId),
+					x: c.x,
+					y: c.y,
+					glyph: UNIT_GLYPH[type] ?? type.slice(0, 3).toUpperCase(),
+					count,
+					slot: slot++
+				});
 			}
 		}
 		return out;
@@ -775,6 +810,10 @@
 			...data.sea.mines.map((m) => hexKey(m))
 		])
 	);
+
+	/** Half-width of the EEZ band in map units: it reaches this far out from
+	 *  the coastline, i.e. the claim's rings plus half a cell. */
+	const eezBandWidth = () => mapHexSize() * (EEZ.radiusHexes + 0.5);
 
 	/** Coast points bucketed by map cell, so an EEZ claim can find the nearest
 	 *  coastline without comparing every hex with every sampled point. */
@@ -809,7 +848,8 @@
 					if (landHexKeys.has(key)) continue;
 					const distance = hexDistance(h, centre);
 					const prev = owner.get(key);
-					if (!prev || distance < prev.distance) owner.set(key, { regionId: region.id, stateId: region.stateId, color, distance });
+					if (!prev || distance < prev.distance)
+						owner.set(key, { regionId: region.id, stateId: region.stateId, color, distance });
 				}
 			}
 			return owner;
@@ -827,7 +867,9 @@
 		}
 
 		const { grid, cell } = coastGrid;
-		const maxDistance = mapHexSize() * (EEZ.radiusHexes + 0.8);
+		// A hex whose centre lies under the band belongs to the EEZ; the grid
+		// proper starts with the first cell beyond the band's seaward edge.
+		const maxDistance = eezBandWidth();
 		for (const key of candidates) {
 			const centre = hexToMap(parseHexKey(key));
 			const bx = Math.floor(centre.x / cell);
@@ -864,7 +906,6 @@
 			regionId: number | null;
 			inEez: boolean;
 			condition: ReturnType<typeof seaConditionAt>;
-			glyph: string;
 		}[] = [];
 		for (let r = HEX_BOUNDS.minR; r <= HEX_BOUNDS.maxR; r++) {
 			for (let q = HEX_BOUNDS.minQ; q <= HEX_BOUNDS.maxQ; q++) {
@@ -888,36 +929,17 @@
 					color: owner?.color ?? "#38bdf8",
 					regionId: owner?.regionId ?? null,
 					inEez: !!owner,
-					condition,
-					glyph: condition === "icy" ? "❄" : condition === "stormy" ? "≋" : ""
+					condition
 				});
 			}
 		}
 		return out;
 	});
 
-	/** One outline per coastal region: the hexes of its EEZ merged into a
-	 *  single zone that reads as an extension of the coastline. */
-	const eezZones = $derived.by(() => {
-		const groups = new Map<number, { color: string; hexes: { q: number; r: number }[] }>();
-		for (const [key, info] of eezByHex) {
-			const group = groups.get(info.regionId) ?? { color: info.color, hexes: [] };
-			group.hexes.push(parseHexKey(key));
-			groups.set(info.regionId, group);
-		}
-		return [...groups.entries()].map(([regionId, group]) => ({
-			regionId,
-			color: group.color,
-			path: hexUnionPath(group.hexes),
-			name: data.regionMap[regionId] ? `#${regionId}` : `region ${regionId}`
-		}));
-	});
 	/** Show a vessel on water even if its stored hex sits under a land path. */
 	function displayHex(h: { q: number; r: number }) {
 		if (eezByHex.has(hexKey(h))) return h;
-		const nearest = [...eezByHex.keys()]
-			.map(parseHexKey)
-			.sort((a, b) => hexDistance(a, h) - hexDistance(b, h))[0];
+		const nearest = [...eezByHex.keys()].map(parseHexKey).sort((a, b) => hexDistance(a, h) - hexDistance(b, h))[0];
 		return nearest ?? h;
 	}
 	const portMarkers = $derived(data.sea.ports.map((p) => ({ ...p, ...hexCentre(displayHex(p)) })));
@@ -935,7 +957,9 @@
 		return {
 			q: h.q,
 			r: h.r,
-			owner: owner ? { regionId: owner.regionId, stateName: stateById.get(owner.stateId)?.name ?? `State ${owner.stateId}` } : null,
+			owner: owner
+				? { regionId: owner.regionId, stateName: stateById.get(owner.stateId)?.name ?? `State ${owner.stateId}` }
+				: null,
 			port: data.sea.ports.find((p) => p.q === h.q && p.r === h.r) ?? null,
 			ships: data.sea.ships.filter((s) => s.q === h.q && s.r === h.r && s.status !== "sunk"),
 			mines: data.sea.mines.filter((m) => m.q === h.q && m.r === h.r),
@@ -952,7 +976,8 @@
 		if (!info?.intel) return null;
 		const key = selectedHexKey!;
 		const h = parseHexKey(key);
-		const ll = mapToLatLon(hexCentre(h));
+		const centre = hexCentre(h);
+		const ll = mapToLatLon(centre.x, centre.y);
 		const conditions = regionConditions({ id: h.q * 100 + h.r, longitude: ll.lon, terrain: "shore" }, now);
 		const ownerId = info.owner?.regionId;
 		const shore = ownerId != null ? coastlines.find((c) => c.regionId === ownerId) : null;
@@ -1021,62 +1046,94 @@
 	}
 
 	/** The hex map is part of the world SVG itself, not a second floating canvas.
-	 *  It is inserted *before* the region paths: the opaque land clips it at the
-	 *  shoreline. Cells inside a coastal region's EEZ are filled with that
-	 *  region's colour but carry no grid outline — the EEZ is the band of water
-	 *  between the coast and the hex grid, which starts at its seaward edge.
-	 *  Every cell keeps its coordinate so it can still be tapped. */
+	 *  Drawn in order before the region paths, so the opaque land clips both:
+	 *   1. the open-sea hex grid (cells under the band are skipped);
+	 *   2. the EEZ band: each coastal region's outline stroked twice as wide as
+	 *      the claim reaches — an edge pass, then an opaque tinted fill pass.
+	 *      The land covers the inland half, leaving a smooth band of water that
+	 *      follows the real coastline. The hex grid starts at its seaward edge.
+	 *  Stroke styles go in `style`: the page CSS sets path stroke widths, and
+	 *  CSS colour variables only resolve there. */
 	const worldSvg = $derived.by(() => {
 		if (!showSea || !overlays.sea) return WorldMap;
-		const glyphSize = Math.max(7, mapHexSize() * 1.25);
 		const cells = seaHexes
+			.filter((h) => !h.inEez)
 			.map((h) => {
-				const picked = selectedHexKeys.has(h.key);
-				let polygon: string;
-				if (h.inEez) {
-					polygon = `<polygon data-hex='${h.key}' data-tutorial='hex-cell' points='${h.points}' fill='${h.color}' fill-opacity='${
-						picked ? 0.34 : 0.13
-					}' stroke='${picked ? "#f8fafc" : "none"}' stroke-width='${picked ? 2 : 0}' style='cursor:pointer'/>`;
-				} else {
-					polygon = `<polygon data-hex='${h.key}' data-tutorial='hex-cell' points='${h.points}' fill='${h.color}' fill-opacity='${
-						picked ? 0.36 : h.active ? 0.2 : 0.05
-					}' stroke='${picked ? "#f8fafc" : h.color}' stroke-opacity='${picked ? 1 : h.active ? 0.9 : 0.22}' stroke-width='${
-						picked ? 2 : h.active ? 1 : 0.8
-					}' style='cursor:pointer'/>`;
-				}
-				if (!h.glyph) return polygon;
-				const fill = h.condition === "icy" ? "#bae6fd" : "#fbbf24";
-				return `${polygon}<text x='${h.x.toFixed(1)}' y='${(h.y + glyphSize * 0.35).toFixed(1)}' text-anchor='middle' font-size='${
-					glyphSize.toFixed(1)
-				}' fill='${fill}' fill-opacity='0.7' pointer-events='none'>${h.glyph}</text>`;
+				const fill = h.condition === "stormy" ? "url(#sea-storm)" : h.condition === "icy" ? "url(#sea-ice)" : "#38bdf8";
+				const opacity = h.condition !== "calm" ? 1 : h.active ? 0.1 : 0;
+				return `<polygon data-hex='${h.key}' data-tutorial='hex-cell' points='${h.points}' fill='${fill}' fill-opacity='${opacity}' stroke='#7dd3fc' stroke-opacity='${
+					h.active ? 0.45 : 0.16
+				}' stroke-width='0.6' stroke-linejoin='round' style='cursor:pointer'/>`;
 			})
 			.join("");
-		const group = `<g id='world-hex-sea'><title>Hex sea grid · EEZ ${EEZ.radiusHexes} hex rings · ❄ ice · ≋ storms</title>${cells}</g>`;
+		const patterns =
+			"<defs>" +
+			"<pattern id='sea-storm' width='3' height='3' patternUnits='userSpaceOnUse' patternTransform='rotate(45)'>" +
+			"<rect width='3' height='3' fill='#f59e0b' fill-opacity='0.05'/>" +
+			"<line x1='0' y1='0' x2='0' y2='3' stroke='#fbbf24' stroke-opacity='0.4' stroke-width='0.5'/></pattern>" +
+			"<pattern id='sea-ice' width='4' height='4' patternUnits='userSpaceOnUse'>" +
+			"<rect width='4' height='4' fill='#e0f2fe' fill-opacity='0.08'/>" +
+			"<circle cx='2' cy='2' r='0.45' fill='#e0f2fe' fill-opacity='0.45'/></pattern>" +
+			"</defs>";
+		const width = eezBandWidth() * 2;
+		const coasts = coastlines.filter((c) => c.d);
+		const edge = coasts
+			.map(
+				(c) =>
+					`<path d='${c.d}' style='fill:none;stroke:${c.color};stroke-opacity:0.8;stroke-width:${(width + 1.2).toFixed(
+						1
+					)}px;stroke-linejoin:round;stroke-linecap:round;pointer-events:none'/>`
+			)
+			.join("");
+		const band = coasts
+			.map(
+				(c) =>
+					`<path data-eez='${c.regionId}' d='${c.d}' style='fill:none;stroke:color-mix(in oklab, ${c.color} 22%, var(--color-surface-0));stroke-width:${width.toFixed(
+						1
+					)}px;stroke-linejoin:round;stroke-linecap:round;pointer-events:stroke;cursor:pointer'/>`
+			)
+			.join("");
+		const group =
+			`<g id='world-hex-sea'><title>Open sea · hex grid</title>${patterns}${cells}</g>` +
+			`<g id='world-eez'><title>Exclusive economic zones · coast to hex grid</title>${edge}${band}</g>`;
 		return WorldMap.replace("</defs>", `</defs>${group}`);
 	});
 
-	/** Aerial mode: a Luftraum is one region-shaped union of its hexes, their
-	 *  EEZs and the land regions above them — not a rectangle around them. */
+	/** Hex outlines for the selection and the cell under the pointer. They sit
+	 *  in the overlay so they also show inside the EEZ band. */
+	const hexHighlights = $derived.by(() => {
+		if (!showSea || !overlays.sea) return [];
+		const keys = new Set(selectedHexKeys);
+		if (selectedHexKey) keys.add(selectedHexKey);
+		const out = [...keys].map((key) => ({ key, points: hexPoints(parseHexKey(key)), picked: true }));
+		if (hoverHexKey && !keys.has(hoverHexKey))
+			out.push({ key: hoverHexKey, points: hexPoints(parseHexKey(hoverHexKey)), picked: false });
+		return out;
+	});
+
+	/** Aerial mode: the grid is split into Luftraum sectors. Each sector is
+	 *  the union of its hexes; the label tab sits at its centre. */
 	const airspaces = $derived.by(() => {
 		if (mode !== "aerial") return [];
+		const ownAir = data.sea.aircraft.filter((a) => sideStates.has(a.stateId) && a.fuel > 0);
 		return airspaceSectors().map((sector) => {
 			const hexSet = new Set(sector.hexes.map(hexKey));
-			const path = hexUnionPath(sector.hexes);
 			const centres = sector.hexes.map(hexCentre);
-			const x = Math.min(...centres.map((p) => p.x));
-			const y = Math.min(...centres.map((p) => p.y));
-			const width = Math.max(...centres.map((p) => p.x)) - x;
-			const height = Math.max(...centres.map((p) => p.y)) - y;
+			const anchor = {
+				x: centres.reduce((sum, p) => sum + p.x, 0) / centres.length,
+				y: centres.reduce((sum, p) => sum + p.y, 0) / centres.length
+			};
 			const regions = data.sea.regionsForEez.filter((r) => hexSet.has(hexKeyFromCoords(r))).length;
-			const ships = data.sea.ships.filter((s) => hexSet.has(hexKey(s))).length;
-			const eez = [...hexSet].filter((key) => eezByHex.has(key)).length;
-			const air = data.sea.aircraft.filter((a) => {
+			const ships = data.sea.ships.filter((s) => s.status !== "sunk" && hexSet.has(hexKey(s))).length;
+			const air = ownAir.filter((a) => {
 				const region = data.sea.regionsForEez.find((r) => r.id === a.regionId);
-				return a.fuel > 0 && region && hexSet.has(hexKeyFromCoords(region));
+				return region && hexSet.has(hexKeyFromCoords(region));
 			}).length;
-			return { id: sector.id, path, x, y, width, height, regions, ships, eez, air };
+			return { id: sector.id, path: hexUnionPath(sector.hexes), x: anchor.x, y: anchor.y, regions, ships, air };
 		});
 	});
+	const hoverSector = $derived(mode === "aerial" && cursor ? airspaceSectorOf(mapToHex(cursor.x, cursor.y)) : null);
+
 	function hexKeyFromCoords(r: { latitude: number; longitude: number }) {
 		return hexKey(hexFromLatLon(r.latitude, r.longitude));
 	}
@@ -1174,88 +1231,185 @@
 				</g>
 
 				{#if mode === "aerial"}
-					<!-- Luftraum: several hexes and the regions over them, one sector -->
+					<!-- Luftraum sectors: thin solid boundaries, a tab label per sector -->
 					<g pointer-events="none">
 						{#each airspaces as sector (sector.id)}
+							{@const hot = sector.id === hoverSector}
 							<path
 								d={sector.path}
 								style:stroke="var(--color-primary)"
-								stroke-opacity="0.55"
-								stroke-width={1.2 * k}
-								stroke-dasharray="{6 * k} {3 * k}"
 								style:fill="var(--color-primary)"
-								fill-opacity="0.04"
+								stroke-opacity={hot ? 0.8 : 0.4}
+								fill-opacity={hot ? 0.07 : 0.015}
+								stroke-width={(hot ? 1.4 : 1) * k}
+								stroke-linejoin="round"
 							/>
-							<text
-								x={sector.x + 4 * k}
-								y={sector.y + 11 * k}
-								font-size={9 * k}
-								style:fill="var(--color-primary)"
-								style:paint-order="stroke"
-								style:stroke="var(--color-surface-0)"
-								stroke-width={2 * k}
-							>{sector.id} · {sector.regions}R {sector.eez}H {sector.ships}S {sector.air}✈</text>
+						{/each}
+						{#each airspaces as sector (sector.id)}
+							{@const hot = sector.id === hoverSector}
+							<g transform="translate({sector.x} {sector.y}) scale({k})">
+								<rect
+									x="-20"
+									y="-7"
+									width="40"
+									height="14"
+									rx="2"
+									style:fill={hot ? "var(--color-primary)" : "var(--color-surface-0)"}
+									style:stroke="var(--color-primary)"
+									stroke-opacity={hot ? 1 : 0.5}
+								/>
+								<text
+									y="3"
+									text-anchor="middle"
+									font-size="8"
+									font-weight="600"
+									class="data"
+									style:fill={hot ? "var(--color-primary-content)" : "var(--color-primary)"}
+								>
+									{sector.id}
+								</text>
+							</g>
 						{/each}
 					</g>
 				{/if}
 
 				{#if showSea && overlays.sea}
-					<!-- The dashed line is the seaward edge of the EEZ band:
-				         coast → coloured EEZ water → hex grid starts here. -->
+					<!-- Selected and hovered hexes; the band hides the cells beneath it -->
 					<g pointer-events="none">
-						{#each eezZones as zone (zone.regionId)}
-							<path
-								d={zone.path}
-								stroke={zone.color}
-								stroke-opacity="0.55"
-								stroke-width={1.1 * k}
-								stroke-dasharray="{3 * k} {2 * k}"
-								fill="none"
-							><title>EEZ of region {zone.name} · coast to hex grid</title></path>
+						{#each hexHighlights as h (h.key)}
+							<polygon
+								points={h.points}
+								fill="#f8fafc"
+								fill-opacity={h.picked ? 0.14 : 0.06}
+								stroke="#f8fafc"
+								stroke-opacity={h.picked ? 0.95 : 0.5}
+								stroke-width={(h.picked ? 1.5 : 1) * k}
+								stroke-linejoin="round"
+							/>
 						{/each}
 					</g>
-					<!-- Ports, ships and minefields (hexes live in the world SVG) -->
+					<!-- Ports, ships and minefields -->
 					<g class="sea-markers" pointer-events="none">
-						{#if overlays.friendly}
-							{#each domainUnitMarkers as u (u.id + ":" + u.glyph)}
-								<g transform="translate({u.x} {u.y - 16 * k}) scale({k})">
-									<title>{u.glyph} ×{u.count}</title>
-									<rect x="-9" y="-6" width="27" height="12" rx="3" style:fill="var(--color-surface-0)" stroke="#7dd3fc" stroke-opacity="0.8" />
-									<text x="1" y="3" text-anchor="middle" font-size="6" font-weight="bold" style:fill="#7dd3fc">{u.glyph}</text>
-									<text x="14" y="3" font-size="6" style:fill="#7dd3fc">×{u.count}</text>
-								</g>
-							{/each}
-						{/if}
 						{#each mineMarkers as m (m.id)}
-							<text
-								x={m.x}
-								y={m.y - 6 * k}
-								text-anchor="middle"
-								font-size={11 * k}
-								style:fill="var(--color-error)"
-							>✳</text>
+							<g transform="translate({m.x + 7 * k} {m.y - 7 * k}) scale({k})">
+								<title>Minefield · strength {m.strength}</title>
+								<g style:stroke="var(--color-error)" stroke-width="1.2" stroke-linecap="round">
+									<line x1="-4.5" y1="0" x2="4.5" y2="0" />
+									<line x1="0" y1="-4.5" x2="0" y2="4.5" />
+									<line x1="-3.2" y1="-3.2" x2="3.2" y2="3.2" />
+									<line x1="-3.2" y1="3.2" x2="3.2" y2="-3.2" />
+								</g>
+								<circle
+									r="2.6"
+									style:fill="var(--color-surface-0)"
+									style:stroke="var(--color-error)"
+									stroke-width="1.2"
+								/>
+							</g>
 						{/each}
 						{#each portMarkers as p (p.id)}
 							<g transform="translate({p.x} {p.y}) scale({k})">
 								<title>{p.name} · hex {p.q},{p.r}</title>
-								<rect x="-9" y="-9" width="18" height="18" rx="3" style:fill="var(--color-surface-0)" stroke="#38bdf8" />
-								<text x="0" y="4" text-anchor="middle" font-size="10" style:fill="#7dd3fc">⚓</text>
-								<text x="12" y="3" font-size="8" style:fill="#7dd3fc">{p.name}</text>
+								<circle r="7.5" style:fill="var(--color-surface-0)" stroke="#38bdf8" stroke-width="1.2" />
+								<g fill="none" stroke="#7dd3fc" stroke-width="1.1" stroke-linecap="round" stroke-linejoin="round">
+									<circle cx="0" cy="-3.6" r="1.3" />
+									<path d="M0 -2.3 V4.2 M-2.6 -0.8 H2.6 M-4 1.6 Q-3.4 4.4 0 4.4 Q3.4 4.4 4 1.6" />
+								</g>
+								<text
+									x="11"
+									y="3"
+									font-size="8"
+									class="data"
+									style:fill="#7dd3fc"
+									style:paint-order="stroke"
+									style:stroke="var(--color-surface-0)"
+									stroke-width="2.5"
+								>
+									{p.name}
+								</text>
 							</g>
 						{/each}
 						{#each shipMarkers as s (s.id)}
-							<g transform="translate({s.x} {s.y + 11 * k}) scale({k})">
+							{@const side =
+								s.stateId === data.sa?.side?.stateId || sideStates.has(s.stateId)
+									? "friend"
+									: data.sa?.enemyStateIds?.includes(s.stateId)
+										? "hostile"
+										: "unknown"}
+							<g transform="translate({s.x} {s.y + 12 * k}) scale({k})">
 								<title>{s.short} · hex {s.q},{s.r} · {s.health} hp</title>
-								<circle
-									r="5"
-									style:fill={s.stateId === data.sa?.side?.stateId
-										? "#4ade80"
-										: data.sa?.enemyStateIds?.includes(s.stateId)
-											? "#f87171"
-											: "#38bdf8"}
-									stroke="#04121f"
+								<!-- APP-6 sea surface frames: circle friend, diamond hostile, square other -->
+								{#if side === "friend"}
+									<circle
+										r="6"
+										style:fill={TACTICAL.friend.fill}
+										style:stroke={TACTICAL.friend.stroke}
+										stroke-width="1.2"
+									/>
+								{:else if side === "hostile"}
+									<path
+										d="M0 -7 L7 0 L0 7 L-7 0 Z"
+										style:fill={TACTICAL.hostile.fill}
+										style:stroke={TACTICAL.hostile.stroke}
+										stroke-width="1.2"
+									/>
+								{:else}
+									<rect
+										x="-5.5"
+										y="-5.5"
+										width="11"
+										height="11"
+										style:fill={TACTICAL.unknown.fill}
+										style:stroke={TACTICAL.unknown.stroke}
+										stroke-width="1.2"
+									/>
+								{/if}
+								<text
+									x="0"
+									y="2"
+									text-anchor="middle"
+									font-size="4.6"
+									font-weight="bold"
+									style:fill={TACTICAL[side].text}
+								>
+									{s.short}
+								</text>
+							</g>
+						{/each}
+					</g>
+				{/if}
+
+				{#if mode !== "land" && overlays.friendly}
+					<!-- Own sea or air units at their home region -->
+					<g pointer-events="none">
+						{#each domainUnitMarkers as u (u.id + ":" + u.glyph)}
+							<g transform="translate({u.x} {u.y - (16 + u.slot * 13) * k}) scale({k})">
+								<title>{u.glyph} ×{u.count}</title>
+								<rect
+									x="-12"
+									y="-5.5"
+									width="34"
+									height="11"
+									rx="5.5"
+									style:fill="var(--color-surface-0)"
+									style:stroke={TACTICAL.friend.stroke}
 								/>
-								<text x="0" y="2" text-anchor="middle" font-size="5" font-weight="bold" fill="#04121f">{s.short}</text>
+								{#if mode === "aerial"}
+									<path
+										transform="translate(-6.5 0) rotate(45)"
+										d="M0 -4.5 L0.8 -1.2 L4 0.6 L4 1.5 L0.8 0.7 L0.5 3.2 L1.6 4 L1.6 4.6 L0 4.1 L-1.6 4.6 L-1.6 4 L-0.5 3.2 L-0.8 0.7 L-4 1.5 L-4 0.6 L-0.8 -1.2 Z"
+										style:fill={TACTICAL.friend.icon}
+									/>
+								{:else}
+									<path
+										d="M-10 -0.5 H-3 L-4.2 2.5 H-8.8 Z M-7 -0.5 V-3.5 H-5.6 V-0.5"
+										style:fill={TACTICAL.friend.icon}
+									/>
+								{/if}
+								<text x="0" y="2.2" font-size="6" font-weight="bold" style:fill={TACTICAL.friend.text}>{u.glyph}</text>
+								<text x="20" y="2.2" text-anchor="end" font-size="6" class="data" style:fill={TACTICAL.friend.text}>
+									{u.count}
+								</text>
 							</g>
 						{/each}
 					</g>
@@ -1311,8 +1465,10 @@
 									style:fill="var(--color-warning)"
 									style:paint-order="stroke"
 									style:stroke="var(--color-surface-0)"
-									stroke-width="2">{m.count}</text
+									stroke-width="2"
 								>
+									{m.count}
+								</text>
 							{/if}
 						</g>
 					{/each}
@@ -1423,8 +1579,10 @@
 							onclick={() => {
 								base = h.value;
 								heatOpen = false;
-							}}>{h.label}</button
+							}}
 						>
+							{h.label}
+						</button>
 					{/each}
 				</div>
 			{/if}
@@ -1459,7 +1617,14 @@
 		<div class="panel absolute right-2 top-28 z-20 w-64 rounded-sm p-3 text-xs shadow-lg animate-pop-in">
 			<div class="flex items-center justify-between gap-2">
 				<h3 class="font-semibold text-heading">Sea hex {selectedHexInfo.q},{selectedHexInfo.r}</h3>
-				<IconButton icon={IconDismiss} label="Close" size="xs" shape="square" variant="ghost" onclick={() => (selectedHexKey = null)} />
+				<IconButton
+					icon={IconDismiss}
+					label="Close"
+					size="xs"
+					shape="square"
+					variant="ghost"
+					onclick={() => (selectedHexKey = null)}
+				/>
 			</div>
 			<div class="mt-1 text-fg-muted">
 				{#if selectedHexInfo.owner}
@@ -1470,28 +1635,34 @@
 			</div>
 			<div class="mt-1">
 				{seaHexes.find((h) => h.key === selectedHexKey)?.condition === "icy"
-					? "❄ Icy waters"
+					? "Icy waters"
 					: seaHexes.find((h) => h.key === selectedHexKey)?.condition === "stormy"
-						? "≋ Stormy seas"
+						? "Stormy seas"
 						: "Calm seas"}
 			</div>
 			{#if selectedHexKeys.size > 1}
 				<div class="mt-1 text-primary-fg">{selectedHexKeys.size} hexes selected for a fleet order</div>
 			{/if}
 			{#if selectedHexInfo.port}
-				<div class="mt-2">⚓ <span class="font-medium">{selectedHexInfo.port.name}</span></div>
+				<div class="mt-2">Port <span class="font-medium">{selectedHexInfo.port.name}</span></div>
 			{/if}
 			{#if selectedHexInfo.ships.length}
-				<div class="mt-1">Ships: {selectedHexInfo.ships.map((s) => SHIP_CLASSES[s.shipClass]?.short ?? s.shipClass).join(", ")}</div>
+				<div class="mt-1">
+					Ships: {selectedHexInfo.ships.map((s) => SHIP_CLASSES[s.shipClass]?.short ?? s.shipClass).join(", ")}
+				</div>
 			{/if}
 			{#if selectedHexInfo.mines.length}
-				<div class="mt-1 text-error">✳ {selectedHexInfo.mines.length} minefield(s)</div>
+				<div class="mt-1 text-error">
+					{selectedHexInfo.mines.length} minefield{selectedHexInfo.mines.length === 1 ? "" : "s"}
+				</div>
 			{/if}
 			<div class="mt-2 border-t border-line/20 pt-2">
 				<div class="mb-1 font-semibold text-heading">Sea intel</div>
 				{#if selectedHexInfo.intel}
 					<div class="text-fg-muted">
-						{selectedHexInfo.intel.sensor} · {Object.entries(selectedHexInfo.intel.contacts ?? {}).map(([kind, n]) => `${kind} ×${n}`).join(", ") || "no contacts"} ·
+						{selectedHexInfo.intel.sensor} · {Object.entries(selectedHexInfo.intel.contacts ?? {})
+							.map(([kind, n]) => `${kind} ×${n}`)
+							.join(", ") || "no contacts"} ·
 						{selectedHexInfo.intel.mines} mines · {selectedHexInfo.intel.confidence}% confidence
 					</div>
 				{:else}
@@ -1515,18 +1686,25 @@
 					<form
 						method="POST"
 						action="?/launchSeaIntel"
-						use:enhance={() => async ({ result, update }) => {
-							await update();
-							toastResult(result);
-						}}
+						use:enhance={() =>
+							async ({ result, update }) => {
+								await update();
+								toastResult(result);
+							}}
 						class="mt-2 space-y-1.5"
 					>
 						<input type="hidden" name="q" value={selectedHexInfo.q} />
 						<input type="hidden" name="r" value={selectedHexInfo.r} />
-						<select name="sensor" bind:value={seaSensor} class="w-full rounded border border-line/30 bg-surface-2 px-2 py-1 text-xs">
+						<select
+							name="sensor"
+							bind:value={seaSensor}
+							class="w-full rounded border border-line/30 bg-surface-2 px-2 py-1 text-xs"
+						>
 							{#each data.sea.sensors as sensor (sensor.id)}
 								<option value={sensor.id} disabled={!!sensor.cooldownEndsAt}>
-									{sensor.label} · ${sensor.cost.toLocaleString()} · {sensor.durationMinutes}m{sensor.cooldownEndsAt ? " · cooling down" : ""}
+									{sensor.label} · ${sensor.cost.toLocaleString()} · {sensor.durationMinutes}m{sensor.cooldownEndsAt
+										? " · cooling down"
+										: ""}
 								</option>
 							{/each}
 						</select>
@@ -1541,10 +1719,11 @@
 				<form
 					method="POST"
 					action="?/assignFleet"
-					use:enhance={() => async ({ result, update }) => {
-						await update();
-						toastResult(result);
-					}}
+					use:enhance={() =>
+						async ({ result, update }) => {
+							await update();
+							toastResult(result);
+						}}
 					class="mt-2 space-y-1 border-t border-line/20 pt-2"
 				>
 					<div class="font-semibold text-heading">Hold area with a fleet</div>
@@ -1594,9 +1773,9 @@
 							class="flex w-full items-center gap-2 px-3 py-2 text-left hover:bg-surface-5"
 							onclick={() => pick(r)}
 						>
-							<span class="font-mono text-[10px] uppercase text-fg-faint w-10"
-								>{r.kind === "state" ? "STATE" : "RGN"}</span
-							>
+							<span class="font-mono text-[10px] uppercase text-fg-faint w-10">
+								{r.kind === "state" ? "STATE" : "RGN"}
+							</span>
 							<span class="min-w-0 flex-1">
 								<span class="block truncate text-sm text-fg">{r.name}</span>
 								{#if r.kind === "region"}<span class="block truncate text-xs text-fg-muted">{r.sub}</span>{/if}
@@ -1618,7 +1797,9 @@
 			class="mb-0.5 whitespace-nowrap"
 			data-tutorial="map-history"
 			onclick={() => (historyOpen = !historyOpen)}
-		>History</Button>
+		>
+			History
+		</Button>
 		<div class="mx-1 h-px bg-line/20"></div>
 		<IconButton icon={IconZoomIn} label="Zoom in" size="sm" shape="square" onclick={() => zoomBy(1.6)} />
 		<IconButton icon={IconZoomOut} label="Zoom out" size="sm" shape="square" onclick={() => zoomBy(1 / 1.6)} />
@@ -1704,34 +1885,67 @@
 	<div class="panel absolute left-16 bottom-9 z-10 hidden rounded-sm px-2.5 py-1.5 text-[11px] text-fg-soft sm:block">
 		<div class="flex flex-wrap items-center gap-x-3 gap-y-1">
 			<span class="inline-flex items-center gap-1 text-fg">
-				{mode === "naval" ? "NAVAL · sea + coasts" : mode === "aerial" ? "AERIAL · Luftraum sectors" : "LAND · regions + forces"}
+				{mode === "naval"
+					? "NAVAL · sea + coasts"
+					: mode === "aerial"
+						? "AERIAL · Luftraum sectors"
+						: "LAND · regions + forces"}
 			</span>
-			{#if showSea && overlays.sea}
-				<span class="inline-flex items-center gap-1"><span class="size-2.5 border border-sky-400"></span>EEZ band · hex grid</span>
-				<span class="inline-flex items-center gap-1">❄ Ice</span>
-				<span class="inline-flex items-center gap-1">≋ Storm</span>
-				<span class="inline-flex items-center gap-1">⚓ Port</span>
+			{#if mode === "aerial"}
+				<span class="inline-flex items-center gap-1">
+					<span class="h-2.5 w-3.5 rounded-[2px] border border-primary/70 bg-primary/10"></span>Sector
+				</span>
 			{/if}
-			{#if mode !== "naval" && overlays.friendly}<span class="inline-flex items-center gap-1"
-					><UnitBadge affiliation="friend" size={14} />Own</span
-				>{/if}
+			{#if showSea && overlays.sea}
+				<span class="inline-flex items-center gap-1">
+					<span class="h-2 w-3.5 rounded-[2px] border border-sky-300/80 bg-sky-400/25"></span>EEZ
+				</span>
+				<span class="inline-flex items-center gap-1">
+					<svg viewBox="0 0 14 12" class="h-3 w-3.5" aria-hidden="true">
+						<polygon
+							points="3.5,0.5 10.5,0.5 13.5,6 10.5,11.5 3.5,11.5 0.5,6"
+							fill="none"
+							stroke="#7dd3fc"
+							stroke-opacity="0.6"
+						/>
+					</svg>Open sea
+				</span>
+				<span class="inline-flex items-center gap-1">
+					<span class="size-2.5 rounded-[2px] border border-sky-100/40 bg-sky-100/15"></span>Ice
+				</span>
+				<span class="inline-flex items-center gap-1">
+					<span
+						class="size-2.5 rounded-[2px] border border-amber-400/50 bg-[repeating-linear-gradient(45deg,rgb(251_191_36/0.5)_0_1px,transparent_1px_3px)]"
+					></span>Storm
+				</span>
+				<span class="inline-flex items-center gap-1">
+					<span class="size-2.5 rounded-full border border-sky-400"></span>Port
+				</span>
+				<span class="inline-flex items-center gap-1">
+					<span class="size-2.5 rounded-full border border-error bg-base-100"></span>Mines
+				</span>
+			{/if}
+			{#if mode !== "naval" && overlays.friendly}<span class="inline-flex items-center gap-1">
+					<UnitBadge affiliation="friend" size={14} />Own
+				</span>{/if}
 			{#if mode !== "naval" && overlays.hostile}
 				<span class="inline-flex items-center gap-1"><UnitBadge affiliation="hostile" size={14} />Hostile (intel)</span>
 				<span class="inline-flex items-center gap-1"><UnitBadge affiliation="unknown" size={14} />Unknown</span>
 			{/if}
-			{#if mode !== "naval" && overlays.battles}<span class="inline-flex items-center gap-1"
-					><span class="size-2.5 rounded-full border border-error"></span>Battle</span
-				>{/if}
-			{#if mode !== "naval" && overlays.recon}<span class="inline-flex items-center gap-1"
-					><span class="size-2.5 rounded-full bg-primary/40"></span>Recon cover</span
-				>{/if}
-			{#if mode !== "naval" && overlays.strikes && strikeMarkers.length}<span class="inline-flex items-center gap-1"
-					><span class="size-2.5 rotate-45 bg-warning"></span>Airstrike</span
-				>{/if}
+			{#if mode !== "naval" && overlays.battles}<span class="inline-flex items-center gap-1">
+					<span class="size-2.5 rounded-full border border-error"></span>Battle
+				</span>{/if}
+			{#if mode !== "naval" && overlays.recon}<span class="inline-flex items-center gap-1">
+					<span class="size-2.5 rounded-full bg-primary/40"></span>Recon cover
+				</span>{/if}
+			{#if mode !== "naval" && overlays.strikes && strikeMarkers.length}<span class="inline-flex items-center gap-1">
+					<span class="size-2.5 rotate-45 bg-warning"></span>Airstrike
+				</span>{/if}
 			{#if base === "weather"}<span class="text-fg-muted">· grey cloud/fog, blue rain</span>{/if}
 			{#if base === "terrain"}<span class="text-fg-muted">· green forest, grey urban, amber mountains</span>{/if}
-			{#if isHeat}<span class="text-fg-muted">· {HEAT_LAYERS.find((h) => h.value === base)?.label}: low → high</span
-				>{/if}
+			{#if isHeat}<span class="text-fg-muted">
+					· {HEAT_LAYERS.find((h) => h.value === base)?.label}: low → high
+				</span>{/if}
 		</div>
 	</div>
 
@@ -1745,13 +1959,19 @@
 		<span class="hidden sm:inline text-fg-faint">
 			{cursor ? `GRID ${Math.round(cursor.x)}/${Math.round(cursor.y)}` : ""}
 		</span>
+		{#if hoverSector}
+			{@const sector = airspaces.find((x) => x.id === hoverSector)}
+			{#if sector}
+				<span class="hidden text-primary sm:inline">
+					{sector.id} · {sector.regions} regions · {sector.air} own air · {sector.ships} ships
+				</span>
+			{/if}
+		{/if}
 		{#if hoverHexKey}
 			<span class="text-fg-faint">
-				{seaHexes.find((h) => h.key === hoverHexKey)?.condition === "icy"
-					? "❄ icy"
-					: seaHexes.find((h) => h.key === hoverHexKey)?.condition === "stormy"
-						? "≋ stormy"
-						: "calm"}
+				HEX {hoverHexKey}
+				· {eezByHex.has(hoverHexKey) ? "EEZ" : "open sea"}
+				· {SEA_CONDITION_LABEL[seaHexes.find((h) => h.key === hoverHexKey)?.condition ?? "calm"].toLowerCase()}
 				{selectedHexKeys.has(hoverHexKey) ? " · in order" : ""}
 			</span>
 		{/if}
@@ -1796,8 +2016,11 @@
 						<a href="/state/{selState.id}" class="flex items-center gap-1.5 text-sm text-fg-soft hover:text-primary-fg">
 							<span class="size-2.5 shrink-0" style:background={data.stateColorMap[selState.id]}></span>
 							<span class="truncate">{selState.name}</span>
-							{#if selOwn}<Badge tone="blue" size="xs">own side</Badge
-								>{:else if sel.stateId && enemyStates.has(sel.stateId)}<Badge tone="red" size="xs">hostile</Badge>{/if}
+							{#if selOwn}<Badge tone="blue" size="xs">
+									own side
+								</Badge>{:else if sel.stateId && enemyStates.has(sel.stateId)}<Badge tone="red" size="xs">
+									hostile
+								</Badge>{/if}
 						</a>
 					{:else}
 						<p class="text-sm italic text-fg-muted">Unclaimed</p>
@@ -1863,11 +2086,11 @@
 							<Badge tone={levelTone[selPicture.level as keyof typeof levelTone] ?? "neutral"} size="xs">
 								Intel {selPicture.level} · {Math.round(selPicture.confidence * 100)}%
 							</Badge>
-							{#if selPicture.observedAt}<span class="font-mono text-fg-muted"
-									>{ageLabel(selPicture.observedAt, now) === "now"
+							{#if selPicture.observedAt}<span class="font-mono text-fg-muted">
+									{ageLabel(selPicture.observedAt, now) === "now"
 										? "just now"
-										: `${ageLabel(selPicture.observedAt, now)} ago`}</span
-								>{/if}
+										: `${ageLabel(selPicture.observedAt, now)} ago`}
+								</span>{/if}
 						</div>
 						<div class="flex flex-wrap gap-2">
 							{#each UNIT_CATEGORIES as c}
@@ -1981,22 +2204,47 @@
 				<section class="mt-3 border-t border-line/20 pt-2">
 					<div class="mb-1 font-semibold text-heading">Beach operations</div>
 					<p class="text-[10px] leading-tight text-fg-muted">
-						Landings need sea dominance; paradrops need air dominance. Beach AA and fortifications raise the failure risk.
+						Landings need sea dominance; paradrops need air dominance. Beach AA and fortifications raise the failure
+						risk.
 					</p>
-					<form method="POST" action="?/navalLanding" use:enhance={() => async ({ result, update }) => { await update(); toastResult(result); }} class="mt-2 space-y-1">
+					<form
+						method="POST"
+						action="?/navalLanding"
+						use:enhance={() =>
+							async ({ result, update }) => {
+								await update();
+								toastResult(result);
+							}}
+						class="mt-2 space-y-1"
+					>
 						<input type="hidden" name="regionId" value={selectedId} />
 						<div class="max-h-16 overflow-y-auto rounded border border-line/20 p-1">
 							{#each data.sea.ships.filter((s) => sideStates.has(s.stateId)) as ship (ship.id)}
-								<label class="flex items-center gap-1 text-[11px]"><input type="checkbox" name="shipIds" value={ship.id} /> {SHIP_CLASSES[ship.shipClass]?.short ?? ship.shipClass}</label>
+								<label class="flex items-center gap-1 text-[11px]">
+									<input type="checkbox" name="shipIds" value={ship.id} />
+									{SHIP_CLASSES[ship.shipClass]?.short ?? ship.shipClass}
+								</label>
 							{/each}
 						</div>
 						<Button type="submit" size="xs" variant="ghost" block>Naval landing</Button>
 					</form>
-					<form method="POST" action="?/paradrop" use:enhance={() => async ({ result, update }) => { await update(); toastResult(result); }} class="mt-1.5 space-y-1">
+					<form
+						method="POST"
+						action="?/paradrop"
+						use:enhance={() =>
+							async ({ result, update }) => {
+								await update();
+								toastResult(result);
+							}}
+						class="mt-1.5 space-y-1"
+					>
 						<input type="hidden" name="regionId" value={selectedId} />
 						<div class="max-h-16 overflow-y-auto rounded border border-line/20 p-1">
 							{#each data.sea.aircraft.filter((a) => sideStates.has(a.stateId) && a.fuel > 0) as unit (unit.id)}
-								<label class="flex items-center gap-1 text-[11px]"><input type="checkbox" name="unitIds" value={unit.id} /> {unit.unitType}</label>
+								<label class="flex items-center gap-1 text-[11px]">
+									<input type="checkbox" name="unitIds" value={unit.id} />
+									{unit.unitType}
+								</label>
 							{/each}
 						</div>
 						<Button type="submit" size="xs" variant="ghost" block>Paradrop</Button>
