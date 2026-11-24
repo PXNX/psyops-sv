@@ -50,8 +50,8 @@
 	<section class="panel rounded-sm p-4">
 		<h2 class="section-title mb-3">Buy a bond</h2>
 		<p class="mb-3 text-xs text-fg-muted">
-			States borrow only when their president or economy minister opens an offering. The coupon is priced
-			from that state's debt, treasury, wars and stability — risky borrowers pay more.
+			States borrow only when their president or economy minister opens an offering. The coupon is priced from that
+			state's debt, treasury, wars and stability — risky borrowers pay more.
 		</p>
 		{#if form?.error}
 			<p class="field-error mb-3">{form.error}</p>
@@ -98,7 +98,15 @@
 					required
 				/>
 			</label>
-			<Button type="submit" variant="primary" loading={buying} disabled={data.offerings.length === 0} loadingText="Buying…">Buy bond</Button>
+			<Button
+				type="submit"
+				variant="primary"
+				loading={buying}
+				disabled={data.offerings.length === 0}
+				loadingText="Buying…"
+			>
+				Buy bond
+			</Button>
 		</form>
 		<p class="field-hint">
 			Minimum {money(data.config.BOND_MIN_PRINCIPAL)} · {data.config.BOND_TERM_DAYS}-day term ·
@@ -132,7 +140,7 @@
 						<div class="mt-3 pt-3 border-t border-ink/20 grid gap-2 sm:grid-cols-3 text-xs">
 							<p>Interest earned <span class="font-mono font-bold">{money(bond.earned)}</span></p>
 							<p>Next coupon <span class="font-mono">{bond.nextCouponAt ? dtgDate(bond.nextCouponAt) : "—"}</span></p>
-							<p class="sm:text-right">
+							<div class="sm:text-right">
 								{#if bond.status === "active"}
 									<form
 										method="POST"
@@ -148,7 +156,7 @@
 								{:else}
 									<span class="font-mono uppercase tracking-wide">{bond.status}</span>
 								{/if}
-							</p>
+							</div>
 						</div>
 					</li>
 				{/each}

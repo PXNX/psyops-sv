@@ -251,24 +251,6 @@
 							>
 								<p class="text-base font-semibold text-fg">Tap to change</p>
 							</div>
-							{#if $form.logo}
-								<button
-									type="button"
-									onclick={(e) => {
-										e.stopPropagation();
-										clearImage();
-									}}
-									disabled={$submitting}
-									class={buttonClass({
-										variant: "secondary",
-										size: "sm",
-										shape: "circle",
-										class: "absolute top-2 right-2"
-									})}
-								>
-									✕
-								</button>
-							{/if}
 						</div>
 						{#if $form.logo}
 							<div class="border-t border-line/15 p-3 bg-surface-4/70">
@@ -282,6 +264,25 @@
 						{/if}
 					{/if}
 				</button>
+				{#if previewUrl && $form.logo}
+					<button
+						type="button"
+						aria-label="Remove logo"
+						onclick={(e) => {
+							e.stopPropagation();
+							clearImage();
+						}}
+						disabled={$submitting}
+						class={buttonClass({
+							variant: "secondary",
+							size: "sm",
+							shape: "circle",
+							class: "absolute top-2 right-2"
+						})}
+					>
+						✕
+					</button>
+				{/if}
 			</div>
 
 			{#if $errors.logo}

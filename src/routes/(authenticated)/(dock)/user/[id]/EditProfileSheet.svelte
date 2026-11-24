@@ -238,27 +238,28 @@
 								>
 									<p class="text-sm font-semibold text-fg">Tap to change</p>
 								</div>
-								{#if previewUrl !== currentLogo && canEdit}
-									<button
-										type="button"
-										onclick={(e) => {
-											e.stopPropagation();
-											clearImage();
-										}}
-										disabled={$submitting}
-										class={buttonClass({
-											variant: "secondary",
-											size: "sm",
-											shape: "circle",
-											class: "absolute top-2 right-2"
-										})}
-									>
-										✕
-									</button>
-								{/if}
 							</div>
 						{/if}
 					</button>
+					{#if previewUrl !== currentLogo && canEdit}
+						<button
+							type="button"
+							aria-label="Remove picture"
+							onclick={(e) => {
+								e.stopPropagation();
+								clearImage();
+							}}
+							disabled={$submitting}
+							class={buttonClass({
+								variant: "secondary",
+								size: "sm",
+								shape: "circle",
+								class: "absolute top-2 right-2"
+							})}
+						>
+							✕
+						</button>
+					{/if}
 				</div>
 
 				{#if $errors.logo}
