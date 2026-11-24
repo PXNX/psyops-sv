@@ -143,9 +143,9 @@
 			</div>
 
 			<div>
-				<label for="background" class="field-label"
-					>Tagline <span class="text-fg-muted font-normal">(optional)</span></label
-				>
+				<label for="background" class="field-label">
+					Tagline <span class="text-fg-muted font-normal">(optional)</span>
+				</label>
 				<textarea
 					id="background"
 					name="background"
@@ -219,24 +219,6 @@
 							>
 								<p class="text-base font-semibold text-fg">Tap to change</p>
 							</div>
-							{#if $form.logo}
-								<button
-									type="button"
-									onclick={(e) => {
-										e.stopPropagation();
-										clearImage();
-									}}
-									disabled={$submitting}
-									class={buttonClass({
-										variant: "secondary",
-										size: "sm",
-										shape: "circle",
-										class: "absolute top-2 right-2"
-									})}
-								>
-									✕
-								</button>
-							{/if}
 						</div>
 						{#if $form.logo}
 							<div class="border-t border-white/10 p-3">
@@ -250,6 +232,25 @@
 						{/if}
 					{/if}
 				</button>
+				{#if previewUrl && $form.logo}
+					<button
+						aria-label="Remove image"
+						type="button"
+						onclick={(e) => {
+							e.stopPropagation();
+							clearImage();
+						}}
+						disabled={$submitting}
+						class={buttonClass({
+							variant: "secondary",
+							size: "sm",
+							shape: "circle",
+							class: "absolute top-2 right-2"
+						})}
+					>
+						✕
+					</button>
+				{/if}
 			</div>
 
 			{#if $errors.logo}

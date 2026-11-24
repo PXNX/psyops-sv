@@ -226,27 +226,28 @@
 								>
 									<p class="text-sm font-semibold text-fg">Tap to change</p>
 								</div>
-								{#if $form.logo}
-									<button
-										type="button"
-										onclick={(e) => {
-											e.stopPropagation();
-											clearImage();
-										}}
-										disabled={$submitting}
-										class={buttonClass({
-											variant: "secondary",
-											size: "sm",
-											shape: "circle",
-											class: "absolute top-2 right-2"
-										})}
-									>
-										✕
-									</button>
-								{/if}
 							</div>
 						{/if}
 					</button>
+					{#if previewUrl && $form.logo}
+						<button
+							aria-label="Remove image"
+							type="button"
+							onclick={(e) => {
+								e.stopPropagation();
+								clearImage();
+							}}
+							disabled={$submitting}
+							class={buttonClass({
+								variant: "secondary",
+								size: "sm",
+								shape: "circle",
+								class: "absolute top-2 right-2"
+							})}
+						>
+							✕
+						</button>
+					{/if}
 				</div>
 
 				{#if $errors.logo}
@@ -366,8 +367,8 @@
 					/>
 				</label>
 				<p class="text-xs text-fg-muted">
-					Member states are shown as meeting or missing the guideline based on their last 30 days of income and
-					defence spending. Leave blank for no guideline.
+					Member states are shown as meeting or missing the guideline based on their last 30 days of income and defence
+					spending. Leave blank for no guideline.
 				</p>
 			</div>
 

@@ -172,19 +172,6 @@
 				>
 					<p class="text-base font-semibold text-fg">Tap to change</p>
 				</div>
-				{#if file && !disabled}
-					<button
-						type="button"
-						onclick={(e) => {
-							e.stopPropagation();
-							onClearImage();
-						}}
-						{disabled}
-						class="{buttonClass({ variant: 'secondary', size: 'sm', shape: 'circle' })} absolute top-2 right-2"
-					>
-						✕
-					</button>
-				{/if}
 			</div>
 			{#if file}
 				<div class="border-t border-line/15 p-3 bg-surface-4/70">
@@ -198,6 +185,20 @@
 			{/if}
 		{/if}
 	</button>
+	{#if file && !disabled}
+		<button
+			aria-label="Remove image"
+			type="button"
+			onclick={(e) => {
+				e.stopPropagation();
+				onClearImage();
+			}}
+			{disabled}
+			class="{buttonClass({ variant: 'secondary', size: 'sm', shape: 'circle' })} absolute top-2 right-2"
+		>
+			✕
+		</button>
+	{/if}
 </div>
 
 {#if error}
