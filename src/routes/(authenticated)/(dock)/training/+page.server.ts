@@ -142,6 +142,7 @@ export const load: PageServerLoad = async ({ locals }) => {
 				organization: militaryUnits.organization,
 				health: militaryUnits.health,
 				supplyLevel: militaryUnits.supplyLevel,
+				fuel: militaryUnits.fuel,
 				experience: militaryUnits.experience,
 				isTraining: militaryUnits.isTraining,
 				trainingStartedAt: militaryUnits.trainingStartedAt,

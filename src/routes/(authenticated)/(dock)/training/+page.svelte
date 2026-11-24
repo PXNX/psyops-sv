@@ -1,47 +1,52 @@
 <!-- /src/routes/(authenticated)/(dock)/training/+page.svelte -->
-<!-- The barracks: the roster of serving units (service records), the
-     recruitment office to enlist new ones, and the drill yard queue. -->
+<!-- Forces: the order of battle for the army, navy and air arm. A status
+     strip, formations as a tree, a dense roster, the recruitment office, and
+     a side rail with the drill yard, exercises and the officer corps. -->
 <script lang="ts">
-	import { vanish } from "#lib/utils/motion.js";
-	import { enhance } from "$app/forms";
 	import { page } from "$app/state";
-	import type { SubmitFunction } from "$app/forms";
 	import type { PageData } from "./$types";
-	import FluentTarget from "~icons/fluent/target-24-regular";
-	import IconAdd from "~icons/fluent/add-24-filled";
-	import IconDelete from "~icons/fluent/delete-24-filled";
-	import IconCheckmark from "~icons/fluent/checkmark-24-filled";
-	import IconClock from "~icons/fluent/clock-24-filled";
+	import FluentShield20Regular from "~icons/fluent/shield-20-regular";
+	import FluentVehicleShip20Regular from "~icons/fluent/vehicle-ship-20-regular";
+	import FluentAirplane20Regular from "~icons/fluent/airplane-20-regular";
+	import FluentPeopleTeam20Regular from "~icons/fluent/people-team-20-regular";
+	import FluentGauge20Regular from "~icons/fluent/gauge-20-regular";
+	import FluentBox20Regular from "~icons/fluent/box-20-regular";
+	import FluentFlag20Regular from "~icons/fluent/flag-20-regular";
+	import FluentHatGraduation20Regular from "~icons/fluent/hat-graduation-20-regular";
+	import FluentPersonAdd20Regular from "~icons/fluent/person-add-20-regular";
 	import FluentWarning20Filled from "~icons/fluent/warning-20-filled";
-	import * as m from "#lib/paraglide/messages.js";
-	import CommanderBadge from "#lib/component/CommanderBadge.svelte";
-	import UnitIcon from "./UnitIcon.svelte";
-	import { ACADEMY, AIRCRAFT_IDS, DOMAIN_UNITS } from "#lib/config/index.js";
-	import { canCoverManpower, getExperienceLevel, manpowerCostOf } from "#lib/config/index.js";
-	import { toastResult } from "#lib/ui/toast.svelte.js";
-	import { confirmSubmit } from "#lib/ui/confirm-submit.js";
-	import { celebrate } from "#lib/utils/celebrate.js";
-
-	import ResourceRequirements from "#lib/component/ResourceRequirements.svelte";
+	import FluentInfo16Regular from "~icons/fluent/info-16-regular";
+	import { AIRCRAFT_IDS, DOMAIN_UNITS, POPULATION_FLOOR } from "#lib/config/index.js";
 	import PageContainer from "#lib/component/PageContainer.svelte";
-	import PageHeader from "#lib/component/PageHeader.svelte";
-	import EmptyState from "#lib/component/EmptyState.svelte";
 	import NavyConsole from "#lib/component/forces/NavyConsole.svelte";
 	import AirOperations from "#lib/component/forces/AirOperations.svelte";
 	import Tutorial from "#lib/component/Tutorial.svelte";
-	import { Button, IconButton, Badge } from "#lib/component/ui/index.js";
+	import { Badge } from "#lib/component/ui/index.js";
+	import StatTile from "./StatTile.svelte";
+	import Roster from "./Roster.svelte";
+	import Formations from "./Formations.svelte";
+	import SelectionBar from "./SelectionBar.svelte";
+	import Recruitment from "./Recruitment.svelte";
+	import SideRail from "./SideRail.svelte";
+	import { SERVICE_DOMAIN, type Service } from "./forces";
 
 	let { data }: { data: PageData } = $props();
 
-	// All three services live on this page, but each keeps its own view.
-	type View = "army" | "navy" | "aviation";
-	const VIEWS: View[] = ["army", "navy", "aviation"];
-	let view = $state<View>(VIEWS.includes(page.url.searchParams.get("view") as View) ? (page.url.searchParams.get("view") as View) : "army");
+	// ── Service tabs (kept in ?view=) ───────────────────────────────────────
+	const SERVICES: { id: Service; label: string; icon: typeof FluentShield20Regular }[] = [
+		{ id: "army", label: "Army", icon: FluentShield20Regular },
+		{ id: "navy", label: "Navy", icon: FluentVehicleShip20Regular },
+		{ id: "aviation", label: "Aviation", icon: FluentAirplane20Regular }
+	];
+	const isService = (v: string | null): v is Service => SERVICES.some((s) => s.id === v);
+	let view = $state<Service>(
+		isService(page.url.searchParams.get("view")) ? (page.url.searchParams.get("view") as Service) : "army"
+	);
 	$effect(() => {
-		const fromUrl = page.url.searchParams.get("view") as View | null;
-		if (fromUrl && VIEWS.includes(fromUrl)) view = fromUrl;
+		const fromUrl = page.url.searchParams.get("view");
+		if (isService(fromUrl)) view = fromUrl;
 	});
-	function setView(next: View) {
+	function setView(next: Service) {
 		view = next;
 		const url = new URL(page.url.href);
 		url.searchParams.set("view", next);
@@ -78,706 +83,335 @@
 		}
 	];
 
-	// Unit type names are paraglide messages keyed by the unit type.
-	const unitLabel = (unitType: string) => (m as unknown as Record<string, () => string>)[unitType]?.() ?? unitType;
-	const officersById = $derived(new Map((data.officers ?? []).map((o) => [o.id, o])));
-	const unitsOf = (groupId: number) => (data.officerUnits ?? []).filter((u) => u.groupId === groupId);
-
-	let isSubmitting = $state(false);
-	let selectedTemplate = $state<any>(null);
+	// ── Clock ───────────────────────────────────────────────────────────────
 	let now = $state(Date.now());
-	let yard = $state<HTMLElement>();
-	let roster = $state<HTMLElement>();
-
 	$effect(() => {
 		const t = setInterval(() => (now = Date.now()), 30000);
 		return () => clearInterval(t);
 	});
-	// A template picked in one branch must not follow the player into another.
-	$effect(() => {
-		void view;
-		selectedTemplate = null;
-	});
 
-	const trainingDisabled = $derived(data.isIndependentRegion || data.isTraveling);
-	const trainingDisabledReason = $derived(
+	const blocked = $derived(
 		data.isIndependentRegion
-			? "Independent region — join a state to recruit."
+			? "Independent region — join a state to recruit and exercise."
 			: data.isTraveling
-				? "No recruiting while travelling."
+				? "No recruiting or exercises while travelling."
 				: ""
 	);
 
-	// Olive-ink tint for the unit silhouettes; gold when picked.
-	const INK =
-		"[filter:brightness(0)_saturate(100%)_invert(80%)_sepia(10%)_saturate(500%)_hue-rotate(180deg)_brightness(95%)_contrast(90%)]";
-	const INK_GOLD =
-		"[filter:brightness(0)_saturate(100%)_invert(76%)_sepia(58%)_saturate(640%)_hue-rotate(352deg)_brightness(96%)_contrast(92%)]";
+	// ── Units of the selected service ───────────────────────────────────────
+	const domainOf = (unitType: string) => data.templates[unitType as keyof typeof data.templates]?.domain;
+	const countFor = (s: Service) => data.units.filter((u) => domainOf(u.unitType) === SERVICE_DOMAIN[s]).length;
+	const branchUnits = $derived(
+		data.units
+			.filter((u) => domainOf(u.unitType) === SERVICE_DOMAIN[view])
+			.sort(
+				(a, b) =>
+					Number(a.isTraining) - Number(b.isTraining) ||
+					new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+			)
+	);
+	const ready = $derived(branchUnits.filter((u) => !u.isTraining));
+	const branchTemplates = $derived(Object.values(data.templates).filter((t) => t.domain === SERVICE_DOMAIN[view]));
 
-	function getUnitIconPath(unitType: string): string {
-		return `/units/${unitType}.svg`;
-	}
+	// Everything in progress, across all services: the rail is a status board.
+	const byCreated = (a: { createdAt: Date | string }, b: { createdAt: Date | string }) =>
+		new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
+	const training = $derived(data.units.filter((u) => u.isTraining).sort(byCreated));
+	const exercising = $derived(data.units.filter((u) => u.isExercising).sort(byCreated));
 
-	function canAfford(template: any): boolean {
-		if (!template || !data.inventory) return false;
-		return (
-			data.inventory.currency >= template.currencyCost &&
-			(data.inventory.resources.iron || 0) >= template.ironCost &&
-			(data.inventory.resources.steel || 0) >= template.steelCost &&
-			(data.inventory.resources.gunpowder || 0) >= template.gunpowderCost &&
-			(data.inventory.products.rifles || 0) >= template.riflesCost &&
-			(data.inventory.products.ammunition || 0) >= template.ammunitionCost &&
-			(data.inventory.products.artillery || 0) >= template.artilleryCost &&
-			(data.inventory.products.vehicles || 0) >= template.vehiclesCost &&
-			(data.inventory.products.explosives || 0) >= template.explosivesCost &&
-			canCoverManpower(data.availableManpower ?? 0, manpowerCostOf(template.unitType))
+	// ── Formations ──────────────────────────────────────────────────────────
+	const groupKind = $derived(view === "army" ? "division" : view === "aviation" ? "airgroup" : null);
+	const groups = $derived((data.unitGroups ?? []).filter((g) => g.kind === groupKind));
+	const groupNames = $derived(new Map((data.unitGroups ?? []).map((g) => [g.id, g.name])));
+	const canGroup = $derived.by(() => {
+		if (!groupKind) return null;
+		const allowed: readonly string[] = groupKind === "airgroup" ? AIRCRAFT_IDS : DOMAIN_UNITS.land;
+		return (u: { unitType: string; isTraining: boolean; health: number }) =>
+			allowed.includes(u.unitType) && !u.isTraining && u.health > 0;
+	});
+	const unassigned = $derived(canGroup ? branchUnits.filter((u) => canGroup(u) && !u.groupId).length : 0);
+
+	let selected = $state<number[]>([]);
+	$effect(() => {
+		void view;
+		selected = [];
+	});
+	// Drop ticks for units that left (disbanded, moved by the server…).
+	$effect(() => {
+		const ids = new Set(branchUnits.map((u) => u.id));
+		if (selected.some((id) => !ids.has(id))) selected = selected.filter((id) => ids.has(id));
+	});
+
+	// ── Status strip ────────────────────────────────────────────────────────
+	const avg = (key: "health" | "organization" | "supplyLevel" | "fuel") =>
+		ready.length ? Math.round(ready.reduce((s, u) => s + (u[key] ?? 0), 0) / ready.length) : null;
+	const effective = (stat: "baseAttack" | "baseDefense") =>
+		Math.round(
+			ready.reduce(
+				(s, u) => s + (data.templates[u.unitType as keyof typeof data.templates]?.[stat] ?? 0) * (u.health / 100),
+				0
+			)
 		);
-	}
+	const officersAlive = $derived((data.officers ?? []).filter((o) => o.alive).length);
+	const lowOrg = $derived(ready.filter((u) => u.organization < data.exerciseConfig.MIN_ORG_TO_START).length);
+	const inService = $derived(ready.length + (view === "navy" ? data.navy.ships.length : 0));
+	const tone = (v: number | null) =>
+		v == null ? "text-fg" : v < 25 ? "text-error" : v < 50 ? "text-warning" : "text-fg";
 
-	function getTemplateCosts(template: any): Record<string, number> {
-		const costs: Record<string, number> = {};
-		if (template.currencyCost > 0) costs.currency = template.currencyCost;
-		if (template.ironCost > 0) costs.iron = template.ironCost;
-		if (template.steelCost > 0) costs.steel = template.steelCost;
-		if (template.gunpowderCost > 0) costs.gunpowder = template.gunpowderCost;
-		if (template.riflesCost > 0) costs.rifles = template.riflesCost;
-		if (template.ammunitionCost > 0) costs.ammunition = template.ammunitionCost;
-		if (template.artilleryCost > 0) costs.artillery = template.artilleryCost;
-		if (template.vehiclesCost > 0) costs.vehicles = template.vehiclesCost;
-		if (template.explosivesCost > 0) costs.explosives = template.explosivesCost;
-		return costs;
-	}
-
-	function getAvailableResources(): Record<string, number> {
-		return {
-			currency: data.inventory.currency,
-			iron: data.inventory.resources.iron || 0,
-			steel: data.inventory.resources.steel || 0,
-			gunpowder: data.inventory.resources.gunpowder || 0,
-			rifles: data.inventory.products.rifles || 0,
-			ammunition: data.inventory.products.ammunition || 0,
-			artillery: data.inventory.products.artillery || 0,
-			vehicles: data.inventory.products.vehicles || 0,
-			explosives: data.inventory.products.explosives || 0
-		};
-	}
-
-	function progressBetween(start: Date | string | null, end: Date | string | null): number {
-		if (!start || !end) return 0;
-		const s = new Date(start).getTime();
-		const e = new Date(end).getTime();
-		return Math.min(100, Math.max(0, ((now - s) / (e - s)) * 100));
-	}
-
-	function timeLeft(end: Date | string | null): string {
-		if (!end) return "";
-		const diff = new Date(end).getTime() - now;
-		if (diff <= 0) return "Ready";
-		const hours = Math.floor(diff / 3600000);
-		const minutes = Math.floor((diff % 3600000) / 60000);
-		return hours > 0 ? `${hours}h ${minutes}m` : `${minutes}m`;
-	}
-
-	// Army and Aviation each see only their own service's units and templates.
-	const seaUnits = $derived(data.units.filter((u) => data.templates[u.unitType]?.domain === "sea"));
-	const domain = $derived(view === "army" ? "land" : view === "aviation" ? "air" : "sea");
-	const domainUnits = $derived(data.units.filter((u) => data.templates[u.unitType]?.domain === domain));
-	const domainTemplates = $derived(Object.values(data.templates).filter((t) => t.domain === domain));
-	const countFor = (service: View) => {
-		const d = service === "army" ? "land" : service === "aviation" ? "air" : "sea";
-		return data.units.filter((u) => data.templates[u.unitType]?.domain === d).length;
-	};
-	// Show every unit of the branch, including those still in the drill yard —
-	// otherwise a freshly trained ship or squadron looks like it vanished.
-	const rosterUnits = $derived(
-		[...domainUnits].sort(
-			(a, b) => Number(a.isTraining) - Number(b.isTraining) || new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
-		)
-	);
-	const activeUnits = $derived(domainUnits.filter((u) => !u.isTraining));
-	const trainingUnits = $derived(
-		domainUnits
-			.filter((u) => u.isTraining)
-			.sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime())
-	);
-	// Only the first unit in the queue is actually drilling.
-	const activeTrainingUnit = $derived(trainingUnits[0]);
-	const queuedUnits = $derived(trainingUnits.slice(1));
-
-	// Shared enhance: busy flag, toast on failure, a quiet glow on success.
-	function submit(target: () => HTMLElement | undefined, after?: () => void): SubmitFunction {
-		return () => {
-			isSubmitting = true;
-			return async ({ update, result }) => {
-				await update();
-				isSubmitting = false;
-				after?.();
-				if (result.type === "success") celebrate(target());
-				else toastResult(result);
-			};
-		};
-	}
-
-	const bars = [
-		{ key: "organization", label: "ORG", color: "var(--color-friendly)" },
-		{ key: "health", label: "STR", color: "var(--color-positive)" },
-		{ key: "supplyLevel", label: "SUP", color: "var(--color-primary)" },
-		{ key: "fuel", label: "FUEL", color: "var(--color-warning)" }
-	] as const;
+	let yard = $state<HTMLElement>();
 </script>
 
-<PageContainer maxWidth="6xl">
-	<PageHeader
-		title="Forces"
-		documentTitle="Forces"
-		subtitle="Navy, army and aviation — one service record, kept apart"
-		icon={FluentTarget}
-	/>
+<svelte:head><title>Forces · PsyOps</title></svelte:head>
 
-	<!-- Tabs keep the three services on one page without mixing their units. -->
-	<div class="flex flex-wrap gap-2 border-b border-line/20 pb-2" role="tablist" aria-label="Service branch">
-		{#each VIEWS as service (service)}
-			<button
-				type="button"
-				role="tab"
-				aria-selected={view === service}
-				class="rounded-sm px-4 py-2 text-sm font-medium capitalize transition-colors {view === service
-					? 'bg-primary/15 text-primary-fg border border-primary/45'
-					: 'text-fg-muted hover:text-fg border border-transparent'}"
-				onclick={() => setView(service)}
-			>
-				{service === "navy" ? "Navy" : service === "army" ? "Army" : "Aviation"}
-				<span class="ml-1 text-[10px] font-mono opacity-70">
-					{service === "navy" ? data.navy.ships.length + seaUnits.length : countFor(service)}
-				</span>
-			</button>
-		{/each}
-	</div>
-
-	{#if trainingDisabled && view !== "navy"}
-		<p
-			class="bg-primary/12 border border-primary/35 text-primary-fg rounded-sm px-4 py-3 text-sm flex items-center gap-2"
+<PageContainer maxWidth="7xl">
+	<!-- Header -->
+	<header class="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+		<div class="min-w-0">
+			<p class="section-title">J3 · Order of battle</p>
+			<h1 class="mt-1 text-2xl font-semibold text-heading">Forces</h1>
+			<p class="mt-0.5 text-sm text-fg-muted">
+				{data.residence.stateName ?? "Independent region"} · raise, drill and organise your army, navy and air arm
+				<a
+					href="/docs/conflict"
+					class="ml-1 inline-flex align-middle text-fg-faint hover:text-primary-fg"
+					title="How units, drill and battles work"
+				>
+					<FluentInfo16Regular class="size-4" />
+				</a>
+			</p>
+		</div>
+		<div
+			class="flex shrink-0 rounded-md border border-line/20 bg-surface-2 p-0.5"
+			role="tablist"
+			aria-label="Service branch"
 		>
-			<FluentWarning20Filled class="size-4 shrink-0" />
-			{trainingDisabledReason}
+			{#each SERVICES as s (s.id)}
+				{@const count = s.id === "navy" ? data.navy.ships.length + countFor("navy") : countFor(s.id)}
+				<button
+					type="button"
+					role="tab"
+					aria-selected={view === s.id}
+					class="flex flex-1 items-center justify-center gap-1.5 rounded-[5px] px-3 py-1.5 text-sm transition-colors {view ===
+					s.id
+						? 'bg-primary/18 font-medium text-primary-fg'
+						: 'text-fg-muted hover:text-fg'}"
+					onclick={() => setView(s.id)}
+				>
+					<s.icon class="size-4" />
+					{s.label}
+					<span class="data text-[10px] opacity-70">{count}</span>
+				</button>
+			{/each}
+		</div>
+	</header>
+
+	{#if blocked && view !== "navy"}
+		<p class="flex items-center gap-2 rounded-sm border border-warning/35 bg-warning/10 px-3 py-2 text-sm text-fg-body">
+			<FluentWarning20Filled class="size-4 shrink-0 text-warning" />
+			{blocked}
 		</p>
 	{/if}
 
-	<!-- ── Officers, academy and formations ──────────────────────────────── -->
-	<section class="panel animate-soft-in rounded-sm p-5 space-y-3">
-		<div class="flex flex-wrap items-center justify-between gap-2">
-			<h2 class="section-title">Commanders & formations</h2>
-			{#if data.navy.canCommand}
-				<div class="w-full sm:w-auto sm:min-w-56">
-					<ResourceRequirements
-						title="Academy cost"
-						compact
-						costs={{ currency: ACADEMY.money, steel: ACADEMY.steel, hours: ACADEMY.durationHours }}
-						available={{}}
-					/>
-					<form method="POST" action="?/startTraining" use:enhance class="mt-2">
-						<Button type="submit" size="sm" variant="secondary">Train a commander</Button>
-					</form>
-				</div>
-			{/if}
+	<!-- Status strip -->
+	<div class="panel overflow-hidden">
+		<div
+			class="grid grid-cols-2 gap-px bg-line/12 sm:grid-cols-5 [&>*]:bg-surface-4 [&>*:last-child]:col-span-2 sm:[&>*:last-child]:col-span-1"
+		>
+			<StatTile
+				label="In service"
+				icon={FluentFlag20Regular}
+				value={inService}
+				hint={view === "navy" && data.navy.ships.length
+					? `${data.navy.ships.length} hulls · ${ready.length} naval units`
+					: branchUnits.length > ready.length
+						? `${branchUnits.length - ready.length} more in training`
+						: "none in training"}
+			/>
+			<StatTile
+				label="Strength"
+				icon={FluentShield20Regular}
+				value={avg("health")}
+				suffix="%"
+				tone={tone(avg("health"))}
+				hint={ready.length ? `ATK ${effective("baseAttack")} · DEF ${effective("baseDefense")}` : "no units ready"}
+				title="Average strength; attack and defence scaled by what is left of each unit"
+			/>
+			<StatTile
+				label="Readiness"
+				icon={FluentGauge20Regular}
+				value={avg("organization")}
+				suffix="%"
+				tone={tone(avg("organization"))}
+				hint={ready.length
+					? lowOrg
+						? `${lowOrg} too disorganised to drill`
+						: "all fit to exercise"
+					: "average organisation"}
+				title="Average organisation"
+			/>
+			<StatTile
+				label="Supply"
+				icon={FluentBox20Regular}
+				value={avg("supplyLevel")}
+				suffix="%"
+				tone={tone(avg("supplyLevel"))}
+				hint={avg("fuel") != null ? `fuel ${avg("fuel")}%` : "average supply"}
+			/>
+			<StatTile
+				label="Commanders"
+				icon={FluentHatGraduation20Regular}
+				value={officersAlive}
+				hint={(data.commanderTrainings ?? []).length
+					? `${(data.commanderTrainings ?? []).length} at the academy`
+					: `${(data.unitGroups ?? []).length} formations`}
+			/>
 		</div>
-		{#if (data.commanderTrainings ?? []).length}
-			<div class="text-xs text-fg-muted">
-				In training: {(data.commanderTrainings ?? []).map((t) => new Date(t.completesAt).toLocaleString()).join(", ")}
-			</div>
-		{/if}
-		{#if (data.officers ?? []).length}
-			<p class="text-[10px] uppercase tracking-wide text-fg-muted">Officer corps</p>
-			<div class="flex flex-wrap gap-2">
-				{#each (data.officers ?? []) as officer (officer.id)}
-					<div class="soft-lift rounded-sm border border-line/20 bg-surface-1 px-2 py-1">
-						<CommanderBadge {officer} size="sm" />
-					</div>
-				{/each}
-			</div>
-		{/if}
-
-		<!-- Formations: a card per group with its commander and icon-bearing roster.
-		     Unassigned units are picked as icon tiles, then moved into a group or
-		     used to create one. -->
-		{#each (["airgroup", "division"] as const) as kind}
-			{@const pool = (data.officerUnits ?? []).filter((u) => !u.groupId && (kind === "airgroup" ? (AIRCRAFT_IDS as readonly string[]).includes(u.unitType) : (DOMAIN_UNITS.land as readonly string[]).includes(u.unitType)))}
-			{@const groups = (data.unitGroups ?? []).filter((g) => g.kind === kind)}
-			<div class="animate-soft-in rounded-sm border border-line/20 p-3 space-y-3">
-				<div class="flex flex-wrap items-center justify-between gap-2">
-					<div class="flex items-center gap-2 text-xs font-semibold text-heading">
-						<span class="text-base">{kind === "airgroup" ? "🛩️" : "🛡️"}</span>
-						{kind === "airgroup" ? "Airgroups" : "Divisions"}
-						<Badge tone="neutral" size="xs">{groups.length}</Badge>
-					</div>
-					<span class="text-[10px] text-fg-muted">{pool.length} unassigned</span>
-				</div>
-
-				{#each groups as group (group.id)}
-					{@const members = unitsOf(group.id)}
-					{@const officer = officersById.get(group.commanderId ?? -1)}
-					<div class="rounded-sm border border-line/15 bg-surface-1/50 p-3">
-						<div class="flex flex-wrap items-center gap-2">
-							<span class="font-semibold text-fg">{group.name}</span>
-							<Badge tone="neutral" size="xs">{members.length} units</Badge>
-							{#if officer}
-								<span class="ml-1 flex items-center gap-1 text-[10px] text-fg-muted">
-									<span class="size-1.5 rounded-full bg-positive"></span> commanded by {officer.name}
-								</span>
-							{/if}
-							<form method="POST" action="?/disbandUnitGroup" use:enhance class="ml-auto">
-								<input type="hidden" name="groupId" value={group.id} />
-								<Button type="submit" size="xs" variant="ghost">Disband</Button>
-							</form>
-						</div>
-
-						<div class="mt-2 flex flex-wrap gap-1.5">
-							{#each members as unit (unit.id)}
-								<div class="group flex items-center gap-1 rounded-sm border border-line/20 bg-surface-2 px-1.5 py-1" title="{unitLabel(unit.unitType)} · {unit.name}">
-									<UnitIcon unitType={unit.unitType} size={22} />
-									<span class="max-w-24 truncate text-[10px] text-fg-soft">{unit.name}</span>
-									<form method="POST" action="?/setUnitGroup" use:enhance={handleSubmit}>
-										<input type="hidden" name="unitIds" value={unit.id} />
-										<input type="hidden" name="groupId" value="" />
-										<button type="submit" class="text-fg-faint transition-colors hover:text-error" title="Detach from {group.name}">×</button>
-									</form>
-								</div>
-							{:else}
-								<p class="text-xs text-fg-muted">Empty formation — move units in below.</p>
-							{/each}
-						</div>
-
-						<form method="POST" action="?/assignCommander" use:enhance class="mt-2 flex flex-wrap items-center gap-1.5">
-							<input type="hidden" name="kind" value={kind} />
-							<input type="hidden" name="id" value={group.id} />
-							<select name="commanderId" class="field-control rounded-sm px-1.5 py-1 text-[11px]">
-								<option value="">No commander</option>
-								{#each (data.officers ?? []).filter((o) => o.alive) as o (o.id)}
-									<option value={o.id} selected={o.id === group.commanderId}>{o.name}</option>
-								{/each}
-							</select>
-							<Button type="submit" size="xs" variant="ghost">Set commander</Button>
-						</form>
-					</div>
-				{/each}
-
-				{#if pool.length}
-					<div class="rounded-sm border border-dashed border-line/25 p-2">
-						<p class="mb-2 text-[10px] uppercase tracking-wide text-fg-muted">Unassigned {kind === "airgroup" ? "aircraft" : "battalions"}</p>
-						<form method="POST" action="?/setUnitGroup" use:enhance={handleSubmit}>
-							<div class="grid max-h-52 grid-cols-2 gap-1.5 overflow-y-auto sm:grid-cols-3 lg:grid-cols-4">
-								{#each pool as unit (unit.id)}
-									<label class="flex cursor-pointer items-center gap-1.5 rounded-sm border border-line/15 bg-surface-2/60 px-2 py-1.5 transition-colors hover:border-primary/40">
-										<input type="checkbox" name="unitIds" value={unit.id} class="checkbox checkbox-xs" />
-										<UnitIcon unitType={unit.unitType} size={22} />
-										<span class="min-w-0 flex-1 truncate text-[10px] text-fg-soft" title="{unitLabel(unit.unitType)} · {unit.name}">{unit.name}</span>
-									</label>
-								{/each}
-							</div>
-							<div class="mt-2 flex flex-wrap items-center gap-2">
-								<select name="groupId" class="field-control rounded-sm px-2 py-1 text-[11px]">
-									<option value="">Unassigned</option>
-									{#each groups as g (g.id)}<option value={g.id}>{g.name}</option>{/each}
-								</select>
-								<Button type="submit" size="xs" variant="secondary">Move selected</Button>
-							</div>
-						</form>
-						<form method="POST" action="?/formUnitGroup" use:enhance={handleSubmit} class="mt-2 flex flex-wrap gap-2">
-							<input type="hidden" name="kind" value={kind} />
-							<input name="name" required maxlength="100" placeholder="New {kind} name" class="field-control min-w-40 flex-1 rounded-sm px-2 py-1 text-[11px]" />
-							<select name="commanderId" class="field-control rounded-sm px-2 py-1 text-[11px]" title="Place the new formation under a commander">
-								<option value="">No commander yet</option>
-								{#each (data.officers ?? []).filter((o) => o.alive) as o (o.id)}
-									<option value={o.id}>{o.name}</option>
-								{/each}
-							</select>
-							<Button type="submit" size="xs" variant="secondary">Form {kind}</Button>
-						</form>
-						<p class="mt-1 text-[10px] text-fg-muted">Tick units above, then move them into a group or form a new one.</p>
-					</div>
-				{/if}
-			</div>
-		{/each}
-	</section>
+	</div>
 
 	{#if view === "navy"}
-		<!-- Ships trained as military units are not fleet hulls: show both, so a
-		     carrier that is still drilling is just as visible as a frigate at sea. -->
-		<section class="panel rounded-sm p-5 space-y-3">
-			<div class="flex items-center justify-between">
-				<h2 class="section-title">Naval units</h2>
-				<Badge tone="green">{seaUnits.length}</Badge>
-			</div>
-			{#if seaUnits.length}
-				<ul class="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
-					{#each seaUnits as unit (unit.id)}
-						<li class="panel-muted rounded-sm flex items-center gap-2 px-3 py-2">
-							<img src={getUnitIconPath(unit.unitType)} alt="" class="size-8 object-contain {INK}" />
-							<div class="min-w-0 flex-1">
-								<p class="truncate text-sm font-medium text-fg">{unit.name}</p>
-								<p class="text-[10px] uppercase tracking-wide text-fg-muted">{unitLabel(unit.unitType)}</p>
-							</div>
-							{#if unit.isTraining}<Badge tone="amber" size="xs">Training</Badge>{/if}
-						</li>
-					{/each}
-				</ul>
-			{:else}
-				<p class="text-sm text-fg-muted">No naval units in service yet.</p>
-			{/if}
-		</section>
-		<!-- The fleet console used to be /navy. It now lives here as its own tab. -->
+		<div class="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1fr)_19rem]">
+			<section class="panel min-w-0 p-4 sm:p-5">
+				<h2 class="section-title mb-3">
+					<FluentVehicleShip20Regular class="size-4" /> Naval units <Badge tone="neutral" size="xs">
+						{branchUnits.length}
+					</Badge>
+				</h2>
+				{#if branchUnits.length}
+					<Roster
+						units={branchUnits}
+						templates={data.templates}
+						exercise={data.exerciseConfig}
+						{now}
+						{blocked}
+						{groupNames}
+						canGroup={null}
+						bind:selected
+					/>
+				{:else}
+					<p class="text-sm text-fg-muted">
+						No naval units trained yet — hulls at sea are listed in the fleet console below.
+					</p>
+				{/if}
+			</section>
+			<aside class="panel space-y-4 self-start p-4">
+				<SideRail
+					{now}
+					{training}
+					{exercising}
+					exercise={data.exerciseConfig}
+					officers={data.officers ?? []}
+					courses={data.commanderTrainings ?? []}
+					canCommand={data.navy.canCommand}
+					bind:yard
+				/>
+			</aside>
+		</div>
+		<!-- The fleet console used to be /navy; it lives here as the Navy tab. -->
 		<NavyConsole data={data.navy} embedded />
 	{:else}
-		{#if view === "aviation"}
-			<section class="panel rounded-sm p-5 space-y-3">
-				<h2 class="section-title">Air operations</h2>
-				<AirOperations
-					airSupport={data.navy.airSupport}
-					airMissions={data.navy.airMissions}
-					regionList={data.navy.regionList}
-					myStateId={data.navy.myStateId}
-					canCommand={data.navy.canCommand}
-				/>
-			</section>
-			<Tutorial id="air" title="Luftwaffen-Kurzanleitung" steps={airSteps} />
-		{/if}
+		<div class="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1fr)_19rem]">
+			<div class="min-w-0 space-y-6">
+				{#if view === "aviation"}
+					<section class="panel p-4 sm:p-5">
+						<h2 class="section-title mb-3"><FluentAirplane20Regular class="size-4" /> Air operations</h2>
+						<AirOperations
+							airSupport={data.navy.airSupport}
+							airMissions={data.navy.airMissions}
+							regionList={data.navy.regionList}
+							myStateId={data.navy.myStateId}
+							canCommand={data.navy.canCommand}
+						/>
+					</section>
+					<Tutorial id="air" title="Luftwaffen-Kurzanleitung" steps={airSteps} />
+				{/if}
 
-		<div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-		<div class="lg:col-span-2 space-y-6">
-			<!-- Roster -->
-			<section bind:this={roster} class="space-y-3">
-				<div class="flex items-center justify-between">
-					<h2 class="section-title">Roster</h2>
-					{#if rosterUnits.length > 0}
-						<Badge tone="green">{activeUnits.length} in service{trainingUnits.length ? ` · ${trainingUnits.length} training` : ""}</Badge>
-					{/if}
-				</div>
-
-				{#each rosterUnits as unit, i (unit.id)}
-					{@const tpl = data.templates[unit.unitType]}
-					{@const level = getExperienceLevel(unit.experience ?? 0)}
-					<article
-						out:vanish
-						class="panel rounded-sm p-4 sm:p-5 animate-rise-in"
-						style="--rise-delay: {Math.min(i, 6) * 40}ms"
-					>
-						<!-- Service record header -->
-						<div class="flex items-start gap-3">
-							<div class="size-12 shrink-0 panel-muted rounded-sm p-1.5">
-								<img
-									loading="lazy"
-									decoding="async"
-									src={getUnitIconPath(unit.unitType)}
-									alt=""
-									class="size-full object-contain opacity-90 {INK}"
-								/>
-							</div>
-							<div class="flex-1 min-w-0">
-								<p class="text-[10px] uppercase tracking-[0.2em] text-fg-muted font-mono">
-									No. {String(unit.id).padStart(4, "0")} · {unitLabel(unit.unitType)}
-								</p>
-								<h3 class="font-bold text-fg truncate">{unit.name}</h3>
-								<div class="mt-1 flex flex-wrap items-center gap-1.5">
-									{#if unit.isTraining}<Badge tone="amber" size="xs">In training</Badge>{/if}
-									<Badge tone="red" size="xs">ATK {tpl.baseAttack}</Badge>
-									<Badge tone="blue" size="xs">DEF {tpl.baseDefense}</Badge>
-									<Badge tone="purple" size="xs">{level.label}</Badge>
-								</div>
-							</div>
-							<form
-								method="POST"
-								action="?/disbandUnit"
-								use:confirmSubmit={{
-									title: `Disband ${unit.name}?`,
-									body: "No refund.",
-									confirmLabel: "Disband",
-									danger: true
-								}}
-								use:enhance={() =>
-									async ({ update, result }) => {
-										await update();
-										toastResult(result);
-									}}
-							>
-								<input type="hidden" name="unitId" value={unit.id} />
-								<IconButton
-									type="submit"
-									icon={IconDelete}
-									label="Disband unit"
-									variant="ghost"
-									size="sm"
-									shape="square"
-									class="text-fg-muted hover:text-red-400 hover:bg-red-500/10"
-								/>
-							</form>
-						</div>
-
-						<!-- Condition -->
-						<div class="mt-4">
-							<div class="flex items-center justify-between text-xs mb-1">
-								<span class="text-fg-muted">EXP</span>
-								<span class="font-mono text-fg-soft">{unit.experience ?? 0}%</span>
-							</div>
-							<div class="h-1.5 bg-surface-0/70 rounded-full overflow-hidden border border-line/10">
-								<div
-									class="h-full rounded-full bg-politics transition-all duration-500"
-									style="width: {unit.experience ?? 0}%"
-								></div>
-							</div>
-						</div>
-						<div class="mt-2 grid grid-cols-3 gap-3">
-							{#each bars as bar}
-								<div>
-									<div class="flex items-center justify-between text-xs mb-1">
-										<span class="text-fg-muted">{bar.label}</span>
-										<span class="font-mono text-fg-soft">{unit[bar.key]}%</span>
-									</div>
-									<div class="h-1.5 bg-surface-0/70 rounded-full overflow-hidden border border-line/10">
-										<div
-											class="h-full rounded-full transition-all duration-500"
-											style="width: {unit[bar.key]}%; background: {bar.color}"
-										></div>
-									</div>
-								</div>
-							{/each}
-						</div>
-
-						<!-- Exercise -->
-						<div class="mt-4 pt-3 border-t border-dashed border-line/20">
-							{#if unit.isExercising}
-								{@const exComplete = unit.exerciseCompletesAt && new Date(unit.exerciseCompletesAt).getTime() <= now}
-								<div class="flex items-center justify-between text-xs mb-1">
-									<span class="text-politics-fg">On exercise</span>
-									<span class="text-fg-muted font-mono">{timeLeft(unit.exerciseCompletesAt)}</span>
-								</div>
-								<div class="h-1.5 bg-surface-0/70 rounded-full overflow-hidden border border-line/10 mb-3">
-									<div
-										class="h-full rounded-full bg-politics transition-all duration-700"
-										style="width: {progressBetween(unit.exerciseStartedAt, unit.exerciseCompletesAt)}%"
-									></div>
-								</div>
-								{#if exComplete}
-									<form method="POST" action="?/completeExercise" use:enhance={submit(() => roster)}>
-										<input type="hidden" name="unitId" value={unit.id} />
-										<Button
-											type="submit"
-											variant="soft-emerald"
-											size="sm"
-											block
-											disabled={isSubmitting}
-											icon={IconCheckmark}
-										>
-											Complete exercise
-										</Button>
-									</form>
-								{:else}
-									<form method="POST" action="?/cancelExercise" use:enhance={submit(() => undefined)}>
-										<input type="hidden" name="unitId" value={unit.id} />
-										<Button
-											type="submit"
-											variant="ghost"
-											size="sm"
-											block
-											disabled={isSubmitting}
-											class="hover:text-red-400"
-										>
-											Cancel exercise
-										</Button>
-									</form>
-								{/if}
-							{:else}
-								{@const lowOrg = unit.organization < data.exerciseConfig.MIN_ORG_TO_START}
-								<form method="POST" action="?/startExercise" use:enhance={submit(() => undefined)}>
-									<input type="hidden" name="unitId" value={unit.id} />
-									<Button
-										type="submit"
-										variant="secondary"
-										size="sm"
-										block
-										icon={IconClock}
-										disabled={isSubmitting || trainingDisabled || lowOrg}
-									>
-										Exercise ({data.exerciseConfig.DURATION_HOURS}h)
-									</Button>
-								</form>
-								<p class="mt-1.5 text-[11px] leading-snug text-fg-muted">
-									{#if lowOrg}
-										Needs {data.exerciseConfig.MIN_ORG_TO_START}% ORG
-									{:else}
-										+{data.exerciseConfig.EXPERIENCE_GAIN} XP · −{data.exerciseConfig.ORG_COST} ORG · −{data
-											.exerciseConfig.SUPPLY_COST} SUP · equipment worn
-									{/if}
-								</p>
+				<!-- Order of battle -->
+				{#if groupKind}
+					<section class="panel p-4 sm:p-5">
+						<div class="mb-3 flex flex-wrap items-center gap-2">
+							<h2 class="section-title">
+								<FluentPeopleTeam20Regular class="size-4" />
+								{groupKind === "division" ? "Divisions" : "Airgroups"}
+							</h2>
+							<Badge tone="neutral" size="xs">{groups.length}</Badge>
+							{#if unassigned}
+								<span class="ml-auto text-[11px] text-fg-muted">{unassigned} unassigned — tick them in the roster</span>
 							{/if}
 						</div>
-					</article>
-				{/each}
-
-				{#if rosterUnits.length === 0}
-					<EmptyState icon={FluentTarget} title="No units in this branch" />
+						<Formations
+							kind={groupKind}
+							{groups}
+							units={data.officerUnits ?? []}
+							officers={data.officers ?? []}
+							{unassigned}
+							bind:selected
+						/>
+					</section>
 				{/if}
-			</section>
 
-			<!-- Recruitment office -->
-			<section class="panel rounded-sm p-5 space-y-4">
-				<h2 class="section-title">Recruitment office</h2>
+				<!-- Roster -->
+				<section class="panel p-4 sm:p-5">
+					<div class="mb-2 flex flex-wrap items-center gap-2">
+						<h2 class="section-title"><FluentFlag20Regular class="size-4" /> Roster</h2>
+						<Badge tone="green" size="xs">{ready.length} ready</Badge>
+						{#if branchUnits.length > ready.length}<Badge tone="amber" size="xs">
+								{branchUnits.length - ready.length} training
+							</Badge>{/if}
+					</div>
+					{#if branchUnits.length}
+						<Roster
+							units={branchUnits}
+							templates={data.templates}
+							exercise={data.exerciseConfig}
+							{now}
+							{blocked}
+							{groupNames}
+							{canGroup}
+							bind:selected
+						/>
+					{:else}
+						<p class="py-4 text-sm text-fg-muted">
+							No {view === "army" ? "battalions" : "squadrons"} yet — recruit one below.
+						</p>
+					{/if}
+				</section>
 
-				<div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2">
-					{#each domainTemplates as template (template.id)}
-						{@const isSelected = selectedTemplate?.id === template.id}
-						<button
-							type="button"
-							class="press-spring tap-target p-3 rounded-sm border transition-colors text-center {isSelected
-								? 'bg-primary/12 border-primary/55'
-								: 'bg-surface-4/70 border-line/15 hover:border-primary/45'} disabled:opacity-50 disabled:cursor-not-allowed"
-							aria-pressed={isSelected}
-							onclick={() => (selectedTemplate = template)}
-							disabled={isSubmitting || trainingDisabled}
-						>
-							<img
-								loading="lazy"
-								decoding="async"
-								src={getUnitIconPath(template.unitType)}
-								alt=""
-								class="size-12 mx-auto object-contain transition-[filter] {isSelected ? INK_GOLD : INK}"
-							/>
-							<span
-								class="mt-1.5 block text-sm font-medium leading-tight {isSelected ? 'text-primary-fg' : 'text-fg-soft'}"
-								>{unitLabel(template.unitType)}</span
-							>
-							<span class="mt-0.5 block text-[10px] font-mono text-fg-muted">
-								{template.baseAttack}/{template.baseDefense} · {template.trainingDuration}h
-							</span>
-						</button>
-					{/each}
-				</div>
-
-				{#if selectedTemplate}
-					{#key selectedTemplate.id}
-						<!-- Enlistment form -->
-						<div class="panel-muted rounded-sm p-4 space-y-4 animate-rise-in">
-							<div class="flex items-center gap-3 pb-3 border-b border-dashed border-line/20">
-								<img
-									loading="lazy"
-									decoding="async"
-									src={getUnitIconPath(selectedTemplate.unitType)}
-									alt=""
-									class="size-12 object-contain shrink-0 {INK}"
-								/>
-								<div class="min-w-0 flex-1">
-									<p class="text-[10px] uppercase tracking-[0.2em] text-fg-muted">Enlistment order</p>
-									<h3 class="font-serif text-lg font-bold text-fg truncate">{selectedTemplate.displayName}</h3>
-								</div>
-								<div class="text-right shrink-0">
-									<p class="text-[10px] uppercase tracking-wide text-fg-muted">Drill</p>
-									<p class="font-mono font-bold text-fg">{selectedTemplate.trainingDuration}h</p>
-								</div>
-							</div>
-
-							<ResourceRequirements costs={getTemplateCosts(selectedTemplate)} available={getAvailableResources()} />
-
-							<p class="mt-3 text-[10px] uppercase tracking-[0.2em] text-fg-muted">
-								Manpower
-								<span class="font-mono text-fg">{manpowerCostOf(selectedTemplate.unitType).toLocaleString()} civilians</span>
-								· {data.availableManpower.toLocaleString()} in region
-							</p>
-
-							<form
-								method="POST"
-								action="?/train"
-								use:enhance={submit(
-									() => yard,
-									() => (selectedTemplate = null)
-								)}
-							>
-								<input type="hidden" name="unitType" value={selectedTemplate.unitType} />
-								<Button
-									type="submit"
-									variant="primary"
-									block
-									icon={IconAdd}
-									disabled={!canAfford(selectedTemplate) || trainingDisabled}
-									loading={isSubmitting}
-									loadingText="Enlisting…"
-								>
-									Enlist
-								</Button>
-							</form>
-						</div>
-					{/key}
+				{#if groupKind && selected.length}
+					<SelectionBar kind={groupKind} {groups} officers={data.officers ?? []} bind:selected />
 				{/if}
-			</section>
-		</div>
 
-		<!-- Drill yard -->
-		<aside bind:this={yard} class="panel rounded-sm p-5 self-start space-y-3">
-			<div class="flex items-center justify-between">
-				<h2 class="section-title">Drill yard</h2>
-				{#if trainingUnits.length > 0}
-					<Badge tone="amber">{trainingUnits.length}</Badge>
-				{/if}
+				<!-- Recruitment office -->
+				<section id="recruit" class="panel scroll-mt-4 p-4 sm:p-5">
+					<div class="mb-1 flex flex-wrap items-baseline gap-x-3 gap-y-1">
+						<h2 class="section-title"><FluentPersonAdd20Regular class="size-4" /> Recruitment office</h2>
+						<span class="text-[11px] text-fg-muted">
+							<span class="data text-fg-soft">
+								{Math.max(0, data.availableManpower - POPULATION_FLOOR).toLocaleString()}
+							</span> civilians to spare in your region
+						</span>
+					</div>
+					<Recruitment
+						templates={branchTemplates}
+						inventory={data.inventory}
+						manpower={data.availableManpower}
+						{blocked}
+						glow={() => yard}
+					/>
+				</section>
 			</div>
 
-			{#if activeTrainingUnit}
-				{@const isComplete =
-					activeTrainingUnit.trainingCompletesAt && new Date(activeTrainingUnit.trainingCompletesAt).getTime() <= now}
-				<div class="bg-primary/12 border border-primary/35 rounded-sm p-3">
-					<div class="flex items-center gap-2 mb-2">
-						<img
-							loading="lazy"
-							decoding="async"
-							src={getUnitIconPath(activeTrainingUnit.unitType)}
-							alt=""
-							class="size-10 object-contain shrink-0 {INK}"
-						/>
-						<div class="flex-1 min-w-0">
-							<h3 class="font-semibold text-fg text-sm truncate">{activeTrainingUnit.name}</h3>
-							<p class="text-xs text-primary-fg font-mono">{timeLeft(activeTrainingUnit.trainingCompletesAt)}</p>
-						</div>
-					</div>
-					<div class="h-1.5 bg-surface-0/70 rounded-full overflow-hidden border border-line/10">
-						<div
-							class="h-full rounded-full bg-primary transition-all duration-700"
-							style="width: {progressBetween(
-								activeTrainingUnit.trainingStartedAt,
-								activeTrainingUnit.trainingCompletesAt
-							)}%"
-						></div>
-					</div>
-					{#if isComplete}
-						<form method="POST" action="?/completeTraining" use:enhance={submit(() => roster)} class="mt-3">
-							<input type="hidden" name="unitId" value={activeTrainingUnit.id} />
-							<Button type="submit" variant="soft-emerald" size="sm" block icon={IconCheckmark} disabled={isSubmitting}>
-								Pass out
-							</Button>
-						</form>
-					{/if}
-				</div>
-			{/if}
-
-			{#if queuedUnits.length > 0}
-				<ol class="space-y-1.5">
-					{#each queuedUnits as unit, index (unit.id)}
-						<li out:vanish class="panel-muted rounded-sm px-2.5 py-2 flex items-center gap-2">
-							<span class="text-xs font-mono text-fg-muted w-5 shrink-0">{index + 2}.</span>
-							<img
-								loading="lazy"
-								decoding="async"
-								src={getUnitIconPath(unit.unitType)}
-								alt=""
-								class="size-6 object-contain shrink-0 {INK}"
-							/>
-							<span class="text-sm text-fg-body truncate flex-1">{unit.name}</span>
-							<span class="text-[10px] uppercase tracking-wide text-fg-muted">Waiting</span>
-						</li>
-					{/each}
-				</ol>
-			{/if}
-
-			{#if trainingUnits.length === 0}
-				<p class="py-6 text-center text-sm text-fg-muted">The yard is empty.</p>
-			{/if}
-		</aside>
+			<aside class="panel space-y-4 self-start p-4 lg:sticky lg:top-4">
+				<SideRail
+					{now}
+					{training}
+					{exercising}
+					exercise={data.exerciseConfig}
+					officers={data.officers ?? []}
+					courses={data.commanderTrainings ?? []}
+					canCommand={data.navy.canCommand}
+					bind:yard
+				/>
+			</aside>
 		</div>
 	{/if}
 </PageContainer>
