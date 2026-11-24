@@ -1,7 +1,7 @@
 <!-- src/routes/(authenticated)/(dock)/party/[id]/EditPartySheet.svelte -->
 <script lang="ts">
 	import { superForm, type SuperValidated } from "sveltekit-superforms";
-	import { valibotClient } from "sveltekit-superforms/adapters";
+	import { valibotClient } from "sveltekit-superforms/adapters/valibot";
 	import { createPartySchema } from "../create/schema";
 	import { useImageUpload } from "#lib/utils/edit/useImageUpload.svelte.js";
 	import FluentPeople20Filled from "~icons/fluent/people-20-filled";

@@ -16,7 +16,7 @@ import { eq, and, sql } from "drizzle-orm";
 import type { Actions, PageServerLoad } from "./$types";
 import { uploadFileFromForm } from "#lib/server/backblaze.js";
 import { superValidate, message } from "sveltekit-superforms";
-import { valibot } from "sveltekit-superforms/adapters";
+import { valibot } from "sveltekit-superforms/adapters/valibot";
 import { createPartySchema } from "./schema";
 import { PARTY_CREATION_CONFIG } from "#lib/config/index.js";
 import { getRegionName } from "#lib/utils/formatting.js";

@@ -30,7 +30,7 @@ import {
 } from "#lib/config/index.js";
 import type { Actions, PageServerLoad } from "./$types";
 import { superValidate, message } from "sveltekit-superforms";
-import { valibot } from "sveltekit-superforms/adapters";
+import { valibot } from "sveltekit-superforms/adapters/valibot";
 import { editFactorySchema } from "./schema";
 
 // Config for the "Edit Factory" bottom sheet.

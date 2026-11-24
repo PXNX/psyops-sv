@@ -1,7 +1,7 @@
 <!-- src/routes/(authenticated)/(dock)/newspaper/create/+page.svelte -->
 <script lang="ts">
 	import { superForm } from "sveltekit-superforms";
-	import { valibotClient } from "sveltekit-superforms/adapters";
+	import { valibotClient } from "sveltekit-superforms/adapters/valibot";
 	import { newspaperSchema } from "./schema";
 	import FluentImage20Filled from "~icons/fluent/image-20-filled";
 	import FluentCheckmark20Filled from "~icons/fluent/checkmark-20-filled";

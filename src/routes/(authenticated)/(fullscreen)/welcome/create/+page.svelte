@@ -1,7 +1,7 @@
 <!-- src/routes/(authenticated)/(fullscreen)/welcome/create/+page.svelte -->
 <script lang="ts">
 	import { superForm } from "sveltekit-superforms";
-	import { valibotClient } from "sveltekit-superforms/adapters";
+	import { valibotClient } from "sveltekit-superforms/adapters/valibot";
 	import { createProfileSchema } from "./schema";
 	import FluentPerson20Filled from "~icons/fluent/person-20-filled";
 	import FluentImage20Filled from "~icons/fluent/image-20-filled";

@@ -38,7 +38,7 @@ import { getEmbargoReason } from "#lib/server/embargo.js";
 import { getLogoUrl, getSignedDownloadUrl, uploadFileFromForm } from "#lib/server/backblaze.js";
 import { sendNotificationIfEnabled } from "#lib/server/services/push-notification.service.js";
 import { superValidate, message, type Infer, type SuperValidated } from "sveltekit-superforms";
-import { valibot } from "sveltekit-superforms/adapters";
+import { valibot } from "sveltekit-superforms/adapters/valibot";
 import { editCompanySchema, declareDividendSchema, dividendPolicySchema } from "./schema";
 import {
 	DividendError,

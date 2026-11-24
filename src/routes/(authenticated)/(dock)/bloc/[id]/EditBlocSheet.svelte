@@ -1,7 +1,7 @@
 <!-- src/routes/(authenticated)/(dock)/bloc/[id]/EditBlocSheet.svelte -->
 <script lang="ts">
 	import { superForm, type SuperValidated } from "sveltekit-superforms";
-	import { valibotClient } from "sveltekit-superforms/adapters";
+	import { valibotClient } from "sveltekit-superforms/adapters/valibot";
 	import FluentFlag20Filled from "~icons/fluent/flag-20-filled";
 	import FluentColor20Filled from "~icons/fluent/color-20-filled";
 	import FluentDocument20Filled from "~icons/fluent/document-20-filled";

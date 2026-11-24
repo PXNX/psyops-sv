@@ -14,7 +14,7 @@ import { and, eq, desc, sql } from "drizzle-orm";
 import type { PageServerLoad, Actions } from "./$types";
 import { getLogoUrl, uploadFileFromForm } from "#lib/server/backblaze.js";
 import { superValidate, message } from "sveltekit-superforms";
-import { valibot } from "sveltekit-superforms/adapters";
+import { valibot } from "sveltekit-superforms/adapters/valibot";
 import { newspaperSchema } from "./schema";
 import { coverImage, excerpt, readingMinutes } from "#lib/server/services/content/article-text.js";
 

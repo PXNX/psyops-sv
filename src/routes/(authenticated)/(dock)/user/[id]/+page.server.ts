@@ -42,7 +42,7 @@ import { getBirthdayInfo, collectBirthdayRewards } from "#lib/server/service/bir
 import { isPremiumActive, PREMIUM_PLANS } from "#lib/config/index.js";
 import { giftPremium as giftPremiumService } from "#lib/server/service/premium.js";
 import { superValidate, message } from "sveltekit-superforms";
-import { valibot } from "sveltekit-superforms/adapters";
+import { valibot } from "sveltekit-superforms/adapters/valibot";
 import { updateProfileSchema } from "./schema";
 import { PROFILE_EDIT_CONFIG } from "#lib/config/features/party.config.js";
 import { getContext } from "#lib/server/context.js";

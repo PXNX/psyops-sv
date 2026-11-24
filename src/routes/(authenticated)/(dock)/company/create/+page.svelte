@@ -1,7 +1,7 @@
 <!-- src/routes/company/create/+page.svelte -->
 <script lang="ts">
 	import { superForm } from "sveltekit-superforms";
-	import { valibotClient } from "sveltekit-superforms/adapters";
+	import { valibotClient } from "sveltekit-superforms/adapters/valibot";
 	import { createCompanySchema } from "./schema";
 	import { goto } from "$app/navigation";
 	import ThreeAnimation from "#lib/component/ThreeAnimation.svelte";

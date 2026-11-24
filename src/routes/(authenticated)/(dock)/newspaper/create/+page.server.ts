@@ -3,7 +3,7 @@ import { db } from "#lib/server/db.js";
 import { journalists, newspapers, files } from "#lib/server/schema.js";
 import { redirect } from "@sveltejs/kit";
 import { superValidate, message } from "sveltekit-superforms";
-import { valibot } from "sveltekit-superforms/adapters";
+import { valibot } from "sveltekit-superforms/adapters/valibot";
 import type { Actions, PageServerLoad } from "./$types";
 import { newspaperSchema } from "./schema";
 import { uploadFileFromForm } from "#lib/server/backblaze.js";

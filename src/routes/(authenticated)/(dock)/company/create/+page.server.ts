@@ -6,7 +6,7 @@ import { eq, sql } from "drizzle-orm";
 import type { Actions, PageServerLoad } from "./$types";
 import { uploadFileFromForm } from "#lib/server/backblaze.js";
 import { superValidate, message } from "sveltekit-superforms";
-import { valibot } from "sveltekit-superforms/adapters";
+import { valibot } from "sveltekit-superforms/adapters/valibot";
 import { createCompanySchema } from "./schema";
 import { reachFirstTime } from "#lib/server/services/politics/first-time.js";
 

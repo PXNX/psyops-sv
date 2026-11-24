@@ -1,7 +1,7 @@
 <!-- src/routes/(authenticated)/(dock)/newspaper/[id]/EditNewspaperSheet.svelte -->
 <script lang="ts">
 	import { superForm, type SuperValidated } from "sveltekit-superforms";
-	import { valibotClient } from "sveltekit-superforms/adapters";
+	import { valibotClient } from "sveltekit-superforms/adapters/valibot";
 	import FluentDocument20Filled from "~icons/fluent/document-20-filled";
 	import FluentImage20Filled from "~icons/fluent/image-20-filled";
 	import FluentCheckmark20Filled from "~icons/fluent/checkmark-20-filled";

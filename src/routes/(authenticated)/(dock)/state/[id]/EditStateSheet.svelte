@@ -1,7 +1,7 @@
 <!-- src/routes/(authenticated)/(dock)/state/[id]/EditStateSheet.svelte -->
 <script lang="ts">
 	import { superForm, type SuperValidated } from "sveltekit-superforms";
-	import { valibotClient } from "sveltekit-superforms/adapters";
+	import { valibotClient } from "sveltekit-superforms/adapters/valibot";
 	import { editStateSchema } from "./schema";
 	import { useImageUpload } from "#lib/utils/edit/useImageUpload.svelte.js";
 	import {

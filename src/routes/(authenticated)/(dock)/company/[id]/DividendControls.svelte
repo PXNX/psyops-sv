@@ -4,7 +4,7 @@
 <script lang="ts">
 	import { tick } from "svelte";
 	import { superForm, type SuperValidated } from "sveltekit-superforms";
-	import { valibotClient } from "sveltekit-superforms/adapters";
+	import { valibotClient } from "sveltekit-superforms/adapters/valibot";
 	import { declareDividendSchema, dividendPolicySchema } from "./schema.js";
 	import { celebrate } from "#lib/utils/celebrate.js";
 	import { toast } from "#lib/ui/toast.svelte.js";

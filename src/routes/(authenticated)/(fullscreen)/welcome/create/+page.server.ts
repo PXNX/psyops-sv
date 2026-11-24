@@ -6,7 +6,7 @@ import { eq } from "drizzle-orm";
 import type { Actions, PageServerLoad } from "./$types";
 import { uploadFileFromForm } from "#lib/server/backblaze.js";
 import { superValidate, message } from "sveltekit-superforms";
-import { valibot } from "sveltekit-superforms/adapters";
+import { valibot } from "sveltekit-superforms/adapters/valibot";
 import { createProfileSchema } from "./schema";
 
 const STARTING_BALANCE = 100_000;

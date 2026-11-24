@@ -1,7 +1,7 @@
 <!-- src/routes/(authenticated)/(dock)/factory/[id]/EditFactorySheet.svelte -->
 <script lang="ts">
 	import { superForm, type SuperValidated } from "sveltekit-superforms";
-	import { valibotClient } from "sveltekit-superforms/adapters";
+	import { valibotClient } from "sveltekit-superforms/adapters/valibot";
 	import FluentFactory20Filled from "~icons/fluent/building-factory-20-filled";
 	import FluentMoney20Filled from "~icons/fluent/money-20-filled";
 	import FluentCheckmark20Filled from "~icons/fluent/checkmark-20-filled";

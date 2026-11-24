@@ -2,7 +2,7 @@
 <script lang="ts">
 	import { goto } from "$app/navigation";
 	import { superForm } from "sveltekit-superforms";
-	import { valibot } from "sveltekit-superforms/adapters";
+	import { valibot } from "sveltekit-superforms/adapters/valibot";
 	import WysiwygEditor from "#lib/component/WysiwygEditor.svelte";
 	import Modal from "#lib/component/Modal.svelte";
 	import PostEditor from "#lib/component/press/PostEditor.svelte";

@@ -36,7 +36,7 @@ import { getLogoUrl, getSignedDownloadUrl, uploadFileFromForm } from "#lib/serve
 import { getRegionName, regionCoatUrl } from "#lib/utils/formatting.js";
 import { sendNotificationIfEnabled } from "#lib/server/services/push-notification.service.js";
 import { superValidate, message } from "sveltekit-superforms";
-import { valibot } from "sveltekit-superforms/adapters";
+import { valibot } from "sveltekit-superforms/adapters/valibot";
 import { editStateSchema } from "./schema";
 
 /** The user's pending residence application for any region of this state. */

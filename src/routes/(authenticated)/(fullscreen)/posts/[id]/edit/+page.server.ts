@@ -5,7 +5,7 @@ import { eq } from "drizzle-orm";
 import type { PageServerLoad, Actions } from "./$types";
 import { fail, redirect } from "@sveltejs/kit";
 import { superValidate } from "sveltekit-superforms";
-import { valibot } from "sveltekit-superforms/adapters";
+import { valibot } from "sveltekit-superforms/adapters/valibot";
 import { editArticleSchema } from "./schema";
 import { sanitizeArticleHtml } from "#lib/utils/safe-html.js";
 

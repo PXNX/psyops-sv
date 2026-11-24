@@ -38,7 +38,7 @@ import {
 	voteOnExpulsion
 } from "#lib/server/service/blocExpulsion.js";
 import { superValidate, message } from "sveltekit-superforms";
-import { valibot } from "sveltekit-superforms/adapters";
+import { valibot } from "sveltekit-superforms/adapters/valibot";
 import { editBlocSchema } from "./schema.js";
 import { warsOfBloc } from "#lib/server/services/military/history.js";
 

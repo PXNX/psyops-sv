@@ -15,7 +15,7 @@ import type { Actions, PageServerLoad } from "./$types";
 import { getLogoUrl, getSignedDownloadUrl } from "#lib/server/backblaze.js";
 import { getContext } from "#lib/server/context.js";
 import { superValidate, message } from "sveltekit-superforms";
-import { valibot } from "sveltekit-superforms/adapters";
+import { valibot } from "sveltekit-superforms/adapters/valibot";
 import { createPartySchema } from "../create/schema";
 
 // Configuration constants for the party edit flow (ported from the old /edit route).

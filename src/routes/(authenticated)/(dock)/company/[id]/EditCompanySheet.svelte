@@ -1,7 +1,7 @@
 <!-- src/routes/(authenticated)/(dock)/company/[id]/EditCompanySheet.svelte -->
 <script lang="ts">
 	import { superForm, type SuperValidated } from "sveltekit-superforms";
-	import { valibotClient } from "sveltekit-superforms/adapters";
+	import { valibotClient } from "sveltekit-superforms/adapters/valibot";
 	import { editCompanySchema } from "./schema.js";
 	import { formatDate } from "#lib/utils/formatting.js";
 	import { useImageUpload } from "#lib/utils/edit/useImageUpload.svelte.js";

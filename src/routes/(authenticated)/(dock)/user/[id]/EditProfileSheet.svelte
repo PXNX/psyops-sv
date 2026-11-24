@@ -1,7 +1,7 @@
 <!-- src/routes/(authenticated)/(dock)/user/[id]/EditProfileSheet.svelte -->
 <script lang="ts">
 	import { superForm, type SuperValidated } from "sveltekit-superforms";
-	import { valibotClient } from "sveltekit-superforms/adapters";
+	import { valibotClient } from "sveltekit-superforms/adapters/valibot";
 	import FluentPerson20Filled from "~icons/fluent/person-20-filled";
 	import FluentImage20Filled from "~icons/fluent/image-20-filled";
 	import FluentCheckmark20Filled from "~icons/fluent/checkmark-20-filled";
