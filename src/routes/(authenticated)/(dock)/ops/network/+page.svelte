@@ -35,7 +35,6 @@
 	import { toastResult } from "#lib/ui/toast.svelte.js";
 	import { vanish } from "#lib/utils/motion.js";
 	import IconBack from "~icons/fluent/arrow-left-20-regular";
-	import IconInfo from "~icons/fluent/info-20-regular";
 	import IconLock from "~icons/fluent/document-lock-20-regular";
 	import IconCam from "~icons/fluent/video-security-20-regular";
 	import IconFactory from "~icons/fluent/building-factory-20-regular";
@@ -263,9 +262,6 @@
 					</div>
 				</form>
 			{/if}
-			<Button variant="ghost" size="sm" href="/docs/spy-networks" icon={IconInfo} title="How spy networks work">
-				Guide
-			</Button>
 		</div>
 	</header>
 

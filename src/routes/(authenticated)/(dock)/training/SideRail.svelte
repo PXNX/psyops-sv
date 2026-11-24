@@ -144,7 +144,6 @@
 		{exercise.DURATION_HOURS}h · +{exercise.EXPERIENCE_GAIN} EXP · −{exercise.ORG_COST} ORG · −{exercise.SUPPLY_COST} SUP
 		· needs
 		{exercise.MIN_ORG_TO_START}% ORG
-		<a href="/docs/conflict" class="ml-0.5 text-primary-fg hover:underline" title="How drill and experience work">ⓘ</a>
 	</p>
 </section>
 

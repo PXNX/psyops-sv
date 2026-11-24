@@ -32,7 +32,6 @@
 	import { OP_ICON } from "./opIcons.js";
 	import IconShield from "~icons/fluent/shield-keyhole-20-regular";
 	import IconNetwork from "~icons/fluent/connected-20-regular";
-	import IconInfo from "~icons/fluent/info-20-regular";
 	import IconCyber from "~icons/fluent/globe-shield-20-regular";
 	import IconPsyops from "~icons/fluent/people-team-20-regular";
 	import IconAlert from "~icons/fluent/warning-20-regular";
@@ -230,9 +229,6 @@
 			{/if}
 		</div>
 		<div class="flex items-center gap-2">
-			<Button variant="ghost" size="sm" href="/docs/intel" icon={IconInfo} title="How covert operations work">
-				Guide
-			</Button>
 			{#if data.authority}
 				<Button variant="secondary" size="sm" href="/ops/network" icon={IconNetwork}>Network</Button>
 			{/if}

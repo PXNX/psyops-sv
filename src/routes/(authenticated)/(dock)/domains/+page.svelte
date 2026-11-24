@@ -10,7 +10,6 @@
 	import FluentPlanet20Regular from "~icons/fluent/planet-20-regular";
 	import FluentCheckmarkCircle20Regular from "~icons/fluent/checkmark-circle-20-regular";
 	import FluentWarning20Regular from "~icons/fluent/warning-20-regular";
-	import FluentInfo16Regular from "~icons/fluent/info-16-regular";
 	import PageContainer from "#lib/component/PageContainer.svelte";
 	import { Badge } from "#lib/component/ui/index.js";
 	import { AI_MAX_LEVEL } from "#lib/config/index.js";
@@ -108,9 +107,6 @@
 			</div>
 			<div class="flex items-center gap-2">
 				{#if data.state}<Badge>{data.state.name}</Badge>{/if}
-				<a href="/docs/conflict" class="flex items-center gap-1 text-xs text-fg-muted hover:text-fg">
-					<FluentInfo16Regular class="size-4" />Guide
-				</a>
 			</div>
 		</header>
 

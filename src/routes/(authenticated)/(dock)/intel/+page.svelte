@@ -4,14 +4,13 @@
      the sensor table sit in the side rail. -->
 <script lang="ts">
 	import PageContainer from "#lib/component/PageContainer.svelte";
-	import { Button, IconButton } from "#lib/component/ui/index.js";
+	import { Button } from "#lib/component/ui/index.js";
 	import { ImageryGallery, type ImageryItem } from "#lib/component/recon/index.js";
 	import { toImageryInput } from "#lib/utils/sensor-image.js";
 	import { SENSORS, type SensorId } from "#lib/config/index.js";
 	import { countdown } from "#lib/utils/military.js";
 	import { countUp } from "#lib/utils/count-up.js";
 	import IconRadar from "~icons/fluent/radar-20-regular";
-	import IconInfo from "~icons/fluent/info-20-regular";
 	import IconEye from "~icons/fluent/eye-20-regular";
 	import IconImage from "~icons/fluent/image-multiple-20-regular";
 	import IconArchive from "~icons/fluent/archive-20-regular";
@@ -19,7 +18,6 @@
 	import IconNetwork from "~icons/fluent/plug-connected-20-regular";
 	import RegionWatch from "./RegionWatch.svelte";
 	import ReportArchive from "./ReportArchive.svelte";
-	import SensorMatrix from "./SensorMatrix.svelte";
 	import { LEVEL_LABEL, pct } from "./labels";
 
 	const { data } = $props();
@@ -75,7 +73,6 @@
 			{/if}
 		</div>
 		<div class="flex items-center gap-2">
-			<IconButton href="/docs/intel" icon={IconInfo} label="How recon works" variant="ghost" size="sm" />
 			<Button href="/map" size="sm" icon={IconSend} title="Pick a hostile region on the map to launch a pass">
 				Order recon
 			</Button>
@@ -199,10 +196,6 @@
 						<p class="text-xs text-fg-muted">No passes in flight.</p>
 						<a href="/map" class="mt-1 inline-block text-xs text-primary-fg hover:underline">Order one on the map</a>
 					{/if}
-				</section>
-
-				<section class="panel p-4">
-					<SensorMatrix />
 				</section>
 
 				{#if shallow}

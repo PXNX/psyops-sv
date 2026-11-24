@@ -4,7 +4,6 @@
 <script lang="ts">
 	import { enhance } from "$app/forms";
 	import FluentVehicleTruckProfile20Regular from "~icons/fluent/vehicle-truck-profile-20-regular";
-	import FluentInfo16Regular from "~icons/fluent/info-16-regular";
 	import { Badge, Button, SearchSelect } from "#lib/component/ui/index.js";
 	import ResourceRequirements from "#lib/component/ResourceRequirements.svelte";
 	import { CONVOY, REPAIR, convoyCost, repairCost } from "#lib/config/index.js";
@@ -39,9 +38,6 @@
 		<h2 id="logistics-title" class="section-title">
 			<FluentVehicleTruckProfile20Regular class="size-4" />Land · Logistics
 		</h2>
-		<a href="/docs/conflict" class="text-fg-faint hover:text-fg" title="How supply and convoys work">
-			<FluentInfo16Regular class="size-4" /><span class="sr-only">Logistics help</span>
-		</a>
 	</header>
 
 	<div class="divide-y divide-line/15">

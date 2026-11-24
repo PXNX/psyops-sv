@@ -8,6 +8,7 @@ category: "Conflict & forces"
 <script>
   import Mermaid from "../component/Mermaid.svelte";
   import DocArt from "../component/docs/DocArt.svelte";
+  import SensorMatrix from "../component/docs/SensorMatrix.svelte";
 
 </script>
 
@@ -26,6 +27,8 @@ time of day, cover and air defence all affect the result.
 
 Passes fuse into one **intel picture** per region, showing cover, units,
 buildings and confidence. Battle planners use it.
+
+<SensorMatrix />
 
 <DocArt kind="intel" label="No single sensor sees everything" caption="Drone EO spots infantry, SAR sees metal through cloud, sonar finds submarines. Combine passes to raise confidence." />
 

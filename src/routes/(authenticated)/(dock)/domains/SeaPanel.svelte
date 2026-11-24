@@ -3,7 +3,6 @@
 <script lang="ts">
 	import { enhance } from "$app/forms";
 	import FluentVehicleShip20Regular from "~icons/fluent/vehicle-ship-20-regular";
-	import FluentInfo16Regular from "~icons/fluent/info-16-regular";
 	import FluentWarning20Regular from "~icons/fluent/warning-20-regular";
 	import { Badge, Button, SearchSelect } from "#lib/component/ui/index.js";
 	import ResourceRequirements from "#lib/component/ResourceRequirements.svelte";
@@ -33,9 +32,6 @@
 <section id="sea" class="panel scroll-mt-20 p-4" aria-labelledby="sea-title">
 	<header class="mb-3 flex items-center justify-between gap-2">
 		<h2 id="sea-title" class="section-title"><FluentVehicleShip20Regular class="size-4" />Sea · Naval command</h2>
-		<a href="/docs/navy" class="text-fg-faint hover:text-fg" title="Naval operations and sea control">
-			<FluentInfo16Regular class="size-4" /><span class="sr-only">Navy help</span>
-		</a>
 	</header>
 
 	<div class="divide-y divide-line/15">

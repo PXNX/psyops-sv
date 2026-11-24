@@ -4,7 +4,6 @@
 <script lang="ts">
 	import { enhance } from "$app/forms";
 	import FluentArrowSwap20Regular from "~icons/fluent/arrow-swap-20-regular";
-	import FluentInfo16Regular from "~icons/fluent/info-16-regular";
 	import { Button, SearchSelect } from "#lib/component/ui/index.js";
 	import ResourceRequirements from "#lib/component/ResourceRequirements.svelte";
 	import {
@@ -43,13 +42,6 @@
 		<h2 id="trade-title" class="section-title">
 			<FluentArrowSwap20Regular class="size-4" />Air &amp; sea · Trade lanes
 		</h2>
-		<a
-			href="/docs/navy"
-			class="text-fg-faint hover:text-fg"
-			title="Lanes earn treasury every six hours; closures and blockades choke them"
-		>
-			<FluentInfo16Regular class="size-4" /><span class="sr-only">Trade help</span>
-		</a>
 	</header>
 
 	<div class="divide-y divide-line/15">

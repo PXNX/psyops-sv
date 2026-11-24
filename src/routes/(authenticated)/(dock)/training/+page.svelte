@@ -15,7 +15,6 @@
 	import FluentHatGraduation20Regular from "~icons/fluent/hat-graduation-20-regular";
 	import FluentPersonAdd20Regular from "~icons/fluent/person-add-20-regular";
 	import FluentWarning20Filled from "~icons/fluent/warning-20-filled";
-	import FluentInfo16Regular from "~icons/fluent/info-16-regular";
 	import { AIRCRAFT_IDS, DOMAIN_UNITS, POPULATION_FLOOR } from "#lib/config/index.js";
 	import PageContainer from "#lib/component/PageContainer.svelte";
 	import NavyConsole from "#lib/component/forces/NavyConsole.svelte";
@@ -171,13 +170,6 @@
 			<h1 class="mt-1 text-2xl font-semibold text-heading">Forces</h1>
 			<p class="mt-0.5 text-sm text-fg-muted">
 				{data.residence.stateName ?? "Independent region"} · raise, drill and organise your army, navy and air arm
-				<a
-					href="/docs/conflict"
-					class="ml-1 inline-flex align-middle text-fg-faint hover:text-primary-fg"
-					title="How units, drill and battles work"
-				>
-					<FluentInfo16Regular class="size-4" />
-				</a>
 			</p>
 		</div>
 		<div

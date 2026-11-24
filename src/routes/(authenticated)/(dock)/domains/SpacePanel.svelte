@@ -4,7 +4,6 @@
 <script lang="ts">
 	import { enhance } from "$app/forms";
 	import FluentPlanet20Regular from "~icons/fluent/planet-20-regular";
-	import FluentInfo16Regular from "~icons/fluent/info-16-regular";
 	import { Badge, Button, SearchSelect } from "#lib/component/ui/index.js";
 	import ResourceRequirements from "#lib/component/ResourceRequirements.svelte";
 	import {
@@ -43,9 +42,6 @@
 <section id="space" class="panel scroll-mt-20 p-4" aria-labelledby="space-title">
 	<header class="mb-3 flex items-center justify-between gap-2">
 		<h2 id="space-title" class="section-title"><FluentPlanet20Regular class="size-4" />Space · Constellation</h2>
-		<a href="/docs/conflict" class="text-fg-faint hover:text-fg" title="Satellites, counter-space and space defence">
-			<FluentInfo16Regular class="size-4" /><span class="sr-only">Space help</span>
-		</a>
 	</header>
 
 	<div class="divide-y divide-line/15">
