@@ -1,9 +1,9 @@
 <!-- src/routes/(authenticated)/(dock)/ops/+page.svelte -->
 <!-- Covert operations console. Leaders (president, defence or foreign
-     minister) plan cyber operations and psyops: pick an operation and a
-     target, see the odds and why, launch, and watch it resolve in the
-     console. Alongside: what is working on our state, what our operations
-     are doing to others, cyber defence, and the ledger. -->
+     minister) pick an operation from a dense list, choose a target in the
+     sticky detail pane, read the live odds and why, launch, and watch it
+     resolve in the console. Below: what is working on our state, our running
+     operations, cyber defence and the ledger. -->
 <script lang="ts">
 	import { enhance } from "$app/forms";
 	import { fade } from "svelte/transition";
@@ -22,15 +22,24 @@
 		type CovertOpKind,
 		type StateEffectKind
 	} from "#lib/config/index.js";
-	import { countdown, dtg } from "#lib/utils/military.js";
+	import { countdown } from "#lib/utils/military.js";
 	import { EFFECT_TONE, effectLabel } from "#lib/utils/covert.js";
 	import { celebrate } from "#lib/utils/celebrate.js";
 	import { toastResult } from "#lib/ui/toast.svelte.js";
 	import { vanish } from "#lib/utils/motion.js";
 	import OpsTerminal from "./OpsTerminal.svelte";
-	import OpsArt from "./OpsArt.svelte";
+	import OpsLedger from "./OpsLedger.svelte";
+	import { OP_ICON } from "./opIcons.js";
 	import IconShield from "~icons/fluent/shield-keyhole-20-regular";
-	import IconNetwork from "~icons/mdi/network";
+	import IconNetwork from "~icons/fluent/connected-20-regular";
+	import IconInfo from "~icons/fluent/info-20-regular";
+	import IconCyber from "~icons/fluent/globe-shield-20-regular";
+	import IconPsyops from "~icons/fluent/people-team-20-regular";
+	import IconAlert from "~icons/fluent/warning-20-regular";
+	import IconTarget from "~icons/fluent/target-arrow-20-regular";
+	import IconHistory from "~icons/fluent/history-20-regular";
+	import IconClock from "~icons/fluent/clock-20-regular";
+	import IconHome from "~icons/fluent/home-20-regular";
 
 	const { data, form } = $props();
 
@@ -41,7 +50,6 @@
 	});
 
 	// ── Planner ────────────────────────────────────────────────────────────
-	let domain = $state<CovertDomain>("cyber");
 	let kind = $state<CovertOpKind>("grid_attack");
 	let targetId = $state<string | undefined>(undefined);
 	// A network console link can preselect the target; don't overwrite a manual
@@ -59,13 +67,14 @@
 	let launching = $state(false);
 	let upgrading = $state(false);
 
+	const DOMAINS = [
+		{ id: "cyber", label: "Cyber", icon: IconCyber },
+		{ id: "psyops", label: "Psyops", icon: IconPsyops }
+	] as const;
 	const kindsOf = (d: CovertDomain) => COVERT_OP_KINDS.filter((k) => COVERT_OPS[k].domain === d);
-	function pickDomain(d: CovertDomain) {
-		domain = d;
-		kind = kindsOf(d)[0]!;
-	}
 
 	const spec = $derived(COVERT_OPS[kind]);
+	const SpecIcon = $derived(OP_ICON[kind]);
 	const targets = $derived(data.planner?.targets ?? []);
 	const target = $derived(targets.find((t) => String(t.id) === targetId) ?? null);
 	const targetItems = $derived(
@@ -76,29 +85,35 @@
 			hint: t.ally ? "bloc partner" : t.atWar ? "at war" : t.casusBelli ? "casus belli" : "peace"
 		}))
 	);
-	const odds = $derived(
-		spec.self
-			? covertOdds(kind, { defenceLevel: 0, atWar: true, recentOps: 0, targetResilient: false })
-			: target
-				? covertOdds(kind, {
-						defenceLevel: target.defenceLevel,
-						atWar: target.atWar || target.casusBelli,
-						recentOps: target.recentOps,
-						targetResilient: target.resilient,
-						networkAssets: target.networkAssets
-					})
-				: null
-	);
-	const cooldownLeft = $derived.by(() => {
-		const at = data.planner?.cooldowns[kind];
+
+	function oddsOf(k: CovertOpKind) {
+		if (COVERT_OPS[k].self)
+			return covertOdds(k, { defenceLevel: 0, atWar: true, recentOps: 0, targetResilient: false });
+		if (!target) return null;
+		return covertOdds(k, {
+			defenceLevel: target.defenceLevel,
+			atWar: target.atWar || target.casusBelli,
+			recentOps: target.recentOps,
+			targetResilient: target.resilient,
+			networkAssets: target.networkAssets
+		});
+	}
+	const odds = $derived(oddsOf(kind));
+	// Before a target is chosen the meters show the base odds, dimmed.
+	const shownOdds = $derived(odds ?? { success: spec.baseSuccess, attribution: spec.baseAttribution, factors: [] });
+
+	const cooldownOf = (k: CovertOpKind) => {
+		const at = data.planner?.cooldowns[k];
 		return at ? countdown(at, now) : null;
-	});
+	};
+	const cooldownLeft = $derived(cooldownOf(kind));
 	const regionName = $derived(data.planner?.regions.find((r) => String(r.id) === regionId)?.name ?? null);
+	const treasury = $derived(data.state?.treasury ?? 0);
 
 	const blocked = $derived.by((): string | null => {
 		if (!data.planner || !data.state) return "Only your state's leadership can order operations.";
 		if (cooldownLeft) return `Teams ready again in ${cooldownLeft}.`;
-		if ((data.state.treasury ?? 0) < spec.cost) return `The treasury can't cover $${spec.cost.toLocaleString()}.`;
+		if (treasury < spec.cost) return `The treasury can't cover $${spec.cost.toLocaleString()}.`;
 		if (!spec.self) {
 			if (!target) return "Choose a target state.";
 			if (target.ally) return "That's a bloc partner.";
@@ -110,10 +125,19 @@
 		return null;
 	});
 
-	/** Everything this operation spends, read from the same config used to
-	 *  charge and schedule it. */
-	const specCosts = $derived({ currency: spec.cost, hours: spec.durationHours, cooldown: spec.cooldownHours });
-	const opsAvailable = $derived({ currency: data.state?.treasury ?? 0 });
+	/** Everything an operation spends, from the same config used to charge and
+	 *  schedule it. "hours" is the effect duration, not a build time. */
+	const costsOf = (k: CovertOpKind) => {
+		const s = COVERT_OPS[k];
+		return {
+			currency: s.cost,
+			...(s.durationHours ? { hours: s.durationHours } : {}),
+			cooldown: s.cooldownHours
+		};
+	};
+	const COST_LABELS = { hours: "Effect", cooldown: "Cooldown" };
+	const INLINE_LABELS = { hours: "effect", cooldown: "cooldown" };
+	const available = $derived({ currency: treasury });
 
 	const pct = (n: number) => `${Math.round(n * 100)}%`;
 	const signed = (n: number) => `${n > 0 ? "+" : n < 0 ? "−" : "±"}${Math.abs(Math.round(n * 100))}`;
@@ -155,83 +179,203 @@
 	let consoleEl: HTMLElement | undefined = $state();
 
 	const effectsOnUs = $derived(data.effectsOnUs.filter((e) => new Date(e.expiresAt) > now));
+	const hostileOnUs = $derived(effectsOnUs.filter((e) => e.kind !== "morale_boost" && e.kind !== "casus_belli"));
 	const running = $derived((data.planner?.running ?? []).filter((e) => new Date(e.expiresAt) > now));
+	const footholds = $derived(targets.reduce((n, t) => n + (t.networkAssets ?? 0), 0));
+	const footholdStates = $derived(targets.filter((t) => (t.networkAssets ?? 0) > 0).length);
+	const runningTargets = $derived(new Set(running.map((e) => e.target)).size);
+	const againstUs = $derived(data.ledger.filter((o) => !o.ours).length);
+
+	const defenceMax = CYBER_DEFENCE.MAX_LEVEL;
+	const defenceTip = `Each level makes cyber attacks on us ${Math.round(CYBER_DEFENCE.SUCCESS_PER_LEVEL * 100)}% less likely to work and ${Math.round(CYBER_DEFENCE.ATTRIBUTION_PER_LEVEL * 100)}% likelier to be traced.`;
 </script>
 
 <svelte:head>
 	<title>Operations · PsyOps</title>
 </svelte:head>
 
+{#snippet countdownChip(expiresAt: string)}
+	<span class="data flex shrink-0 items-center gap-1.5 text-xs text-fg-soft">
+		<span class="size-1.5 rounded-full bg-positive motion-safe:animate-pulse" aria-hidden="true"></span>
+		{countdown(expiresAt, now) ?? "ended"}
+	</span>
+{/snippet}
+
+{#snippet defenceMeter(level: number, cls: string)}
+	<div
+		class="flex gap-0.5 {cls}"
+		role="meter"
+		aria-label="Cyber defence level"
+		aria-valuemin={0}
+		aria-valuemax={defenceMax}
+		aria-valuenow={level}
+	>
+		{#each Array(defenceMax) as _, i (i)}
+			<span class="h-1 flex-1 rounded-full transition-colors duration-500 {i < level ? 'bg-positive' : 'bg-surface-8'}"
+			></span>
+		{/each}
+	</div>
+{/snippet}
+
 <PageContainer maxWidth="6xl">
-	<!-- Animated command banner -->
-	<header class="panel relative mb-5 overflow-hidden rounded-sm">
-		<OpsArt
-			kind="radar"
-			class="pointer-events-none absolute inset-x-0 top-0 h-full w-full opacity-75"
-			label="Radar sweeping for hostile signals"
-		/>
-		<div class="relative flex flex-wrap items-end justify-between gap-4 p-4 sm:p-5">
-			<div class="max-w-lg">
-				<p class="font-mono text-[11px] uppercase tracking-[0.2em] text-primary-fg">
-					J3 · Information operations
-				</p>
-				<h1 class="mt-1 text-2xl font-bold text-fg drop-shadow-sm">Covert operations</h1>
-				{#if data.state}
-					<p class="mt-1 text-sm text-fg-muted">
-						{data.state.name}{data.authority ? ` · ${data.authority.roleLabel}` : ""}
-					</p>
-				{/if}
-				<div class="mt-3 flex flex-wrap gap-2" aria-hidden="true">
-					<span class="rounded-full border border-primary/30 bg-primary/10 px-2.5 py-1 font-mono text-[10px] uppercase tracking-widest text-primary-fg">
-						live intel
-					</span>
-					<span class="rounded-full border border-line/25 bg-surface-1/70 px-2.5 py-1 font-mono text-[10px] uppercase tracking-widest text-fg-muted">
-						need-to-know
-					</span>
-				</div>
-			</div>
+	<!-- Header -->
+	<header class="flex flex-wrap items-end justify-between gap-3">
+		<div class="min-w-0">
+			<p class="section-title">J3 · Information operations</p>
+			<h1 class="mt-1 text-2xl font-semibold text-fg">Covert operations</h1>
 			{#if data.state}
-				<div class="flex flex-wrap items-end justify-end gap-5">
-					{#if data.planner}
-						<span class="data hidden text-xs text-fg-muted sm:block">
-							{targets.reduce((n, t) => n + (t.networkAssets ?? 0), 0)} footholds abroad
-						</span>
-					{/if}
-					<dl class="flex gap-5 text-right">
-						{#if data.state.treasury !== null}
-							<div>
-								<dt class="section-title justify-end">Treasury</dt>
-								<dd class="data text-lg text-fg">${data.state.treasury.toLocaleString()}</dd>
-							</div>
-						{/if}
-						<div>
-							<dt class="section-title justify-end">Cyber defence</dt>
-							<dd class="data text-lg text-fg">L{data.state.defenceLevel}/{CYBER_DEFENCE.MAX_LEVEL}</dd>
-						</div>
-					</dl>
-					<Button variant="secondary" size="sm" href="/ops/network" icon={IconNetwork}>Network</Button>
-				</div>
+				<p class="mt-0.5 text-sm text-fg-muted">
+					{data.state.name}{data.authority ? ` · ${data.authority.roleLabel}` : " · what your state knows"}
+				</p>
+			{/if}
+		</div>
+		<div class="flex items-center gap-2">
+			<Button variant="ghost" size="sm" href="/docs/intel" icon={IconInfo} title="How covert operations work">
+				Guide
+			</Button>
+			{#if data.authority}
+				<Button variant="secondary" size="sm" href="/ops/network" icon={IconNetwork}>Network</Button>
 			{/if}
 		</div>
 	</header>
 
 	{#if !data.state}
-		<div class="panel mt-6 p-6 text-sm text-fg-muted">Settle in a state to see its operations.</div>
+		<div class="panel mt-6 p-6 text-sm text-fg-muted">
+			Settle in a state to see its covert operations. <a class="text-primary-fg hover:underline" href="/states">
+				Browse states
+			</a>
+		</div>
 	{:else}
-		<div class="mt-6 grid gap-6 lg:grid-cols-[minmax(0,1.35fr)_minmax(0,1fr)]">
-			<!-- Planner -->
-			<section class="space-y-4" aria-labelledby="planner-title">
-				<h2 id="planner-title" class="section-title">Plan an operation</h2>
-				{#if !data.planner}
-					<div class="panel p-5 text-sm text-fg-muted">
-						Operations are ordered by your state's president, defence minister or foreign minister. You can see what
-						your state knows about operations against it below.
-					</div>
-				{:else}
+		<!-- Status strip -->
+		<dl class="panel mt-5 grid grid-cols-2 sm:grid-cols-4">
+			{#if data.state.treasury !== null}
+				<div class="p-3 sm:px-4">
+					<dt class="section-title">Treasury</dt>
+					<dd class="data mt-1 text-xl text-fg">${data.state.treasury.toLocaleString()}</dd>
+					<dd class="text-[11px] text-fg-faint">Pays for every operation</dd>
+				</div>
+			{/if}
+			<div class="border-line/15 p-3 sm:border-l sm:px-4" title={defenceTip}>
+				<dt class="section-title">Cyber defence</dt>
+				<dd class="data mt-1 text-xl text-fg">
+					L{data.state.defenceLevel}<span class="text-sm text-fg-faint">/{defenceMax}</span>
+				</dd>
+				<dd>{@render defenceMeter(data.state.defenceLevel, "mt-1 max-w-24")}</dd>
+			</div>
+			<div class="border-t border-line/15 p-3 sm:border-t-0 sm:border-l sm:px-4">
+				<dt class="section-title">Working on us</dt>
+				<dd class="data mt-1 text-xl {hostileOnUs.length ? 'text-hostile-fg' : 'text-fg'}">{effectsOnUs.length}</dd>
+				<dd class="text-[11px] text-fg-faint">
+					{hostileOnUs.length ? `${hostileOnUs.length} hostile` : "Nothing hostile detected"}
+				</dd>
+			</div>
+			{#if data.planner}
+				<div class="border-t border-l border-line/15 p-3 sm:border-t-0 sm:px-4">
+					<dt class="section-title">Our ops running</dt>
+					<dd class="data mt-1 text-xl text-fg">{running.length}</dd>
+					<dd class="text-[11px] text-fg-faint">
+						{#if footholds}
+							<a href="/ops/network" class="hover:text-primary-fg">
+								{footholds} foothold{footholds === 1 ? "" : "s"} in {footholdStates} state{footholdStates === 1
+									? ""
+									: "s"}
+							</a>
+						{:else}
+							{running.length ? `on ${runningTargets} state${runningTargets === 1 ? "" : "s"}` : "No footholds abroad"}
+						{/if}
+					</dd>
+				</div>
+			{:else}
+				<div class="border-t border-l border-line/15 p-3 sm:border-t-0 sm:px-4">
+					<dt class="section-title">Ops against us</dt>
+					<dd class="data mt-1 text-xl text-fg">{againstUs}</dd>
+					<dd class="text-[11px] text-fg-faint">On record</dd>
+				</div>
+			{/if}
+		</dl>
+
+		{#if data.planner}
+			<div class="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,23rem)]">
+				<!-- Operation picker -->
+				<section class="panel min-w-0 self-start" aria-labelledby="picker-title">
+					<h2 id="picker-title" class="sr-only">Choose an operation</h2>
+					{#each DOMAINS as d (d.id)}
+						<div role="radiogroup" aria-labelledby="domain-{d.id}">
+							<h3
+								id="domain-{d.id}"
+								class="section-title border-b border-line/15 px-4 pt-3 pb-2 {d.id === 'psyops' ? 'border-t' : ''}"
+							>
+								<d.icon class="size-4" />
+								{d.label}
+							</h3>
+							<ul class="divide-y divide-line/10">
+								{#each kindsOf(d.id) as k (k)}
+									{@const s = COVERT_OPS[k]}
+									{@const Icon = OP_ICON[k]}
+									{@const cd = cooldownOf(k)}
+									{@const o = oddsOf(k)}
+									{@const warLocked = !s.self && s.needsWar && target && !target.atWar && !target.casusBelli}
+									<li>
+										<label
+											class="group flex cursor-pointer items-start gap-3 px-4 py-2.5 transition-colors hover:bg-surface-5 has-[:checked]:bg-primary/10 has-[:checked]:shadow-[inset_3px_0_0_var(--color-primary)] has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-primary/60 has-[:focus-visible]:ring-inset"
+										>
+											<input type="radio" name="op-kind" value={k} bind:group={kind} class="sr-only" />
+											<span
+												class="mt-0.5 grid size-8 shrink-0 place-items-center rounded-sm bg-surface-7 text-fg-soft transition-colors group-has-[:checked]:bg-primary/20 group-has-[:checked]:text-primary-fg"
+											>
+												<Icon class="size-4.5" />
+											</span>
+											<span class="min-w-0 flex-1">
+												<span class="flex items-center justify-between gap-2">
+													<span class="truncate font-medium text-fg">{s.label}</span>
+													{#if cd}
+														<Badge size="xs" tone="amber" icon={IconClock}>{cd}</Badge>
+													{:else if warLocked}
+														<Badge size="xs" tone="neutral">Needs war</Badge>
+													{:else if o && !s.self}
+														<span
+															class="data text-xs {o.success >= 0.6
+																? 'text-positive-fg'
+																: o.success >= 0.35
+																	? 'text-warning'
+																	: 'text-hostile-fg'}"
+															title="Success / attribution against {target?.name}"
+														>
+															{pct(o.success)}<span class="text-fg-faint"> · {pct(o.attribution)}</span>
+														</span>
+													{:else if s.self}
+														<Badge size="xs" tone="green" icon={IconHome}>Home</Badge>
+													{/if}
+												</span>
+												<span class="block truncate text-xs text-fg-muted" title={s.blurb}>{s.blurb}</span>
+												<span class="mt-1 block">
+													<ResourceRequirements inline costs={costsOf(k)} {available} labels={INLINE_LABELS} />
+												</span>
+											</span>
+										</label>
+									</li>
+								{/each}
+							</ul>
+						</div>
+					{/each}
+				</section>
+
+				<!-- Detail pane -->
+				<div class="space-y-4 self-start {outcome ? '' : 'lg:sticky lg:top-4'}">
+					{#if outcome}
+						<div bind:this={consoleEl} transition:fade={{ duration: 150 }}>
+							<OpsTerminal
+								{outcome}
+								onclose={() => (outcome = null)}
+								ondone={() => outcome?.succeeded && celebrate(consoleEl)}
+							/>
+						</div>
+					{/if}
+
 					<form
 						method="POST"
 						action="?/launch"
-						class="panel space-y-4 p-4"
+						class="panel divide-y divide-line/15"
 						use:enhance={() => {
 							launching = true;
 							return async ({ result, update }) => {
@@ -246,61 +390,48 @@
 							};
 						}}
 					>
-						<div class="flex gap-1 rounded-md bg-surface-2 p-1" role="tablist" aria-label="Domain">
-							{#each ["cyber", "psyops"] as const as d (d)}
-								<button
-									type="button"
-									role="tab"
-									aria-selected={domain === d}
-									class="flex-1 rounded-sm px-3 py-1.5 text-sm font-semibold uppercase tracking-[0.12em] transition-colors {domain ===
-									d
-										? 'bg-surface-8 text-fg'
-										: 'text-fg-muted hover:text-fg'}"
-									onclick={() => pickDomain(d)}
-								>
-									<OpsArt kind={d} class="size-5 shrink-0" label={d === "cyber" ? "Cyber" : "Psyops"} />
-									{d === "cyber" ? "Cyber" : "Psyops"}
-								</button>
-							{/each}
+						<input type="hidden" name="kind" value={kind} />
+
+						<!-- What -->
+						<div class="flex items-start gap-3 p-4">
+							<span
+								class="grid size-10 shrink-0 place-items-center rounded-sm {spec.domain === 'cyber'
+									? 'bg-primary/15 text-primary-fg'
+									: 'bg-politics-bg/20 text-politics-fg'}"
+							>
+								<SpecIcon class="size-5" />
+							</span>
+							<div class="min-w-0">
+								<p class="section-title">{spec.domain === "cyber" ? "Cyber operation" : "Psychological operation"}</p>
+								<h2 class="text-lg font-semibold text-fg">{spec.label}</h2>
+								<p class="mt-0.5 text-xs text-fg-muted">{spec.blurb}</p>
+							</div>
 						</div>
 
-						<fieldset class="grid gap-2 sm:grid-cols-2">
-							<legend class="sr-only">Operation</legend>
-							{#each kindsOf(domain) as k (k)}
-								{@const s = COVERT_OPS[k]}
-								{@const cd = data.planner.cooldowns[k] ? countdown(data.planner.cooldowns[k]!, now) : null}
-								<label
-									class="panel-interactive flex cursor-pointer flex-col gap-1 p-3 has-[:checked]:border-primary/70 has-[:checked]:bg-surface-6"
-								>
-									<input type="radio" name="kind" value={k} bind:group={kind} class="sr-only" />
-									<span class="font-semibold text-fg">{s.label}</span>
-									<span class="text-xs text-fg-muted">{s.blurb}</span>
-									<ResourceRequirements
-										compact
-										costs={{ currency: s.cost, hours: s.durationHours, cooldown: s.cooldownHours }}
-										available={data.state ? { currency: data.state.treasury ?? 0 } : {}}
+						<!-- Where -->
+						<div class="space-y-3 p-4">
+							{#if spec.self}
+								<p class="flex items-center gap-2 text-sm text-fg-soft">
+									<IconHome class="size-4 text-positive" /> Aimed at our own population: always lands, never traced.
+								</p>
+							{:else}
+								<div>
+									<label class="field-label flex items-center gap-1.5" for="ops-target">
+										<IconTarget class="size-4 text-fg-muted" /> Target state
+									</label>
+									<SearchSelect
+										id="ops-target"
+										name="targetStateId"
+										items={targetItems}
+										bind:value={targetId}
+										showId
+										placeholder="Choose a target…"
+										searchPlaceholder="Search states…"
 									/>
-									{#if cd}<span class="data mt-auto text-[11px] text-warning">Ready in {cd}</span>{/if}
-								</label>
-							{/each}
-						</fieldset>
+								</div>
+							{/if}
 
-						{#if !spec.self}
-							<div>
-								<label class="field-label" for="ops-target">Target state</label>
-								<SearchSelect
-									id="ops-target"
-									name="targetStateId"
-									items={targetItems}
-									bind:value={targetId}
-									placeholder="Choose a target…"
-									searchPlaceholder="Search states…"
-								/>
-							</div>
-						{/if}
-
-						{#if spec.needsRegion}
-							<div class="grid gap-3 sm:grid-cols-[1fr_auto]">
+							{#if spec.needsRegion}
 								<div>
 									<label class="field-label" for="ops-region">Region to dress up</label>
 									<SearchSelect
@@ -308,15 +439,18 @@
 										name="regionId"
 										items={data.planner.regions}
 										bind:value={regionId}
+										showId
 										placeholder="One of your regions…"
+										searchPlaceholder="Search regions…"
 									/>
 								</div>
-								<fieldset>
+								<fieldset class="min-w-0">
 									<legend class="field-label">Posture</legend>
-									<div class="flex gap-1 rounded-md bg-surface-2 p-1">
+									<div class="flex gap-1 rounded-sm bg-surface-2 p-1">
 										{#each ["inflate", "conceal"] as const as p (p)}
 											<label
-												class="cursor-pointer rounded-sm px-3 py-1.5 text-sm {posture === p
+												class="flex-1 cursor-pointer rounded-sm px-3 py-1.5 text-center text-sm transition-colors has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-primary/60 {posture ===
+												p
 													? 'bg-surface-8 text-fg'
 													: 'text-fg-muted hover:text-fg'}"
 											>
@@ -326,90 +460,113 @@
 										{/each}
 									</div>
 								</fieldset>
-							</div>
-						{/if}
+							{/if}
 
-						{#if kind === "leaflet_drop"}
-							<div>
-								<label class="field-label" for="ops-leaflet">Leaflet text</label>
-								<textarea
-									id="ops-leaflet"
-									name="message"
-									bind:value={message}
-									maxlength={PSYOPS.LEAFLET_MAX_CHARS}
-									rows="3"
-									class="field-control textarea w-full resize-none"
-									placeholder="Soldiers of …, your leaders have abandoned you."></textarea>
-								<p class="field-hint data text-right">{message.length}/{PSYOPS.LEAFLET_MAX_CHARS}</p>
-							</div>
-						{/if}
-
-						<!-- Live odds and why -->
-						<div class="relative overflow-hidden rounded-md border border-line/15 bg-surface-2 p-3">
-							<OpsArt
-								kind="trace"
-								class="pointer-events-none absolute inset-x-0 top-0 h-10 w-full opacity-60"
-								label="Signal trace"
-							/>
-							<p class="relative text-sm text-fg-body">{effectPreview}</p>
-							{#if odds}
-								<div class="relative mt-3 grid grid-cols-2 gap-3">
-									{#each [{ label: "Success", v: odds.success, tone: "bg-positive" }, { label: "Attribution", v: odds.attribution, tone: "bg-hostile" }] as m (m.label)}
-										<div>
-											<div class="flex items-baseline justify-between">
-												<span class="section-title">{m.label}</span>
-												<span class="data text-lg text-fg">{pct(m.v)}</span>
-											</div>
-											<div
-												class="mt-1 h-1.5 overflow-hidden rounded-full bg-surface-6"
-												role="meter"
-												aria-label={m.label}
-												aria-valuemin={0}
-												aria-valuemax={100}
-												aria-valuenow={Math.round(m.v * 100)}
-											>
-												<div class="h-full {m.tone} transition-[width] duration-300" style:width={pct(m.v)}></div>
-											</div>
-										</div>
-									{/each}
+							{#if kind === "leaflet_drop"}
+								<div>
+									<label class="field-label" for="ops-leaflet">Leaflet text</label>
+									<textarea
+										id="ops-leaflet"
+										name="message"
+										bind:value={message}
+										maxlength={PSYOPS.LEAFLET_MAX_CHARS}
+										rows="3"
+										class="field-control textarea w-full resize-none"
+										placeholder="Soldiers of …, your leaders have abandoned you."></textarea>
+									<p class="field-hint data text-right">{message.length}/{PSYOPS.LEAFLET_MAX_CHARS}</p>
 								</div>
-								{#if !spec.self}
-									<ul class="relative mt-3 space-y-0.5 text-xs">
-										<li class="flex justify-between text-fg-muted">
-											<span>Base odds</span>
-											<span class="data">{pct(spec.baseSuccess)} / {pct(spec.baseAttribution)}</span>
-										</li>
+							{/if}
+						</div>
+
+						<!-- Odds and why -->
+						<div class="p-4">
+							<div class="grid grid-cols-2 gap-4" class:opacity-60={!odds}>
+								{#each [{ label: "Success", v: shownOdds.success, base: spec.baseSuccess, tone: "bg-positive" }, { label: "Traced", v: shownOdds.attribution, base: spec.baseAttribution, tone: "bg-hostile" }] as m (m.label)}
+									<div>
+										<div class="flex items-baseline justify-between">
+											<span class="section-title">{m.label}</span>
+											<span class="data text-xl text-fg">{pct(m.v)}</span>
+										</div>
+										<div
+											class="relative mt-1 h-1.5 rounded-full bg-surface-7"
+											role="meter"
+											aria-label="{m.label} chance"
+											aria-valuemin={0}
+											aria-valuemax={100}
+											aria-valuenow={Math.round(m.v * 100)}
+										>
+											<div
+												class="h-full rounded-full {m.tone} transition-[width] duration-300 motion-reduce:transition-none"
+												style:width={pct(m.v)}
+											></div>
+											{#if odds && !spec.self}
+												<span
+													class="absolute -top-0.5 h-2.5 w-px bg-fg-muted"
+													style:left={pct(m.base)}
+													title="Base {pct(m.base)}"
+													aria-hidden="true"
+												></span>
+											{/if}
+										</div>
+									</div>
+								{/each}
+							</div>
+							{#if !odds}
+								<p class="mt-2 text-xs text-fg-muted">Base odds. Pick a target for the live picture.</p>
+							{:else if !spec.self}
+								<table class="mt-3 w-full text-xs">
+									<tbody class="divide-y divide-line/10">
+										<tr class="text-fg-muted">
+											<td class="py-1">Base</td>
+											<td class="data py-1 text-right">{pct(spec.baseSuccess)}</td>
+											<td class="data w-14 py-1 text-right">{pct(spec.baseAttribution)}</td>
+										</tr>
 										{#each odds.factors as f (f.label)}
-											<li class="flex justify-between text-fg-soft">
-												<span>{f.label}</span>
-												<span class="data">
-													<span class:text-hostile-fg={f.success < 0}>{f.success ? signed(f.success) : "±0"}</span>
-													/
-													<span class:text-warning={f.attribution > 0}>
-														{f.attribution ? signed(f.attribution) : "±0"}
-													</span>
-												</span>
-											</li>
+											<tr class="text-fg-soft">
+												<td class="py-1">{f.label}</td>
+												<td
+													class="data py-1 text-right"
+													class:text-hostile-fg={f.success < 0}
+													class:text-positive-fg={f.success > 0}
+												>
+													{f.success ? signed(f.success) : "±0"}
+												</td>
+												<td
+													class="data py-1 text-right"
+													class:text-warning={f.attribution > 0}
+													class:text-positive-fg={f.attribution < 0}
+												>
+													{f.attribution ? signed(f.attribution) : "±0"}
+												</td>
+											</tr>
 										{/each}
-										{#if target && !target.atWar}
-											<li class="text-warning">
-												{target.casusBelli
-													? `We hold a casus belli on ${target.name}: no diplomatic exposure.`
-													: `Not at war: if traced, ${target.name} gets a casus belli against us for a week.`}
-											</li>
-										{/if}
-									</ul>
+									</tbody>
+								</table>
+								{#if target && !target.atWar}
+									<p class="mt-2 flex items-start gap-1.5 text-xs text-warning">
+										<IconAlert class="mt-px size-3.5 shrink-0" />
+										{target.casusBelli
+											? `We hold a casus belli on ${target.name}: no diplomatic exposure.`
+											: `Not at war: if traced, ${target.name} gets a casus belli against us for a week.`}
+									</p>
 								{/if}
 							{/if}
 						</div>
 
-						<ResourceRequirements title="Operation cost" costs={specCosts} available={opsAvailable} />
+						<!-- Effect -->
+						<div class="p-4">
+							<p class="section-title mb-1">Effect if it lands</p>
+							<p class="text-sm text-fg-body">{effectPreview}</p>
+						</div>
 
-						<div class="flex flex-wrap items-center justify-between gap-3">
-							{#if blocked}<p class="text-xs text-error">{blocked}</p>{/if}
+						<!-- Cost and launch -->
+						<div class="space-y-3 p-4">
+							<ResourceRequirements title="Operation cost" costs={costsOf(kind)} {available} labels={COST_LABELS} />
+							{#if blocked}<p class="text-xs text-error" role="status">{blocked}</p>{/if}
 							<Button
 								type="submit"
-								variant={domain === "cyber" ? "primary" : "soft-purple"}
+								block
+								variant={spec.domain === "cyber" ? "primary" : "soft-purple"}
 								disabled={!!blocked}
 								loading={launching}
 								loadingText="Executing…"
@@ -418,100 +575,89 @@
 							</Button>
 						</div>
 					</form>
-				{/if}
+				</div>
+			</div>
+		{:else}
+			<p class="mt-6 text-sm text-fg-muted">
+				Operations are ordered by your state's president, defence minister or foreign minister.
+			</p>
+		{/if}
 
-				{#if outcome}
-					<div bind:this={consoleEl} transition:fade={{ duration: 150 }}>
-						<OpsTerminal {outcome} onclose={() => (outcome = null)} />
-					</div>
-				{/if}
-			</section>
-
-			<!-- Situation -->
-			<aside class="space-y-6">
-				<section aria-labelledby="on-us-title">
-					<h2 id="on-us-title" class="section-title mb-2">Working on {data.state.name}</h2>
+		<!-- Situation and ledger -->
+		<div class="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,23rem)]">
+			<aside class="panel divide-y divide-line/15 self-start lg:col-start-2 lg:row-start-1">
+				<section class="p-4" aria-labelledby="on-us-title">
+					<h2 id="on-us-title" class="section-title mb-2">
+						<IconAlert class="size-4" /> Working on {data.state.name}
+					</h2>
 					{#if effectsOnUs.length}
-						<ul class="space-y-2">
+						<ul class="divide-y divide-line/10">
 							{#each effectsOnUs as e (e.id)}
-								<li class="panel flex items-start justify-between gap-3 p-3" out:vanish>
+								<li class="flex items-start justify-between gap-3 py-2" out:vanish>
 									<div class="min-w-0">
 										<Badge tone={EFFECT_TONE[e.kind as StateEffectKind]}>
 											{effectLabel(e.kind, e.magnitude, e.region)}
 										</Badge>
 										<p class="mt-1 text-xs text-fg-muted">
 											{#if e.kind === "casus_belli"}
-												against {e.source ?? "an unknown state"}: we may strike it as if at war
+												Against {e.source ?? "an unknown state"}: we may strike it as if at war
 											{:else if e.kind === "morale_boost"}
-												our own campaign
+												Our own campaign
 											{:else}
-												{e.source ? `by ${e.source}` : "origin unknown"}
+												{e.source ? `By ${e.source}` : "Origin unknown"}
 											{/if}
 										</p>
 									</div>
-									<span class="data flex shrink-0 items-center gap-1.5 text-xs text-fg-soft">
-										<span class="size-1.5 animate-pulse rounded-full bg-positive" aria-hidden="true"></span>
-										{countdown(e.expiresAt, now) ?? "ended"}
-									</span>
+									{@render countdownChip(e.expiresAt)}
 								</li>
 							{/each}
 						</ul>
 					{:else}
-						<p class="panel p-3 text-sm text-fg-muted">Nothing detected. Which isn't the same as nothing.</p>
+						<p class="text-sm text-fg-muted">Nothing detected. Which isn't the same as nothing.</p>
 					{/if}
 				</section>
 
 				{#if data.planner}
-					<section aria-labelledby="running-title">
-						<h2 id="running-title" class="section-title mb-2">Our operations running</h2>
+					<section class="p-4" aria-labelledby="running-title">
+						<h2 id="running-title" class="section-title mb-2"><IconTarget class="size-4" /> Our operations running</h2>
 						{#if running.length}
-							<ul class="space-y-2">
+							<ul class="divide-y divide-line/10">
 								{#each running as e (e.id)}
-									<li class="panel flex items-start justify-between gap-3 p-3" out:vanish>
+									<li class="flex items-start justify-between gap-3 py-2" out:vanish>
 										<div class="min-w-0">
 											<Badge tone={EFFECT_TONE[e.kind as StateEffectKind]}>
 												{effectLabel(e.kind, e.magnitude, e.region)}
 											</Badge>
-											<p class="mt-1 text-xs text-fg-muted">on {e.target}</p>
+											<p class="mt-1 text-xs text-fg-muted">On {e.target}</p>
 										</div>
-										<span class="data flex shrink-0 items-center gap-1.5 text-xs text-fg-soft">
-										<span class="size-1.5 animate-pulse rounded-full bg-positive" aria-hidden="true"></span>
-										{countdown(e.expiresAt, now) ?? "ended"}
-									</span>
+										{@render countdownChip(e.expiresAt)}
 									</li>
 								{/each}
 							</ul>
 						{:else}
-							<p class="panel p-3 text-sm text-fg-muted">No operation of ours is running.</p>
+							<p class="text-sm text-fg-muted">None running. Pick one above to start.</p>
 						{/if}
 					</section>
 				{/if}
 
-				<section aria-labelledby="defence-title" class="panel p-4">
-					<h2 id="defence-title" class="section-title mb-3"><IconShield class="size-4" /> Cyber defence</h2>
-					<div class="flex items-center gap-4">
-						<OpsArt kind="shield" class="size-16 shrink-0" label="Cyber defence level {data.state.defenceLevel}" />
-						<div class="flex flex-1 gap-1" aria-label="Level {data.state.defenceLevel} of {CYBER_DEFENCE.MAX_LEVEL}">
-							{#each Array(CYBER_DEFENCE.MAX_LEVEL) as _, i (i)}
-								<span class="h-2 flex-1 rounded-sm transition-all duration-500 {i < data.state.defenceLevel ? 'bg-positive' : 'bg-surface-7'}"></span>
-							{/each}
-						</div>
-					</div>
+				<section class="p-4" aria-labelledby="defence-title">
+					<h2 id="defence-title" class="section-title mb-2">
+						<IconShield class="size-4" /> Cyber defence
+						<span class="data ml-auto text-xs tracking-normal text-fg-soft normal-case">
+							Level {data.state.defenceLevel} of {defenceMax}
+						</span>
+					</h2>
+					{@render defenceMeter(data.state.defenceLevel, "")}
 					<p class="mt-2 text-xs text-fg-muted">
-						Each level: cyber attacks on us {Math.round(CYBER_DEFENCE.SUCCESS_PER_LEVEL * 100)}% less likely to work and
-						{Math.round(CYBER_DEFENCE.ATTRIBUTION_PER_LEVEL * 100)}% likelier to be traced.
+						Per level: −{Math.round(CYBER_DEFENCE.SUCCESS_PER_LEVEL * 100)}% enemy success, +{Math.round(
+							CYBER_DEFENCE.ATTRIBUTION_PER_LEVEL * 100
+						)}% traced.
 					</p>
 					{#if data.state.canUpgrade && data.state.upgradeCost !== null}
-						<ResourceRequirements
-							title="Defence upgrade cost"
-							compact
-							costs={{ currency: data.state.upgradeCost }}
-							available={{ currency: data.state.treasury ?? 0 }}
-						/>
 						<form
 							method="POST"
 							action="?/upgradeDefence"
-							class="mt-3"
+							class="mt-3 flex flex-wrap items-center justify-between gap-2"
 							use:enhance={({ formElement }) => {
 								upgrading = true;
 								return async ({ result, update }) => {
@@ -522,80 +668,32 @@
 								};
 							}}
 						>
+							<ResourceRequirements
+								inline
+								title="Upgrade cost"
+								costs={{ currency: data.state.upgradeCost }}
+								available={{ currency: treasury }}
+							/>
 							<Button
 								type="submit"
 								variant="secondary"
 								size="sm"
 								loading={upgrading}
-								disabled={(data.state.treasury ?? 0) < data.state.upgradeCost}
+								disabled={treasury < data.state.upgradeCost}
 							>
-								Raise to level {data.state.defenceLevel + 1}
+								Raise to L{data.state.defenceLevel + 1}
 							</Button>
 						</form>
+					{:else if data.state.upgradeCost === null}
+						<p class="mt-2 text-xs text-positive-fg">At the highest level.</p>
 					{/if}
 				</section>
 			</aside>
-		</div>
 
-		<!-- Ledger -->
-		<section class="mt-8" aria-labelledby="ledger-title">
-			<h2 id="ledger-title" class="section-title mb-2">Operations ledger</h2>
-			{#if data.ledger.length}
-				<div class="panel overflow-x-auto">
-					<table class="w-full text-sm">
-						<thead>
-							<tr class="border-b border-line/15 text-left text-[11px] uppercase tracking-[0.12em] text-fg-muted">
-								<th class="px-3 py-2 font-semibold">DTG</th>
-								<th class="px-3 py-2 font-semibold">Operation</th>
-								<th class="px-3 py-2 font-semibold">Target / origin</th>
-								<th class="px-3 py-2 text-right font-semibold">Odds S/A</th>
-								<th class="px-3 py-2 font-semibold">Outcome</th>
-							</tr>
-						</thead>
-						<tbody>
-							{#each data.ledger as o (`${o.ours}-${o.id}`)}
-								<tr class="border-b border-line/10 align-top last:border-0">
-									<td class="data whitespace-nowrap px-3 py-2 text-xs text-fg-muted">{dtg(o.launchedAt)}</td>
-									<td class="px-3 py-2">
-										<span class="text-fg">{COVERT_OPS[o.kind].label}</span>
-										{#if o.region}<span class="text-xs text-fg-muted"> · {o.region}</span>{/if}
-										{#if o.message}<p class="max-w-xs truncate text-xs italic text-fg-muted">“{o.message}”</p>{/if}
-										{#if o.amount}<p class="data text-xs text-fg-soft">${o.amount.toLocaleString()} taken</p>{/if}
-									</td>
-									<td class="px-3 py-2 text-xs">
-										{#if o.self}
-											<span class="text-fg-muted">home front</span>
-										{:else if o.ours}
-											<span class="text-fg-soft">→ {o.other}</span>
-										{:else}
-											<span class="text-hostile-fg">← {o.other ?? "unknown"}</span>
-										{/if}
-									</td>
-									<td class="data px-3 py-2 text-right text-xs text-fg-soft">
-										{o.successChance}% / {o.attributionChance}%
-									</td>
-									<td class="px-3 py-2">
-										<div class="flex flex-wrap gap-1">
-											<Badge size="xs" tone={o.succeeded ? (o.ours ? "green" : "red") : "neutral"}>
-												{o.succeeded ? "success" : o.ours ? "failed" : "thwarted"}
-											</Badge>
-											{#if o.ours && !o.self}
-												{#if o.attributed}<Badge size="xs" tone="orange">traced</Badge>
-												{:else if o.detected}<Badge size="xs" tone="amber">noticed</Badge>
-												{:else}<Badge size="xs" tone="neutral">unseen</Badge>{/if}
-											{:else if !o.ours && o.attributed}
-												<Badge size="xs" tone="orange">attributed</Badge>
-											{/if}
-										</div>
-									</td>
-								</tr>
-							{/each}
-						</tbody>
-					</table>
-				</div>
-			{:else}
-				<p class="panel p-3 text-sm text-fg-muted">No operations on record.</p>
-			{/if}
-		</section>
+			<section class="panel self-start p-4 lg:col-start-1 lg:row-start-1" aria-labelledby="ledger-title">
+				<h2 id="ledger-title" class="section-title mb-1"><IconHistory class="size-4" /> Operations ledger</h2>
+				<OpsLedger rows={data.ledger} />
+			</section>
+		</div>
 	{/if}
 </PageContainer>

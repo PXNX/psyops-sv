@@ -25,7 +25,12 @@
 		stolen: { taken: number; kept: number } | null;
 	}
 
-	const { outcome, onclose }: { outcome: Outcome; onclose: () => void } = $props();
+	const {
+		outcome,
+		onclose,
+		ondone
+	}: { outcome: Outcome; onclose: () => void; /** Called once the verdict is printed. */ ondone?: () => void } =
+		$props();
 
 	type Line = { text: string; status?: string; tone?: "ok" | "bad" | "warn" };
 	const spec = $derived(COVERT_OPS[outcome.kind]);
@@ -179,6 +184,13 @@
 		return () => clearInterval(t);
 	});
 	const done = $derived(shown >= lines.length);
+	let reported = -1;
+	$effect(() => {
+		if (done && reported !== outcome.id) {
+			reported = outcome.id;
+			ondone?.();
+		}
+	});
 	const toneClass = { ok: "text-positive-fg", bad: "text-hostile-fg", warn: "text-warning" } as const;
 </script>
 
