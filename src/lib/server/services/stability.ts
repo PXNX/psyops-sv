@@ -17,7 +17,7 @@ import {
 	POPULATION_FLOOR,
 	STABILITY,
 	regionPopulation,
-	populationDelta,
+	populationDeltaRaw,
 	regimeStability,
 	type ExploitationPolicyLike,
 	type StabilityResult
@@ -213,6 +213,7 @@ export async function populationTick(
 				id: regions.id,
 				stateId: regions.stateId,
 				population: regions.population,
+				populationRemainder: regions.populationRemainder,
 				terrain: regions.terrain,
 				infrastructure: regions.infrastructure,
 				economy: regions.economy,
@@ -241,20 +242,27 @@ export async function populationTick(
 		const s = row.stateId != null ? info.get(row.stateId) : undefined;
 		const strain = row.stateId != null ? pressure.get(row.stateId) : undefined;
 		const current = regionPopulation(row);
-		const delta = populationDelta(current, {
-			days,
-			atWar: s?.atWar ?? false,
-			environment: s?.environment ?? "standard",
-			conscription: strain?.pressure ?? s?.conscription ?? 0,
-			stability: s?.stability.score ?? 60,
-			hardship: needs.get(row.id)?.hardship ?? 0,
-			replicationFactor: strain?.band.replicationFactor,
-			conscriptionMortality: strain?.band.mortalityAdd,
-			hospital: strain?.hospital
-		});
-		if (!delta) continue;
+		const raw =
+			populationDeltaRaw(current, {
+				days,
+				atWar: s?.atWar ?? false,
+				environment: s?.environment ?? "standard",
+				conscription: strain?.pressure ?? s?.conscription ?? 0,
+				stability: s?.stability.score ?? 60,
+				hardship: needs.get(row.id)?.hardship ?? 0,
+				replicationFactor: strain?.band.replicationFactor,
+				conscriptionMortality: strain?.band.mortalityAdd,
+				hospital: strain?.hospital
+			}) + (row.populationRemainder ?? 0);
+		// Carry the fraction: a region growing by 0.2 people a week must still
+		// gain one person every five ticks instead of being rounded to zero.
+		const delta = Math.round(raw);
+		const remainder = raw - delta;
 		const next = Math.max(POPULATION_FLOOR, current + delta);
-		await db.update(regions).set({ population: next }).where(eq(regions.id, row.id));
+		await db
+			.update(regions)
+			.set({ population: next, populationRemainder: next === POPULATION_FLOOR && raw < 0 ? 0 : remainder })
+			.where(eq(regions.id, row.id));
 		result.regionsChanged++;
 		if (next > current) result.gained += next - current;
 		else result.lost += current - next;

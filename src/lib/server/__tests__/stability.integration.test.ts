@@ -75,6 +75,23 @@ describe("regime stability", () => {
 });
 
 describe("populationTick", () => {
+	it("accumulates slow growth over repeated ticks instead of rounding it away", async () => {
+		const [region] = await handle.db.select().from(regions).limit(1);
+		await handle.db
+			.update(regions)
+			.set({ stateId: null, population: 1_000, populationRemainder: 0 })
+			.where(eq(regions.id, region!.id));
+		// A nearly whole person carried over from an earlier tick still turns
+		// into one, even when this week's change is a fraction below zero.
+		await handle.db
+			.update(regions)
+			.set({ stateId: null, population: 1_000, populationRemainder: 0.9 })
+			.where(eq(regions.id, region!.id));
+		await populationTick(handle.db, now, 7);
+		const [after] = await handle.db.select().from(regions).where(eq(regions.id, region!.id));
+		expect(after!.population!).toBeGreaterThan(1_000);
+	});
+
 	it("moves populations without ever crossing the floor", async () => {
 		const before = (await handle.db.select().from(regions)).map((r) => ({ id: r.id, population: r.population }));
 		const result = await populationTick(handle.db, now, 365);

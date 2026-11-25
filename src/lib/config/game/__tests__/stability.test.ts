@@ -6,6 +6,7 @@ import {
 	STABILITY,
 	clampStability,
 	populationDelta,
+	populationDeltaRaw,
 	regimeStability,
 	stabilityLabel,
 	stabilityMoraleFactor,
@@ -146,6 +147,16 @@ describe("populationDelta", () => {
 	it("loses people when basic needs are not met", () => {
 		expect(populationDelta(100_000, { ...base, hardship: 1 })).toBeLessThan(populationDelta(100_000, base));
 		expect(populationDelta(100_000, { ...base, hardship: 0.2 })).toBe(populationDelta(100_000, base));
+	});
+
+	it("keeps small changes as a fraction instead of rounding them away", () => {
+		const town = { ...base, days: 7 };
+		expect(populationDelta(1_000, town)).toBe(0);
+		const raw = populationDeltaRaw(1_000, town);
+		expect(raw).toBeGreaterThan(0);
+		expect(raw).toBeLessThan(1);
+		// A hundred ticks of the same fraction add up to several people.
+		expect(raw * 100).toBeGreaterThan(1);
 	});
 
 	it("leaves empty or invalid populations alone", () => {

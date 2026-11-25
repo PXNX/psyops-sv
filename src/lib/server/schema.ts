@@ -378,6 +378,8 @@ export const regions = pgTable("regions", {
 	// casualties). Read it through regionPopulation() in population.config.ts,
 	// which derives a figure from the region when this is null.
 	population: integer("population"),
+	/** Fractional people left over from the last population tick, so slow trends still move. */
+	populationRemainder: real("population_remainder").default(0).notNull(),
 	createdAt: timestamp("created_at").defaultNow().notNull()
 });
 

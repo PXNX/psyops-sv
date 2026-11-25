@@ -350,7 +350,12 @@ export function populationBreakdown(
 	return { contributions, annualRate, net: Math.round(population * annualRate * (p.days / 365)) };
 }
 
-export function populationDelta(population: number, p: PopulationPressure): number {
+/**
+ * Unrounded population change for `days`, so a caller can carry the fraction
+ * between ticks. Rounding every weekly tick to a whole person otherwise means
+ * a small region with a slow but steady trend never changes at all.
+ */
+export function populationDeltaRaw(population: number, p: PopulationPressure): number {
 	if (!Number.isFinite(population) || population <= 0 || p.days <= 0) return 0;
 	const d = POPULATION_DYNAMICS;
 	const care = p.hospital ?? 1;
@@ -358,16 +363,16 @@ export function populationDelta(population: number, p: PopulationPressure): numb
 		d.BIRTHS_PER_YEAR * (p.replicationFactor ?? 1) * hospitalReplication(care) - d.DEATHS_PER_YEAR;
 	if (p.atWar) annual -= d.WAR_DEATHS_PER_YEAR;
 	annual -= d.ENVIRONMENT_DEATHS_PER_YEAR[p.environment] ?? 0;
-	annual -=
-		p.conscriptionMortality ?? Math.max(0, p.conscription) * d.CONSCRIPTION_DEATHS_PER_PERMILLE;
+	annual -= p.conscriptionMortality ?? Math.max(0, p.conscription) * d.CONSCRIPTION_DEATHS_PER_PERMILLE;
 	annual -= hospitalDeaths(care);
 	if (p.stability < d.EMIGRATION_BELOW_STABILITY) {
 		annual -= d.EMIGRATION_PER_YEAR * ((d.EMIGRATION_BELOW_STABILITY - p.stability) / d.EMIGRATION_BELOW_STABILITY);
 	}
-	// A region that cannot feed, water or warm its people loses them faster
-	// than a merely unhappy one. Imported from the supply rules to keep the
-	// thresholds in one place.
 	annual -= hardshipExtraDeaths(p.hardship) + hardshipExtraEmigration(p.hardship);
 	annual = clamp(annual, -d.MAX_ANNUAL_CHANGE, d.MAX_ANNUAL_CHANGE);
-	return Math.round(population * annual * (p.days / 365));
+	return population * annual * (p.days / 365);
+}
+
+export function populationDelta(population: number, p: PopulationPressure): number {
+	return Math.round(populationDeltaRaw(population, p));
 }
