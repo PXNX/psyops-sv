@@ -164,6 +164,7 @@
 			<EditSection title="State Color" icon={FluentColor20Filled}>
 				<EditColorPicker
 					bind:color={$form.background}
+					name="background"
 					disabled={$submitting === true || onCooldown}
 					previewIcon={FluentGlobe20Filled}
 					previewTitle={$form.name || stateName}

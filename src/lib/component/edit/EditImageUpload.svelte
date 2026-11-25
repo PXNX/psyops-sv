@@ -1,6 +1,5 @@
 <script lang="ts">
 	import FluentImage20Filled from "~icons/fluent/image-20-filled";
-	import ImageCropper from "#lib/component/ImageCropper.svelte";
 	import { buttonClass } from "#lib/component/ui/styles.js";
 
 	interface Props {
@@ -39,9 +38,9 @@
 		file
 	}: Props = $props();
 
-	let showCropper = $state(false);
-	let cropImageUrl = $state<string | null>(null);
-
+	// Cropping belongs to the sheet that owns the form: this component only
+	// hands the picked file over. A second, nested cropper used to open here
+	// and swallow the form's file value.
 	const dropzoneClass = $derived(
 		[
 			"group relative w-full overflow-hidden rounded-sm border-2 border-dashed transition-all duration-200",
@@ -57,73 +56,18 @@
 			.filter(Boolean)
 			.join(" ")
 	);
-
-	function handleFileSelectWithCrop(event: Event) {
-		const target = event.target as HTMLInputElement;
-		const selectedFile = target.files?.[0];
-		if (selectedFile) {
-			// Show cropper before proceeding
-			const objectUrl = URL.createObjectURL(selectedFile);
-			cropImageUrl = objectUrl;
-			showCropper = true;
-		}
-	}
-
-	function handleDropWithCrop(event: DragEvent) {
-		event.preventDefault();
-		dragActive = false;
-		const droppedFile = event.dataTransfer?.files[0];
-		if (droppedFile) {
-			const objectUrl = URL.createObjectURL(droppedFile);
-			cropImageUrl = objectUrl;
-			showCropper = true;
-		}
-	}
-
-	function handleCropComplete(croppedDataUrl: string) {
-		showCropper = false;
-		if (cropImageUrl) {
-			URL.revokeObjectURL(cropImageUrl);
-			cropImageUrl = null;
-		}
-		// Convert data URL to File and call the parent handler
-		fetch(croppedDataUrl)
-			.then((r) => r.blob())
-			.then((blob) => {
-				const croppedFile = new File([blob], "cropped-image.png", { type: "image/png" });
-				// Create a synthetic event-like object
-				const dt = new DataTransfer();
-				dt.items.add(croppedFile);
-				if (fileInputElement) {
-					Object.defineProperty(fileInputElement, "files", {
-						value: dt.files,
-						writable: true
-					});
-				}
-				// Update preview directly
-				previewUrl = croppedDataUrl;
-				// Notify parent
-				onCropComplete?.(croppedDataUrl);
-				// Also trigger the original onFileSelect with a synthetic event
-				const syntheticEvent = { target: { files: dt.files } } as unknown as Event;
-				onFileSelect(syntheticEvent);
-			});
-	}
-
-	function handleCropCancel() {
-		showCropper = false;
-		if (cropImageUrl) {
-			URL.revokeObjectURL(cropImageUrl);
-			cropImageUrl = null;
-		}
-		// Reset file input
-		if (fileInputElement) {
-			fileInputElement.value = "";
-		}
-	}
 </script>
 
-<div class="relative" ondrop={handleDropWithCrop} ondragover={onDragOver} ondragleave={onDragLeave}>
+<div
+	class="relative"
+	ondrop={(event) => {
+		event.preventDefault();
+		dragActive = false;
+		onDrop(event);
+	}}
+	ondragover={onDragOver}
+	ondragleave={onDragLeave}
+>
 	<input
 		bind:this={fileInputElement}
 		type="file"
@@ -131,7 +75,7 @@
 		name="logo"
 		accept="image/*"
 		class="hidden"
-		onchange={handleFileSelectWithCrop}
+		onchange={onFileSelect}
 		{disabled}
 	/>
 
@@ -207,15 +151,4 @@
 	<p class="text-xs text-fg-muted mt-2">
 		Upload a new {entityName} to replace the current one • Will be converted to 96x96 WebP • Max 5MB
 	</p>
-{/if}
-
-{#if showCropper && cropImageUrl}
-	<ImageCropper
-		imageUrl={cropImageUrl}
-		{aspectRatio}
-		title="Crop {entityName}"
-		cropButtonText="Use this crop"
-		onCrop={handleCropComplete}
-		onCancel={handleCropCancel}
-	/>
 {/if}

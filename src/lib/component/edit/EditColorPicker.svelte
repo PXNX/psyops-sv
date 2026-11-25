@@ -8,6 +8,8 @@
 
 	interface Props {
 		color: string;
+		/** Form field name — states post this as `background`. */
+		name?: string;
 		disabled?: boolean;
 		error?: string;
 		previewIcon?: ComponentType;
@@ -19,6 +21,7 @@
 
 	let {
 		color = $bindable(),
+		name = "color",
 		disabled = false,
 		error,
 		previewIcon: PreviewIcon,
@@ -64,7 +67,7 @@
 		<input
 			type="color"
 			id="color"
-			name="color"
+			{name}
 			bind:value={color}
 			class="h-10 w-20 rounded-sm border border-line/20 bg-surface-0 cursor-pointer"
 			{disabled}
