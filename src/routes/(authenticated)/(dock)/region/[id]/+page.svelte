@@ -446,13 +446,23 @@
 						{/if}
 					</a>
 					<a
-						href="/region/{data.region.id}/economy"
+						href="/region/{data.region.id}/budget"
 						class="panel-interactive rounded-sm p-3 flex items-center gap-3 group"
 					>
 						<FluentWallet20Filled class="size-5 text-warning shrink-0" />
 						<div class="min-w-0 flex-1">
 							<p class="text-sm font-bold text-fg group-hover:text-primary-hover">Regional budget</p>
-							<p class="text-xs text-fg-muted truncate">Budget, civilian population and local supplies on one page</p>
+							<p class="text-xs text-fg-muted truncate">Purse, programmes and the construction queue</p>
+						</div>
+					</a>
+					<a
+						href="/region/{data.region.id}/population"
+						class="panel-interactive rounded-sm p-3 flex items-center gap-3 group"
+					>
+						<FluentPeople20Filled class="size-5 text-friendly shrink-0" />
+						<div class="min-w-0 flex-1">
+							<p class="text-sm font-bold text-fg group-hover:text-primary-hover">Population</p>
+							<p class="text-xs text-fg-muted truncate">Civilians, supplies and the civil register</p>
 						</div>
 					</a>
 				</div>
@@ -477,11 +487,14 @@
 		</a>
 
 		{#if isIndependent}
-			<a href="/region/{data.region.id}/economy" class="panel-interactive rounded-sm p-3 flex items-center gap-3 group">
-				<FluentWallet20Filled class="size-5 text-warning shrink-0" />
+			<a
+				href="/region/{data.region.id}/population"
+				class="panel-interactive rounded-sm p-3 flex items-center gap-3 group"
+			>
+				<FluentPeople20Filled class="size-5 text-friendly shrink-0" />
 				<div class="min-w-0 flex-1">
-					<p class="text-sm font-bold text-fg group-hover:text-primary-hover">Civilians & budget</p>
-					<p class="text-xs text-fg-muted truncate">Population, local supplies and public funds</p>
+					<p class="text-sm font-bold text-fg group-hover:text-primary-hover">Population</p>
+					<p class="text-xs text-fg-muted truncate">Civilians, supplies and the civil register</p>
 				</div>
 			</a>
 		{/if}

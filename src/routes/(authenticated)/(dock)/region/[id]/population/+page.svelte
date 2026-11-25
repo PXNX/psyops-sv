@@ -10,6 +10,8 @@
 	import Logo from "#lib/component/Logo.svelte";
 	import PageContainer from "#lib/component/PageContainer.svelte";
 	import { Button, IconButton, Badge } from "#lib/component/ui/index.js";
+	import Sparkline from "#lib/component/charts/Sparkline.svelte";
+	import CivilianNeeds from "../CivilianNeeds.svelte";
 	import { formatDate, regionCoatUrl } from "#lib/utils/formatting.js";
 
 	const { data } = $props();
@@ -61,6 +63,57 @@
 			<span class="sm:hidden">{data.sortOrder === "asc" ? "Oldest" : "Newest"}</span>
 		</Button>
 	</header>
+
+	<div class="grid gap-4 items-start lg:grid-cols-2 mt-4">
+		<section class="panel rounded-sm p-4">
+			<div class="flex flex-wrap items-center justify-between gap-3">
+				<h2 class="section-title text-base">Civilian population</h2>
+				{#if data.civilians.report}
+					<span class="font-mono text-xs {data.civilians.report.annualRate < 0 ? 'text-error' : 'text-positive-fg'}">
+						{data.civilians.report.annualRate >= 0 ? "+" : ""}{(data.civilians.report.annualRate * 100).toFixed(1)}% /
+						year
+					</span>
+				{/if}
+			</div>
+			<p class="mt-1 font-mono text-xl font-bold text-fg">
+				{data.civilians.population.toLocaleString()}
+				<span class="text-xs font-normal text-fg-muted">· {data.civilians.density}/km²</span>
+			</p>
+			<Sparkline
+				values={data.civilians.trend ?? []}
+				label="Civilian population over the last 90 days"
+				color="var(--color-positive)"
+			/>
+			<div class="mt-3 flex flex-wrap items-center justify-between gap-2 border-t border-line/10 pt-2 text-xs">
+				<span
+					class="text-fg-muted"
+					title="Share set by the region's education level: {(data.civilians.workforce.share * 100).toFixed(0)}%"
+				>
+					Civilian workforce · {(data.civilians.workforce.share * 100).toFixed(0)}% at education level {data.civilians
+						.workforce.education}
+				</span>
+				<span class="font-mono text-fg-body" title="Civilians available to take a company shift">
+					{data.civilians.workforce.available.toLocaleString()} workers
+				</span>
+			</div>
+			{#if data.civilians.report?.contributions.length}
+				<div class="mt-2 grid gap-1 text-xs sm:grid-cols-2">
+					{#each data.civilians.report.contributions as c}
+						<div class="flex justify-between gap-2 border-b border-line/10 py-1">
+							<span class="text-fg-muted">{c.label}</span>
+							<span class="font-mono {c.value < 0 ? 'text-error' : 'text-positive-fg'}">
+								{c.value >= 0 ? "+" : ""}{c.value.toLocaleString()}
+							</span>
+						</div>
+					{/each}
+				</div>
+			{/if}
+		</section>
+
+		<CivilianNeeds needs={data.civilianNeeds} />
+	</div>
+
+	<h2 class="section-title mt-5 mb-2">Registered residents</h2>
 
 	{#if data.residents.length === 0}
 		<div class="panel-muted rounded-sm p-12 text-center">

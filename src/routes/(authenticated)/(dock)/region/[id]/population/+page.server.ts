@@ -6,11 +6,23 @@ import { eq, desc, asc, sql, count } from "drizzle-orm";
 import { error } from "@sveltejs/kit";
 import type { PageServerLoad } from "./$types";
 import { getRegionName } from "#lib/utils/formatting.js";
+import {
+	CIVILIAN_NEEDS,
+	NEED_META,
+	civilianLabour,
+	labourShare,
+	regionDensity,
+	regionPopulation
+} from "#lib/config/index.js";
+import { regionCivilianNeeds } from "#lib/server/services/civilians/supply.js";
+import { regionPopulationReport } from "#lib/server/services/population-report.js";
+import { populationHistory } from "#lib/server/services/snapshot-history.js";
 
 const PAGE_SIZE = 20;
 
 export const load: PageServerLoad = async ({ params, url, locals }) => {
 	const account = locals.account!;
+	const regionId = parseInt(params.id);
 	const sortOrder = (url.searchParams.get("sort") || "desc") as "asc" | "desc";
 	const currentPage = parseInt(url.searchParams.get("page") || "1");
 
@@ -58,12 +70,44 @@ export const load: PageServerLoad = async ({ params, url, locals }) => {
 
 	const totalResidents = totalCountResult[0]?.count || 0;
 
+	const [civilianNeeds, report, trend] = await Promise.all([
+		regionCivilianNeeds(db, regionId),
+		regionPopulationReport(db, regionId),
+		populationHistory(regionId)
+	]);
+
 	return {
 		region: {
 			id: region.id,
 			name: getRegionName(region.id),
 			stateId: region.stateId,
 			stateName: region.state?.name
+		},
+		civilianNeeds: civilianNeeds
+			? {
+					hardship: civilianNeeds.hardship,
+					shortages: civilianNeeds.shortages,
+					reasons: civilianNeeds.reasons,
+					supplies: CIVILIAN_NEEDS.map((key) => ({
+						key,
+						label: NEED_META[key].label,
+						icon: NEED_META[key].icon,
+						demand: civilianNeeds[key].demand,
+						capacity: civilianNeeds[key].capacity,
+						sufficiency: civilianNeeds[key].sufficiency
+					}))
+				}
+			: null,
+		civilians: {
+			population: regionPopulation(region),
+			density: Math.round(regionDensity(region)),
+			report,
+			trend: trend.map((p) => p.value),
+			workforce: {
+				available: civilianLabour(regionPopulation(region), region.education ?? 0),
+				share: labourShare(region.education ?? 0),
+				education: region.education ?? 0
+			}
 		},
 		residents: await Promise.all(
 			residentsData.map(async (r) => ({
