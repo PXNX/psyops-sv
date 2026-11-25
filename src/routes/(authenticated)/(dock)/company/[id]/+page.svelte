@@ -463,7 +463,7 @@
 				</div>
 			{/if}
 
-			<dl class="grid grid-cols-2 sm:grid-cols-4 gap-2">
+			<dl class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2">
 				<div class="panel-muted rounded-sm p-3">
 					<dt class="text-[10px] text-fg-muted uppercase tracking-wide">Issued</dt>
 					<dd class="font-mono text-base font-bold text-fg">{data.shares.totalShares.toLocaleString()}</dd>
@@ -483,6 +483,15 @@
 				<div class="panel-muted rounded-sm p-3">
 					<dt class="text-[10px] text-fg-muted uppercase tracking-wide">On offer</dt>
 					<dd class="font-mono text-base font-bold text-fg">{data.floatOutstanding.toLocaleString()}</dd>
+				</div>
+				<div
+					class="panel-muted rounded-sm p-3"
+					title="All {data.shares.totalShares.toLocaleString()} issued shares at the current price per share"
+				>
+					<dt class="text-[10px] text-fg-muted uppercase tracking-wide">Market cap</dt>
+					<dd class="font-mono text-base font-bold text-positive-fg">
+						${(data.marketCap ?? 0).toLocaleString()}
+					</dd>
 				</div>
 			</dl>
 

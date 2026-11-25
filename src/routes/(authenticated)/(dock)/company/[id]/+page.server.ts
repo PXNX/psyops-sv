@@ -478,6 +478,10 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 		listings,
 		topHolders,
 		floatOutstanding,
+		// Market capitalization: every issued share at the current quote.
+		marketCap: shares
+			? Math.round((dividends?.overview.sharePrice ?? Number(shares.ipoPrice)) * shares.totalShares)
+			: null,
 		dividends,
 		earnings: await companyEarnings(db, companyId),
 		dividendConfig: {
