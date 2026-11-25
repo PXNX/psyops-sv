@@ -18,6 +18,7 @@
 		TRACE,
 		coverTracks,
 		exploitsFor,
+		networkFor,
 		parseCommand,
 		parseExploitArgs,
 		readDeep,
@@ -56,7 +57,6 @@
 	let history: string[] = [];
 	let historyAt = -1;
 	let camsOpen = $state(false);
-	let camsTapped = $state(false);
 	let rain = $state(true);
 	let reduced = $state(false);
 	let inputEl: HTMLInputElement | undefined = $state();
@@ -69,7 +69,10 @@
 	const exploitable = $derived(
 		((session?.ports ?? []) as { port: number; service: string; vector?: string }[]).filter((p) => p.vector)
 	);
-	const camsReady = $derived(camsTapped || (site?.cameras ?? 0) > 0);
+	/** Cameras and file share this session has earned, as the server decided. */
+	const systems = $derived(session?.systems ?? null);
+	/** Host ids on this site's network (which ones exist varies per site). */
+	const hostIds = $derived(networkFor(site, "", session?.host ?? undefined).hosts.map((h) => h.id));
 	/** Trace meter, hosts, keys and loot, as the server last reported them. */
 	const deep = $derived(readDeep(session?.deep));
 	const level = $derived(traceLevel(deep.trace));
@@ -184,11 +187,11 @@
 		["loot [n]", "list or take what's on this host"],
 		["cover", "cover your tracks: −trace, dearer and weaker each time"],
 		["trace · status", "the trace meter, keys and loot"],
-		["ls [dir] · cd <dir>", "look around the host"],
+		["ls [dir] · cd <dir>", "look around the file share (once you're on it)"],
 		["cat <file>", "read a file"],
 		["grep <word>", "search every file"],
 		["copy <file>", "copy a file into the dossier (adds heat)"],
-		["cams", `the camera wall (first tap ${money(INFILTRATION_ACTIONS.camera.cost)})`],
+		["cams", "the camera wall (own the video recorder first)"],
 		["probe", `count the guards · ${money(INFILTRATION_ACTIONS.probe.cost)}`],
 		["wipe logs", `rest the operator, −heat · ${money(INFILTRATION_ACTIONS.cover.cost)}`],
 		["deploy <payload>", "launch a cyber payload once inside"],
@@ -387,15 +390,17 @@
 			}
 			case "cams":
 			case "cctv": {
-				if (!camsReady) {
-					say("Tapping the camera network…", "info");
-					const d = await post("act", { action: "camera" });
-					const o = d.outcome;
-					say(o.detail, o.success ? "ok" : "bad");
-					if (!o.success) return say(`No picture this time (${o.chance}% chance). Try again?`, "warn");
-					camsTapped = true;
-				}
-				say("📺 Camera wall online. Grid, single view, night vision, thermal, PTZ and fisheye are all yours.", "ok");
+				if (!systems?.mapped) return say("No signal. Get inside the network, then find the video recorder.", "warn");
+				if (systems.cameraCount === 0) return say("This site runs no cameras at all. Nothing to watch.", "info");
+				if (!systems.cameras.length)
+					return say(
+						`The recorder has ${systems.cameraCount} channel${systems.cameraCount === 1 ? "" : "s"}, all dark to you. \`hop cams\` first.`,
+						"warn"
+					);
+				say(
+					`📺 ${systems.cameras.length} feed${systems.cameras.length === 1 ? "" : "s"} up: ${systems.cameras.map((c: { label: string }) => c.label).join(", ")}.`,
+					"ok"
+				);
 				camsOpen = true;
 				return;
 			}
@@ -463,12 +468,13 @@
 			s.push(
 				"hosts",
 				"loot",
-				...["gw", "cams", "files", "badge", "core"].filter((h) => h !== deep.at).map((h) => `hop ${h}`),
-				"ls",
+				...hostIds.filter((h) => h !== deep.at).map((h) => `hop ${h}`),
+				...(systems?.files === "open" ? ["ls"] : []),
+				...(systems?.cameras.length ? ["cams"] : []),
 				"deploy"
 			);
 		if (session && !deep.traced && deep.trace > 0) s.push("cover");
-		s.push("cams", "status", "help", "exit");
+		s.push("status", "help", "exit");
 		return [...new Set(s)];
 	});
 
@@ -682,7 +688,7 @@
 							<span>camera wall · {site.name}</span>
 							<button type="button" class="hover:text-[#d8ffe2]" onclick={() => (camsOpen = false)}>[x] close</button>
 						</div>
-						<CameraWall {site} observedAt={site.lastSeen ?? undefined} owned={deep.owned} terminal />
+						<CameraWall {site} {systems} terminal />
 					</div>
 				{/if}
 			</div>

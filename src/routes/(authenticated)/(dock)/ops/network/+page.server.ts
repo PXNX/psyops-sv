@@ -10,7 +10,15 @@ import { db } from "#lib/server/db.js";
 import { intrusionSessions, states } from "#lib/server/schema.js";
 import { getLogoUrl } from "#lib/server/backblaze.js";
 import { getRegionName } from "#lib/utils/formatting.js";
-import { COVERT_OPS, INTRUSION, isExploitTier, payloadBonus, readDeep, type CovertOpKind } from "#lib/config/index.js";
+import {
+	COVERT_OPS,
+	INTRUSION,
+	isExploitTier,
+	payloadBonus,
+	readDeep,
+	systemsView,
+	type CovertOpKind
+} from "#lib/config/index.js";
 import {
 	CovertOpError,
 	OPS_ROLE_LABEL,
@@ -63,7 +71,7 @@ const empty = {
 	sites: [] as Awaited<ReturnType<typeof sitesFor>>,
 	files: [] as Awaited<ReturnType<typeof filesFor>>,
 	actions: [] as Awaited<ReturnType<typeof actionsFor>>,
-	sessions: [] as Awaited<ReturnType<typeof loadSessions>>,
+	sessions: [] as ReturnType<typeof withSystems>,
 	treasury: null as number | null
 };
 
@@ -71,6 +79,20 @@ function loadSessions(stateId: number, targetStateId: number) {
 	return db.query.intrusionSessions.findMany({
 		where: and(eq(intrusionSessions.stateId, stateId), eq(intrusionSessions.targetStateId, targetStateId)),
 		orderBy: (s, { desc }) => [desc(s.updatedAt)]
+	});
+}
+
+/**
+ * Attach what each session has earned (cameras, file share). Decided here so
+ * the page never gets a camera list the operator hasn't unlocked.
+ */
+function withSystems(sessions: Awaited<ReturnType<typeof loadSessions>>, sites: Awaited<ReturnType<typeof sitesFor>>) {
+	return sessions.map((s) => {
+		const site = sites.find((x) => x.id === s.siteId);
+		const systems = site
+			? systemsView(site, { stage: s.stage, deep: readDeep(s.deep) })
+			: systemsView({ seed: 0, kind: "command" }, null);
+		return { ...s, systems };
 	});
 }
 
@@ -109,7 +131,7 @@ export const load: PageServerLoad = async ({ locals, url }) => {
 		sites,
 		files,
 		actions,
-		sessions,
+		sessions: withSystems(sessions, sites),
 		treasury: authority ? (treasury?.balance ?? 0) : null,
 		maxAssets: INFILTRATION.MAX_ASSETS_PER_TARGET,
 		/** Set while recruiting in the selected target is on cooldown. */

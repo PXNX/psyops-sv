@@ -6,7 +6,6 @@ import {
 	EXPLOIT_TIER_ORDER,
 	TRACE,
 	addTrace,
-	cameraAccess,
 	coverTracks,
 	emptyDeep,
 	exploitChance,
@@ -22,12 +21,19 @@ import {
 	readDeep,
 	resolveHost,
 	resolveLoot,
+	siteSystems,
 	sitesForTarget,
 	tracePenalty,
 	traceLevel
 } from "#lib/config/index.js";
 
-const site = sitesForTarget(7, [{ id: 3, name: "Ashfield Coal Station", plantType: "coal" }])[0]!;
+// A power plant that runs every host (cameras, a file share and a door controller).
+const site = Array.from({ length: 40 }, (_, i) => sitesForTarget(7, [{ id: i + 1, plantType: "coal" }])[0]!).find(
+	(s) => {
+		const sys = siteSystems(s);
+		return sys.cameras.length > 0 && sys.hasFiles && sys.hasBadge;
+	}
+)!;
 const asset = { access: 3, heat: 0 };
 
 describe("exploit tiers", () => {
@@ -154,12 +160,6 @@ describe("session state", () => {
 	it("reads old or partial rows as a full state", () => {
 		expect(readDeep(null)).toEqual(emptyDeep());
 		expect(readDeep({ trace: 40, keys: ["x"] })).toMatchObject({ trace: 40, keys: ["x"], owned: [], moves: 0 });
-	});
-
-	it("locks the inside cameras until the recorder is owned", () => {
-		for (const v of ["main", "gate", "perimeter"]) expect(cameraAccess(v, null)).toBe(true);
-		expect(cameraAccess("lobby", { owned: ["gw"] })).toBe(false);
-		expect(cameraAccess("server", { owned: ["gw", "cams"] })).toBe(true);
 	});
 
 	it("gives payloads an extra foothold with the master key", () => {

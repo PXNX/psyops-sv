@@ -14,11 +14,12 @@ import {
 	plantAsset,
 	readSystemRecord,
 	runAction,
+	runDeepMove,
 	runIntrusion,
 	sessionFor
 } from "../services/military/infiltration";
 import { launchOperation } from "../services/military/covert-ops";
-import { INFILTRATION, INTRUSION, actionChance, sitesForTarget } from "#lib/config/index.js";
+import { INFILTRATION, INTRUSION, actionChance, siteRecords, sitesForTarget } from "#lib/config/index.js";
 
 let handle: MockDbHandle;
 let freedonia: number;
@@ -111,6 +112,8 @@ describe("an intrusion chain", () => {
 
 describe("life inside the host", () => {
 	let operator: number;
+	/** Folders on this site's share that hold files (which ones exist varies per site). */
+	let folders: string[];
 
 	beforeAll(async () => {
 		operator = (
@@ -126,6 +129,20 @@ describe("life inside the host", () => {
 				rng: always
 			});
 		}
+		// The files live on the file share: take the gateway's password and walk in.
+		await runDeepMove(handle.db, "user-1", {
+			assetId: operator,
+			siteId,
+			move: "loot",
+			item: "svc-password",
+			now: now()
+		});
+		await runDeepMove(handle.db, "user-1", { assetId: operator, siteId, move: "hop", host: "files", now: now() });
+		const fs = siteRecords(
+			sitesForTarget(sylvania).find((s) => s.id === siteId)!,
+			"Empire of Sylvania"
+		);
+		folders = [...new Set(fs.files.map((f) => f.path.slice(0, f.path.lastIndexOf("/"))))].sort();
 	});
 
 	it("walks directories without needing a new intrusion", async () => {
@@ -135,7 +152,7 @@ describe("life inside the host", () => {
 		const finance = await browseSystem(handle.db, "user-1", {
 			assetId: operator,
 			siteId,
-			path: "/srv/shared/finance",
+			path: folders.find((d) => d.startsWith("/srv/"))!,
 			now: now()
 		});
 		expect(finance.files.length).toBeGreaterThan(0);
@@ -143,7 +160,12 @@ describe("life inside the host", () => {
 	});
 
 	it("reads a partially redacted record", async () => {
-		const listing = await browseSystem(handle.db, "user-1", { assetId: operator, siteId, path: "/mail", now: now() });
+		const listing = await browseSystem(handle.db, "user-1", {
+			assetId: operator,
+			siteId,
+			path: folders[0]!,
+			now: now()
+		});
 		const record = await readSystemRecord(handle.db, "user-1", {
 			assetId: operator,
 			siteId,
@@ -164,7 +186,7 @@ describe("life inside the host", () => {
 		const listing = await browseSystem(handle.db, "user-1", {
 			assetId: operator,
 			siteId,
-			path: "/srv/shared/legal",
+			path: folders.at(-1)!,
 			now: now()
 		});
 		const record = listing.files[0]!;

@@ -8,7 +8,7 @@
 	import {
 		CONTENT_KIND_LABEL,
 		CLASSIFICATION_TONE,
-		fileSystemFor,
+		siteRecords,
 		listDirectory,
 		type SystemRecord
 	} from "#lib/config/index.js";
@@ -30,7 +30,7 @@
 	}
 	let { site, assetId, targetName, copiedIds, onResult }: Props = $props();
 
-	const fs = $derived(fileSystemFor(site, targetName));
+	const fs = $derived(siteRecords(site, targetName));
 	let path = $state("/");
 	let record = $state<SystemRecord | null>(null);
 	let query = $state("");

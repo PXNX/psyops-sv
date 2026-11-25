@@ -79,6 +79,9 @@ describe("a deep intrusion", () => {
 	});
 
 	it("takes the gateway's key and walks into the file share with it", async () => {
+		await expect(browseSystem(handle.db, "user-1", { assetId, siteId, path: "/", now: now() })).rejects.toThrow(
+			/file share/
+		);
 		const took = await runDeepMove(handle.db, "user-1", { assetId, siteId, move: "loot", item: "1", now: now() });
 		expect(took.deep.keys).toContain("svc-password");
 		await expect(
@@ -95,6 +98,8 @@ describe("a deep intrusion", () => {
 		expect(hop.success).toBe(true);
 		expect(hop.deep.at).toBe("files");
 		expect(hop.deep.owned).toContain("files");
+		const root = await browseSystem(handle.db, "user-1", { assetId, siteId, path: "/", now: now() });
+		expect(root.dirs.length).toBeGreaterThan(0);
 	});
 
 	it("skims cash loot into the treasury", async () => {

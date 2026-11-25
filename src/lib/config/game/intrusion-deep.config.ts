@@ -13,6 +13,7 @@
 import { hash32, seededRandom } from "./recon.config";
 import type { Site } from "./infiltration.config";
 import type { ScanPort } from "./intrusion.config";
+import { siteSystems, type SiteSystems } from "./site-systems.config";
 
 // ── Trace meter ─────────────────────────────────────────────────────────────
 
@@ -227,7 +228,7 @@ export function networkFor(site: Pick<Site, "seed" | "kind">, target: string, ga
 			keys: [],
 			locked: false,
 			defence: 1,
-			blurb: "The video recorder. Own it to see the lobby and the server room.",
+			blurb: "The video recorder. Own it to watch the site's cameras.",
 			loot: [
 				{
 					id: "badge-clone",
@@ -323,7 +324,45 @@ export function networkFor(site: Pick<Site, "seed" | "kind">, target: string, ga
 			]
 		}
 	];
-	return { hosts };
+	return { hosts: trimToSite(hosts, siteSystems(site)) };
+}
+
+/** Which host each key is found on. */
+const KEY_SOURCE: Record<string, string> = {
+	"svc-password": "gw",
+	"badge-clone": "cams",
+	"admin-token": "files",
+	"vault-pin": "badge"
+};
+
+/**
+ * Drop the hosts this site doesn't run and rewire the rest, so the core is
+ * always reachable and always has a key that can actually be found.
+ */
+function trimToSite(all: NetHost[], sys: SiteSystems): NetHost[] {
+	const present = new Set(["gw", "core"]);
+	if (sys.cameras.length) present.add("cams");
+	if (sys.hasFiles) present.add("files");
+	if (sys.hasBadge) present.add("badge");
+	const hosts = all
+		.filter((h) => present.has(h.id))
+		.map((h) => ({ ...h, links: h.links.filter((l) => present.has(l)) }));
+	const get = (id: string) => hosts.find((h) => h.id === id);
+	const link = (a: string, b: string) => {
+		if (!get(a)!.links.includes(b)) get(a)!.links.push(b);
+		if (!get(b)!.links.includes(a)) get(b)!.links.push(a);
+	};
+	if (!present.has("cams") && !present.has("files")) link("gw", "badge");
+	if (!present.has("badge")) link(present.has("files") ? "files" : "cams", "core");
+	// A key is worth carrying only if its host exists (and, for the service password, the share it opens).
+	const findable = (k: string) =>
+		!(k in KEY_SOURCE) || (present.has(KEY_SOURCE[k]!) && (k !== "svc-password" || present.has("files")));
+	for (const h of hosts) {
+		h.keys = h.keys.filter(findable);
+		h.loot = h.loot.filter((l) => l.kind !== "key" || findable(l.id));
+		if (!h.keys.length && h.id !== "core") h.locked = false;
+	}
+	return hosts;
 }
 
 export const hostById = (net: TargetNetwork, id: string) => net.hosts.find((h) => h.id === id);
@@ -431,17 +470,6 @@ export function hopChance(host: NetHost, deep: Pick<DeepState, "trace">, asset: 
 /** The dice for one move: deterministic for a given session, hour and move count. */
 export function moveRng(seed: number, assetId: number, moves: number, now: Date): () => number {
 	return seededRandom(hash32(seed, assetId, moves + 1, Math.floor(now.getTime() / 3_600_000)));
-}
-
-// ── Cameras ─────────────────────────────────────────────────────────────────
-
-/** Feeds that need the video recorder host; the outside ones come with any tap. */
-export const INSIDE_CAMERAS = ["lobby", "server"] as const;
-
-/** Whether one camera view is available, given the session's deep state. */
-export function cameraAccess(view: string, deep: Pick<DeepState, "owned"> | null | undefined): boolean {
-	if (!(INSIDE_CAMERAS as readonly string[]).includes(view)) return true;
-	return !!deep?.owned.includes("cams");
 }
 
 /** Extra footholds a payload gets from this session's loot. */

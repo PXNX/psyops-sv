@@ -693,9 +693,10 @@
 										{@render actionResult(lastAction)}
 									{/if}
 
-									{#if site.cameras > 0}
-										<CameraWall {site} observedAt={site.lastSeen ?? undefined} owned={siteSession?.deep?.owned ?? []} />
-									{/if}
+									<div>
+										<h4 class="section-title mb-2">Cameras · {site.code}</h4>
+										<CameraWall {site} systems={siteSession?.systems} />
+									</div>
 
 									{#if selectedAsset}
 										<div>
@@ -741,9 +742,25 @@
 										</div>
 									{/if}
 
-									{#if siteSession?.stage === "pivot" && selectedAsset}
+									{#if siteSession?.systems?.mapped && siteSession.systems.files !== "open" && selectedAsset}
 										<div>
-											<h4 class="section-title mb-2">Inside the host · {site.code}</h4>
+											<h4 class="section-title mb-2">File share · {site.code}</h4>
+											<p class="text-sm text-fg-muted">
+												{siteSession.systems.files === "none"
+													? "This network keeps no file share worth reading."
+													: "The files sit on the file share. Hop to it from the terminal (hop files) to browse them."}
+											</p>
+										</div>
+									{/if}
+
+									{#if siteSession?.systems?.files === "open" && selectedAsset}
+										<div>
+											<h4 class="section-title mb-2">File share · {site.code}</h4>
+											{#if siteSession.systems.dataSets.length}
+												<p class="mb-2 text-xs text-fg-muted">
+													On the share: {siteSession.systems.dataSets.join(", ")}.
+												</p>
+											{/if}
 											<FileSystemExplorer
 												{site}
 												assetId={selectedAsset.id}

@@ -48,7 +48,7 @@ import {
 	type LogLine,
 	type ScanReport,
 	type Site,
-	fileSystemFor,
+	siteRecords,
 	listDirectory,
 	findRecords,
 	hash32,
@@ -1123,7 +1123,8 @@ export async function runDeepMove(
 					deep.owned.push(target.id);
 					line(`[+] shell on ${target.name} (${target.ip})`, "ok");
 					line(`> ${target.blurb}`);
-					if (target.role === "cameras") line("[+] the lobby and server room cameras are yours now", "ok");
+					if (target.role === "cameras") line("[+] the camera feeds are yours now · `cams`", "ok");
+					if (target.role === "files") line("[+] the file share is open · `ls` to look around", "ok");
 				} else {
 					line(`[-] ${target.name} slammed the door · the attempt was logged`, "bad");
 				}
@@ -1208,7 +1209,15 @@ export async function runDeepMove(
 
 /** The file system of a site, stable for every visitor and every visit. */
 export function recordsFor(site: Site, target: string) {
-	return fileSystemFor(site, target);
+	return siteRecords(site, target);
+}
+
+/** The files live on the file share: the operator has to be holding it. */
+function requireShare(session: { deep: unknown; host: string | null }, site: Site, targetName: string) {
+	const net = networkFor(site, targetName, session.host ?? undefined);
+	if (!hostById(net, "files")) throw new InfiltrationError("This network has no file share worth reading.");
+	if (!readDeep(session.deep as Partial<DeepState> | null).owned.includes("files"))
+		throw new InfiltrationError("The files sit on the file share. Get there first: hop files.");
 }
 
 /** Append operator commands to the session transcript. */
@@ -1267,6 +1276,7 @@ export async function browseSystem(
 		const { session, targetName } = await requirePivot(tx, userId, input.assetId, input.siteId);
 		const site = (await sitesIn(tx, session.targetStateId)).find((s) => s.id === input.siteId);
 		if (!site) throw new InfiltrationError("That site is not in the target's catalogue.");
+		requireShare(session, site, targetName);
 		const listing = listDirectory(recordsFor(site, targetName), input.path || "/");
 		const t = dtg(now);
 		const lines: LogLine[] = [
@@ -1294,6 +1304,7 @@ export async function readSystemRecord(
 		const { session, targetName } = await requirePivot(tx, userId, input.assetId, input.siteId);
 		const site = (await sitesIn(tx, session.targetStateId)).find((s) => s.id === input.siteId);
 		if (!site) throw new InfiltrationError("That site is not in the target's catalogue.");
+		requireShare(session, site, targetName);
 		const record = recordsFor(site, targetName).files.find((f) => f.id === input.recordId);
 		if (!record) throw new InfiltrationError("That file no longer exists on the host.");
 		const t = dtg(now);
@@ -1318,6 +1329,7 @@ export async function grepSystem(
 		const { session, targetName } = await requirePivot(tx, userId, input.assetId, input.siteId);
 		const site = (await sitesIn(tx, session.targetStateId)).find((s) => s.id === input.siteId);
 		if (!site) throw new InfiltrationError("That site is not in the target's catalogue.");
+		requireShare(session, site, targetName);
 		const matches = findRecords(recordsFor(site, targetName), input.query);
 		const t = dtg(now);
 		const lines: LogLine[] = [
@@ -1341,6 +1353,7 @@ export async function exfilRecord(
 		const { asset, session, targetName, stateId } = await requirePivot(tx, userId, input.assetId, input.siteId);
 		const site = (await sitesIn(tx, session.targetStateId)).find((s) => s.id === input.siteId);
 		if (!site) throw new InfiltrationError("That site is not in the target's catalogue.");
+		requireShare(session, site, targetName);
 		const record = recordsFor(site, targetName).files.find((f) => f.id === input.recordId);
 		if (!record) throw new InfiltrationError("That file no longer exists on the host.");
 		const [duplicate] = await tx
