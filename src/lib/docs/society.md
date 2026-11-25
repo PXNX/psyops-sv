@@ -52,7 +52,9 @@ visa to settle permanently; applications appear in `/visas`.
 
 ## 5. Patronage and satisfaction
 
-Use `/civic` to support patronage projects. Satisfaction, supply and stability
+Fund civic buildings from a region's **Patronage** page (`/region/<id>/patronage`,
+linked from the region page), where you also expand them and engrave plaques.
+`/civic` is your ledger across every region. Satisfaction, supply and stability
 feed back into elections and internal security.
 
 <Mermaid label="From supply to stability" chart={"flowchart LR\nF[Food · water · power · heat] --> H{Coverage ≥ 0.85?}\nH -->|no| SH[Hardship]\nSH --> O[Opinion −20 × hardship]\nSH --> T[Stability −14 × hardship]\nH -->|yes| C[Content citizens]\nC --> E[Elections: goodwill and votes]"} />
@@ -61,7 +63,6 @@ feed back into elections and internal security.
 
 The rules are in `population.config.ts`, `civilian-supply.config.ts` and
 `stability.config.ts`. For the military side see [Conflict](/docs/conflict).
-
 
 ## Deep dive: exact numbers
 
@@ -102,17 +103,17 @@ Hardship feeds back into the state:
 Base stability is **50**, opinion weight **0.4**, scale 0–100. Labels: loyal
 ≥70, stable ≥48, uneasy ≥32, unrest ≥18, collapsing ≥0.
 
-| Modifier | Value |
-| --- | --- |
-| War crime per point | −0.4 (cap −25) |
-| Conservation / standard / industrial / unrestricted environment | +6 / 0 / −6 / −12 |
-| Conscription per permille | −1.2 (cap −18) |
-| Education per level | +1.2 (cap +12) |
-| Wage vs 1,500 reference | ±8 × normalized gap (min −10, max +10) |
-| Cyber per point | −0.25 (cap −10) |
-| Rally defence | +8 |
-| Services penalty | −14 |
-| Hospital shortfall | −12 |
+| Modifier                                                        | Value                                  |
+| --------------------------------------------------------------- | -------------------------------------- |
+| War crime per point                                             | −0.4 (cap −25)                         |
+| Conservation / standard / industrial / unrestricted environment | +6 / 0 / −6 / −12                      |
+| Conscription per permille                                       | −1.2 (cap −18)                         |
+| Education per level                                             | +1.2 (cap +12)                         |
+| Wage vs 1,500 reference                                         | ±8 × normalized gap (min −10, max +10) |
+| Cyber per point                                                 | −0.25 (cap −10)                        |
+| Rally defence                                                   | +8                                     |
+| Services penalty                                                | −14                                    |
+| Hospital shortfall                                              | −12                                    |
 
 Stability scales combat morale by **0.9–1.1×** and the war exhaustion limit by
 **0.8–1.2×** (`stabilityMoraleFactor`, `stabilityWarLimitFactor`).
@@ -126,14 +127,14 @@ starts below stability **35** at **2%/yr**; total annual change is capped at
 
 ### Civic projects (`civic.config.ts`)
 
-| Building | Wallet cost | Opinion | Days |
-| --- | --- | --- | --- |
-| water works | 25,000 | +6 | 5 |
-| housing block | 40,000 | +8 | 8 |
-| market hall | 30,000 | +5 | 6 |
-| clinic | 55,000 | +9 | 10 |
-| school annex | 45,000 | +7 | 9 |
-| power relay | 60,000 | +8 | 12 |
+| Building      | Wallet cost | Opinion | Days |
+| ------------- | ----------- | ------- | ---- |
+| water works   | 25,000      | +6      | 5    |
+| housing block | 40,000      | +8      | 8    |
+| market hall   | 30,000      | +5      | 6    |
+| clinic        | 55,000      | +9      | 10   |
+| school annex  | 45,000      | +7      | 9    |
+| power relay   | 60,000      | +8      | 12   |
 
 A visa (`economy.config.ts`) costs **5,000**, lasts **30 days** and carries a
 **20%** visa tax.

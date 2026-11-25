@@ -1,8 +1,10 @@
-<!-- src/routes/(authenticated)/(dock)/civic/CivicProjectCard.svelte -->
+<!-- src/lib/component/civic/CivicProjectCard.svelte -->
 <!-- One building the patron paid for: its illustration and tier, where it
      stands, what it is worth after the region's saturation, the build or
      expansion progress, and the two things to do with it next: expand it or
-     put a name on its plaque. -->
+     put a name on its plaque. The actions post to the region's patronage
+     page, so with `manage` off (the personal overview) the card links there
+     instead of carrying the forms. -->
 <script lang="ts">
 	import { enhance, type SubmitFunction } from "$app/forms";
 	import { slide } from "svelte/transition";
@@ -42,8 +44,11 @@
 		plaqueCost: number;
 		plaqueMax: number;
 		plaqueBonus: number;
+		/** Show the expand and plaque forms (on the region's patronage page). */
+		manage?: boolean;
 	}
-	let { project, wallet, plaqueCost, plaqueMax, plaqueBonus }: Props = $props();
+	let { project, wallet, plaqueCost, plaqueMax, plaqueBonus, manage = true }: Props = $props();
+	const patronageHref = $derived(`/region/${project.regionId}/patronage`);
 
 	const building = $derived(isCivicBuildingType(project.buildingType) ? CIVIC_BUILDINGS[project.buildingType] : null);
 	const tierLabel = $derived(CIVIC_TIERS[project.tier - 1]?.label ?? "Founded");
@@ -69,7 +74,7 @@
 		};
 </script>
 
-<article class="panel flex h-full min-w-0 flex-col overflow-hidden">
+<article id="project-{project.id}" class="panel flex h-full min-w-0 scroll-mt-4 flex-col overflow-hidden">
 	<div class="flex items-start gap-3 border-b border-line/15 bg-linear-to-br from-positive/10 to-transparent p-3">
 		<span class="grid size-14 shrink-0 place-items-center rounded-sm bg-surface-2">
 			<CivicArt
@@ -88,7 +93,7 @@
 				</Badge>
 			</div>
 			<a
-				href="/region/{project.regionId}"
+				href={patronageHref}
 				class="mt-0.5 inline-flex max-w-full items-center gap-1 text-xs text-fg-muted hover:text-primary-fg"
 			>
 				<IconLocation class="size-3.5 shrink-0" /><span class="truncate">{project.regionName}</span>
@@ -147,7 +152,15 @@
 			</div>
 		</dl>
 
-		{#if open}
+		{#if !manage}
+			<a
+				href="{patronageHref}#project-{project.id}"
+				class="inline-flex items-center justify-center gap-1.5 rounded-sm border border-line/20 px-3 py-1.5 text-xs text-fg-muted transition-colors hover:border-line/40 hover:text-primary-fg"
+			>
+				<IconLocation class="size-3.5" />
+				{open && project.upgrade && !expanding ? "Expand or name it" : "Manage"} in {project.regionName}
+			</a>
+		{:else if open}
 			<div class="flex flex-wrap gap-2">
 				{#if project.upgrade && !expanding}
 					<form method="POST" action="?/upgrade" class="min-w-0 flex-1" use:enhance={submit("upgrade")}>

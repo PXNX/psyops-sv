@@ -5,7 +5,7 @@
 
 import { and, asc, count, eq, inArray, isNotNull, isNull, lte, sql } from "drizzle-orm";
 import type { Database } from "../../db";
-import { regions, strikes } from "../../schema";
+import { regions, strikes, userProfiles } from "../../schema";
 import { civicProjects } from "../../schema-investments";
 import { debitWallet } from "../../money";
 import {
@@ -40,6 +40,7 @@ export async function startCivicProject(
 ) {
 	if (!isCivicBuildingType(type)) throw new CivicError("Unknown civic building.");
 	const building = CIVIC_BUILDINGS[type];
+	if (!Number.isSafeInteger(regionId) || regionId <= 0) throw new CivicError("That region does not exist.");
 	const [region] = await db.select({ id: regions.id }).from(regions).where(eq(regions.id, regionId)).limit(1);
 	if (!region) throw new CivicError("That region does not exist.");
 	const [pending] = await db
@@ -73,11 +74,15 @@ export async function startCivicProject(
 	});
 }
 
-/** A finished building the caller owns, or a CivicError saying why not. */
-async function ownedFinishedProject(db: Database, userId: string, projectId: number) {
+/**
+ * A finished building the caller owns, or a CivicError saying why not. With a
+ * `regionId` (a region's patronage page) the building must also stand there.
+ */
+async function ownedFinishedProject(db: Database, userId: string, projectId: number, regionId?: number) {
 	if (!Number.isSafeInteger(projectId) || projectId <= 0) throw new CivicError("Choose one of your buildings.");
 	const [project] = await db.select().from(civicProjects).where(eq(civicProjects.id, projectId)).limit(1);
 	if (!project || project.userId !== userId) throw new CivicError("That building is not yours.");
+	if (regionId != null && project.regionId !== regionId) throw new CivicError("That building stands elsewhere.");
 	if (!project.completedAt) throw new CivicError("Wait for the ribbon-cutting first.");
 	if (!isCivicBuildingType(project.buildingType)) throw new CivicError("Unknown civic building.");
 	return { ...project, buildingType: project.buildingType as CivicBuildingType };
@@ -89,10 +94,15 @@ async function ownedFinishedProject(db: Database, userId: string, projectId: num
  */
 export async function upgradeCivicProject(
 	db: Database,
-	{ userId, projectId, now = new Date() }: { userId: string; projectId: number; now?: Date }
+	{
+		userId,
+		projectId,
+		regionId,
+		now = new Date()
+	}: { userId: string; projectId: number; regionId?: number; now?: Date }
 ) {
 	await completeCivicProjects(db, now);
-	const project = await ownedFinishedProject(db, userId, projectId);
+	const project = await ownedFinishedProject(db, userId, projectId, regionId);
 	if (project.upgradeCompletesAt) throw new CivicError("An expansion is already under way.");
 	if (project.tier >= CIVIC_MAX_TIER) throw new CivicError("This building is already a landmark.");
 	const toTier = project.tier + 1;
@@ -121,12 +131,18 @@ export async function upgradeCivicProject(
 /** Buy the naming rights: engrave a plaque on a finished building. */
 export async function dedicateCivicProject(
 	db: Database,
-	{ userId, projectId, plaque, now = new Date() }: { userId: string; projectId: number; plaque: unknown; now?: Date }
+	{
+		userId,
+		projectId,
+		plaque,
+		regionId,
+		now = new Date()
+	}: { userId: string; projectId: number; plaque: unknown; regionId?: number; now?: Date }
 ) {
 	const parsed = parsePlaque(plaque);
 	if (!parsed.ok) throw new CivicError(parsed.error);
 	await completeCivicProjects(db, now);
-	const project = await ownedFinishedProject(db, userId, projectId);
+	const project = await ownedFinishedProject(db, userId, projectId, regionId);
 	if (project.plaque === parsed.text) throw new CivicError("The plaque already says that.");
 
 	return db.transaction(async (tx) => {
@@ -402,4 +418,51 @@ export async function patronage(db: Database, userId: string, now = new Date()) 
 	const goodwill = Math.round(projects.reduce((sum, p) => sum + p.goodwill, 0));
 	const invested = projects.reduce((sum, p) => sum + p.invested, 0);
 	return { projects, goodwill, invested, completed: projects.filter((p) => p.completedAt).length };
+}
+
+/**
+ * Every civic building in one region, whoever paid for it, oldest first:
+ * its patron, its standalone value and what it adds after saturation.
+ * Buildings still going up carry no allocation yet.
+ */
+export async function regionCivicProjects(db: Database, regionId: number, now = new Date()) {
+	await completeCivicProjects(db, now);
+	const [rows, allocations] = await Promise.all([
+		db
+			.select({ project: civicProjects, patronName: userProfiles.name, patronLogo: userProfiles.logo })
+			.from(civicProjects)
+			.leftJoin(userProfiles, eq(userProfiles.accountId, civicProjects.userId))
+			.where(eq(civicProjects.regionId, regionId))
+			.orderBy(asc(civicProjects.startedAt), asc(civicProjects.id)),
+		civicAllocations(db, [regionId])
+	]);
+	const byProject = new Map((allocations.get(regionId) ?? []).map((a) => [a.projectId, a]));
+	return rows.map(({ project: p, patronName, patronLogo }) => {
+		const known = isCivicBuildingType(p.buildingType);
+		const type = p.buildingType as CivicBuildingType;
+		const a = byProject.get(p.id);
+		return {
+			...p,
+			patronName: patronName ?? "Unknown patron",
+			patronLogo,
+			value: known ? civicBuildingOpinion(type, p.tier, !!p.plaque) : 0,
+			goodwill: a?.effective ?? 0,
+			multiplier: a?.multiplier ?? null,
+			invested: known ? civicInvested(type, p.tier + (p.upgradeCompletesAt ? 1 : 0), !!p.plaque) : 0
+		};
+	});
+}
+
+/** A cheap summary for a region page: civic buildings there, yours, and your goodwill. */
+export async function regionCivicSummary(db: Database, regionId: number, userId: string) {
+	const [rows, allocations] = await Promise.all([
+		db.select({ userId: civicProjects.userId }).from(civicProjects).where(eq(civicProjects.regionId, regionId)),
+		civicAllocations(db, [regionId])
+	]);
+	const mine = (allocations.get(regionId) ?? []).filter((a) => a.userId === userId);
+	return {
+		buildings: rows.length,
+		mine: rows.filter((r) => r.userId === userId).length,
+		goodwill: Math.round(mine.reduce((s, a) => s + a.effective, 0) * 10) / 10
+	};
 }

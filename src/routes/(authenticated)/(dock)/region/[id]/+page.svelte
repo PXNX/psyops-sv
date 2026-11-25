@@ -32,6 +32,7 @@
 	import FluentRain20Regular from "~icons/fluent/weather-rain-20-regular";
 	import FluentFog20Regular from "~icons/fluent/weather-fog-20-regular";
 	import FluentMountain20Regular from "~icons/fluent/mountain-location-bottom-20-regular";
+	import FluentRibbon20Filled from "~icons/fluent/ribbon-20-filled";
 
 	import Logo from "#lib/component/Logo.svelte";
 	import ResourceIcon from "#lib/component/ResourceIcon.svelte";
@@ -638,6 +639,23 @@
 				</div>
 			</SectionCard>
 		{/if}
+
+		<!-- Private patronage: fund civic buildings here -->
+		<a href="/region/{data.region.id}/patronage" class="panel-interactive rounded-sm p-4 flex items-center gap-3 group">
+			<span class="grid size-10 shrink-0 place-items-center rounded-sm bg-warning/12 text-warning">
+				<FluentRibbon20Filled class="size-5" />
+			</span>
+			<div class="min-w-0 flex-1">
+				<p class="text-sm font-bold text-fg group-hover:text-primary-hover">Patronage</p>
+				<p class="text-xs text-fg-muted truncate">
+					{data.patronage.buildings} civic building{data.patronage.buildings === 1 ? "" : "s"} ·
+					{data.patronage.mine ? `${data.patronage.mine} yours` : "fund one from your wallet"}
+				</p>
+			</div>
+			{#if data.patronage.goodwill}
+				<Badge tone="green">+{data.patronage.goodwill} goodwill</Badge>
+			{/if}
+		</a>
 
 		<!-- What the civilians here live on -->
 		<CivilianNeeds needs={data.civilianNeeds} />

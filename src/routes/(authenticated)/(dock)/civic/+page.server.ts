@@ -1,18 +1,15 @@
 // src/routes/(authenticated)/(dock)/civic/+page.server.ts
-// The patronage desk: fund civic buildings from your own wallet, expand them,
-// put your name on them and watch civilian opinion move where they stand.
-import { fail } from "@sveltejs/kit";
-import { eq } from "drizzle-orm";
-import type { Actions, PageServerLoad } from "./$types";
+// The patron's ledger across every region: title, totals, every building paid
+// for and its record. Funding, expanding and plaques happen on each region's
+// patronage page (/region/[id]/patronage), where the region is fixed.
+import { eq, inArray } from "drizzle-orm";
+import type { PageServerLoad } from "./$types";
 import { db } from "#lib/server/db.js";
 import { regions, residences, states, userWallets } from "#lib/server/schema.js";
-import { InsufficientFundsError } from "#lib/server/money.js";
 import {
 	CIVIC_BUILDINGS,
-	CIVIC_BUILDING_TYPES,
 	CIVIC_DEDICATION,
 	CIVIC_MAX_TIER,
-	CIVIC_SATURATION,
 	CIVIC_TIERS,
 	civicBuildingOpinion,
 	civicSaturation,
@@ -24,14 +21,10 @@ import {
 } from "#lib/config/game/civic.config.js";
 import { getRegionName } from "#lib/utils/formatting.js";
 import {
-	CivicError,
 	civicAllocations,
 	civicCrowding,
-	dedicateCivicProject,
 	patronage,
-	regionOpinions,
-	startCivicProject,
-	upgradeCivicProject
+	regionOpinions
 } from "#lib/server/services/politics/civic.service.js";
 
 type HistoryKind = "funded" | "opened" | "expanding" | "expanded" | "dedicated";
@@ -39,25 +32,27 @@ type HistoryKind = "funded" | "opened" | "expanding" | "expanded" | "dedicated";
 export const load: PageServerLoad = async ({ locals }) => {
 	const account = locals.account!;
 	const now = new Date();
-	const [wallet, home, allRegions, patron, crowding] = await Promise.all([
+	const [wallet, home, patron, crowding] = await Promise.all([
 		db.select({ balance: userWallets.balance }).from(userWallets).where(eq(userWallets.userId, account.id)).limit(1),
 		db.select({ regionId: residences.regionId }).from(residences).where(eq(residences.userId, account.id)).limit(1),
-		db
-			.select({ id: regions.id, stateId: regions.stateId, stateName: states.name })
-			.from(regions)
-			.leftJoin(states, eq(states.id, regions.stateId))
-			.orderBy(regions.id),
 		patronage(db, account.id, now),
 		civicCrowding(db)
 	]);
 	const homeRegionId = home[0]?.regionId ?? null;
-	const regionInfo = new Map(
-		allRegions.map((r) => [r.id, { name: getRegionName(r.id), stateId: r.stateId, stateName: r.stateName }])
-	);
 
 	// Regions the patron cares about: home, and wherever they have built.
 	const watched = [...new Set([homeRegionId, ...patron.projects.map((p) => p.regionId)])].filter(
 		(id): id is number => id != null
+	);
+	const watchedRows = watched.length
+		? await db
+				.select({ id: regions.id, stateId: regions.stateId, stateName: states.name })
+				.from(regions)
+				.leftJoin(states, eq(states.id, regions.stateId))
+				.where(inArray(regions.id, watched))
+		: [];
+	const regionInfo = new Map(
+		watchedRows.map((r) => [r.id, { name: getRegionName(r.id), stateId: r.stateId, stateName: r.stateName }])
 	);
 	const [opinions, allocations] = await Promise.all([regionOpinions(db, watched, now), civicAllocations(db, watched)]);
 
@@ -155,12 +150,7 @@ export const load: PageServerLoad = async ({ locals }) => {
 	return {
 		walletBalance: Number(wallet[0]?.balance ?? 0),
 		homeRegionId,
-		regions: allRegions.map((r) => ({
-			id: r.id,
-			name: getRegionName(r.id),
-			hint: r.stateName ?? "unclaimed"
-		})),
-		crowding: Object.fromEntries(crowding),
+		homeRegionName: homeRegionId != null ? getRegionName(homeRegionId) : null,
 		projects,
 		goodwill: patron.goodwill,
 		invested: patron.invested,
@@ -168,51 +158,7 @@ export const load: PageServerLoad = async ({ locals }) => {
 		rank: patronRank(patron.goodwill),
 		goodwillView,
 		history: history.slice(0, 30),
-		buildings: CIVIC_BUILDING_TYPES.map((type) => CIVIC_BUILDINGS[type]),
-		tiers: CIVIC_TIERS,
 		dedication: CIVIC_DEDICATION,
-		saturation: CIVIC_SATURATION,
 		now: now.getTime()
 	};
-};
-
-/** Run a civic action, turning rule and money errors into form errors. */
-async function attempt<T>(run: () => Promise<T>, message: (r: T) => string) {
-	try {
-		const result = await run();
-		return { success: true, message: message(result) };
-	} catch (err) {
-		if (err instanceof CivicError) return fail(400, { error: err.message });
-		if (err instanceof InsufficientFundsError) return fail(400, { error: "Your wallet can't cover that." });
-		throw err;
-	}
-}
-
-export const actions: Actions = {
-	build: async ({ request, locals }) => {
-		const form = await request.formData();
-		const regionId = Number(form.get("regionId"));
-		const type = String(form.get("type") ?? "");
-		if (!Number.isSafeInteger(regionId) || regionId <= 0) return fail(400, { error: "Choose a region." });
-		return attempt(
-			() => startCivicProject(db, { userId: locals.account!.id, regionId, type }),
-			() => "Funded. Goodwill arrives when it opens."
-		);
-	},
-	upgrade: async ({ request, locals }) => {
-		const form = await request.formData();
-		const projectId = Number(form.get("projectId"));
-		return attempt(
-			() => upgradeCivicProject(db, { userId: locals.account!.id, projectId }),
-			(r) => `Expansion paid. It becomes ${CIVIC_TIERS[r.toTier - 1]!.label.toLowerCase()} when the work is done.`
-		);
-	},
-	dedicate: async ({ request, locals }) => {
-		const form = await request.formData();
-		const projectId = Number(form.get("projectId"));
-		return attempt(
-			() => dedicateCivicProject(db, { userId: locals.account!.id, projectId, plaque: form.get("plaque") }),
-			(r) => `Plaque unveiled: “${r.plaque}”.`
-		);
-	}
 };

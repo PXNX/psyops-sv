@@ -69,6 +69,7 @@ import {
 	strikeOptions
 } from "#lib/server/services/military/strike.js";
 import { regionCivilianNeeds } from "#lib/server/services/civilians/supply.js";
+import { regionCivicSummary } from "#lib/server/services/politics/civic.service.js";
 import { regionPopulationReport } from "#lib/server/services/population-report.js";
 import { populationHistory } from "#lib/server/services/snapshot-history.js";
 
@@ -554,13 +555,15 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 
 	// What this region's civilians can actually get today: food from the land
 	// and imports, power and heat from the grid, water from the local supply.
-	const [civilianNeeds, populationReport, populationTrend] = await Promise.all([
+	const [civilianNeeds, populationReport, populationTrend, patronage] = await Promise.all([
 		regionCivilianNeeds(db, regionId),
 		regionPopulationReport(db, regionId),
-		populationHistory(regionId)
+		populationHistory(regionId),
+		regionCivicSummary(db, regionId, account.id)
 	]);
 
 	const result = {
+		patronage,
 		strike: {
 			// Only offered to someone who could order it (a leader at war with the owner).
 			options: strikePlan && !strikePlan.reason ? strikePlan : null,

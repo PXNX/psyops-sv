@@ -1,7 +1,7 @@
 // Civic patronage: a player's wallet buys buildings, the buildings finish on
 // their own schedule, and completed ones move the region's civilian opinion.
 import { afterAll, beforeAll, describe, expect, it } from "@rstest/core";
-import { eq } from "drizzle-orm";
+import { eq, ne } from "drizzle-orm";
 import { createMockDb, type MockDbHandle } from "../mock-db";
 import { regions, userWallets } from "../schema";
 import { civicProjects } from "../schema-investments";
@@ -10,6 +10,8 @@ import {
 	completeCivicProjects,
 	dedicateCivicProject,
 	patronage,
+	regionCivicProjects,
+	regionCivicSummary,
 	regionOpinion,
 	startCivicProject,
 	upgradeCivicProject
@@ -118,5 +120,49 @@ describe("civic patronage", () => {
 		const clinic = p.projects.find((x) => x.buildingType === "clinic")!;
 		expect(clinic.multiplier).toBe(0.75);
 		expect(clinic.goodwill).toBeCloseTo(6.75);
+	});
+
+	it("only expands or names a building from the region it stands in", async () => {
+		const [other] = await handle.db.select({ id: regions.id }).from(regions).where(ne(regions.id, regionId)).limit(1);
+		await expect(
+			upgradeCivicProject(handle.db, { userId: "user-1", projectId: firstId, regionId: other!.id, now: at(21) })
+		).rejects.toThrow(/elsewhere/);
+		await expect(
+			dedicateCivicProject(handle.db, {
+				userId: "user-1",
+				projectId: firstId,
+				plaque: "Somewhere Else",
+				regionId: other!.id,
+				now: at(21)
+			})
+		).rejects.toThrow(/elsewhere/);
+		await expect(
+			startCivicProject(handle.db, { userId: "user-1", regionId: Number.NaN, type: "clinic", now: at(21) })
+		).rejects.toThrow(/does not exist/);
+		const row = await dedicateCivicProject(handle.db, {
+			userId: "user-1",
+			projectId: firstId,
+			plaque: "The Well Of Here",
+			regionId,
+			now: at(21)
+		});
+		expect(row.plaque).toBe("The Well Of Here");
+	});
+
+	it("lists every patron's buildings in a region with a short summary", async () => {
+		await handle.db.update(userWallets).set({ balance: 100_000 }).where(eq(userWallets.userId, "user-2"));
+		await startCivicProject(handle.db, { userId: "user-2", regionId, type: "water_works", now: at(21) });
+		const all = await regionCivicProjects(handle.db, regionId, at(22));
+		expect(all.map((p) => p.userId)).toEqual(expect.arrayContaining(["user-1", "user-2"]));
+		const theirs = all.find((p) => p.userId === "user-2")!;
+		expect(theirs.completedAt).toBeNull();
+		expect(theirs.goodwill).toBe(0);
+		expect(typeof theirs.patronName).toBe("string");
+
+		const summary = await regionCivicSummary(handle.db, regionId, "user-1");
+		expect(summary.buildings).toBe(all.length);
+		expect(summary.mine).toBe(all.filter((p) => p.userId === "user-1").length);
+		const mine = all.filter((p) => p.userId === "user-1").reduce((s, p) => s + p.goodwill, 0);
+		expect(summary.goodwill).toBeCloseTo(mine, 0);
 	});
 });
