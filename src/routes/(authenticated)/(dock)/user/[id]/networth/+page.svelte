@@ -111,29 +111,12 @@
 			</section>
 		</div>
 
-		<section class="panel rounded-sm p-4">
-			<h2 class="section-title mb-3 flex items-center gap-2">
+		<section class="panel rounded-sm p-4 space-y-2">
+			<h2 class="section-title flex items-center gap-2">
 				<FluentTrophy20Filled class="size-4 text-warning" /> Richest players
 			</h2>
-			<ol class="space-y-1 text-sm">
-				{#each data.leaders as player, i (player.id)}
-					<li
-						class="flex items-center gap-3 rounded-sm px-2 py-1.5 {player.id === data.userId
-							? 'bg-primary/10'
-							: 'hover:bg-white/[0.04]'}"
-					>
-						<span class="w-5 shrink-0 text-right font-mono text-xs text-fg-muted">{i + 1}</span>
-						<a
-							href="/user/{player.id}/networth"
-							class="min-w-0 flex-1 truncate text-fg hover:text-primary-fg"
-							title={player.id === data.userId ? "You" : undefined}
-						>
-							{player.name}
-						</a>
-						<span class="font-mono shrink-0 text-fg-body">{money(player.total)}</span>
-					</li>
-				{/each}
-			</ol>
+			<p class="text-sm text-fg-muted">See how your fortune compares with everyone else on the server.</p>
+			<Button href="/user/richest" variant="secondary" size="sm" block>View leaderboard →</Button>
 		</section>
 	</div>
 </PageContainer>

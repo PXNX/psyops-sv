@@ -521,21 +521,24 @@
 					<div class="min-w-0">
 						<dt
 							class="font-mono text-[11px] uppercase tracking-[0.15em] text-fg-muted"
-							title="Cash plus {data.netWorth.positions} share position{data.netWorth.positions === 1
-								? ''
-								: 's'} at the current market price · ${data.netWorth.cash.toLocaleString()} cash + ${data.netWorth.stocks.toLocaleString()} in stocks"
+							title="{data.netWorth.shareHoldings
+								.length} share positions · ${data.netWorth.cash.toLocaleString()} cash + ${data.netWorth.stocks.toLocaleString()} in stocks"
 						>
 							Net worth
 						</dt>
 						<dd class="border-b border-dotted border-line/40 pb-0.5 font-mono">
-							<a
-								href="/user/{data.user.id}/networth"
-								class="font-mono text-fg-body hover:text-fg hover:underline"
-								title="{data.netWorth.shareHoldings
-									.length} share positions · ${data.netWorth.cash.toLocaleString()} cash · ${data.netWorth.resources.toLocaleString()} stockpile · ${data.netWorth.bonds.toLocaleString()} bonds"
-							>
-								${data.netWorth.total.toLocaleString()}
-							</a>
+							{#if data.isOwnProfile}
+								<a
+									href="/user/{data.user.id}/networth"
+									class="font-mono text-fg-body hover:text-fg hover:underline"
+									title="{data.netWorth.shareHoldings
+										.length} share positions · ${data.netWorth.cash.toLocaleString()} cash · ${data.netWorth.resources.toLocaleString()} stockpile · ${data.netWorth.bonds.toLocaleString()} bonds"
+								>
+									${data.netWorth.total.toLocaleString()}
+								</a>
+							{:else}
+								<span class="text-fg-body">${data.netWorth.total.toLocaleString()}</span>
+							{/if}
 						</dd>
 					</div>
 					<div class="min-w-0">
