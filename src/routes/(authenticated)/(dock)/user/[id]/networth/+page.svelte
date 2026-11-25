@@ -27,6 +27,7 @@
 <PageContainer maxWidth="5xl">
 	<PageHeader title="Net worth" subtitle={data.userName}>
 		{#snippet actions()}
+			<Button href="/user/richest" variant="secondary" size="sm">Richest players</Button>
 			<Button href="/user/{data.userId}" variant="secondary" size="sm" icon={FluentChevronLeft20Filled}>Profile</Button>
 		{/snippet}
 	</PageHeader>
