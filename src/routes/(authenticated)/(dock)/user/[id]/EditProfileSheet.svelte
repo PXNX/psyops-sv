@@ -188,6 +188,7 @@
 					<input
 						bind:this={fileInput}
 						type="file"
+						data-crop="own"
 						id="edit-logo"
 						name="logo"
 						accept="image/*"

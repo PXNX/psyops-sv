@@ -227,6 +227,7 @@
 				id="file"
 				name="file"
 				type="file"
+				data-crop="own"
 				accept={acceptedTypes}
 				class="hidden"
 				onchange={handleFileSelect}

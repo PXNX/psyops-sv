@@ -201,6 +201,7 @@
 				<input
 					bind:this={fileInput}
 					type="file"
+					data-crop="own"
 					id="logo"
 					name="logo"
 					accept="image/*"

@@ -271,7 +271,7 @@
 
 <svelte:window onmousemove={handleMove} onmouseup={handleEnd} ontouchmove={handleMove} ontouchend={handleEnd} />
 
-<div class="modal modal-open">
+<div class="modal modal-open !z-[2147483000]">
 	<div class="modal-box w-full max-w-2xl panel rounded-sm">
 		<h3 class="font-bold text-lg mb-4 text-fg">{title}</h3>
 

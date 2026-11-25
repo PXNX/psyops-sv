@@ -8,6 +8,7 @@
 	import InstallPrompt from "#lib/components/InstallPrompt.svelte";
 	import Toaster from "#lib/ui/Toaster.svelte";
 	import ConfirmHost from "#lib/ui/ConfirmHost.svelte";
+	import GlobalImageCropper from "#lib/component/GlobalImageCropper.svelte";
 
 	const { children } = $props();
 
@@ -70,3 +71,4 @@
 <InstallPrompt />
 <Toaster />
 <ConfirmHost />
+<GlobalImageCropper />

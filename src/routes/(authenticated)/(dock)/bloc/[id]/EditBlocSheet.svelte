@@ -181,6 +181,7 @@
 					<input
 						bind:this={fileInput}
 						type="file"
+						data-crop="own"
 						id="edit-bloc-logo"
 						name="logo"
 						accept="image/*"

@@ -71,6 +71,7 @@
 	<input
 		bind:this={fileInputElement}
 		type="file"
+		data-crop="own"
 		id="logo"
 		name="logo"
 		accept="image/*"
