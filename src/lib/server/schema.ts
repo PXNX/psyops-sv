@@ -3303,8 +3303,8 @@ export const companyShares = pgTable("company_shares", {
 	lastDividendAt: timestamp("last_dividend_at"),
 	// Automatic dividend policy, run by an hourly cron at most once per dividend
 	// cooldown: pay out this percentage (0-100) of the budget above
-	// dividendReserve. 0 means dividends are only declared by hand.
-	dividendPayoutRatio: integer("dividend_payout_ratio").default(0).notNull(),
+	// dividendReserve. Companies pay automatically by default; 0 turns it off.
+	dividendPayoutRatio: integer("dividend_payout_ratio").default(50).notNull(),
 	dividendReserve: bigint("dividend_reserve", { mode: "number" }).default(0).notNull()
 });
 

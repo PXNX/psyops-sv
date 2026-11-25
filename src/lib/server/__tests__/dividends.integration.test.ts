@@ -292,4 +292,18 @@ describe("paying dividends", () => {
 			setDividendPolicy(handle.db, { companyId, userId: "user-2", ratioPercent: 10, reserve: 0 })
 		).rejects.toThrow(/owner/);
 	});
+
+	it("turns automatic payouts on by default for a newly filed company", async () => {
+		const [other] = (await handle.db.select().from(companies)).filter((c) => c.id !== companyId);
+		const [filing] = await handle.db
+			.insert(companyShares)
+			.values({
+				companyId: other!.id,
+				totalShares: 100,
+				founderLockedShares: 51,
+				ipoPrice: 1000
+			})
+			.returning();
+		expect(filing!.dividendPayoutRatio).toBe(ECONOMY_CONFIG.DIVIDEND_DEFAULT_PAYOUT_RATIO);
+	});
 });

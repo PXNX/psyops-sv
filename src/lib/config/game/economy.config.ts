@@ -37,6 +37,9 @@ export const ECONOMY_CONFIG = {
 	// % of a public company's budget balance paid out to shareholders per
 	// dividend cycle (run by the dividends cron), split pro-rata by holding.
 	DIVIDEND_RATE_PERCENT: 5,
+	// Companies pay out automatically by default; owners can set the ratio to
+	// 0 to turn the cron off and declare payouts by hand instead.
+	DIVIDEND_DEFAULT_PAYOUT_RATIO: 50,
 	// Dividends (services/economy/dividends.ts): paid from the company budget
 	// to every holder pro rata, in whole currency per share, at most once per
 	// cooldown (manual and automatic share it). A payout must be at least
