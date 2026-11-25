@@ -3,7 +3,7 @@
 // turns true figures into the estimates the viewer may see. The rules live in
 // the pure module #lib/utils/intel-estimate.
 
-import { and, desc, eq, gte, inArray, sql } from "drizzle-orm";
+import { and, desc, eq, gte, inArray, or, sql } from "drizzle-orm";
 import { alias } from "drizzle-orm/pg-core";
 import type { Database } from "../../db";
 import {
@@ -15,16 +15,7 @@ import {
 	regions,
 	states
 } from "../../schema";
-import {
-	estimateStat,
-	exactStat,
-	intelLevel,
-	type Estimate,
-	type IntelLevel,
-	type IntelRelation,
-	type IntelSignals,
-	type StatSpec
-} from "#lib/utils/intel-estimate.js";
+import { stateIntelFrom, type IntelRelation, type IntelSignals, type StateIntel } from "#lib/utils/intel-estimate.js";
 import { opsAuthority } from "./covert-ops.js";
 import { viewerSide } from "./recon.js";
 
@@ -40,29 +31,122 @@ export async function intelViewer(db: Db, accountId: string | undefined) {
 	return { stateId: authority?.stateId ?? side?.stateId ?? null, authority };
 }
 
-async function relationOf(db: Db, viewerStateId: number | null, targetStateId: number): Promise<IntelRelation> {
-	if (viewerStateId == null) return "foreign";
-	if (viewerStateId === targetStateId) return "self";
-	const rows = await db
-		.select({ id: states.id, blocId: states.blocId })
-		.from(states)
-		.where(inArray(states.id, [viewerStateId, targetStateId]));
-	const a = rows.find((r) => r.id === viewerStateId)?.blocId;
-	const b = rows.find((r) => r.id === targetStateId)?.blocId;
-	return a != null && a === b ? "bloc" : "foreign";
-}
+/** Everything that feeds the viewer state's intel level on each target, in one round of grouped queries. */
+export async function intelSignalsMany(
+	db: Db,
+	viewerStateId: number | null,
+	targetStateIds: number[],
+	now = new Date()
+): Promise<Map<number, IntelSignals>> {
+	const targets = [...new Set(targetStateIds)];
+	const out = new Map<number, IntelSignals>();
+	const blank = (relation: IntelRelation): IntelSignals => ({
+		relation,
+		sharedBorder: false,
+		activeAssets: 0,
+		files: [],
+		recon: [],
+		covertOps: []
+	});
+	if (!targets.length) return out;
+	if (viewerStateId == null) {
+		for (const t of targets) out.set(t, blank("foreign"));
+		return out;
+	}
+	const foreign = targets.filter((t) => t !== viewerStateId);
+	if (targets.includes(viewerStateId)) out.set(viewerStateId, blank("self"));
+	if (!foreign.length) return out;
 
-async function sharesBorder(db: Db, a: number, b: number): Promise<boolean> {
+	const since = new Date(now.getTime() - LOOKBACK_DAYS * 86_400_000);
 	const r1 = alias(regions, "r1");
 	const r2 = alias(regions, "r2");
-	const [row] = await db
-		.select({ id: regionBorders.id })
-		.from(regionBorders)
-		.innerJoin(r1, eq(regionBorders.regionId, r1.id))
-		.innerJoin(r2, eq(regionBorders.neighborId, r2.id))
-		.where(sql`(${r1.stateId} = ${a} and ${r2.stateId} = ${b}) or (${r1.stateId} = ${b} and ${r2.stateId} = ${a})`)
-		.limit(1);
-	return !!row;
+	const [blocs, borders, assets, files, recon, ops] = await Promise.all([
+		db
+			.select({ id: states.id, blocId: states.blocId })
+			.from(states)
+			.where(inArray(states.id, [viewerStateId, ...foreign])),
+		// Neighbours among the targets: the other side of any border the viewer touches.
+		db
+			.selectDistinct({ a: r1.stateId, b: r2.stateId })
+			.from(regionBorders)
+			.innerJoin(r1, eq(regionBorders.regionId, r1.id))
+			.innerJoin(r2, eq(regionBorders.neighborId, r2.id))
+			.where(
+				or(
+					and(eq(r1.stateId, viewerStateId), inArray(r2.stateId, foreign)),
+					and(eq(r2.stateId, viewerStateId), inArray(r1.stateId, foreign))
+				)
+			),
+		db
+			.select({ target: infiltrationAssets.targetStateId, n: sql<number>`count(*)::int` })
+			.from(infiltrationAssets)
+			.where(
+				and(
+					eq(infiltrationAssets.stateId, viewerStateId),
+					inArray(infiltrationAssets.targetStateId, foreign),
+					eq(infiltrationAssets.status, "active")
+				)
+			)
+			.groupBy(infiltrationAssets.targetStateId),
+		db
+			.select({
+				target: infiltrationFiles.targetStateId,
+				siteId: infiltrationFiles.siteId,
+				classification: infiltrationFiles.classification,
+				capturedAt: infiltrationFiles.capturedAt
+			})
+			.from(infiltrationFiles)
+			.where(
+				and(
+					eq(infiltrationFiles.stateId, viewerStateId),
+					inArray(infiltrationFiles.targetStateId, foreign),
+					gte(infiltrationFiles.capturedAt, since)
+				)
+			),
+		db
+			.select({ target: reconMissions.targetStateId, at: reconMissions.completedAt })
+			.from(reconMissions)
+			.where(
+				and(
+					eq(reconMissions.stateId, viewerStateId),
+					inArray(reconMissions.targetStateId, foreign),
+					eq(reconMissions.status, "completed"),
+					gte(reconMissions.completesAt, since)
+				)
+			),
+		db
+			.select({ target: covertOperations.targetStateId, at: covertOperations.launchedAt })
+			.from(covertOperations)
+			.where(
+				and(
+					eq(covertOperations.stateId, viewerStateId),
+					inArray(covertOperations.targetStateId, foreign),
+					eq(covertOperations.succeeded, true),
+					gte(covertOperations.launchedAt, since)
+				)
+			)
+	]);
+
+	const viewerBloc = blocs.find((r) => r.id === viewerStateId)?.blocId ?? null;
+	for (const t of foreign) {
+		const bloc = blocs.find((r) => r.id === t)?.blocId ?? null;
+		out.set(t, blank(viewerBloc != null && viewerBloc === bloc ? "bloc" : "foreign"));
+	}
+	for (const b of borders) {
+		const other = b.a === viewerStateId ? b.b : b.a;
+		const s = other != null ? out.get(other) : undefined;
+		if (s) s.sharedBorder = true;
+	}
+	for (const a of assets) {
+		const s = a.target != null ? out.get(a.target) : undefined;
+		if (s) s.activeAssets = a.n;
+	}
+	for (const f of files) {
+		out.get(f.target)?.files.push({ siteId: f.siteId, classification: f.classification, capturedAt: f.capturedAt });
+	}
+	for (const r of recon) if (r.at && r.target != null) out.get(r.target)?.recon.push(r.at);
+	for (const o of ops) if (o.target != null) out.get(o.target)?.covertOps.push(o.at);
+	return out;
 }
 
 /** Everything that feeds the viewer state's intel level on the target. */
@@ -72,79 +156,11 @@ export async function intelSignals(
 	targetStateId: number,
 	now = new Date()
 ): Promise<IntelSignals> {
-	const relation = await relationOf(db, viewerStateId, targetStateId);
-	if (viewerStateId == null || relation === "self") {
-		return { relation, sharedBorder: false, activeAssets: 0, files: [], recon: [], covertOps: [] };
-	}
-	const since = new Date(now.getTime() - LOOKBACK_DAYS * 86_400_000);
-	const [sharedBorder, assets, files, recon, ops] = await Promise.all([
-		sharesBorder(db, viewerStateId, targetStateId),
-		db
-			.select({ n: sql<number>`count(*)::int` })
-			.from(infiltrationAssets)
-			.where(
-				and(
-					eq(infiltrationAssets.stateId, viewerStateId),
-					eq(infiltrationAssets.targetStateId, targetStateId),
-					eq(infiltrationAssets.status, "active")
-				)
-			),
-		db
-			.select({
-				siteId: infiltrationFiles.siteId,
-				classification: infiltrationFiles.classification,
-				capturedAt: infiltrationFiles.capturedAt
-			})
-			.from(infiltrationFiles)
-			.where(
-				and(
-					eq(infiltrationFiles.stateId, viewerStateId),
-					eq(infiltrationFiles.targetStateId, targetStateId),
-					gte(infiltrationFiles.capturedAt, since)
-				)
-			),
-		db
-			.select({ at: reconMissions.completedAt })
-			.from(reconMissions)
-			.where(
-				and(
-					eq(reconMissions.stateId, viewerStateId),
-					eq(reconMissions.targetStateId, targetStateId),
-					eq(reconMissions.status, "completed"),
-					gte(reconMissions.completesAt, since)
-				)
-			),
-		db
-			.select({ at: covertOperations.launchedAt })
-			.from(covertOperations)
-			.where(
-				and(
-					eq(covertOperations.stateId, viewerStateId),
-					eq(covertOperations.targetStateId, targetStateId),
-					eq(covertOperations.succeeded, true),
-					gte(covertOperations.launchedAt, since)
-				)
-			)
-	]);
-	return {
-		relation,
-		sharedBorder,
-		activeAssets: assets[0]?.n ?? 0,
-		files,
-		recon: recon.map((r) => r.at).filter((at): at is Date => !!at),
-		covertOps: ops.map((o) => o.at)
-	};
+	const signals = await intelSignalsMany(db, viewerStateId, [targetStateId], now);
+	return signals.get(targetStateId)!;
 }
 
-/** An estimator bound to one viewer and target: true figure in, estimate out. */
-export interface StateIntel {
-	viewerStateId: number | null;
-	relation: IntelRelation;
-	level: IntelLevel;
-	/** True when figures are shown as they are (own state, or confirmed). */
-	exact: boolean;
-	estimate: (stat: string, value: number, spec: StatSpec) => Estimate;
-}
+export type { StateIntel };
 
 export async function stateIntel(
 	db: Db,
@@ -152,19 +168,24 @@ export async function stateIntel(
 	targetStateId: number,
 	now = new Date()
 ): Promise<StateIntel> {
-	const signals = await intelSignals(db, viewerStateId, targetStateId, now);
-	const level = intelLevel(signals, now);
-	const self = signals.relation === "self";
-	return {
-		viewerStateId,
-		relation: signals.relation,
-		level,
-		exact: self,
-		estimate: (stat, value, spec) =>
-			self
-				? exactStat(value, spec.group)
-				: estimateStat(value, level.groups[spec.group], spec, { viewerStateId, targetStateId, stat, now })
-	};
+	return stateIntelFrom(viewerStateId, targetStateId, await intelSignals(db, viewerStateId, targetStateId, now), now);
+}
+
+/** Estimators for many targets at once (rankings), keyed by target state id. */
+export async function stateIntelMany(
+	db: Db,
+	viewerStateId: number | null,
+	targetStateIds: number[],
+	now = new Date()
+): Promise<Map<number, StateIntel>> {
+	const signals = await intelSignalsMany(db, viewerStateId, targetStateIds, now);
+	return new Map([...signals].map(([id, s]) => [id, stateIntelFrom(viewerStateId, id, s, now)]));
+}
+
+/** The viewer's intel on one state, for the state's subpages. */
+export async function viewerStateIntel(db: Db, accountId: string | undefined, targetStateId: number, now = new Date()) {
+	const viewer = await intelViewer(db, accountId);
+	return stateIntel(db, viewer.stateId, targetStateId, now);
 }
 
 /** The dossier: documents the viewer's network copied from the target, newest first. */

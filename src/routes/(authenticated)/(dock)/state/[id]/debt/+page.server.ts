@@ -7,8 +7,15 @@ import { db } from "#lib/server/db.js";
 import { states } from "#lib/server/schema.js";
 import { stateDebt } from "#lib/server/services/economy/bailout.js";
 import { stateDebtCreditors, stateGdp } from "#lib/server/services/economy/state-metrics.js";
-import { BondError, canIssueStateBonds, issueBondOffering, stateBondOfferingsFor } from "#lib/server/services/economy/bonds.js";
+import {
+	BondError,
+	canIssueStateBonds,
+	issueBondOffering,
+	stateBondOfferingsFor
+} from "#lib/server/services/economy/bonds.js";
 import { bondRiskFor } from "#lib/server/services/economy/bond-risk.js";
+import { viewerStateIntel } from "#lib/server/services/military/state-intel.js";
+import { debtView } from "../state-stats";
 
 export const load: PageServerLoad = async ({ params, locals }) => {
 	const stateId = Number(params.id);
@@ -22,20 +29,24 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 	if (!state) error(404, "State not found");
 
 	const debt = await stateDebt(db, stateId);
-	const [gdp, creditors, canIssueBonds, bondOfferings, risk] = await Promise.all([
+	const [gdp, creditors, canIssueBonds, bondOfferings, risk, intel] = await Promise.all([
 		stateGdp(db, stateId, debt),
 		stateDebtCreditors(db, stateId),
 		locals.account ? canIssueStateBonds(db, locals.account.id, stateId) : false,
 		stateBondOfferingsFor(db, stateId),
-		bondRiskFor(db, stateId)
+		bondRiskFor(db, stateId),
+		viewerStateIntel(db, locals.account?.id, stateId)
 	]);
+	const view = debtView(intel, { debt, gdp, creditors, risk });
 
 	return {
 		state: { id: state.id, name: state.name },
-		debt,
-		gdp,
-		creditors,
-		risk,
+		debt: view.debt,
+		gdp: view.gdp,
+		creditors: view.creditors,
+		lenderTotal: view.lenderTotal,
+		risk: { ...risk, components: view.riskComponents },
+		intel: { exact: intel.exact, level: intel.level.groups.economy },
 		canIssueBonds,
 		bondOfferings: bondOfferings.map((o) => ({ ...o, createdAt: o.createdAt.toISOString() }))
 	};
@@ -52,7 +63,10 @@ export const actions: Actions = {
 		const principal = Number((await request.formData()).get("principal"));
 		try {
 			const offering = await issueBondOffering(db, { userId: account.id, stateId, principal });
-			return { success: true, message: `Bond offering of ${offering.principal.toLocaleString()} is now open to investors.` };
+			return {
+				success: true,
+				message: `Bond offering of ${offering.principal.toLocaleString()} is now open to investors.`
+			};
 		} catch (err) {
 			if (err instanceof BondError) return fail(400, { error: err.message });
 			throw err;

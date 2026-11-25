@@ -343,3 +343,43 @@ export function improveHint(e: Estimate): string {
 	const what = e.kind === "hidden" ? "Not known" : `${TIER_LABEL[e.tier]} estimate`;
 	return `${what} (${INTEL_GROUP_LABEL[e.group].toLowerCase()} intel ${Math.round(e.level * 100)}%). Sharpen it with ${GROUP_SOURCES[e.group]}.`;
 }
+
+// ── Bound estimator ─────────────────────────────────────────────────────────
+
+/** An estimator bound to one viewer and target: true figure in, estimate out. */
+export interface StateIntel {
+	viewerStateId: number | null;
+	targetStateId: number;
+	relation: IntelRelation;
+	level: IntelLevel;
+	/** True when figures are shown as they are (the viewer's own state). */
+	exact: boolean;
+	estimate: (stat: string, value: number, spec: StatSpec) => Estimate;
+}
+
+/** Bind the signals the server gathered to an estimator for one viewer and target. */
+export function stateIntelFrom(
+	viewerStateId: number | null,
+	targetStateId: number,
+	signals: IntelSignals,
+	now = new Date()
+): StateIntel {
+	const level = intelLevel(signals, now);
+	const self = signals.relation === "self";
+	return {
+		viewerStateId,
+		targetStateId,
+		relation: signals.relation,
+		level,
+		exact: self,
+		estimate: (stat, value, spec) =>
+			self
+				? exactStat(value, spec.group)
+				: estimateStat(value, level.groups[spec.group], spec, { viewerStateId, targetStateId, stat, now })
+	};
+}
+
+/** Sort key for an estimate: its shown value, hidden figures last. */
+export function estimateRank(e: Estimate): number {
+	return e.kind === "hidden" ? -Infinity : e.value;
+}

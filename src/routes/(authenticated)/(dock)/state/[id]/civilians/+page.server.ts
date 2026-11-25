@@ -15,8 +15,10 @@ import { statesPressure } from "#lib/server/services/civilians/pressure.js";
 import { stateOutbreaks } from "#lib/server/services/civilians/diseases.js";
 import { stancesHeldBy, stancesToward } from "#lib/server/services/politics/civilian-stance.js";
 import { stateSeries } from "#lib/server/services/snapshot-history.js";
+import { viewerStateIntel } from "#lib/server/services/military/state-intel.js";
+import { civiliansView } from "../state-stats";
 
-export const load: PageServerLoad = async ({ params }) => {
+export const load: PageServerLoad = async ({ params, locals }) => {
 	const stateId = Number(params.id);
 	if (!Number.isInteger(stateId)) error(404, "State not found");
 
@@ -27,30 +29,42 @@ export const load: PageServerLoad = async ({ params }) => {
 		.limit(1);
 	if (!state) error(404, "State not found");
 
-	const [civilians, regionRows, series, stancesAbout, stancesHeld, bailoutRows, report, pressure, outbreaks, stateRows] =
-		await Promise.all([
-			statePopulation(db, stateId),
-			db.select().from(regions).where(eq(regions.stateId, stateId)),
-			stateSeries(stateId, 90),
-			stancesToward(db, stateId),
-			stancesHeldBy(db, stateId),
-			db
-				.select({
-					amount: stateBailouts.amount,
-					donorId: stateBailouts.donorStateId,
-					from: states.name,
-					createdAt: stateBailouts.createdAt
-				})
-				.from(stateBailouts)
-				.innerJoin(states, eq(stateBailouts.donorStateId, states.id))
-				.where(eq(stateBailouts.recipientStateId, stateId))
-				.orderBy(desc(stateBailouts.createdAt))
-				.limit(5),
-			statePopulationReport(db, stateId),
-			statesPressure(db, [stateId]),
-			stateOutbreaks(db, stateId),
-			db.select({ id: states.id, logo: states.logo }).from(states)
-		]);
+	const [
+		civilians,
+		regionRows,
+		series,
+		stancesAbout,
+		stancesHeld,
+		bailoutRows,
+		report,
+		pressure,
+		outbreaks,
+		stateRows,
+		intel
+	] = await Promise.all([
+		statePopulation(db, stateId),
+		db.select().from(regions).where(eq(regions.stateId, stateId)),
+		stateSeries(stateId, 90),
+		stancesToward(db, stateId),
+		stancesHeldBy(db, stateId),
+		db
+			.select({
+				amount: stateBailouts.amount,
+				donorId: stateBailouts.donorStateId,
+				from: states.name,
+				createdAt: stateBailouts.createdAt
+			})
+			.from(stateBailouts)
+			.innerJoin(states, eq(stateBailouts.donorStateId, states.id))
+			.where(eq(stateBailouts.recipientStateId, stateId))
+			.orderBy(desc(stateBailouts.createdAt))
+			.limit(5),
+		statePopulationReport(db, stateId),
+		statesPressure(db, [stateId]),
+		stateOutbreaks(db, stateId),
+		db.select({ id: states.id, logo: states.logo }).from(states),
+		viewerStateIntel(db, locals.account?.id, stateId)
+	]);
 
 	const logoUrls = new Map<number, string | null>();
 	for (const row of stateRows) logoUrls.set(row.id, await getLogoUrl(row.logo));
@@ -74,8 +88,8 @@ export const load: PageServerLoad = async ({ params }) => {
 	const strain = pressure.get(stateId);
 	const workforce = byRegion.reduce((sum, r) => sum + r.workforce, 0);
 
-	return {
-		state: { id: state.id, name: state.name },
+	// Exact figures stay on the server unless it is the viewer's own state.
+	const view = civiliansView(intel, {
 		civilians,
 		trend: series.map((p) => p.civilians),
 		regions: byRegion,
@@ -90,15 +104,23 @@ export const load: PageServerLoad = async ({ params }) => {
 			underArms: strain?.soldiers ?? 0,
 			perThousand: strain?.pressure ?? 0,
 			regime: strain?.band.label ?? "Volunteer army",
-			available: Math.max(0, civilians - (strain?.soldiers ?? 0)),
-			hospital: strain?.hospital ?? 1
+			available: Math.max(0, civilians - (strain?.soldiers ?? 0))
 		},
 		workforce,
 		outbreaks: outbreaks.map((o) => ({
-			...o,
+			id: o.id,
+			diseaseId: o.diseaseId,
+			regionId: o.regionId,
+			cases: o.cases,
 			startedAt: o.startedAt.toISOString(),
 			updatedAt: o.updatedAt.toISOString()
-		})),
+		}))
+	});
+
+	return {
+		state: { id: state.id, name: state.name },
+		...view,
+		intel: { exact: intel.exact, level: intel.level.groups.population },
 		stancesAbout: stancesAbout.map((s) => ({ ...s, logo: logoUrls.get(s.stateId) ?? null })),
 		stancesHeld: stancesHeld.map((s) => ({ ...s, logo: logoUrls.get(s.stateId) ?? null })),
 		bailoutHistory: bailoutRows.map((b) => ({

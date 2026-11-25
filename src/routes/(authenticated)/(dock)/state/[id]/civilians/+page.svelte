@@ -9,19 +9,19 @@
 	import Sparkline from "#lib/component/charts/Sparkline.svelte";
 	import EmptyState from "#lib/component/EmptyState.svelte";
 	import { formatDate, getRegionName } from "#lib/utils/formatting.js";
-	import {
-		DISEASES,
-		DISEASE_COUNTERMEASURES,
-		formatPopulation,
-		STANCE_TONE,
-		stanceLabel
-	} from "#lib/config/index.js";
+	import { DISEASES, DISEASE_COUNTERMEASURES, formatPopulation, STANCE_TONE, stanceLabel } from "#lib/config/index.js";
+
+	import IntelValue from "#lib/component/intel/IntelValue.svelte";
+	import IntelNote from "#lib/component/intel/IntelNote.svelte";
+	import type { Estimate } from "#lib/utils/intel-estimate.js";
 
 	let { data } = $props();
+	const exact = $derived(data.intel.exact);
+	/** Growth is positive unless the shown figure says otherwise. */
+	const growing = (e: Estimate) => e.kind === "hidden" || e.value >= 0;
 
 	const stanceTone = (stance: number) => STANCE_TONE[stanceLabel(stance)];
 	const signed = (n: number) => (n > 0 ? `+${n}` : String(n));
-	const percent = (n: number) => `${n > 0 ? "+" : ""}${(n * 100).toFixed(1)}%`;
 
 	let regionQuery = $state("");
 	let stanceQuery = $state("");
@@ -30,6 +30,15 @@
 	const filteredAbout = $derived(data.stancesAbout.filter((s) => matches(s.name, stanceQuery)));
 	const filteredHeld = $derived(data.stancesHeld.filter((s) => matches(s.name, stanceQuery)));
 </script>
+
+<!-- A stat-card figure: formatted as before when exact, an estimate otherwise. -->
+{#snippet figure(e: Estimate, tone: string, format: (n: number) => string, unit = "")}
+	{#if e.kind === "exact"}
+		<p class="mt-0.5 font-mono text-lg font-bold {tone}">{format(e.value)}{unit}</p>
+	{:else}
+		<IntelValue estimate={e} {unit} variant="block" class="mt-0.5" />
+	{/if}
+{/snippet}
 
 <svelte:head>
 	<title>Civilians · {data.state.name} · PsyOps</title>
@@ -45,20 +54,34 @@
 		backLabel={data.state.name}
 	/>
 
+	{#if !exact}
+		<IntelNote stateId={data.state.id} group="population" level={data.intel.level} class="mb-4" />
+	{/if}
+
 	<div class="grid gap-4 sm:grid-cols-2">
 		<div class="panel rounded-sm p-4 sm:p-5">
 			<p class="text-[10px] uppercase tracking-[0.2em] text-fg-muted">Total civilians</p>
-			<p class="mt-1 font-mono text-3xl font-bold text-fg">{data.civilians.toLocaleString()}</p>
+			{#if data.civilians.kind === "exact"}
+				<p class="mt-1 font-mono text-3xl font-bold text-fg">{data.civilians.value.toLocaleString()}</p>
+			{:else}
+				<IntelValue estimate={data.civilians} variant="block" class="mt-1" />
+			{/if}
 			<p class="mt-1 text-xs text-fg-muted">Non-player inhabitants of this state's regions.</p>
 		</div>
 		<div class="panel rounded-sm p-4 sm:p-5">
 			<p class="text-[10px] uppercase tracking-[0.2em] text-fg-muted mb-2">Population trend</p>
-			<Sparkline
-				values={data.trend}
-				label="Civilian population of {data.state.name} over the last 90 days"
-				color="var(--color-positive)"
-			/>
-			<p class="mt-1 text-xs text-fg-muted">Recorded by the daily world snapshots.</p>
+			{#if data.trend}
+				<Sparkline
+					values={data.trend}
+					label="Civilian population of {data.state.name} over the last 90 days"
+					color="var(--color-positive)"
+				/>
+				<p class="mt-1 text-xs text-fg-muted">Recorded by the daily world snapshots.</p>
+			{:else}
+				<p class="text-xs text-fg-muted">
+					The daily census is kept by {data.state.name} and isn't known abroad.
+				</p>
+			{/if}
 		</div>
 	</div>
 
@@ -66,56 +89,77 @@
 	<section class="panel animate-rise-in rounded-sm p-4 sm:p-5 mt-4 space-y-3">
 		<div class="flex flex-wrap items-baseline justify-between gap-2">
 			<h2 class="section-title">Vital rates &amp; national service</h2>
-			<span class="font-mono text-xs {data.demographics.annualRate >= 0 ? 'text-positive-fg' : 'text-hostile-fg'}">
-				{percent(data.demographics.annualRate)} / year
+			<span
+				class="flex items-center gap-1 font-mono text-xs {growing(data.demographics.annualRate)
+					? 'text-positive-fg'
+					: 'text-hostile-fg'}"
+			>
+				{#if data.demographics.annualRate.kind === "exact"}
+					{data.demographics.annualRate.value > 0 ? "+" : ""}{data.demographics.annualRate.value.toFixed(1)}%
+				{:else}
+					<IntelValue estimate={data.demographics.annualRate} unit="%" />
+				{/if}
+				/ year
 			</span>
 		</div>
 		<div class="grid grid-cols-2 gap-3 sm:grid-cols-4">
 			<div class="panel-muted rounded-sm p-3">
 				<p class="text-[10px] uppercase tracking-wide text-fg-muted">Fertility</p>
-				<p class="mt-0.5 font-mono text-lg font-bold text-positive-fg">
-					{(data.demographics.fertility * 1000).toFixed(1)}<span class="text-xs text-fg-muted"> /1k</span>
-				</p>
-				<p class="text-[10px] text-fg-muted">births per year</p>
+				{@render figure(data.demographics.fertility, "text-positive-fg", (n) => n.toFixed(1))}
+				<p class="text-[10px] text-fg-muted">births per 1k a year</p>
 			</div>
 			<div class="panel-muted rounded-sm p-3">
 				<p class="text-[10px] uppercase tracking-wide text-fg-muted">Mortality</p>
-				<p class="mt-0.5 font-mono text-lg font-bold text-hostile-fg">
-					{(data.demographics.mortality * 1000).toFixed(1)}<span class="text-xs text-fg-muted"> /1k</span>
-				</p>
-				<p class="text-[10px] text-fg-muted">deaths per year</p>
+				{@render figure(data.demographics.mortality, "text-hostile-fg", (n) => n.toFixed(1))}
+				<p class="text-[10px] text-fg-muted">deaths per 1k a year</p>
 			</div>
 			<div class="panel-muted rounded-sm p-3">
 				<p class="text-[10px] uppercase tracking-wide text-fg-muted">Workforce</p>
-				<p class="mt-0.5 font-mono text-lg font-bold text-fg">{formatPopulation(data.workforce)}</p>
+				{@render figure(data.workforce, "text-fg", formatPopulation)}
 				<p class="text-[10px] text-fg-muted">civilians available for jobs</p>
 			</div>
 			<div class="panel-muted rounded-sm p-3">
 				<p class="text-[10px] uppercase tracking-wide text-fg-muted">Manpower for war</p>
-				<p class="mt-0.5 font-mono text-lg font-bold text-fg">{formatPopulation(data.manpower.available)}</p>
-				<p class="text-[10px] text-fg-muted">{data.manpower.regime} · {formatPopulation(data.manpower.underArms)} under arms · {data.manpower.perThousand}/1k</p>
+				{@render figure(data.manpower.available, "text-fg", formatPopulation)}
+				<p class="text-[10px] text-fg-muted">
+					{data.manpower.regime} ·
+					{#if exact && data.manpower.underArms.kind === "exact" && data.manpower.perThousand.kind === "exact"}
+						{formatPopulation(data.manpower.underArms.value)} under arms · {data.manpower.perThousand.value}/1k
+					{:else}
+						<IntelValue estimate={data.manpower.underArms} /> under arms
+					{/if}
+				</p>
 			</div>
 		</div>
 
 		<div class="rounded-sm border border-line/20">
-			<div class="grid grid-cols-[1fr_auto] gap-x-3 border-b border-line/20 bg-surface-2/50 px-3 py-2 text-[10px] uppercase tracking-wide text-fg-muted">
+			<div
+				class="grid grid-cols-[1fr_auto] gap-x-3 border-b border-line/20 bg-surface-2/50 px-3 py-2 text-[10px] uppercase tracking-wide text-fg-muted"
+			>
 				<span>What moves the population</span><span class="text-right">People / year</span>
 			</div>
 			{#each data.demographics.contributions as contribution (contribution.label)}
 				<div class="grid grid-cols-[1fr_auto] gap-x-3 border-b border-line/10 px-3 py-1.5 text-sm last:border-0">
 					<span class="text-fg-soft">{contribution.label}</span>
-					<span class="text-right font-mono {contribution.value >= 0 ? 'text-positive-fg' : 'text-hostile-fg'}">
-						{signed(contribution.value)}
-					</span>
+					{#if contribution.value.kind === "exact"}
+						<span class="text-right font-mono {contribution.value.value >= 0 ? 'text-positive-fg' : 'text-hostile-fg'}">
+							{signed(contribution.value.value)}
+						</span>
+					{:else}
+						<IntelValue
+							estimate={contribution.value}
+							class="justify-end text-right {growing(contribution.value) ? 'text-positive-fg' : 'text-hostile-fg'}"
+						/>
+					{/if}
 				</div>
 			{:else}
 				<p class="px-3 py-2 text-xs text-fg-muted">No pressures recorded yet.</p>
 			{/each}
 		</div>
 		<p class="text-[11px] text-fg-muted">
-			Fertility follows education, the conscription regime and hospital care; mortality follows war,
-			the environment, conscription, healthcare shortfalls, hardship and disease. Workforce is set by
-			the share of civilians able to work, reduced by the draft and illness.
+			Fertility follows education, the conscription regime and hospital care; mortality follows war, the environment,
+			conscription, healthcare shortfalls, hardship and disease. Workforce is set by the share of civilians able to
+			work, reduced by the draft and illness.
 		</p>
 	</section>
 
@@ -141,12 +185,16 @@
 								{((disease?.mortalityRate ?? 0) * 100).toFixed(2)}% daily mortality
 							</p>
 						</div>
-						<span class="font-mono text-sm text-hostile-fg">{outbreak.cases.toLocaleString()} cases</span>
+						<span class="flex items-center gap-1 text-sm text-hostile-fg">
+							<IntelValue estimate={outbreak.cases} /> cases
+						</span>
 					</li>
 				{/each}
 			</ul>
 		{:else}
-			<p class="text-sm text-fg-muted">No active outbreaks. Clean water, food and hospitals are keeping the population healthy.</p>
+			<p class="text-sm text-fg-muted">
+				No active outbreaks. Clean water, food and hospitals are keeping the population healthy.
+			</p>
 		{/if}
 		<div class="border-t border-line/15 pt-3">
 			<p class="mb-2 text-[10px] uppercase tracking-wide text-fg-muted">What protects civilians</p>
@@ -174,19 +222,39 @@
 		</div>
 		{#if filteredRegions.length}
 			<div class="rounded-sm border border-line/20">
-				<div class="grid grid-cols-[1fr_auto_auto_auto] gap-x-3 border-b border-line/20 bg-surface-2/50 px-3 py-2 text-[10px] uppercase tracking-wide text-fg-muted">
-					<span>Region</span><span class="text-right">Civilians</span><span class="text-right">/km²</span><span class="text-right">Workers</span>
+				<div
+					class="grid grid-cols-[repeat(3,minmax(0,1fr))] gap-x-3 sm:grid-cols-[1fr_auto_auto_auto] border-b border-line/20 bg-surface-2/50 px-3 py-2 text-[10px] uppercase tracking-wide text-fg-muted"
+				>
+					<span class="hidden sm:block">Region</span><span class="text-right">Civilians</span><span class="text-right">
+						/km²
+					</span><span class="text-right"> Workers </span>
 				</div>
 				{#each filteredRegions as region (region.id)}
-					<div class="grid grid-cols-[1fr_auto_auto_auto] gap-x-3 border-b border-line/10 px-3 py-2 text-sm last:border-0">
-						<a href="/region/{region.id}" class="flex min-w-0 items-center gap-2 truncate text-fg hover:text-primary-hover">
+					<div
+						class="grid grid-cols-[repeat(3,minmax(0,1fr))] gap-x-3 sm:grid-cols-[1fr_auto_auto_auto] border-b border-line/10 px-3 py-2 text-sm last:border-0"
+					>
+						<a
+							href="/region/{region.id}"
+							class="col-span-3 flex min-w-0 items-center gap-2 truncate text-fg hover:text-primary-hover sm:col-span-1"
+						>
 							<Logo src={region.logo} alt="" class="size-6 shrink-0" />
-							<span class="min-w-0 truncate">{region.name} <span class="text-xs text-fg-faint">#{region.id}</span></span>
+							<span class="min-w-0 truncate">
+								{region.name} <span class="text-xs text-fg-faint">#{region.id}</span>
+							</span>
 						</a>
-						<span class="text-right font-mono text-fg-soft">{formatPopulation(region.population)}</span>
-						<span class="text-right font-mono text-fg-muted">{region.density}</span>
-						<span class="text-right font-mono text-fg-muted" title="{(region.workforceShare * 100).toFixed(0)}% of civilians can work">
-							{region.workforce.toLocaleString()}
+						{#if region.population.kind === "exact"}
+							<span class="text-right font-mono text-fg-soft">{formatPopulation(region.population.value)}</span>
+						{:else}
+							<IntelValue estimate={region.population} wrap class="justify-end text-right text-fg-soft" />
+						{/if}
+						<IntelValue estimate={region.density} wrap class="justify-end text-right text-fg-muted" />
+						<span
+							class="min-w-0 text-right text-fg-muted"
+							title={region.workforceShare == null
+								? undefined
+								: `${(region.workforceShare * 100).toFixed(0)}% of civilians can work`}
+						>
+							<IntelValue estimate={region.workforce} wrap class="justify-end" />
 						</span>
 					</div>
 				{/each}
@@ -217,7 +285,10 @@
 					<ul class="divide-y divide-line/10">
 						{#each filteredAbout as stance (stance.stateId)}
 							<li class="flex items-center justify-between gap-3 py-2 text-sm">
-								<a href="/state/{stance.stateId}" class="flex min-w-0 items-center gap-2 truncate text-fg hover:text-primary-hover">
+								<a
+									href="/state/{stance.stateId}"
+									class="flex min-w-0 items-center gap-2 truncate text-fg hover:text-primary-hover"
+								>
 									<Logo src={stance.logo} alt="" class="size-6 shrink-0" />
 									<span class="truncate">{stance.name}</span>
 								</a>
@@ -237,7 +308,10 @@
 					<ul class="divide-y divide-line/10">
 						{#each filteredHeld as stance (stance.stateId)}
 							<li class="flex items-center justify-between gap-3 py-2 text-sm">
-								<a href="/state/{stance.stateId}" class="flex min-w-0 items-center gap-2 truncate text-fg hover:text-primary-hover">
+								<a
+									href="/state/{stance.stateId}"
+									class="flex min-w-0 items-center gap-2 truncate text-fg hover:text-primary-hover"
+								>
 									<Logo src={stance.logo} alt="" class="size-6 shrink-0" />
 									<span class="truncate">{stance.name}</span>
 								</a>

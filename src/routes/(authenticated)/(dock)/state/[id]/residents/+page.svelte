@@ -8,6 +8,8 @@
 	import PageHeader from "#lib/component/PageHeader.svelte";
 	import Sparkline from "#lib/component/charts/Sparkline.svelte";
 	import EmptyState from "#lib/component/EmptyState.svelte";
+	import IntelValue from "#lib/component/intel/IntelValue.svelte";
+	import IntelNote from "#lib/component/intel/IntelNote.svelte";
 
 	let { data } = $props();
 </script>
@@ -26,22 +28,36 @@
 		backLabel={data.state.name}
 	/>
 
+	{#if !data.intel.exact}
+		<IntelNote stateId={data.state.id} group="population" level={data.intel.level} class="mb-4" />
+	{/if}
+
 	<div class="grid gap-4 sm:grid-cols-2">
 		<div class="panel rounded-sm p-4 sm:p-5">
 			<p class="text-[10px] uppercase tracking-[0.2em] text-fg-muted">Current residents</p>
-			<p class="mt-1 font-mono text-3xl font-bold text-fg">{data.total.toLocaleString()}</p>
+			{#if data.total.kind === "exact"}
+				<p class="mt-1 font-mono text-3xl font-bold text-fg">{data.total.value.toLocaleString()}</p>
+			{:else}
+				<IntelValue estimate={data.total} variant="block" class="mt-1" />
+			{/if}
 			<p class="mt-1 text-xs text-fg-muted">Players whose current home is in one of this state's regions.</p>
 		</div>
 		<div class="panel rounded-sm p-4 sm:p-5">
 			<p class="text-[10px] uppercase tracking-[0.2em] text-fg-muted mb-2">Over time</p>
-			<Sparkline
-				values={data.history}
-				label="Residents of {data.state.name} over the last 90 days"
-				color="var(--color-primary)"
-			/>
-			<p class="mt-1 text-xs text-fg-muted">
-				Based on when current residents arrived; daily snapshots make recent days exact.
-			</p>
+			{#if data.history}
+				<Sparkline
+					values={data.history}
+					label="Residents of {data.state.name} over the last 90 days"
+					color="var(--color-primary)"
+				/>
+				<p class="mt-1 text-xs text-fg-muted">
+					Based on when current residents arrived; daily snapshots make recent days exact.
+				</p>
+			{:else}
+				<p class="text-xs text-fg-muted">
+					The day-by-day record is kept by {data.state.name}'s own registry and isn't known abroad.
+				</p>
+			{/if}
 		</div>
 	</div>
 
@@ -51,11 +67,14 @@
 			<ul class="divide-y divide-line/10">
 				{#each data.regions as region (region.id)}
 					<li class="flex items-center justify-between gap-3 py-2 text-sm">
-						<a href="/region/{region.id}/population" class="flex min-w-0 items-center gap-2 text-fg hover:text-primary-hover">
+						<a
+							href="/region/{region.id}/population"
+							class="flex min-w-0 items-center gap-2 text-fg hover:text-primary-hover"
+						>
 							<FluentHome20Filled class="size-4 shrink-0 text-fg-muted" />
 							<span class="truncate">{region.name} <span class="text-xs text-fg-faint">#{region.id}</span></span>
 						</a>
-						<span class="font-mono text-fg-soft">{region.population.toLocaleString()}</span>
+						<IntelValue estimate={region.population} class="shrink-0 text-fg-soft" />
 					</li>
 				{/each}
 			</ul>

@@ -7,8 +7,10 @@ import { db } from "#lib/server/db.js";
 import { regions, residences, states } from "#lib/server/schema.js";
 import { getRegionName } from "#lib/utils/formatting.js";
 import { residentHistory } from "#lib/server/services/snapshot-history.js";
+import { viewerStateIntel } from "#lib/server/services/military/state-intel.js";
+import { residentsView } from "../state-stats";
 
-export const load: PageServerLoad = async ({ params }) => {
+export const load: PageServerLoad = async ({ params, locals }) => {
 	const stateId = Number(params.id);
 	if (!Number.isInteger(stateId)) error(404, "State not found");
 
@@ -19,7 +21,7 @@ export const load: PageServerLoad = async ({ params }) => {
 		.limit(1);
 	if (!state) error(404, "State not found");
 
-	const [regionRows, history] = await Promise.all([
+	const [regionRows, history, intel] = await Promise.all([
 		db
 			.select({
 				id: regions.id,
@@ -29,17 +31,23 @@ export const load: PageServerLoad = async ({ params }) => {
 			.leftJoin(residences, eq(residences.regionId, regions.id))
 			.where(eq(regions.stateId, stateId))
 			.groupBy(regions.id),
-		residentHistory(stateId, 90)
+		residentHistory(stateId, 90),
+		viewerStateIntel(db, locals.account?.id, stateId)
 	]);
 
-	const residentRegions = regionRows
-		.map((r) => ({ id: r.id, name: getRegionName(r.id), population: Number(r.population ?? 0) }))
-		.sort((a, b) => b.population - a.population);
+	const residentRegions = regionRows.map((r) => ({
+		id: r.id,
+		name: getRegionName(r.id),
+		population: Number(r.population ?? 0)
+	}));
 
 	return {
 		state: { id: state.id, name: state.name },
-		regions: residentRegions,
-		total: residentRegions.reduce((sum, r) => sum + r.population, 0),
-		history: history.map((p) => p.value)
+		...residentsView(
+			intel,
+			residentRegions,
+			history.map((p) => p.value)
+		),
+		intel: { exact: intel.exact, level: intel.level.groups.population }
 	};
 };

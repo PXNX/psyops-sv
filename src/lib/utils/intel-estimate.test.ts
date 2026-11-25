@@ -4,12 +4,14 @@ import { describe, expect, it } from "@rstest/core";
 import {
 	INTEL,
 	combine,
+	estimateRank,
 	estimateStat,
 	fileGroups,
 	formatEstimate,
 	halfWidth,
 	intelLevel,
 	intelTier,
+	stateIntelFrom,
 	type IntelSignals
 } from "./intel-estimate.js";
 
@@ -186,5 +188,30 @@ describe("estimateStat", () => {
 	it("formats ranges compactly", () => {
 		const e = estimateStat(1_200_000, 0.5, spec, key("pop"));
 		expect(formatEstimate(e)).toMatch(/^~[\d.]+[kM] \([\d.]+[kM]?–[\d.]+[kM]\)$/);
+	});
+});
+
+describe("stateIntelFrom", () => {
+	it("shows its own state exactly", () => {
+		const intel = stateIntelFrom(2, 2, { ...base, relation: "self" }, now);
+		expect(intel.exact).toBe(true);
+		expect(intel.estimate("debt", 4321, { group: "economy" })).toMatchObject({ kind: "exact", value: 4321 });
+	});
+
+	it("estimates a foreign state, seeded like estimateStat", () => {
+		const intel = stateIntelFrom(1, 2, base, now);
+		expect(intel.exact).toBe(false);
+		const spec = { group: "population" as const, scale: 10 };
+		const e = intel.estimate("residents", 300, spec);
+		expect(e).toEqual(estimateStat(300, intel.level.groups.population, spec, key("residents")));
+		expect(e.kind).toBe("range");
+	});
+});
+
+describe("estimateRank", () => {
+	it("sorts hidden figures last", () => {
+		const shown = estimateStat(50, 0.5, { group: "military" }, key("a"));
+		const hidden = estimateStat(50, 0.05, { group: "military", hideBelow: 0.2 }, key("b"));
+		expect(estimateRank(shown)).toBeGreaterThan(estimateRank(hidden));
 	});
 });

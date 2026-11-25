@@ -10,9 +10,11 @@
 		unit?: string;
 		/** "block" for stat cards (bar + badge), "inline" for compact rows. */
 		variant?: "block" | "inline";
+		/** Inline only: let the interval break onto its own line in narrow cells. */
+		wrap?: boolean;
 		class?: string;
 	}
-	let { estimate: e, unit = "", variant = "inline", class: className = "" }: Props = $props();
+	let { estimate: e, unit = "", variant = "inline", wrap = false, class: className = "" }: Props = $props();
 
 	const hint = $derived(improveHint(e));
 	// Bar domain runs from zero to a little past the top of the interval, so a
@@ -58,9 +60,11 @@
 		{:else if e.kind === "exact"}
 			<span class="font-mono">{e.value.toLocaleString()}{unit}</span>
 		{:else}
-			<span class="truncate font-mono">
+			<span class="font-mono {wrap ? 'max-w-full' : 'truncate'}">
 				~{compactNumber(e.value)}{unit}
-				<span class="font-normal text-fg-muted">({compactNumber(e.low)}–{compactNumber(e.high)}{unit})</span>
+				<span class="font-normal text-fg-muted {wrap ? 'block sm:inline' : ''}">
+					({compactNumber(e.low)}–{compactNumber(e.high)}{unit})
+				</span>
 			</span>
 		{/if}
 	</span>
