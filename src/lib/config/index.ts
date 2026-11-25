@@ -52,6 +52,7 @@ export * from "./game/records.config";
 export * from "./game/civic.config";
 export * from "./game/revolution.config";
 export * from "./game/medals.config";
+export * from "./game/migration.config";
 export * from "./game/stability.config";
 export * from "./game/manpower.config";
 export * from "./game/workforce.config";

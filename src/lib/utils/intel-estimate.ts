@@ -42,6 +42,8 @@ export interface IntelSignals {
 	recon: Date[];
 	/** Successful covert operations the viewer ran against the target. */
 	covertOps: Date[];
+	/** Immigrants from the target recently arrived in the viewer's states. */
+	migration: { civilians: number; at: Date }[];
 }
 
 /** Tunables. Contributions combine as 1 - Π(1 - c), so they saturate below 1. */
@@ -62,6 +64,8 @@ export const INTEL = {
 	RECON_MILITARY: 0.08,
 	RECON_POPULATION: 0.03,
 	COVERT_OP: 0.04,
+	/** Arrivals talk: one report per thousand immigrants, fading with age. */
+	MIGRATION_REPORT: 0.03,
 	/** At or above this level a figure is confirmed and shown exactly. */
 	CONFIRMED: 0.97
 } as const;
@@ -177,12 +181,25 @@ export function intelLevel(signals: IntelSignals, now = new Date()): IntelLevel 
 		sources.push({ label: `${n} recon pass${n === 1 ? "" : "es"}`, amount: combine(parts) });
 	}
 
+	const parts: number[] = [];
 	if (signals.covertOps.length) {
-		const parts = signals.covertOps.map((at) => INTEL.COVERT_OP * freshness(at, now));
-		general.push(...parts);
+		parts.push(...signals.covertOps.map((at) => INTEL.COVERT_OP * freshness(at, now)));
 		const n = signals.covertOps.length;
 		sources.push({ label: `${n} successful covert op${n === 1 ? "" : "s"}`, amount: combine(parts) });
 	}
+	for (const flow of signals.migration) {
+		const reports = Math.max(1, Math.floor(flow.civilians / 1000));
+		for (let i = 0; i < Math.min(4, reports); i++) {
+			parts.push(INTEL.MIGRATION_REPORT * freshness(flow.at, now));
+		}
+	}
+	if (signals.migration.length) {
+		sources.push({
+			label: `${signals.migration.length} migrant report${signals.migration.length === 1 ? "" : "s"}`,
+			amount: combine(parts.slice(-signals.migration.length))
+		});
+	}
+	general.push(...parts);
 
 	const groups = Object.fromEntries(
 		INTEL_GROUPS.map((g) => [g, round3(combine([...general, ...perGroup[g]]))])

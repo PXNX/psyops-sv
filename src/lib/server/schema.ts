@@ -434,6 +434,29 @@ export const revolutionMembers = pgTable(
 	})
 );
 
+/** A recorded movement of civilians between regions, used for disease and intel risk. */
+export const migrationFlows = pgTable(
+	"migration_flows",
+	{
+		id: integer("id").generatedByDefaultAsIdentity().primaryKey(),
+		fromRegionId: integer("from_region_id")
+			.notNull()
+			.references(() => regions.id, { onDelete: "cascade" }),
+		toRegionId: integer("to_region_id")
+			.notNull()
+			.references(() => regions.id, { onDelete: "cascade" }),
+		fromStateId: integer("from_state_id").references(() => states.id, { onDelete: "set null" }),
+		toStateId: integer("to_state_id").references(() => states.id, { onDelete: "set null" }),
+		civilians: integer("civilians").notNull(),
+		neededVisa: boolean("needed_visa").default(false).notNull(),
+		createdAt: timestamp("created_at").defaultNow().notNull()
+	},
+	(t) => ({
+		fromIdx: index("idx_migration_from").on(t.fromRegionId),
+		toIdx: index("idx_migration_to").on(t.toRegionId)
+	})
+);
+
 // An active disease outbreak in a region. Cases rise with the disease's spread
 // rate, fall with recoveries, and kill civilians each day; hospitals, clean
 // water and nutrition blunt both the spread and the mortality.

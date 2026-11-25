@@ -63,6 +63,11 @@
 			"path": "/api/cron/population",
 			"requestMethod": "GET"
 		},
+		"migration": {
+			"schedule": "30 1 * * 1",
+			"path": "/api/cron/migration",
+			"requestMethod": "GET"
+		},
 		"workforce": {
 			"schedule": "0 2 * * 1",
 			"path": "/api/cron/workforce",

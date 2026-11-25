@@ -10,6 +10,7 @@ import {
 	covertOperations,
 	infiltrationAssets,
 	infiltrationFiles,
+	migrationFlows,
 	reconMissions,
 	regionBorders,
 	regions,
@@ -46,7 +47,8 @@ export async function intelSignalsMany(
 		activeAssets: 0,
 		files: [],
 		recon: [],
-		covertOps: []
+		covertOps: [],
+		migration: []
 	});
 	if (!targets.length) return out;
 	if (viewerStateId == null) {
@@ -60,7 +62,7 @@ export async function intelSignalsMany(
 	const since = new Date(now.getTime() - LOOKBACK_DAYS * 86_400_000);
 	const r1 = alias(regions, "r1");
 	const r2 = alias(regions, "r2");
-	const [blocs, borders, assets, files, recon, ops] = await Promise.all([
+	const [blocs, borders, assets, files, recon, ops, arrivals] = await Promise.all([
 		db
 			.select({ id: states.id, blocId: states.blocId })
 			.from(states)
@@ -124,6 +126,20 @@ export async function intelSignalsMany(
 					eq(covertOperations.succeeded, true),
 					gte(covertOperations.launchedAt, since)
 				)
+			),
+		db
+			.select({
+				origin: migrationFlows.fromStateId,
+				civilians: migrationFlows.civilians,
+				at: migrationFlows.createdAt
+			})
+			.from(migrationFlows)
+			.where(
+				and(
+					eq(migrationFlows.toStateId, viewerStateId),
+					inArray(migrationFlows.fromStateId, foreign),
+					gte(migrationFlows.createdAt, since)
+				)
 			)
 	]);
 
@@ -146,6 +162,9 @@ export async function intelSignalsMany(
 	}
 	for (const r of recon) if (r.at && r.target != null) out.get(r.target)?.recon.push(r.at);
 	for (const o of ops) if (o.target != null) out.get(o.target)?.covertOps.push(o.at);
+	for (const f of arrivals) {
+		if (f.origin != null) out.get(f.origin)?.migration.push({ civilians: f.civilians, at: f.at });
+	}
 	return out;
 }
 

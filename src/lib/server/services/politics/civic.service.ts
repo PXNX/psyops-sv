@@ -27,6 +27,8 @@ import {
 import { opinionLossFromHardship, type RegionNeeds } from "#lib/config/game/civilian-supply.config.js";
 import { regionsCivilianNeeds } from "../civilians/supply.js";
 import { regionProgrammeOpinion } from "./regional-budget.js";
+import { regionCivilianEmployment } from "../economy/civilian-work.js";
+import { MIGRATION_CONFIG } from "#lib/config/index.js";
 
 const DAY = 86_400_000;
 
@@ -272,14 +274,15 @@ export async function regionOpinionBreakdown(
 	await completeCivicProjects(db, now);
 	const [region] = await db.select().from(regions).where(eq(regions.id, regionId)).limit(1);
 	if (!region) return null;
-	const [allocations, casualties, programmes] = await Promise.all([
+	const [allocations, casualties, programmes, employment] = await Promise.all([
 		civicAllocations(db, [regionId]),
 		db
 			.select({ total: sql<number>`coalesce(sum(${strikes.civilianCasualties}), 0)`.mapWith(Number) })
 			.from(strikes)
 			.where(eq(strikes.regionId, regionId)),
 		// The governor's programmes, paid from the regional budget.
-		regionProgrammeOpinion(db, regionId, now)
+		regionProgrammeOpinion(db, regionId, now),
+		regionCivilianEmployment(db, regionId, now)
 	]);
 
 	const levels = [
@@ -365,7 +368,24 @@ export async function regionOpinionBreakdown(
 		});
 	}
 
-	const raw = score - casualtyPenalty - hardship;
+	// Idle hands sour a region: the more of its workforce without a job, the
+	// harder it is for the locals to support their government.
+	const unemployment =
+		employment.labour > 0 ? Math.max(0, employment.labour - employment.employed) / employment.labour : 0;
+	const unemploymentPenalty = Math.round(
+		Math.min(1, unemployment / MIGRATION_CONFIG.FULL_PENALTY_UNEMPLOYMENT) *
+			MIGRATION_CONFIG.MAX_UNEMPLOYMENT_OPINION_PENALTY
+	);
+	if (unemploymentPenalty) {
+		components.push({
+			key: "unemployment",
+			label: "Unemployment",
+			detail: `${Math.round(unemployment * 100)}% of the workforce idle`,
+			points: -unemploymentPenalty
+		});
+	}
+
+	const raw = score - casualtyPenalty - hardship - unemploymentPenalty;
 	return { score: clamp(raw), raw, components };
 }
 
