@@ -49,10 +49,13 @@
 		input: ImageryInput;
 		/** Prebuilt scene (sea/coastal passes); region passes build their own. */
 		scene?: Scene;
-		variant?: "full" | "mini";
+		/** "bare": the picture alone, no HUD or boxes (backdrops). */
+		variant?: "full" | "mini" | "bare";
 		irPalette?: IrPalette;
 		/** Play the "developing" reveal and scan line (skipped with reduced motion). */
 		animate?: boolean;
+		/** "cover" crops the frame to fill its box (hero backdrops). */
+		fit?: "contain" | "cover";
 		class?: string;
 	}
 	let {
@@ -61,6 +64,7 @@
 		variant = "full",
 		irPalette = "white",
 		animate = false,
+		fit = "contain",
 		class: className = ""
 	}: Props = $props();
 
@@ -221,6 +225,7 @@
 
 <svg
 	viewBox="0 0 {FRAME_W} {FRAME_H}"
+	preserveAspectRatio={fit === "cover" ? "xMidYMid slice" : undefined}
 	class="sensor-image block h-auto w-full select-none {className}"
 	class:developing={motion}
 	role="img"
@@ -338,6 +343,15 @@
 				{#if scene.tone.haze}
 					<rect width={FRAME_W} height={FRAME_H} fill={scene.tone.hazeColor} opacity={scene.tone.haze} />
 				{/if}
+				{#if scene.tone.tint}
+					<rect
+						width={FRAME_W}
+						height={FRAME_H}
+						fill={scene.tone.tint.color}
+						opacity={scene.tone.tint.op}
+						style="mix-blend-mode: multiply"
+					/>
+				{/if}
 				{#if scene.tone.darkness}
 					<rect width={FRAME_W} height={FRAME_H} fill="#020403" opacity={scene.tone.darkness} />
 				{/if}
@@ -365,117 +379,119 @@
 			<rect width={FRAME_W} height={FRAME_H} fill={url("vignette")} opacity={scene.tone.vignette} />
 		{/if}
 
-		<!-- ── HUD ── -->
-		<g fill="none" stroke={hud} stroke-width={full ? 1.4 : 2.4} opacity="0.85">
-			{#each [[10, 10, 1, 1], [FRAME_W - 10, 10, -1, 1], [10, FRAME_H - 10, 1, -1], [FRAME_W - 10, FRAME_H - 10, -1, -1]] as [x, y, sx, sy] (`${x}-${y}`)}
-				<path d="M{x} {y + sy * 22}V{y}H{x + sx * 22}" />
-			{/each}
-			{#if scene.platform === "drone"}
-				<circle cx={FRAME_W / 2} cy={FRAME_H / 2} r="16" stroke-width="1" opacity="0.7" />
-				<path
-					d="M{FRAME_W / 2 - 34} {FRAME_H / 2}h22M{FRAME_W / 2 + 12} {FRAME_H / 2}h22M{FRAME_W / 2} {FRAME_H / 2 -
-						34}v22M{FRAME_W / 2} {FRAME_H / 2 + 12}v22"
-					stroke-width="1"
-				/>
-			{:else}
-				<path
-					d="M{FRAME_W / 2 - 8} {FRAME_H / 2}h5M{FRAME_W / 2 + 3} {FRAME_H / 2}h5M{FRAME_W / 2} {FRAME_H / 2 -
-						8}v5M{FRAME_W / 2} {FRAME_H / 2 + 3}v5"
-					stroke-width="1"
-				/>
-			{/if}
-		</g>
-
-		<!-- Detection boxes: corner brackets, label tab with an icon. -->
-		{#each scene.detections as d, i (i)}
-			{@const c = boxColor(d.kind)}
-			{@const k = Math.min(6, d.w / 3, d.h / 3)}
-			{@const Icon = ICON[d.icon]}
-			<g stroke={c} stroke-width={full ? 1.1 : 2} fill="none">
-				<path
-					d="M{d.x} {d.y + k}V{d.y}H{d.x + k}M{d.x + d.w - k} {d.y}H{d.x + d.w}V{d.y + k}M{d.x + d.w} {d.y +
-						d.h -
-						k}V{d.y + d.h}H{d.x + d.w - k}M{d.x + k} {d.y + d.h}H{d.x}V{d.y + d.h - k}"
-				/>
-				{#if full}<rect x={d.x} y={d.y} width={d.w} height={d.h} stroke-width="0.5" opacity="0.35" />{/if}
+		{#if variant !== "bare"}
+			<!-- ── HUD ── -->
+			<g fill="none" stroke={hud} stroke-width={full ? 1.4 : 2.4} opacity="0.85">
+				{#each [[10, 10, 1, 1], [FRAME_W - 10, 10, -1, 1], [10, FRAME_H - 10, 1, -1], [FRAME_W - 10, FRAME_H - 10, -1, -1]] as [x, y, sx, sy] (`${x}-${y}`)}
+					<path d="M{x} {y + sy * 22}V{y}H{x + sx * 22}" />
+				{/each}
+				{#if scene.platform === "drone"}
+					<circle cx={FRAME_W / 2} cy={FRAME_H / 2} r="16" stroke-width="1" opacity="0.7" />
+					<path
+						d="M{FRAME_W / 2 - 34} {FRAME_H / 2}h22M{FRAME_W / 2 + 12} {FRAME_H / 2}h22M{FRAME_W / 2} {FRAME_H / 2 -
+							34}v22M{FRAME_W / 2} {FRAME_H / 2 + 12}v22"
+						stroke-width="1"
+					/>
+				{:else}
+					<path
+						d="M{FRAME_W / 2 - 8} {FRAME_H / 2}h5M{FRAME_W / 2 + 3} {FRAME_H / 2}h5M{FRAME_W / 2} {FRAME_H / 2 -
+							8}v5M{FRAME_W / 2} {FRAME_H / 2 + 3}v5"
+						stroke-width="1"
+					/>
+				{/if}
 			</g>
+
+			<!-- Detection boxes: corner brackets, label tab with an icon. -->
+			{#each scene.detections as d, i (i)}
+				{@const c = boxColor(d.kind)}
+				{@const k = Math.min(6, d.w / 3, d.h / 3)}
+				{@const Icon = ICON[d.icon]}
+				<g stroke={c} stroke-width={full ? 1.1 : 2} fill="none">
+					<path
+						d="M{d.x} {d.y + k}V{d.y}H{d.x + k}M{d.x + d.w - k} {d.y}H{d.x + d.w}V{d.y + k}M{d.x + d.w} {d.y +
+							d.h -
+							k}V{d.y + d.h}H{d.x + d.w - k}M{d.x + k} {d.y + d.h}H{d.x}V{d.y + d.h - k}"
+					/>
+					{#if full}<rect x={d.x} y={d.y} width={d.w} height={d.h} stroke-width="0.5" opacity="0.35" />{/if}
+				</g>
+				{#if full}
+					{@const { x: lx, y: ly, w: lw } = labels[i]!}
+					<g>
+						<rect x={lx} y={ly} width={lw} height="11" fill="#000" opacity="0.62" />
+						<Icon x={lx + 1.5} y={ly + 1.5} width="8" height="8" color={c} />
+						<text x={lx + 12} y={ly + 8.3} font-size="8" fill={c}>
+							{d.label}{#if d.detail}<tspan fill="#e8f0e8" opacity="0.85">{"\u00a0" + d.detail}</tspan>{/if}
+						</text>
+					</g>
+				{/if}
+			{/each}
+
 			{#if full}
-				{@const { x: lx, y: ly, w: lw } = labels[i]!}
-				<g>
-					<rect x={lx} y={ly} width={lw} height="11" fill="#000" opacity="0.62" />
-					<Icon x={lx + 1.5} y={ly + 1.5} width="8" height="8" color={c} />
-					<text x={lx + 12} y={ly + 8.3} font-size="8" fill={c}>
-						{d.label}{#if d.detail}<tspan fill="#e8f0e8" opacity="0.85">{"\u00a0" + d.detail}</tspan>{/if}
+				<!-- Classification banner -->
+				<rect x={FRAME_W / 2 - 78} y="0" width="156" height="12" fill="#000" opacity="0.6" />
+				<text x={FRAME_W / 2} y="9" font-size="8" fill="#ff8a7a" text-anchor="middle" letter-spacing="1.5">
+					SECRET // REL BLOC
+				</text>
+				<!-- Sensor and platform -->
+				<g fill={hud} font-size="9">
+					<PlatformIcon x="16" y="15" width="11" height="11" color={hud} />
+					<text x="31" y="24">{sensor?.short ?? input.sensor} · {modeTag}</text>
+					<text x="16" y="36" font-size="7.5" opacity="0.75">
+						FRM {String(input.reportId).padStart(6, "0")}{scene.platform === "drone"
+							? ` · ALT ${1200 + (input.reportId % 7) * 150} M · HDG ${String((scene.heading + 360) % 360).padStart(3, "0")}`
+							: scene.platform === "satellite"
+								? ` · REV ${(input.reportId * 37) % 9000}`
+								: ""}
+					</text>
+					{#if scene.mode === "ir"}<IconThermal x="16" y="40" width="10" height="10" color={hud} />{/if}
+					<!-- Time and conditions -->
+					<text x={FRAME_W - 16} y="24" text-anchor="end">{stamp(input.observedAt)}</text>
+					<WeatherIcon x={FRAME_W - 28} y="28" width="11" height="11" color={hud} />
+					{#if input.findings.conditions.night}<IconNight
+							x={FRAME_W - 42}
+							y="28"
+							width="11"
+							height="11"
+							color={hud}
+						/>{/if}
+					<text
+						x={FRAME_W - 46 - (input.findings.conditions.night ? 0 : -14)}
+						y="36.5"
+						text-anchor="end"
+						font-size="7.5"
+						opacity="0.75"
+					>
+						VIS {Math.round(scene.visibility * 100)}%
+					</text>
+					<!-- Position -->
+					<text x="16" y={FRAME_H - 16}>{latlon}</text>
+					<text x="16" y={FRAME_H - 28} font-size="7.5" opacity="0.75">
+						GSD {scene.platform === "drone" ? "0.1" : "0.5"} M · {input.findings.conditions.cover.toUpperCase()}
 					</text>
 				</g>
+				<!-- Scale bar and north arrow -->
+				{@const sx = FRAME_W - 26 - scene.scale.px}
+				<g stroke={hud} stroke-width="1.2" fill="none">
+					<path
+						d="M{sx} {FRAME_H - 20}v-5M{sx} {FRAME_H - 22.5}h{scene.scale.px}M{sx + scene.scale.px} {FRAME_H - 20}v-5"
+					/>
+					<path d="M{sx + scene.scale.px / 2} {FRAME_H - 21}v-3" stroke-width="0.8" />
+				</g>
+				<text x={sx + scene.scale.px / 2} y={FRAME_H - 28} font-size="7.5" fill={hud} text-anchor="middle">
+					{scene.scale.meters} M
+				</text>
+				<g transform="translate({FRAME_W - 24} 58) rotate({-scene.heading})">
+					<path d="M0 -11L4 4L0 1L-4 4Z" fill={hud} opacity="0.85" />
+					<text y="-14" font-size="7.5" fill={hud} text-anchor="middle">N</text>
+				</g>
+			{:else}
+				<g>
+					<rect x="0" y="0" width="92" height="24" fill="#000" opacity="0.55" />
+					<PlatformIcon x="5" y="4" width="16" height="16" color={hud} />
+					<text x="25" y="17" font-size="13" fill={hud}>{scene.mode.toUpperCase()}</text>
+					{#if input.findings.conditions.night}<IconNight x="70" y="5" width="15" height="15" color={hud} />{/if}
+				</g>
 			{/if}
-		{/each}
-
-		{#if full}
-			<!-- Classification banner -->
-			<rect x={FRAME_W / 2 - 78} y="0" width="156" height="12" fill="#000" opacity="0.6" />
-			<text x={FRAME_W / 2} y="9" font-size="8" fill="#ff8a7a" text-anchor="middle" letter-spacing="1.5">
-				SECRET // REL BLOC
-			</text>
-			<!-- Sensor and platform -->
-			<g fill={hud} font-size="9">
-				<PlatformIcon x="16" y="15" width="11" height="11" color={hud} />
-				<text x="31" y="24">{sensor?.short ?? input.sensor} · {modeTag}</text>
-				<text x="16" y="36" font-size="7.5" opacity="0.75">
-					FRM {String(input.reportId).padStart(6, "0")}{scene.platform === "drone"
-						? ` · ALT ${1200 + (input.reportId % 7) * 150} M · HDG ${String((scene.heading + 360) % 360).padStart(3, "0")}`
-						: scene.platform === "satellite"
-							? ` · REV ${(input.reportId * 37) % 9000}`
-							: ""}
-				</text>
-				{#if scene.mode === "ir"}<IconThermal x="16" y="40" width="10" height="10" color={hud} />{/if}
-				<!-- Time and conditions -->
-				<text x={FRAME_W - 16} y="24" text-anchor="end">{stamp(input.observedAt)}</text>
-				<WeatherIcon x={FRAME_W - 28} y="28" width="11" height="11" color={hud} />
-				{#if input.findings.conditions.night}<IconNight
-						x={FRAME_W - 42}
-						y="28"
-						width="11"
-						height="11"
-						color={hud}
-					/>{/if}
-				<text
-					x={FRAME_W - 46 - (input.findings.conditions.night ? 0 : -14)}
-					y="36.5"
-					text-anchor="end"
-					font-size="7.5"
-					opacity="0.75"
-				>
-					VIS {Math.round(scene.visibility * 100)}%
-				</text>
-				<!-- Position -->
-				<text x="16" y={FRAME_H - 16}>{latlon}</text>
-				<text x="16" y={FRAME_H - 28} font-size="7.5" opacity="0.75">
-					GSD {scene.platform === "drone" ? "0.1" : "0.5"} M · {input.findings.conditions.cover.toUpperCase()}
-				</text>
-			</g>
-			<!-- Scale bar and north arrow -->
-			{@const sx = FRAME_W - 26 - scene.scale.px}
-			<g stroke={hud} stroke-width="1.2" fill="none">
-				<path
-					d="M{sx} {FRAME_H - 20}v-5M{sx} {FRAME_H - 22.5}h{scene.scale.px}M{sx + scene.scale.px} {FRAME_H - 20}v-5"
-				/>
-				<path d="M{sx + scene.scale.px / 2} {FRAME_H - 21}v-3" stroke-width="0.8" />
-			</g>
-			<text x={sx + scene.scale.px / 2} y={FRAME_H - 28} font-size="7.5" fill={hud} text-anchor="middle">
-				{scene.scale.meters} M
-			</text>
-			<g transform="translate({FRAME_W - 24} 58) rotate({-scene.heading})">
-				<path d="M0 -11L4 4L0 1L-4 4Z" fill={hud} opacity="0.85" />
-				<text y="-14" font-size="7.5" fill={hud} text-anchor="middle">N</text>
-			</g>
-		{:else}
-			<g>
-				<rect x="0" y="0" width="92" height="24" fill="#000" opacity="0.55" />
-				<PlatformIcon x="5" y="4" width="16" height="16" color={hud} />
-				<text x="25" y="17" font-size="13" fill={hud}>{scene.mode.toUpperCase()}</text>
-				{#if input.findings.conditions.night}<IconNight x="70" y="5" width="15" height="15" color={hud} />{/if}
-			</g>
 		{/if}
 
 		<!-- No usable picture -->

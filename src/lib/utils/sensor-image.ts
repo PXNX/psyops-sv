@@ -61,6 +61,8 @@ export interface ImageryContext {
 	lon: number | null;
 	terrain: string;
 	strikes: ImageryStrike[];
+	/** Infrastructure level (public): how built-up the ground looks. */
+	infrastructure?: number | null;
 }
 
 export interface ImageryInput extends ImageryContext {
@@ -172,6 +174,10 @@ export interface Scene {
 		vignette: number;
 		speckle: number;
 		static: number;
+		/** Low-sun colour cast (dawn, dusk), multiplied over the frame. */
+		tint: { color: string; op: number } | null;
+		/** Snow on the ground (0-1). */
+		snow: number;
 	};
 	/** Share of the frame not hidden by cloud or haze (0-1). */
 	visibility: number;
@@ -406,16 +412,63 @@ const SAR: Record<Material, number> = {
 	track: 0.3
 };
 
+type Season = "winter" | "spring" | "summer" | "autumn";
+
+/** Meteorological season at a latitude (flipped south of the equator). */
+function seasonAt(lat: number | null, at: Date): Season {
+	const m = (at.getUTCMonth() + ((lat ?? 45) < 0 ? 6 : 0)) % 12;
+	return m === 11 || m <= 1 ? "winter" : m <= 4 ? "spring" : m <= 7 ? "summer" : "autumn";
+}
+
+/**
+ * Snow on the ground (0-1): deep winter at high latitudes and in the
+ * mountains, the shoulder months only far north or high up. Fixed per region
+ * and week so passes agree; rain washes it to slush.
+ */
+function snowCover(lat: number | null, terrain: string, at: Date, weather: string): number {
+	if (lat == null) return 0;
+	const a = Math.abs(lat);
+	const m = (at.getUTCMonth() + (lat < 0 ? 6 : 0)) % 12;
+	const high = terrain === "mountain" ? 12 : terrain === "hills" ? 5 : 0;
+	const deep = m === 11 || m <= 1;
+	const shoulder = m === 10 || m === 2;
+	const reach = a + high;
+	const cover = deep ? clamp((reach - 44) / 8) : shoulder ? clamp((reach - 54) / 8) : 0;
+	return weather === "rain" ? cover * 0.4 : cover;
+}
+
+/** How much snow settles on a material (0-1). */
+const SNOW_HOLD: Partial<Record<Material, number>> = {
+	grass: 0.9,
+	field: 0.92,
+	dirt: 0.85,
+	sand: 0.7,
+	rock: 0.6,
+	roof: 0.7,
+	urban: 0.4,
+	berm: 0.8,
+	track: 0.35
+};
+
 class Painter {
 	constructor(
 		readonly mode: ImageMode,
-		readonly night: boolean
+		readonly night: boolean,
+		/** Snow on the ground, 0-1. */
+		readonly snow = 0,
+		/** Rain-darkened ground, 0-1. */
+		readonly wet = 0
 	) {}
 	/** Colour of a material, with a small variation v in [-1, 1]. */
 	c(m: Material, v = 0, hex?: string): string {
-		if (this.mode === "ir") return grey(irTemp(m, this.night) + v * 0.04);
-		if (this.mode === "sar") return grey(SAR[m] + v * 0.07);
-		return shade(hex ?? EO[m], v * 0.12);
+		const hold = (SNOW_HOLD[m] ?? 0) * this.snow;
+		// Snow reads cold in IR and smooths the radar return a little.
+		if (this.mode === "ir") return grey(irTemp(m, this.night) - hold * 0.1 + v * 0.04);
+		if (this.mode === "sar") return grey(SAR[m] - hold * 0.06 + v * 0.07);
+		const [r, g, b] = hexRgb(hex ?? EO[m]);
+		const f = (1 + v * 0.12) * (1 - this.wet * (m === "water" ? 0 : 0.18));
+		const snow = [232 + v * 10, 236 + v * 10, 240 + v * 8];
+		return rgb(lerp(r * f, snow[0]!, hold), lerp(g * f, snow[1]!, hold), lerp(b * f, snow[2]!, hold));
 	}
 	/** Explicit temperature (IR) or reflectance (SAR); EO uses the material. */
 	hot(m: Material, value: number, v = 0): string {
@@ -447,8 +500,49 @@ interface Terrain {
 	dunes: Pt[][];
 	/** A lake or the sea off one edge: a smooth shoreline over the cell patchwork. */
 	waterbody: Pt[] | null;
+	/** Coastal regions: the shoreline and which edge of the frame the sea is on. */
+	coast: { pts: Pt[]; side: Side } | null;
 	/** Contour lines on ridges and surf lines along a shore. */
 	contours: Pt[][];
+}
+
+type Side = "left" | "right" | "top" | "bottom";
+
+/** Move a point `n` units towards the sea off `side`. */
+const seaward = (p: Pt, side: Side, n: number): Pt =>
+	side === "left"
+		? [p[0] - n, p[1]]
+		: side === "right"
+			? [p[0] + n, p[1]]
+			: side === "top"
+				? [p[0], p[1] - n]
+				: [p[0], p[1] + n];
+
+/** The two outer corners that close a sea polygon off `side`, in order after the coast. */
+function seaCorners(side: Side): Pt[] {
+	const L = -MARGIN;
+	const R = FRAME_W + MARGIN;
+	const T = -MARGIN;
+	const B = FRAME_H + MARGIN;
+	return side === "left"
+		? [
+				[L, B],
+				[L, T]
+			]
+		: side === "right"
+			? [
+					[R, B],
+					[R, T]
+				]
+			: side === "top"
+				? [
+						[R, T],
+						[L, T]
+					]
+				: [
+						[R, B],
+						[L, B]
+					];
 }
 
 const TERRAIN_KIND: Record<string, Terrain["kind"]> = {
@@ -473,9 +567,14 @@ const COLS = 12;
 const ROWS = 7;
 const MARGIN = 120;
 
-function makeTerrain(regionId: number, terrainName: string): Terrain {
+/**
+ * A region's ground, the same on every pass. `infrastructure` (0-5, null when
+ * unknown) thins or fills the settlements.
+ */
+function makeTerrain(regionId: number, terrainName: string, infrastructure: number | null = null): Terrain {
 	const rng = seededRandom(hash32(regionId, 0x7e11a1));
 	const kind = TERRAIN_KIND[terrainName] ?? "plains";
+	const built = infrastructure == null ? 1 : clamp(0.35 + infrastructure * 0.25, 0.35, 1.6);
 
 	// A jittered lattice whose quads share corners: a field patchwork.
 	const cw = (FRAME_W + 2 * MARGIN) / COLS;
@@ -529,11 +628,13 @@ function makeTerrain(regionId: number, terrainName: string): Terrain {
 			["field", 0.14],
 			["bare", 0.08]
 		],
+		// The sea itself is drawn over the patchwork (see the coast below).
 		shore: [
-			["water", 0.34],
-			["sand", 0.34],
-			["field", 0.18],
-			["forest", 0.14]
+			["field", 0.42],
+			["sand", 0.16],
+			["forest", 0.18],
+			["urban", 0.12],
+			["bare", 0.12]
 		],
 		city: [
 			["urban", 0.86],
@@ -573,12 +674,59 @@ function makeTerrain(regionId: number, terrainName: string): Terrain {
 		}
 	}
 
+	// The coast: the sea off one edge (seeded per region), a wavy shoreline
+	// with a headland or a bay. Roads and buildings keep to the land.
+	let coast: Terrain["coast"] = null;
+	let sea: Pt[] | null = null;
+	if (kind === "shore") {
+		const side = (["left", "right", "top", "bottom"] as const)[Math.floor(rng() * 4)]!;
+		const vertical = side === "left" || side === "right";
+		const span = vertical ? FRAME_H : FRAME_W;
+		const depth = vertical ? range(rng, 180, 250) : range(rng, 120, 165);
+		const bumpAt = range(rng, 0.25, 0.75);
+		const bump = (rng() < 0.5 ? -1 : 1) * range(rng, 40, vertical ? 90 : 60);
+		const ph = rng() * 6;
+		const pts: Pt[] = [];
+		for (let k = 0; k <= 28; k++) {
+			const t = k / 28;
+			const a = -MARGIN + t * (span + 2 * MARGIN);
+			const d =
+				depth +
+				Math.sin(t * 7 + ph) * 14 +
+				Math.sin(t * 19 + ph * 2) * 5 +
+				bump * Math.exp(-((t - bumpAt) ** 2) / 0.008);
+			pts.push(
+				side === "left" ? [d, a] : side === "right" ? [FRAME_W - d, a] : side === "top" ? [a, d] : [a, FRAME_H - d]
+			);
+		}
+		coast = { pts, side };
+		sea = [...pts, ...seaCorners(side)];
+	}
+	const inSea = (p: Pt) => !!sea && inPolygon(p, sea);
+	/** Drop the stretch of a road that runs out to sea (one point is kept under the water). */
+	const toLand = (pts: Pt[]): Pt[] => {
+		if (!sea) return pts;
+		const land = pts.map((p) => !inSea(p));
+		const first = land.indexOf(true);
+		const last = land.lastIndexOf(true);
+		if (first < 0) return [];
+		return pts.slice(Math.max(0, first - 1), Math.min(pts.length, last + 2));
+	};
+
 	// Roads: a main road edge to edge, maybe a crossing road and dirt tracks.
+	// On a coast the main road runs along the shore, inland of the beach.
+	const landSpan = (horizontal: boolean): [number, number] => {
+		if (!coast) return horizontal ? [90, 310] : [120, 520];
+		const s = coast.side;
+		if (horizontal) return s === "top" ? [215, 330] : s === "bottom" ? [70, 185] : [90, 310];
+		return s === "left" ? [310, 560] : s === "right" ? [80, 330] : [120, 520];
+	};
 	const road = (horizontal: boolean, width: number, paved: boolean, wobble: number): Road => {
 		const n = 6;
 		const pts: Pt[] = [];
-		const start = horizontal ? range(rng, 90, 310) : range(rng, 120, 520);
-		const end = horizontal ? range(rng, 90, 310) : range(rng, 120, 520);
+		const [lo, hi] = landSpan(horizontal);
+		const start = range(rng, lo, hi);
+		const end = range(rng, lo, hi);
 		for (let k = 0; k <= n; k++) {
 			const t = k / n;
 			const off = lerp(start, end, t) + (k > 0 && k < n ? range(rng, -wobble, wobble) : 0);
@@ -587,11 +735,23 @@ function makeTerrain(regionId: number, terrainName: string): Terrain {
 		return { pts, width, paved };
 	};
 	const dense = kind === "urban" || kind === "city" || kind === "town";
-	const roads: Road[] = [road(rng() < 0.6, dense ? 6 : 4, true, 40)];
-	if (rng() < (dense ? 0.95 : 0.55)) roads.push(road(!(roads[0]!.pts[0]![0] < 0), 3.5, true, 50));
-	if (dense && rng() < 0.7) roads.push(road(rng() < 0.5, 3, true, 60));
+	const firstHorizontal = rng() < 0.6;
+	const roads: Road[] = [
+		road(
+			coast ? coast.side === "top" || coast.side === "bottom" : firstHorizontal,
+			dense ? 6 : 4,
+			true,
+			coast ? 25 : 40
+		)
+	];
+	if (rng() < (dense || coast ? 0.95 : 0.55)) roads.push(road(!(roads[0]!.pts[0]![0] < 0), 3.5, true, 50));
+	if ((dense && rng() < 0.7) || (coast && built > 1.1)) roads.push(road(rng() < 0.5, 3, true, 60));
 	const tracks = dense ? 0 : 1 + Math.floor(rng() * 2);
 	for (let k = 0; k < tracks; k++) roads.push(road(rng() < 0.5, 2, false, 80));
+	if (sea) {
+		for (const r of roads) r.pts = toLand(r.pts);
+		for (let k = roads.length - 1; k > 0; k--) if (roads[k]!.pts.length < 2) roads.splice(k, 1);
+	}
 
 	// A river in about a third of the regions (never in the mountains' rock,
 	// and lakes and shores already have a waterbody).
@@ -616,7 +776,7 @@ function makeTerrain(regionId: number, terrainName: string): Terrain {
 	}
 
 	// A lake is a closed basin; a shore puts the sea along one edge of view.
-	let waterbody: Pt[] | null = null;
+	let waterbody: Pt[] | null = sea;
 	if (kind === "lake") {
 		const cx = range(rng, FRAME_W * 0.35, FRAME_W * 0.65);
 		const cy = range(rng, FRAME_H * 0.35, FRAME_H * 0.65);
@@ -628,21 +788,6 @@ function makeTerrain(regionId: number, terrainName: string): Terrain {
 			const wobble = range(rng, 0.88, 1.12);
 			waterbody.push([cx + Math.cos(a) * rx * wobble, cy + Math.sin(a) * ry * wobble]);
 		}
-	} else if (kind === "shore") {
-		const left = rng() < 0.5;
-		const edge = left ? -MARGIN : FRAME_W + MARGIN;
-		const coast: Pt[] = [
-			[edge, -MARGIN],
-			[edge, FRAME_H + MARGIN]
-		];
-		for (let k = 0; k <= 16; k++) {
-			const y = -MARGIN + (k / 16) * (FRAME_H + 2 * MARGIN);
-			const x = (left ? 70 : FRAME_W - 70) + Math.sin(k * 0.8 + rng()) * 34 + range(rng, -14, 14);
-			coast.push([x, y]);
-		}
-		waterbody = left
-			? [[edge, -MARGIN], ...coast.slice(2), [edge, FRAME_H + MARGIN]]
-			: [[edge, -MARGIN], [edge, FRAME_H + MARGIN], ...coast.slice(2).reverse()];
 	}
 
 	// Contour ridges in the hills and mountains, surf lines along a shore.
@@ -654,31 +799,27 @@ function makeTerrain(regionId: number, terrainName: string): Terrain {
 			for (let s = 0; s <= 12; s++) pts.push([-40 + (s / 12) * (FRAME_W + 80), y + Math.sin(s * 0.7 + k * 1.9) * 16]);
 			contours.push(pts);
 		}
-	} else if (kind === "shore") {
-		for (let k = 0; k < 4; k++) {
-			const pts: Pt[] = [];
-			for (let s = 0; s <= 12; s++) {
-				const y = -30 + (s / 12) * (FRAME_H + 60);
-				pts.push([range(rng, 80, FRAME_W - 80) + Math.sin(s * 0.9 + k) * 12, y]);
-			}
-			contours.push(pts);
-		}
 	}
 
 	// City blocks: buildings in a rotated grid, inside urban cells.
 	const buildings: Terrain["buildings"] = [];
 	if (dense || kind === "plains" || kind === "hills" || kind === "fields" || kind === "shore") {
 		const rot = range(rng, -12, 12);
-		const step = kind === "city" ? 17 : kind === "town" ? 22 : dense ? 20 : 30;
-		const cap = kind === "city" ? 220 : kind === "town" ? 110 : dense ? 160 : 26;
+		const step = kind === "city" ? 17 : kind === "town" ? 22 : dense ? 20 : kind === "shore" ? 20 : 30;
+		const cap = Math.round(
+			(kind === "city" ? 220 : kind === "town" ? 110 : dense ? 160 : kind === "shore" ? 70 : 26) * built
+		);
 		for (let y = 10; y < FRAME_H - 5 && buildings.length < cap; y += step) {
 			for (let x = 10; x < FRAME_W - 5 && buildings.length < cap; x += step) {
 				const p: Pt = [x + range(rng, -3, 3), y + range(rng, -3, 3)];
 				const cell = cells.find((c) => inPolygon(p, c.pts));
 				const urbanCell = cell?.use === "urban";
 				// Villages along the main road outside cities.
-				const village = kind !== "urban" && distToPolyline(p, roads[0]!.pts) < 22 && rng() < 0.35;
+				const village = kind !== "urban" && distToPolyline(p, roads[0]!.pts) < 22 && rng() < 0.35 * built;
 				if (!urbanCell && !village) continue;
+				if (waterbody && inPolygon(p, waterbody)) continue;
+				// Keep the beach clear.
+				if (coast && distToPolyline(p, coast.pts) < 14) continue;
 				if (river && distToPolyline(p, river.pts) < river.width) continue;
 				if (roads.some((r) => distToPolyline(p, r.pts) < r.width + 5)) continue;
 				const big = rng() < 0.2;
@@ -706,7 +847,7 @@ function makeTerrain(regionId: number, terrainName: string): Terrain {
 		}
 	}
 
-	return { kind, cells, roads, river, bridge, buildings, dunes, waterbody, contours };
+	return { kind, cells, roads, river, bridge, buildings, dunes, waterbody, coast, contours };
 }
 
 // ── Building the frame ──────────────────────────────────────────────────────
@@ -755,8 +896,15 @@ function buildImage(input: ImageryInput, mode: ImageMode): Scene {
 	// Unit positions are stable within a 3-hour window, so EO, IR and SAR
 	// passes flown close together show the same convoy.
 	const placeRng = seededRandom(hash32(input.regionId, window, 0x91ace));
-	const P = new Painter(mode, night);
-	const terrain = makeTerrain(input.regionId, input.terrain);
+	const hour = localHour(input.lon ?? 0, at);
+	const season = seasonAt(input.lat, at);
+	const snow = snowCover(input.lat, input.terrain, at, weather);
+	const P = new Painter(mode, night, snow, weather === "rain" ? 1 : 0);
+	const terrain = makeTerrain(
+		input.regionId,
+		input.terrain,
+		input.infrastructure ?? f.buildings?.infrastructure ?? null
+	);
 	const moving = !!f.battle;
 
 	// Camera: satellites look straight down, north up; drones zoom in on a
@@ -800,7 +948,6 @@ function buildImage(input: ImageryInput, mode: ImageMode): Scene {
 	const notes: string[] = [];
 
 	// Sun: shadow direction and length from the local hour.
-	const hour = localHour(input.lon ?? 0, at);
 	const sunAz = ((hour - 6) / 12) * 180 + 90; // 90° at 06h, 180° at noon, 270° at 18h
 	const elev = Math.max(0.15, Math.sin(((hour - 6) / 12) * Math.PI));
 	const diffuse = weather !== "clear" || night || mode !== "eo";
@@ -811,11 +958,7 @@ function buildImage(input: ImageryInput, mode: ImageMode): Scene {
 	// ── Ground ──
 	const kind = terrain.kind;
 	const baseMat: Material =
-		kind === "desert" || kind === "shore"
-			? "sand"
-			: kind === "urban" || kind === "city" || kind === "town"
-				? "urban"
-				: "grass";
+		kind === "desert" ? "sand" : kind === "urban" || kind === "city" || kind === "town" ? "urban" : "grass";
 	const base = P.c(baseMat, 0, kind === "mountain" ? EO.rock : undefined);
 	const forestIn = (p: Pt) => terrain.cells.some((c) => c.use === "forest" && inPolygon(p, c.pts));
 	for (const cell of terrain.cells) {
@@ -862,24 +1005,6 @@ function buildImage(input: ImageryInput, mode: ImageMode): Scene {
 					op: 0.8
 				});
 				break;
-		}
-	}
-	if (terrain.waterbody) {
-		const d = pathOf(terrain.waterbody, true);
-		ground.push({ k: "path", d, fill: P.c("water", 0) });
-		// A bright shoreline and a few reeds make the edge readable in every band.
-		features.push({ k: "path", d, stroke: P.c("dirt", 0.35), sw: 2.4, fill: "none", op: 0.75 });
-		features.push({ k: "path", d, stroke: P.c("sand", 0.5), sw: 1, fill: "none", op: 0.6 });
-		for (let k = 0; k < terrain.waterbody.length; k += 2) {
-			const [x, y] = terrain.waterbody[k]!;
-			features.push({
-				k: "path",
-				d: `M${r1(x - 2)} ${r1(y)}l1 -4M${r1(x + 1)} ${r1(y)}l1 -5`,
-				stroke: P.c("grass", -0.4),
-				sw: 0.8,
-				fill: "none",
-				op: 0.5
-			});
 		}
 	}
 	for (const contour of terrain.contours) {
@@ -935,8 +1060,114 @@ function buildImage(input: ImageryInput, mode: ImageMode): Scene {
 			tf: `rotate(${r1(deg(along(terrain.roads[0]!.pts, 0.5).a) + 90)} ${r1(b[0])} ${r1(b[1])})`
 		});
 	}
-	for (const b of terrain.buildings) {
+	// ── Lake or sea: drawn over the roads so they end at the water ──
+	if (terrain.coast) {
+		const { pts, side } = terrain.coast;
+		const poly = (n: number) => pathOf([...pts.map((p) => seaward(p, side, n)), ...seaCorners(side)], true);
+		// Beach: a wide sand stroke whose landward half shows past the water.
+		features.push({ k: "path", d: smoothPath(pts), stroke: P.c("sand", 0.35, "#cdb98c"), sw: 22, fill: "none" });
+		features.push({ k: "path", d: smoothPath(pts), stroke: P.c("sand", -0.25, "#a8936a"), sw: 9, fill: "none" });
+		// Shallows to deep water.
+		features.push({ k: "path", d: poly(0), fill: P.c("water", 0.9, "#3f6b6a") });
+		features.push({ k: "path", d: poly(22), fill: P.c("water", 0.4, "#33545a") });
+		features.push({ k: "path", d: poly(70), fill: P.c("water", 0, "#25393f") });
+		features.push({ k: "path", d: poly(150), fill: P.c("water", -0.4, "#1d2e35") });
+		// Surf: broken white lines along the beach (rougher in rain).
+		const surf = mode === "sar" ? grey(0.22) : mode === "ir" ? P.c("water", 0.8) : "#e9eeec";
+		for (const [n, op] of [
+			[5, 0.7],
+			[13, 0.45],
+			[25, 0.25]
+		] as const) {
+			features.push({
+				k: "path",
+				d: smoothPath(pts.map((p) => seaward(p, side, n))),
+				stroke: surf,
+				sw: weather === "rain" ? 1.6 : 1.1,
+				dash: `${9 + n} ${6 + n / 2}`,
+				fill: "none",
+				op
+			});
+		}
+		// A jetty and boats off a built-up coast.
+		const harbour = (input.infrastructure ?? f.buildings?.infrastructure ?? 1) >= 2;
+		const hr = seededRandom(hash32(input.regionId, 0x4a7b));
+		const quay = along(pts, range(hr, 0.35, 0.65));
+		const out = seaward([0, 0], side, 1);
+		if (harbour) {
+			const a = Math.atan2(out[1], out[0]);
+			features.push({
+				k: "rect",
+				x: r1(quay.p[0]),
+				y: r1(quay.p[1] - 2.5),
+				w: 46,
+				h: 5,
+				fill: P.c("concrete", 0.2),
+				tf: `rotate(${r1(deg(a))} ${r1(quay.p[0])} ${r1(quay.p[1])})`
+			});
+		}
+		const boats = harbour ? 3 + Math.floor(hr() * 3) : Math.floor(hr() * 2);
+		for (let k = 0; k < boats; k++) {
+			const base = along(pts, range(hr, 0.15, 0.85)).p;
+			const p = seaward(base, side, range(hr, 40, 150));
+			const a = range(hr, 0, Math.PI * 2);
+			const tf = `rotate(${r1(deg(a))} ${r1(p[0])} ${r1(p[1])})`;
+			if (mode === "eo" && !night)
+				features.push({
+					k: "path",
+					d: `M${r1(p[0] - 5)} ${r1(p[1])}l-22 -4m22 4l-22 4`,
+					stroke: "#dfe6e4",
+					sw: 0.8,
+					fill: "none",
+					op: 0.5,
+					tf
+				});
+			features.push({
+				k: "ellipse",
+				x: r1(p[0]),
+				y: r1(p[1]),
+				rx: 5,
+				ry: 1.8,
+				fill: mode === "sar" ? grey(0.95) : mode === "ir" ? grey(night ? 0.7 : 0.62) : "#e6e3da",
+				tf
+			});
+			if (mode === "eo" && night)
+				lights.push({ k: "circle", x: r1(p[0]), y: r1(p[1]), r: 0.9, fill: "#fff1c2", fx: "glow" });
+		}
+		if (snow > 0.3 && mode === "eo") notes.push("Snow cover inland; the coast is clear");
+	} else if (terrain.waterbody) {
+		const d = pathOf(terrain.waterbody, true);
+		features.push({ k: "path", d, fill: P.c("water", 0) });
+		// A bright shoreline and a few reeds make the edge readable in every band.
+		features.push({ k: "path", d, stroke: P.c("dirt", 0.35), sw: 2.4, fill: "none", op: 0.75 });
+		features.push({ k: "path", d, stroke: P.c("sand", 0.5), sw: 1, fill: "none", op: 0.6 });
+		for (let k = 0; k < terrain.waterbody.length; k += 2) {
+			const [x, y] = terrain.waterbody[k]!;
+			features.push({
+				k: "path",
+				d: `M${r1(x - 2)} ${r1(y)}l1 -4M${r1(x + 1)} ${r1(y)}l1 -5`,
+				stroke: P.c("grass", -0.4),
+				sw: 0.8,
+				fill: "none",
+				op: 0.5
+			});
+		}
+	}
+	// Settlements: lit windows at night (EO), warm roofs (IR).
+	const lit = mode === "eo" && night;
+	const powered = clamp((f.buildings?.economy ?? input.infrastructure ?? 2) / 3, 0.2, 1);
+	for (const [bi, b] of terrain.buildings.entries()) {
 		const tf = `rotate(${r1(b.rot)} ${r1(b.x)} ${r1(b.y)})`;
+		if (lit && (bi * 7919) % 100 < 45 * powered)
+			lights.push({
+				k: "circle",
+				x: r1(b.x + b.w / 2),
+				y: r1(b.y + b.h / 2),
+				r: b.w > 10 ? 1.3 : 0.8,
+				fill: b.tone > 0.7 ? "#cfe3ff" : "#ffd58a",
+				op: 0.55 + b.tone * 0.4,
+				fx: "glow"
+			});
 		if (shadowLen) {
 			features.push({
 				k: "rect",
@@ -1972,6 +2203,22 @@ function buildImage(input: ImageryInput, mode: ImageMode): Scene {
 							? 0.06
 							: 0.03;
 	const darkness = mode === "eo" && night ? (platform === "satellite" ? 0.96 : 0.84) : 0;
+	// Golden hour: a warm cast in the two hours after dawn and before dusk.
+	const fromDawn = hour - 6;
+	const toDusk = 20 - hour;
+	const low = !night && mode === "eo" && weather !== "fog" ? Math.min(fromDawn, toDusk) : Infinity;
+	const tint =
+		low < 2
+			? {
+					color: fromDawn < toDusk ? "#f2b48a" : "#f0a060",
+					op: r1((1 - low / 2) * (weather === "clear" ? 0.5 : 0.25) * 100) / 100
+				}
+			: null;
+	if (tint) notes.push(fromDawn < toDusk ? "Dawn: low sun, long shadows" : "Dusk: low sun, long shadows");
+	if (snow > 0.3)
+		notes.push(
+			mode === "ir" ? "Snow: cold ground, warm targets stand out" : "Snow cover: tracks and vehicles stand out"
+		);
 	if (night && mode === "eo") notes.push("Night: low-light imagery");
 	if (night && mode === "ir") notes.push("Night: cold background, strong thermal contrast");
 	if (weather === "fog") notes.push(mode === "sar" ? "Fog: no effect on radar" : "Fog: contrast reduced");
@@ -1997,9 +2244,16 @@ function buildImage(input: ImageryInput, mode: ImageMode): Scene {
 	const meters = platform === "drone" ? 100 : 200;
 
 	const relief = kind === "mountain" ? 1 : kind === "hills" ? 0.6 : kind === "desert" ? 0.25 : 0.12;
+	const leaf = season === "autumn" ? "#4f4526" : season === "spring" ? "#3a4a2c" : EO.forest;
 	const canopy =
 		mode === "eo"
-			? { base: EO.forest, light: shade(EO.forest, 0.35), dark: shade(EO.forest, -0.45) }
+			? snow > 0.3
+				? { base: "#3b4236", light: "#dfe5e6", dark: "#1f251d" }
+				: {
+						base: leaf,
+						light: season === "autumn" ? "#9a6b2c" : shade(leaf, 0.35),
+						dark: shade(leaf, -0.45)
+					}
 			: mode === "ir"
 				? {
 						base: grey(irTemp("forest", night)),
@@ -2041,7 +2295,9 @@ function buildImage(input: ImageryInput, mode: ImageMode): Scene {
 			blur: mode === "ir" ? (platform === "satellite" ? 0.9 : 0.4) : 0,
 			vignette: platform === "drone" ? 0.45 : 0.15,
 			speckle: mode === "sar" ? 1 : 0,
-			static: f.outcome === "intercepted" ? 0.8 : 0
+			static: f.outcome === "intercepted" ? 0.8 : 0,
+			tint,
+			snow: r1(snow * 100) / 100
 		},
 		visibility,
 		brightness: Math.round(brightness * 1000) / 1000,

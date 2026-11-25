@@ -80,6 +80,55 @@ describe("sensor imagery", () => {
 		expect(roofs(sceneFor("city"))).toBeGreaterThan(roofs(sceneFor("town")));
 	});
 
+	it("puts the sea off one edge of a coastal region, with beach, surf and roads that stop at the water", () => {
+		const shore = buildScene(input("sat_eo", findings(), { terrain: "shore", infrastructure: 3 }));
+		const fills = shore.features.filter((p) => p.k === "path" && p.fill && p.fill !== "none");
+		// Shallows to deep water: four nested sea bands.
+		expect(fills.length).toBeGreaterThanOrEqual(4);
+		expect(shore.features.some((p) => p.k === "path" && p.dash)).toBe(true);
+		// The same coast on every pass over the region, whatever the sensor.
+		const sea = (s: typeof shore) =>
+			s.features.filter((p) => p.k === "path" && p.fill?.startsWith("rgb")).map((p) => (p.k === "path" ? p.d : ""));
+		const sar = buildScene(input("sat_sar", findings(), { terrain: "shore", infrastructure: 3, reportId: 77 }));
+		expect(sea(sar)).toEqual(sea(shore));
+		// Different regions put the sea on different sides.
+		const sides = new Set(
+			[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map((regionId) => {
+				const s = buildScene(input("sat_eo", findings(), { terrain: "shore", regionId }));
+				return sea(s)[0]?.slice(0, 12);
+			})
+		);
+		expect(sides.size).toBeGreaterThan(3);
+	});
+
+	it("builds up the ground with the region's infrastructure", () => {
+		const roofs = (infrastructure: number) =>
+			buildScene(input("sat_eo", findings({ buildings: null }), { terrain: "town", infrastructure })).features.filter(
+				(p) => p.k === "rect"
+			).length;
+		expect(roofs(5)).toBeGreaterThan(roofs(0));
+	});
+
+	it("lights settlements at night, warms dawn and dusk and snows over the ground in winter", () => {
+		const night = { weather: "clear", night: true, cover: "open" };
+		const town = { terrain: "town", infrastructure: 4 };
+		const dark = buildScene(input("sat_eo", findings({ conditions: night }), town));
+		expect(dark.lights.length).toBeGreaterThan(10);
+		expect(buildScene(input("sat_eo", findings(), town)).lights.length).toBe(0);
+		// 07:00 local at lon 0 is golden hour; noon is not.
+		const dawn = buildScene(input("sat_eo", findings(), { lon: 0, observedAt: "2026-06-19T07:00:00.000Z" }));
+		expect(dawn.tone.tint).not.toBeNull();
+		expect(buildScene(input("sat_eo", findings(), { lon: 0 })).tone.tint).toBeNull();
+		// January at 60°N is snowy; July is not; the south has its winter in July.
+		const jan = buildScene(input("sat_eo", findings(), { lat: 60, observedAt: "2026-01-15T12:00:00.000Z" }));
+		const jul = buildScene(input("sat_eo", findings(), { lat: 60, observedAt: "2026-07-15T12:00:00.000Z" }));
+		expect(jan.tone.snow).toBeGreaterThan(0.5);
+		expect(jul.tone.snow).toBe(0);
+		expect(
+			buildScene(input("sat_eo", findings(), { lat: -60, observedAt: "2026-07-15T12:00:00.000Z" })).tone.snow
+		).toBeGreaterThan(0.5);
+	});
+
 	it("clouds occlude EO but not SAR", () => {
 		const cloudy = { weather: "cloudy", night: false, cover: "open" };
 		const eo = buildScene(input("sat_eo", findings({ outcome: "obscured", conditions: cloudy, categories: [] })));
