@@ -1,10 +1,10 @@
 // Who may enter a state, against the seeded mock world: Alice (user-1) lives
-// in Freedonia, which is at war with Sylvania. Its war with Borduria is ended
-// here so Borduria is neutral.
+// in Freedonia, which is at war with Sylvania and with Borduria. Borduria has
+// not held its first election; Sylvania is given one here.
 import { afterAll, beforeAll, describe, expect, it } from "@rstest/core";
 import { and, eq } from "drizzle-orm";
 import { createMockDb, type MockDbHandle } from "../mock-db";
-import { parliamentaryElections, stateBorders, stateSanctions, states, wars } from "../schema";
+import { parliamentaryElections, stateBorders, stateSanctions, states } from "../schema";
 import { checkEntry } from "../services/politics/entry";
 
 let handle: MockDbHandle;
@@ -19,44 +19,40 @@ beforeAll(async () => {
 	freedonia = id("Republic of Freedonia");
 	sylvania = id("Empire of Sylvania");
 	borduria = id("Kingdom of Borduria");
-	// Start from states that have not held their inaugural election yet.
-	for (const stateId of [sylvania, borduria]) {
-		await handle.db
-			.delete(parliamentaryElections)
-			.where(and(eq(parliamentaryElections.stateId, stateId), eq(parliamentaryElections.isInaugural, true)));
-	}
-	await handle.db.delete(stateSanctions);
-	await handle.db.update(wars).set({ status: "ended" }).where(eq(wars.defenderId, borduria));
+	await handle.db
+		.delete(parliamentaryElections)
+		.where(and(eq(parliamentaryElections.stateId, borduria), eq(parliamentaryElections.isInaugural, true)));
 }, 900_000);
 
 afterAll(async () => {
 	await handle?.close();
 });
 
-describe("entry before a state's inaugural election", () => {
-	it("lets people move freely, even past closed borders", async () => {
+describe("entry", () => {
+	it("is never refused before a state's first election, not even by war, sanctions or closed borders", async () => {
 		await handle.db
 			.insert(stateBorders)
 			.values({ stateId: borduria, status: "closed" })
 			.onConflictDoUpdate({ target: stateBorders.stateId, set: { status: "closed" } });
-		expect((await checkEntry(handle.db, "user-1", borduria)).allowed).toBe(true);
-		await handle.db.delete(stateBorders).where(eq(stateBorders.stateId, borduria));
-	});
-
-	it("still refuses entry to a state that has sanctioned yours", async () => {
 		await handle.db.insert(stateSanctions).values({
 			sanctioningStateId: borduria,
 			targetStateId: freedonia,
 			sanctionedBy: "user-4",
 			reason: "entry-test"
 		});
-		const entry = await checkEntry(handle.db, "user-1", borduria);
-		expect(entry.allowed).toBe(false);
-		expect(entry.reason).toMatch(/sanctioned/);
+		expect(await checkEntry(handle.db, "user-1", borduria)).toMatchObject({ allowed: true, reason: null });
 		await handle.db.delete(stateSanctions).where(eq(stateSanctions.reason, "entry-test"));
+		await handle.db.delete(stateBorders).where(eq(stateBorders.stateId, borduria));
 	});
 
-	it("still refuses entry to a state at war with yours", async () => {
+	it("refuses entry to a state at war with yours once it has held its first election", async () => {
+		const day = 86_400_000;
+		await handle.db.insert(parliamentaryElections).values({
+			stateId: sylvania,
+			startDate: new Date(Date.now() - 10 * day),
+			endDate: new Date(Date.now() - 9 * day),
+			isInaugural: true
+		});
 		const entry = await checkEntry(handle.db, "user-1", sylvania);
 		expect(entry.allowed).toBe(false);
 		expect(entry.reason).toMatch(/war/);

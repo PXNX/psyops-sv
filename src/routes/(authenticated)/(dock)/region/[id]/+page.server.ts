@@ -694,7 +694,8 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 					}
 				: null,
 			blocVisaFree,
-			blockedReason: visaBlockedReason
+			// Before a state's first election anyone may enter: nothing is refused.
+			blockedReason: allowsFreeMovement ? null : visaBlockedReason
 		},
 		// Whether the viewer could travel here right now, and why not.
 		entry: await checkEntry(db, account.id, region.stateId),

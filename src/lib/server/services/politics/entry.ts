@@ -31,6 +31,13 @@ const OPEN: EntryCheck = { allowed: true, reason: null, visaWouldHelp: false };
 export async function checkEntry(db: Database, userId: string, destStateId: number | null): Promise<EntryCheck> {
 	if (!destStateId) return OPEN; // unclaimed land
 
+	const [inaugural] = await db
+		.select({ id: parliamentaryElections.id })
+		.from(parliamentaryElections)
+		.where(and(eq(parliamentaryElections.stateId, destStateId), eq(parliamentaryElections.isInaugural, true)))
+		.limit(1);
+	if (!inaugural) return OPEN;
+
 	// Citizenship is the home region's state.
 	const [home] = await db
 		.select({ stateId: regions.stateId, blocId: states.blocId })
@@ -82,15 +89,6 @@ export async function checkEntry(db: Database, userId: string, destStateId: numb
 			.limit(1);
 		if (sanction) return { allowed: false, reason: "This state has sanctioned your state.", visaWouldHelp: false };
 	}
-
-	// War and sanctions always keep people out. Borders and visas only apply
-	// once the state has held its inaugural election; before that, free movement.
-	const [inaugural] = await db
-		.select({ id: parliamentaryElections.id })
-		.from(parliamentaryElections)
-		.where(and(eq(parliamentaryElections.stateId, destStateId), eq(parliamentaryElections.isInaugural, true)))
-		.limit(1);
-	if (!inaugural) return OPEN;
 
 	const [border] = await db
 		.select({ status: stateBorders.status })

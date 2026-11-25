@@ -654,6 +654,13 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 		blocVisaFree = true;
 	}
 
+	// Before a state's first election anyone may enter, so no visa is refused.
+	const [inaugural] = await db
+		.select({ id: parliamentaryElections.id })
+		.from(parliamentaryElections)
+		.where(and(eq(parliamentaryElections.stateId, stateId), eq(parliamentaryElections.isInaugural, true)))
+		.limit(1);
+
 	return {
 		warHistory: await warsOfState(db, stateId),
 		state: {
@@ -685,7 +692,7 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 					}
 				: null,
 			blocVisaFree,
-			blockedReason: visaBlockedReason
+			blockedReason: inaugural ? visaBlockedReason : null
 		},
 		bloc: state.blocId
 			? {
