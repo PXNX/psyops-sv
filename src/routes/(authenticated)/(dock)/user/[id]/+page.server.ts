@@ -523,7 +523,8 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 						state: {
 							id: residence.stateId,
 							name: residence.stateName,
-							logo: residence.stateLogo
+							logo: residence.stateLogo,
+							logoUrl: await getLogoUrl(residence.stateLogo)
 						}
 					}
 				}

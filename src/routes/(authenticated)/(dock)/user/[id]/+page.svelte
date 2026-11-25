@@ -210,7 +210,15 @@
 			>
 				Personnel file
 			</div>
-			<article id="profile-card" class="paper relative rounded-[3px] pl-5 sm:pl-7">
+			<article id="profile-card" class="paper relative overflow-hidden rounded-[3px] pl-5 sm:pl-7">
+				{#if data.residence?.region.state.logoUrl}
+					<img
+						src={data.residence.region.state.logoUrl}
+						alt=""
+						aria-hidden="true"
+						class="pointer-events-none absolute -right-10 top-10 size-56 -rotate-12 opacity-[0.045] select-none sm:size-72"
+					/>
+				{/if}
 				<!-- Punch holes -->
 				<span class="absolute left-2 top-16 size-2.5 rounded-full bg-surface-1 shadow-inner" aria-hidden="true"></span>
 				<span class="absolute left-2 bottom-16 size-2.5 rounded-full bg-surface-1 shadow-inner" aria-hidden="true"
@@ -329,8 +337,23 @@
 										Party
 									</span>
 									<a href="/party/{data.party.id}" class="group flex min-w-0 items-center gap-1.5">
+										<span
+											class="shrink-0 rounded-[3px] p-0.5 ring-1 ring-black/15"
+											style="background: {data.party.color}"
+											title={data.party.color}
+										>
+											<Logo
+												src={data.party.logo}
+												alt=""
+												placeholderIcon={FluentPeopleTeam20Filled}
+												class="size-5! rounded-[2px]! bg-white"
+											/>
+										</span>
 										<PartyTag abbreviation={data.party.abbreviation} color={data.party.color} />
-										<span class="truncate font-medium text-fg-body group-hover:text-fg group-hover:underline">
+										<span
+											class="truncate font-medium text-fg-body group-hover:text-fg group-hover:underline"
+											style="text-decoration-color: {data.party.color}"
+										>
 											{data.party.name}
 										</span>
 									</a>
