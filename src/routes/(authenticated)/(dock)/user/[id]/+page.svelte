@@ -542,12 +542,6 @@
 						</dd>
 					</div>
 					<div class="min-w-0">
-						<dt class="font-mono text-[11px] uppercase tracking-[0.15em] text-fg-muted">Standing</dt>
-						<dd class="border-b border-dotted border-line/40 pb-0.5 font-mono">
-							<a href="/user/richest" class="text-fg-body hover:text-fg hover:underline"> Richest players → </a>
-						</dd>
-					</div>
-					<div class="min-w-0">
 						<dt
 							class="font-mono text-[11px] uppercase tracking-[0.15em] text-fg-muted"
 							title="Earned from community upvotes on posts and comments"
