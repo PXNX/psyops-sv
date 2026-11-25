@@ -133,7 +133,16 @@ export const civicProjects = pgTable(
 		completed: boolean("completed").default(false).notNull(),
 		startedAt: timestamp("started_at").defaultNow().notNull(),
 		completesAt: timestamp("completes_at").notNull(),
-		completedAt: timestamp("completed_at")
+		completedAt: timestamp("completed_at"),
+		/** 1 = founded, 2 = expanded, 3 = landmark. The tier in effect now. */
+		tier: integer("tier").default(1).notNull(),
+		/** Set while an expansion to tier + 1 is being built. */
+		upgradeCompletesAt: timestamp("upgrade_completes_at"),
+		/** When the most recent expansion opened. */
+		upgradedAt: timestamp("upgraded_at"),
+		/** The patron's chosen name on the building's plaque. */
+		plaque: varchar("plaque", { length: 40 }),
+		dedicatedAt: timestamp("dedicated_at")
 	},
 	(t) => ({
 		userIdx: index("idx_civic_project_user").on(t.userId),

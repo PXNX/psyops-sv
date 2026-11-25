@@ -3,16 +3,25 @@
 // civilian opinion in its region, which is how money becomes local influence.
 // State buildings and strike casualties feed into the same opinion score.
 
-import { and, eq, isNull, lte, sql } from "drizzle-orm";
+import { and, asc, count, eq, inArray, isNotNull, isNull, lte, sql } from "drizzle-orm";
 import type { Database } from "../../db";
 import { regions, strikes } from "../../schema";
 import { civicProjects } from "../../schema-investments";
 import { debitWallet } from "../../money";
 import {
 	CIVIC_BUILDINGS,
+	CIVIC_DEDICATION,
+	CIVIC_MAX_TIER,
 	OPINION_CONFIG,
 	OPINION_FROM_STATE_BUILDINGS,
+	allocateCivicOpinion,
+	civicBuildingOpinion,
+	civicInvested,
+	civicSaturation,
+	civicUpgradeCost,
+	civicUpgradeDays,
 	isCivicBuildingType,
+	parsePlaque,
 	type CivicBuildingType
 } from "#lib/config/game/civic.config.js";
 import { opinionLossFromHardship, type RegionNeeds } from "#lib/config/game/civilian-supply.config.js";
@@ -64,14 +73,158 @@ export async function startCivicProject(
 	});
 }
 
-/** Finish every project whose ribbon-cutting date has arrived. */
+/** A finished building the caller owns, or a CivicError saying why not. */
+async function ownedFinishedProject(db: Database, userId: string, projectId: number) {
+	if (!Number.isSafeInteger(projectId) || projectId <= 0) throw new CivicError("Choose one of your buildings.");
+	const [project] = await db.select().from(civicProjects).where(eq(civicProjects.id, projectId)).limit(1);
+	if (!project || project.userId !== userId) throw new CivicError("That building is not yours.");
+	if (!project.completedAt) throw new CivicError("Wait for the ribbon-cutting first.");
+	if (!isCivicBuildingType(project.buildingType)) throw new CivicError("Unknown civic building.");
+	return { ...project, buildingType: project.buildingType as CivicBuildingType };
+}
+
+/**
+ * Expand a finished building to its next tier. Paid now; the building keeps
+ * its current goodwill while the expansion is built, then gains the new tier.
+ */
+export async function upgradeCivicProject(
+	db: Database,
+	{ userId, projectId, now = new Date() }: { userId: string; projectId: number; now?: Date }
+) {
+	await completeCivicProjects(db, now);
+	const project = await ownedFinishedProject(db, userId, projectId);
+	if (project.upgradeCompletesAt) throw new CivicError("An expansion is already under way.");
+	if (project.tier >= CIVIC_MAX_TIER) throw new CivicError("This building is already a landmark.");
+	const toTier = project.tier + 1;
+	const cost = civicUpgradeCost(project.buildingType, toTier);
+	const completesAt = new Date(now.getTime() + civicUpgradeDays(project.buildingType, toTier) * DAY);
+
+	return db.transaction(async (tx) => {
+		// Guard on the tier we read so two quick clicks can't both pay.
+		const [updated] = await tx
+			.update(civicProjects)
+			.set({ upgradeCompletesAt: completesAt })
+			.where(
+				and(
+					eq(civicProjects.id, project.id),
+					eq(civicProjects.tier, project.tier),
+					isNull(civicProjects.upgradeCompletesAt)
+				)
+			)
+			.returning();
+		if (!updated) throw new CivicError("An expansion is already under way.");
+		await debitWallet(tx, userId, cost);
+		return { project: updated, toTier, cost };
+	});
+}
+
+/** Buy the naming rights: engrave a plaque on a finished building. */
+export async function dedicateCivicProject(
+	db: Database,
+	{ userId, projectId, plaque, now = new Date() }: { userId: string; projectId: number; plaque: unknown; now?: Date }
+) {
+	const parsed = parsePlaque(plaque);
+	if (!parsed.ok) throw new CivicError(parsed.error);
+	await completeCivicProjects(db, now);
+	const project = await ownedFinishedProject(db, userId, projectId);
+	if (project.plaque === parsed.text) throw new CivicError("The plaque already says that.");
+
+	return db.transaction(async (tx) => {
+		await debitWallet(tx, userId, CIVIC_DEDICATION.COST);
+		const [updated] = await tx
+			.update(civicProjects)
+			.set({ plaque: parsed.text, dedicatedAt: now })
+			.where(eq(civicProjects.id, project.id))
+			.returning();
+		return updated!;
+	});
+}
+
+/** Finish every project and expansion whose ribbon-cutting date has arrived. */
 export async function completeCivicProjects(db: Database, now = new Date()) {
-	const finished = await db
-		.update(civicProjects)
-		.set({ completed: true, completedAt: now })
-		.where(and(eq(civicProjects.completed, false), lte(civicProjects.completesAt, now)))
-		.returning({ id: civicProjects.id, userId: civicProjects.userId, regionId: civicProjects.regionId });
+	const [finished] = await Promise.all([
+		db
+			.update(civicProjects)
+			.set({ completed: true, completedAt: now })
+			.where(and(eq(civicProjects.completed, false), lte(civicProjects.completesAt, now)))
+			.returning({ id: civicProjects.id, userId: civicProjects.userId, regionId: civicProjects.regionId }),
+		db
+			.update(civicProjects)
+			.set({
+				tier: sql`least(${civicProjects.tier} + 1, ${CIVIC_MAX_TIER})`,
+				upgradedAt: sql`${civicProjects.upgradeCompletesAt}`,
+				upgradeCompletesAt: null
+			})
+			.where(and(isNotNull(civicProjects.upgradeCompletesAt), lte(civicProjects.upgradeCompletesAt, now)))
+	]);
 	return { completed: finished.length, projects: finished };
+}
+
+export interface CivicAllocation {
+	projectId: number;
+	userId: string;
+	regionId: number;
+	buildingType: CivicBuildingType;
+	/** Opinion the building is worth alone (tier and plaque included). */
+	value: number;
+	/** Its place in the region's opening order (0 = first). */
+	rank: number;
+	multiplier: number;
+	/** What it actually adds to regional opinion after saturation. */
+	effective: number;
+}
+
+/**
+ * How every finished civic building in the given regions contributes to
+ * opinion once saturation is applied. Buildings count in the order they
+ * opened, so the first in a town is worth the most.
+ */
+export async function civicAllocations(db: Database, regionIds: number[]): Promise<Map<number, CivicAllocation[]>> {
+	const out = new Map<number, CivicAllocation[]>();
+	const ids = [...new Set(regionIds)];
+	if (!ids.length) return out;
+	const rows = await db
+		.select()
+		.from(civicProjects)
+		.where(and(inArray(civicProjects.regionId, ids), eq(civicProjects.completed, true)))
+		.orderBy(asc(civicProjects.completedAt), asc(civicProjects.id));
+	const byRegion = new Map<number, typeof rows>();
+	for (const row of rows) {
+		if (!isCivicBuildingType(row.buildingType)) continue;
+		const list = byRegion.get(row.regionId) ?? [];
+		list.push(row);
+		byRegion.set(row.regionId, list);
+	}
+	for (const [regionId, list] of byRegion) {
+		const values = list.map((r) => civicBuildingOpinion(r.buildingType as CivicBuildingType, r.tier, !!r.plaque));
+		const { each } = allocateCivicOpinion(values);
+		out.set(
+			regionId,
+			list.map((r, i) => ({
+				projectId: r.id,
+				userId: r.userId,
+				regionId,
+				buildingType: r.buildingType as CivicBuildingType,
+				value: values[i]!,
+				rank: i,
+				multiplier: civicSaturation(i),
+				effective: each[i]!
+			}))
+		);
+	}
+	return out;
+}
+
+/**
+ * Civic buildings per region that a new one would queue behind (finished or
+ * still being built), so a planner can show the saturated value up front.
+ */
+export async function civicCrowding(db: Database): Promise<Map<number, number>> {
+	const rows = await db
+		.select({ regionId: civicProjects.regionId, n: count() })
+		.from(civicProjects)
+		.groupBy(civicProjects.regionId);
+	return new Map(rows.map((r) => [r.regionId, Number(r.n)]));
 }
 
 export interface OpinionComponent {
@@ -102,12 +255,8 @@ export async function regionOpinionBreakdown(
 	await completeCivicProjects(db, now);
 	const [region] = await db.select().from(regions).where(eq(regions.id, regionId)).limit(1);
 	if (!region) return null;
-	const [civic, casualties] = await Promise.all([
-		db
-			.select({ buildingType: civicProjects.buildingType, total: sql<number>`count(*)`.mapWith(Number) })
-			.from(civicProjects)
-			.where(and(eq(civicProjects.regionId, regionId), eq(civicProjects.completed, true)))
-			.groupBy(civicProjects.buildingType),
+	const [allocations, casualties] = await Promise.all([
+		civicAllocations(db, [regionId]),
 		db
 			.select({ total: sql<number>`coalesce(sum(${strikes.civilianCasualties}), 0)`.mapWith(Number) })
 			.from(strikes)
@@ -142,15 +291,24 @@ export async function regionOpinionBreakdown(
 			points
 		});
 	}
-	for (const row of civic) {
-		if (!isCivicBuildingType(row.buildingType)) continue;
-		const building = CIVIC_BUILDINGS[row.buildingType as CivicBuildingType];
-		const points = row.total * building.opinion;
+	// Private patronage, saturated in opening order, summed per building type.
+	const civicByType = new Map<CivicBuildingType, { n: number; value: number; effective: number }>();
+	for (const a of allocations.get(regionId) ?? []) {
+		const agg = civicByType.get(a.buildingType) ?? { n: 0, value: 0, effective: 0 };
+		agg.n += 1;
+		agg.value += a.value;
+		agg.effective += a.effective;
+		civicByType.set(a.buildingType, agg);
+	}
+	for (const [type, agg] of civicByType) {
+		const building = CIVIC_BUILDINGS[type];
+		const points = Math.round(agg.effective);
 		score += points;
+		const saturated = agg.effective < agg.value - 0.01;
 		components.push({
-			key: `civic_${row.buildingType}`,
+			key: `civic_${type}`,
 			label: `${building.icon} ${building.name}`,
-			detail: `${row.total} built × ${building.opinion}`,
+			detail: `${agg.n} built, worth ${agg.value}${saturated ? ` (${Math.round((agg.effective / agg.value) * 100)}% after saturation)` : ""}`,
 			points
 		});
 	}
@@ -211,13 +369,37 @@ export async function regionOpinions(
 	return out;
 }
 
-/** What one patron has built and how much goodwill it bought. */
+/**
+ * What one patron has built and how much goodwill it bought. Each project
+ * carries its standalone value, its saturated effect and what it has cost.
+ */
 export async function patronage(db: Database, userId: string, now = new Date()) {
 	await completeCivicProjects(db, now);
-	const projects = await db.select().from(civicProjects).where(eq(civicProjects.userId, userId));
-	const goodwill = projects.reduce((sum, p) => {
-		if (!p.completedAt || !isCivicBuildingType(p.buildingType)) return sum;
-		return sum + CIVIC_BUILDINGS[p.buildingType as CivicBuildingType].opinion;
-	}, 0);
-	return { projects, goodwill, completed: projects.filter((p) => p.completedAt).length };
+	const rows = await db
+		.select()
+		.from(civicProjects)
+		.where(eq(civicProjects.userId, userId))
+		.orderBy(asc(civicProjects.startedAt), asc(civicProjects.id));
+	const allocations = await civicAllocations(
+		db,
+		rows.filter((p) => p.completedAt).map((p) => p.regionId)
+	);
+	const byProject = new Map<number, CivicAllocation>();
+	for (const list of allocations.values()) for (const a of list) byProject.set(a.projectId, a);
+
+	const projects = rows.map((p) => {
+		const known = isCivicBuildingType(p.buildingType);
+		const type = p.buildingType as CivicBuildingType;
+		const a = byProject.get(p.id);
+		return {
+			...p,
+			value: known ? civicBuildingOpinion(type, p.tier, !!p.plaque) : 0,
+			goodwill: a?.effective ?? 0,
+			multiplier: a?.multiplier ?? null,
+			invested: known ? civicInvested(type, p.tier + (p.upgradeCompletesAt ? 1 : 0), !!p.plaque) : 0
+		};
+	});
+	const goodwill = Math.round(projects.reduce((sum, p) => sum + p.goodwill, 0));
+	const invested = projects.reduce((sum, p) => sum + p.invested, 0);
+	return { projects, goodwill, invested, completed: projects.filter((p) => p.completedAt).length };
 }
