@@ -10,6 +10,10 @@
 		CLASSIFICATION_TONE,
 		siteRecords,
 		listDirectory,
+		fileLock,
+		locksFor,
+		networkFor,
+		readCracks,
 		type SystemRecord
 	} from "#lib/config/index.js";
 	import { toastResult } from "#lib/ui/toast.svelte.js";
@@ -26,11 +30,19 @@
 		assetId: number;
 		targetName: string;
 		copiedIds: string[];
+		/** Password locks the operator has worked on (from the session). */
+		cracks?: unknown;
 		onResult?: (data: any) => void;
 	}
-	let { site, assetId, targetName, copiedIds, onResult }: Props = $props();
+	let { site, assetId, targetName, copiedIds, cracks, onResult }: Props = $props();
 
 	const fs = $derived(siteRecords(site, targetName));
+	/** Encrypted files still to crack. The server enforces this; here it only labels them. */
+	const sealed = $derived.by(() => {
+		const opened = readCracks(cracks);
+		const ids = networkFor(site, targetName).hosts.map((h) => h.id);
+		return new Set(locksFor(site, ids, fs.files).files.filter((id) => !opened[fileLock(id)]?.open));
+	});
 	let path = $state("/");
 	let record = $state<SystemRecord | null>(null);
 	let query = $state("");
@@ -172,6 +184,14 @@
 									<IconFile class="size-3.5 shrink-0 text-fg-muted" />
 									<span class="min-w-0 flex-1 truncate text-fg-soft">{file.name}</span>
 									{#if copied.has(file.id)}<IconCheck class="size-3 shrink-0 text-positive-fg" />{/if}
+									{#if sealed.has(file.id)}
+										<span
+											class="shrink-0 text-[10px] text-warning"
+											title="Encrypted. Crack it in the terminal: crack {file.name}"
+										>
+											🔒 encrypted
+										</span>
+									{/if}
 									<Badge size="xs" tone={tone(file.classification)}>{file.classification}</Badge>
 								</button>
 							</form>

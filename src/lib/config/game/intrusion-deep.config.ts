@@ -14,6 +14,7 @@ import { hash32, seededRandom } from "./recon.config";
 import type { Site } from "./infiltration.config";
 import type { ScanPort } from "./intrusion.config";
 import { siteSystems, type SiteSystems } from "./site-systems.config";
+import { readCracks, type CrackState } from "./intrusion-clock.config";
 
 // ── Trace meter ─────────────────────────────────────────────────────────────
 
@@ -403,6 +404,10 @@ export interface DeepState {
 	covers: number;
 	/** Moves made; seeds the dice. */
 	moves: number;
+	/** When the countdown inside runs out (ISO); null until the pivot. */
+	deadline: string | null;
+	/** Password locks attempted, by lock id (`host:files`, `file:<record>`). */
+	cracks: Record<string, CrackState>;
 }
 
 export const emptyDeep = (): DeepState => ({
@@ -413,7 +418,9 @@ export const emptyDeep = (): DeepState => ({
 	keys: [],
 	loot: [],
 	covers: 0,
-	moves: 0
+	moves: 0,
+	deadline: null,
+	cracks: {}
 });
 
 /** A stored value (possibly from before the deep layer existed) as a full state. */
@@ -428,7 +435,9 @@ export function readDeep(raw: Partial<DeepState> | null | undefined): DeepState 
 		keys: Array.isArray(raw.keys) ? [...raw.keys] : base.keys,
 		loot: Array.isArray(raw.loot) ? [...raw.loot] : base.loot,
 		covers: Number.isFinite(raw.covers) ? Number(raw.covers) : base.covers,
-		moves: Number.isFinite(raw.moves) ? Number(raw.moves) : base.moves
+		moves: Number.isFinite(raw.moves) ? Number(raw.moves) : base.moves,
+		deadline: typeof raw.deadline === "string" ? raw.deadline : null,
+		cracks: readCracks(raw.cracks)
 	};
 }
 

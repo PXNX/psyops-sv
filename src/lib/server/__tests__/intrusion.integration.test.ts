@@ -4,7 +4,7 @@
 import { afterAll, beforeAll, describe, expect, it } from "@rstest/core";
 import { eq } from "drizzle-orm";
 import { createMockDb, type MockDbHandle } from "../mock-db";
-import { infiltrationAssets, states } from "../schema";
+import { infiltrationAssets, intrusionSessions, states } from "../schema";
 import {
 	browseSystem,
 	exfilRecord,
@@ -19,7 +19,7 @@ import {
 	sessionFor
 } from "../services/military/infiltration";
 import { launchOperation } from "../services/military/covert-ops";
-import { INFILTRATION, INTRUSION, actionChance, siteRecords, sitesForTarget } from "#lib/config/index.js";
+import { INFILTRATION, INTRUSION, actionChance, readDeep, siteRecords, sitesForTarget } from "#lib/config/index.js";
 
 let handle: MockDbHandle;
 let freedonia: number;
@@ -129,6 +129,12 @@ describe("life inside the host", () => {
 				rng: always
 			});
 		}
+		// Each test step is an hour apart: stop the countdown so it doesn't cut the line.
+		const session = await sessionFor(handle.db, operator, siteId);
+		await handle.db
+			.update(intrusionSessions)
+			.set({ deep: { ...readDeep(session!.deep), deadline: null } })
+			.where(eq(intrusionSessions.id, session!.id));
 		// The files live on the file share: take the gateway's password and walk in.
 		await runDeepMove(handle.db, "user-1", {
 			assetId: operator,
@@ -169,7 +175,7 @@ describe("life inside the host", () => {
 		const record = await readSystemRecord(handle.db, "user-1", {
 			assetId: operator,
 			siteId,
-			recordId: listing.files[0]!.id,
+			recordId: listing.files.find((f) => !f.locked)!.id,
 			now: now()
 		});
 		expect(record.record.body.length).toBeGreaterThan(40);
@@ -189,7 +195,7 @@ describe("life inside the host", () => {
 			path: folders.at(-1)!,
 			now: now()
 		});
-		const record = listing.files[0]!;
+		const record = listing.files.find((f) => !f.locked)!;
 		const copied = await exfilRecord(handle.db, "user-1", {
 			assetId: operator,
 			siteId,

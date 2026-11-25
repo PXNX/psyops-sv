@@ -4108,6 +4108,11 @@ export const intrusionSessions = pgTable(
 			loot: string[];
 			covers: number;
 			moves: number;
+			deadline?: string | null;
+			cracks?: Record<
+				string,
+				{ guesses: { guess: string; exact: number; near: number }[]; open: boolean; jammed: boolean }
+			>;
 		}>(),
 		createdAt: timestamp("created_at").defaultNow().notNull(),
 		updatedAt: timestamp("updated_at").defaultNow().notNull()

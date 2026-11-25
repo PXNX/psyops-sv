@@ -47,6 +47,7 @@ export * from "./game/spy-traits.config";
 export * from "./game/intrusion.config";
 export * from "./game/intrusion-deep.config";
 export * from "./game/site-systems.config";
+export * from "./game/intrusion-clock.config";
 export * from "./game/records.config";
 export * from "./game/civic.config";
 export * from "./game/revolution.config";

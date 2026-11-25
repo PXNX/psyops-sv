@@ -66,6 +66,22 @@ import {
 	moveRng,
 	networkFor,
 	readDeep,
+	CLOCK,
+	CRACK,
+	attemptsLeft,
+	codeFromSeed,
+	fileLock,
+	formatClock,
+	hostLock,
+	isExpired,
+	locksFor,
+	normalizeGuess,
+	remainingMs,
+	scoreGuess,
+	shiftDeadline,
+	strHash,
+	windowSeconds,
+	type CrackState,
 	resolveHost,
 	resolveLoot,
 	tracePenalty,
@@ -937,6 +953,13 @@ export async function runIntrusion(
 				segment = `10.${(asset.targetStateId % 40) + 20}.7.0/24`;
 				deep.owned = ["gw"];
 				deep.at = "gw";
+				const secs = windowSeconds(site.security);
+				deep.deadline = new Date(now.getTime() + secs * 1000).toISOString();
+				lines.push({
+					t: stamp,
+					line: `[!] their monitoring will catch on in ${secs}s · the clock is running`,
+					tone: "warn"
+				});
 			}
 		}
 
@@ -1011,8 +1034,81 @@ function applyTrace(deep: DeepState, delta: number, t: string, lines: LogLine[])
 	return false;
 }
 
-export type DeepMove = "hosts" | "hop" | "loot" | "cover";
-export const DEEP_MOVES: DeepMove[] = ["hosts", "hop", "loot", "cover"];
+export type DeepMove = "hosts" | "hop" | "loot" | "cover" | "crack";
+export const DEEP_MOVES: DeepMove[] = ["hosts", "hop", "loot", "cover", "crack"];
+
+/** A password puzzle as the terminal shows it. The code itself never leaves the server. */
+export interface CrackView {
+	lock: string;
+	/** What to type after `crack`. */
+	target: string;
+	label: string;
+	kind: "host" | "file";
+	length: number;
+	symbols: string;
+	attempts: number;
+	left: number;
+	guesses: CrackState["guesses"];
+	open: boolean;
+	jammed: boolean;
+}
+
+/**
+ * The code behind one password lock. Derived on the server only, from the
+ * site, the lock and a salt (overridable through the environment), so the
+ * browser can't compute it from the shared game config.
+ */
+const CRACK_SALT = Number.parseInt(process.env.INTRUSION_SALT ?? "", 36) || 0x5eedc0de;
+export function crackCode(site: Pick<Site, "seed">, lockId: string): string {
+	return codeFromSeed(hash32(site.seed, strHash(lockId), CRACK_SALT));
+}
+
+/** The password locks of a site, with its network and file share. */
+function siteLocks(site: Site, net: TargetNetwork, targetName: string) {
+	return locksFor(
+		site,
+		net.hosts.map((h) => h.id),
+		recordsFor(site, targetName).files
+	);
+}
+
+/**
+ * If the countdown inside ran out, cut the line now (as a full trace would)
+ * and burn the operator a little. Runs in its own transaction so the cut
+ * sticks even though the move that noticed it is then refused.
+ */
+export async function expireIfLate(db: Database, assetId: number, siteId: string, now = new Date()): Promise<boolean> {
+	return db.transaction(async (tx) => {
+		const [session] = await tx
+			.select()
+			.from(intrusionSessions)
+			.where(and(eq(intrusionSessions.assetId, assetId), eq(intrusionSessions.siteId, siteId)))
+			.limit(1)
+			.for("update");
+		if (!session) return false;
+		const deep = readDeep(session.deep);
+		if (deep.traced || !isExpired(deep.deadline, now)) return false;
+		deep.traced = true;
+		const t = dtg(now);
+		const lines: LogLine[] = [
+			{ t, line: "[!] TIME'S UP · their monitoring caught up and cut the line", tone: "bad" },
+			{ t, line: `> the operator lies low (+${TRACE.BURN_HEAT} heat). Reset to try again.`, tone: "warn" }
+		];
+		const [asset] = await tx.select().from(infiltrationAssets).where(eq(infiltrationAssets.id, assetId)).for("update");
+		if (asset) {
+			const nextHeat = clamp(effectiveHeat(asset, now) + TRACE.BURN_HEAT, 0, INFILTRATION.HEAT_MAX);
+			await tx
+				.update(infiltrationAssets)
+				.set({ heat: nextHeat, status: nextHeat >= INFILTRATION.HEAT_MAX ? "burned" : "active", lastActionAt: now })
+				.where(eq(infiltrationAssets.id, assetId));
+		}
+		await tx
+			.update(intrusionSessions)
+			.set({ deep, log: [...(session.log ?? []), ...lines], updatedAt: now })
+			.where(eq(intrusionSessions.id, session.id));
+		return true;
+	});
+}
 
 export interface DeepMoveResult {
 	session: NonNullable<Awaited<ReturnType<typeof sessionFor>>>;
@@ -1021,6 +1117,32 @@ export interface DeepMoveResult {
 	lines: LogLine[];
 	/** Money spent (positive) or skimmed into the treasury (negative). */
 	cost: number;
+	/** The password puzzle this move touched, if any. */
+	crack?: CrackView;
+}
+
+/** Find a password lock by host (id or name) or file (id, path or name). */
+function resolveLock(
+	query: string,
+	net: TargetNetwork,
+	locks: { hosts: string[]; files: string[] },
+	files: { id: string; name: string; path: string }[]
+): { id: string; kind: "host" | "file"; label: string; target: string; hostId?: string } {
+	const q = query.trim().replace(/^\//, "");
+	if (!q) throw new InfiltrationError("Crack what? A host (`crack files`) or a file (`crack <name>`).");
+	const file = files.find((f) => f.id === q || f.name === q || f.path === `/${q}`);
+	if (file) {
+		if (!locks.files.includes(file.id)) throw new InfiltrationError(`${file.name} isn't encrypted. Just \`cat\` it.`);
+		return { id: fileLock(file.id), kind: "file", label: file.name, target: file.name };
+	}
+	const host = resolveHost(net, q);
+	if (host) {
+		if (!locks.hosts.includes(host.id)) throw new InfiltrationError(`${host.name} doesn't use a password.`);
+		return { id: hostLock(host.id), kind: "host", label: host.name, target: host.id, hostId: host.id };
+	}
+	throw new InfiltrationError(
+		`Nothing called "${query}" is password-protected. \`hosts\` and \`ls\` mark the locked ones.`
+	);
 }
 
 const hopOdds = (net: TargetNetwork, deep: DeepState, id: string, asset: { access: number; heat: number }) => {
@@ -1042,14 +1164,17 @@ export async function runDeepMove(
 		move: DeepMove;
 		/** Host to hop to (id, name, short name or last IP octet). */
 		host?: string;
-		/** Loot to take (id, number or label). Omit to list. */
+		/** Loot to take (id, number or label), or the host or file to crack. Omit to list. */
 		item?: string;
+		/** A guess at a password lock's code. Omit to see the puzzle. */
+		guess?: string;
 		now?: Date;
 		rng?: () => number;
 	}
 ): Promise<DeepMoveResult> {
 	const now = input.now ?? new Date();
 	const t = dtg(now);
+	await expireIfLate(db, input.assetId, input.siteId, now);
 	return db.transaction(async (tx) => {
 		// Covering tracks works from the first scan; everything else needs the gateway.
 		const { asset, session, targetName, stateId } = await requirePivot(
@@ -1073,7 +1198,11 @@ export async function runDeepMove(
 		let cost = 0;
 		let success: boolean | null = null;
 		let traceDelta = 0;
+		/** Seconds added to (or taken off) the countdown. */
+		let timeDelta = 0;
 		let counts = true;
+		let crack: CrackView | undefined;
+		const locks = siteLocks(site, net, targetName);
 
 		if (input.move === "hosts") {
 			counts = false;
@@ -1083,6 +1212,7 @@ export async function runDeepMove(
 				const status = h.id === deep.at ? "you are here" : owned ? "owned" : h.locked ? "locked" : "unowned";
 				const key = h.keys.find((k) => deep.keys.includes(k));
 				const reach = !owned && deep.owned.some((id) => hostById(net, id)?.links.includes(h.id));
+				const pw = locks.hosts.includes(h.id) ? deep.cracks[hostLock(h.id)] : undefined;
 				const hint = owned
 					? ""
 					: !reach
@@ -1091,7 +1221,13 @@ export async function runDeepMove(
 							? ` · key: ${KEY_LABEL[key] ?? key}`
 							: h.locked
 								? ` · needs ${h.keys.map((k) => KEY_LABEL[k] ?? k).join(" or ")}`
-								: ` · force ${Math.round(hopOdds(net, deep, h.id, effective) * 100)}%`;
+								: locks.hosts.includes(h.id)
+									? pw?.open
+										? " · password cracked"
+										: pw?.jammed
+											? " · password locked out"
+											: ` · password · crack ${h.id}`
+									: ` · force ${Math.round(hopOdds(net, deep, h.id, effective) * 100)}%`;
 				line(
 					`${h.id.padEnd(6)} ${h.ip.padEnd(14)} ${h.name}  [${status}]${hint}`,
 					owned ? "ok" : h.locked && !key ? "warn" : "info"
@@ -1108,8 +1244,20 @@ export async function runDeepMove(
 				success = true;
 				line(`[+] back on ${target.name}`, "ok");
 			} else {
+				const pw = locks.hosts.includes(target.id) ? deep.cracks[hostLock(target.id)] : undefined;
+				if (!check.keyed && locks.hosts.includes(target.id) && !pw?.open) {
+					throw new InfiltrationError(
+						pw?.jammed
+							? `${target.name} locked you out. Find a key for it, or reset.`
+							: `${target.name} wants a password. \`crack ${target.id}\` first.`
+					);
+				}
 				cost = TRACE.HOP_COST;
-				if (check.keyed) {
+				if (!check.keyed && pw?.open) {
+					success = true;
+					traceDelta = TRACE.HOP_KEYED;
+					line(`> the cracked password lets you straight into ${target.name}`, "ok");
+				} else if (check.keyed) {
 					success = true;
 					traceDelta = TRACE.HOP_KEYED;
 					line(`> the ${KEY_LABEL[check.key!] ?? check.key} opens ${target.name} without a fuss`, "ok");
@@ -1117,6 +1265,7 @@ export async function runDeepMove(
 					const rng = input.rng ?? moveRng(site.seed, asset.id, deep.moves, now);
 					success = rng() < check.chance;
 					traceDelta = success ? TRACE.HOP.ok : TRACE.HOP.fail;
+					timeDelta = -(CLOCK.FORCE + (success ? 0 : CLOCK.FORCE_FAIL));
 					line(`> forcing ${target.name} · ${Math.round(check.chance * 100)}% chance`);
 				}
 				if (success) {
@@ -1167,16 +1316,97 @@ export async function runDeepMove(
 			success = true;
 			deep.covers += 1;
 			traceDelta = -c.drop;
+			if (deep.deadline) timeDelta = CLOCK.COVER;
 			line("$ tidy-up --logs --new-relay");
 			line(
 				`[+] tracks covered · −${c.drop} trace · next cover $${coverTracks(deep.covers).cost.toLocaleString()}`,
 				"ok"
 			);
+		} else if (input.move === "crack") {
+			const lock = resolveLock(input.item ?? "", net, locks, recordsFor(site, targetName).files);
+			if (lock.kind === "host") {
+				const reach =
+					deep.owned.includes(lock.hostId!) || deep.owned.some((id) => hostById(net, id)?.links.includes(lock.hostId!));
+				if (!reach) throw new InfiltrationError(`${lock.label} isn't reachable from the hosts you hold.`);
+			} else if (!deep.owned.includes("files")) {
+				throw new InfiltrationError("That file sits on the file share. Get there first: hop files.");
+			}
+			const state: CrackState = deep.cracks[lock.id] ?? { guesses: [], open: false, jammed: false };
+			if (state.jammed) throw new InfiltrationError(`${lock.label} locked you out for this session.`);
+			if (state.open || !input.guess) {
+				counts = false;
+				line(`$ crack ${lock.target}`);
+				if (state.open) line(`[+] already cracked · ${lock.label} is open`, "ok");
+				else {
+					line(
+						`> ${lock.label} wants a ${CRACK.LENGTH}-symbol code from ${CRACK.SYMBOLS} · ${attemptsLeft(state)} tries left`,
+						"warn"
+					);
+					line(`> ● right symbol, right place · ○ right symbol, wrong place · each miss costs trace and time`);
+				}
+			} else {
+				const guess = normalizeGuess(input.guess);
+				if (!guess) {
+					throw new InfiltrationError(
+						`A code is ${CRACK.LENGTH} symbols from ${CRACK.SYMBOLS.split("").join(" ")}, e.g. ${CRACK.SYMBOLS.slice(0, CRACK.LENGTH)}.`
+					);
+				}
+				const score = scoreGuess(crackCode(site, lock.id), guess);
+				state.guesses.push({ guess, ...score });
+				line(`$ crack ${lock.target} ${guess}`);
+				line(
+					`> ${guess}  ${"●".repeat(score.exact)}${"○".repeat(score.near)}${"·".repeat(CRACK.LENGTH - score.exact - score.near)}  ${score.exact} right place · ${score.near} wrong place`
+				);
+				if (score.exact === CRACK.LENGTH) {
+					state.open = true;
+					success = true;
+					line(
+						`[+] password accepted · ${lock.label} ${lock.kind === "host" ? `opens: \`hop ${lock.hostId}\`` : "decrypted: `cat` it"}`,
+						"ok"
+					);
+				} else {
+					success = false;
+					traceDelta = CRACK.TRACE;
+					timeDelta = -CLOCK.GUESS;
+					if (attemptsLeft(state) <= 0) {
+						state.jammed = true;
+						line(`[-] too many tries · ${lock.label} locked the account out`, "bad");
+					} else line(`[-] wrong · ${attemptsLeft(state)} tries left`, "warn");
+				}
+			}
+			deep.cracks[lock.id] = state;
+			crack = {
+				lock: lock.id,
+				target: lock.target,
+				label: lock.label,
+				kind: lock.kind,
+				length: CRACK.LENGTH,
+				symbols: CRACK.SYMBOLS,
+				attempts: CRACK.ATTEMPTS,
+				left: attemptsLeft(state),
+				guesses: state.guesses,
+				open: state.open,
+				jammed: state.jammed
+			};
 		} else {
 			throw new InfiltrationError("Unknown move.");
 		}
 
-		const traced = applyTrace(deep, traceDelta, t, lines);
+		let traced = applyTrace(deep, traceDelta, t, lines);
+		if (timeDelta && deep.deadline && !deep.traced) {
+			deep.deadline = shiftDeadline(deep.deadline, timeDelta, now, site.security);
+			const left = remainingMs(deep.deadline, now) ?? 0;
+			line(
+				`> clock ${timeDelta > 0 ? "+" : "−"}${Math.abs(timeDelta)}s · ${formatClock(left)} left`,
+				timeDelta > 0 ? "ok" : "warn"
+			);
+			if (left === 0) {
+				deep.traced = true;
+				traced = true;
+				line("[!] TIME'S UP · their monitoring caught up and cut the line", "bad");
+				line(`> the operator lies low (+${TRACE.BURN_HEAT} heat). Reset to try again.`, "warn");
+			}
+		}
 		if (counts) deep.moves += 1;
 
 		if (cost > 0) {
@@ -1201,7 +1431,7 @@ export async function runDeepMove(
 			.set({ deep, log: [...(session.log ?? []), ...lines], updatedAt: now })
 			.where(eq(intrusionSessions.id, session.id))
 			.returning();
-		return { session: updated!, deep, success, lines, cost };
+		return { session: updated!, deep, success, lines, cost, crack };
 	});
 }
 
@@ -1216,9 +1446,20 @@ export function recordsFor(site: Site, target: string) {
 function requireShare(session: { deep: unknown; host: string | null }, site: Site, targetName: string) {
 	const net = networkFor(site, targetName, session.host ?? undefined);
 	if (!hostById(net, "files")) throw new InfiltrationError("This network has no file share worth reading.");
-	if (!readDeep(session.deep as Partial<DeepState> | null).owned.includes("files"))
+	const deep = readDeep(session.deep as Partial<DeepState> | null);
+	if (!deep.owned.includes("files"))
 		throw new InfiltrationError("The files sit on the file share. Get there first: hop files.");
+	// Files still behind a password the operator hasn't cracked.
+	return new Set(siteLocks(site, net, targetName).files.filter((id) => !deep.cracks[fileLock(id)]?.open));
 }
+
+/** An encrypted record as a listing shows it: name and size, no contents. */
+const sealed = <T extends { body: string; excerpt: string }>(f: T) => ({
+	...f,
+	body: "",
+	excerpt: "[encrypted]",
+	locked: true
+});
 
 /** Append operator commands to the session transcript. */
 async function trace(tx: Tx, sessionId: number, lines: LogLine[], now: Date) {
@@ -1261,7 +1502,8 @@ async function requirePivot(tx: Tx, userId: string, assetId: number, siteId: str
 export interface BrowseResult {
 	path: string;
 	dirs: string[];
-	files: ReturnType<typeof listDirectory>["files"];
+	/** Encrypted files come without their contents. */
+	files: (ReturnType<typeof listDirectory>["files"][number] & { locked: boolean })[];
 	lines: LogLine[];
 }
 
@@ -1272,20 +1514,22 @@ export async function browseSystem(
 	input: { assetId: number; siteId: string; path: string; now?: Date }
 ): Promise<BrowseResult> {
 	const now = input.now ?? new Date();
+	await expireIfLate(db, input.assetId, input.siteId, now);
 	return db.transaction(async (tx) => {
 		const { session, targetName } = await requirePivot(tx, userId, input.assetId, input.siteId);
 		const site = (await sitesIn(tx, session.targetStateId)).find((s) => s.id === input.siteId);
 		if (!site) throw new InfiltrationError("That site is not in the target's catalogue.");
-		requireShare(session, site, targetName);
-		const listing = listDirectory(recordsFor(site, targetName), input.path || "/");
+		const locked = requireShare(session, site, targetName);
+		const raw = listDirectory(recordsFor(site, targetName), input.path || "/");
+		const listing = { ...raw, files: raw.files.map((f) => (locked.has(f.id) ? sealed(f) : { ...f, locked: false })) };
 		const t = dtg(now);
 		const lines: LogLine[] = [
 			{ t, line: `$ ls -la ${listing.path}`, tone: "info" },
 			...listing.dirs.map((d) => ({ t, line: `drwxr-xr-x  ${d.split("/").pop()}/`, tone: "ok" as const })),
 			...listing.files.map((f) => ({
 				t,
-				line: `-rw-------  ${String(f.size).padStart(7)}  ${f.name}  [${f.classification}]`,
-				tone: "info" as const
+				line: `-rw-------  ${String(f.size).padStart(7)}  ${f.name}  [${f.classification}]${f.locked ? "  [ENCRYPTED]" : ""}`,
+				tone: f.locked ? ("warn" as const) : ("info" as const)
 			}))
 		];
 		await trace(tx, session.id, lines, now);
@@ -1300,13 +1544,16 @@ export async function readSystemRecord(
 	input: { assetId: number; siteId: string; recordId: string; now?: Date }
 ) {
 	const now = input.now ?? new Date();
+	await expireIfLate(db, input.assetId, input.siteId, now);
 	return db.transaction(async (tx) => {
 		const { session, targetName } = await requirePivot(tx, userId, input.assetId, input.siteId);
 		const site = (await sitesIn(tx, session.targetStateId)).find((s) => s.id === input.siteId);
 		if (!site) throw new InfiltrationError("That site is not in the target's catalogue.");
-		requireShare(session, site, targetName);
+		const locked = requireShare(session, site, targetName);
 		const record = recordsFor(site, targetName).files.find((f) => f.id === input.recordId);
 		if (!record) throw new InfiltrationError("That file no longer exists on the host.");
+		if (locked.has(record.id))
+			throw new InfiltrationError(`${record.name} is encrypted. \`crack ${record.name}\` first.`);
 		const t = dtg(now);
 		const lines: LogLine[] = [
 			{ t, line: `$ cat ${record.path}`, tone: "info" },
@@ -1325,12 +1572,14 @@ export async function grepSystem(
 	input: { assetId: number; siteId: string; query: string; now?: Date }
 ) {
 	const now = input.now ?? new Date();
+	await expireIfLate(db, input.assetId, input.siteId, now);
 	return db.transaction(async (tx) => {
 		const { session, targetName } = await requirePivot(tx, userId, input.assetId, input.siteId);
 		const site = (await sitesIn(tx, session.targetStateId)).find((s) => s.id === input.siteId);
 		if (!site) throw new InfiltrationError("That site is not in the target's catalogue.");
-		requireShare(session, site, targetName);
-		const matches = findRecords(recordsFor(site, targetName), input.query);
+		const locked = requireShare(session, site, targetName);
+		const fs = recordsFor(site, targetName);
+		const matches = findRecords({ ...fs, files: fs.files.filter((f) => !locked.has(f.id)) }, input.query);
 		const t = dtg(now);
 		const lines: LogLine[] = [
 			{ t, line: `$ grep -ri "${input.query.replace(/"/g, "")}" .`, tone: "info" },
@@ -1349,13 +1598,16 @@ export async function exfilRecord(
 	input: { assetId: number; siteId: string; recordId: string; now?: Date }
 ) {
 	const now = input.now ?? new Date();
+	await expireIfLate(db, input.assetId, input.siteId, now);
 	return db.transaction(async (tx) => {
 		const { asset, session, targetName, stateId } = await requirePivot(tx, userId, input.assetId, input.siteId);
 		const site = (await sitesIn(tx, session.targetStateId)).find((s) => s.id === input.siteId);
 		if (!site) throw new InfiltrationError("That site is not in the target's catalogue.");
-		requireShare(session, site, targetName);
+		const locked = requireShare(session, site, targetName);
 		const record = recordsFor(site, targetName).files.find((f) => f.id === input.recordId);
 		if (!record) throw new InfiltrationError("That file no longer exists on the host.");
+		if (locked.has(record.id))
+			throw new InfiltrationError(`${record.name} is encrypted. \`crack ${record.name}\` first.`);
 		const [duplicate] = await tx
 			.select({ id: infiltrationFiles.id })
 			.from(infiltrationFiles)

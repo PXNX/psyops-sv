@@ -12,16 +12,19 @@
 	import {
 		ATTACK_VECTORS,
 		COVERT_OPS,
+		CRACK,
 		EXPLOIT_TIERS,
 		INFILTRATION_ACTIONS,
 		INTRUSION,
 		TRACE,
 		coverTracks,
 		exploitsFor,
+		formatClock,
 		networkFor,
 		parseCommand,
 		parseExploitArgs,
 		readDeep,
+		remainingMs,
 		traceLevel,
 		type LogLine
 	} from "#lib/config/index.js";
@@ -63,6 +66,28 @@
 	let screenEl: HTMLElement | undefined = $state();
 	let canvas: HTMLCanvasElement | undefined = $state();
 
+	/** The password puzzle on screen, as the server last described it (never the code). */
+	type Crack = {
+		lock: string;
+		target: string;
+		label: string;
+		kind: "host" | "file";
+		length: number;
+		symbols: string;
+		attempts: number;
+		left: number;
+		guesses: { guess: string; exact: number; near: number }[];
+		open: boolean;
+		jammed: boolean;
+	};
+	let crack = $state<Crack | null>(null);
+	let slots = $state<string[]>([]);
+	/** Symbols flicking through the slots while a guess is on its way (brute-force look). */
+	let spin = $state<string[] | null>(null);
+	let nowMs = $state(Date.now());
+	/** The deadline whose expiry was already announced. */
+	let timeUpFor: string | null = null;
+
 	/** Index of the line still being typed; later lines wait their turn. */
 	const pending = $derived(out.findIndex((l) => l.shown < l.text.length));
 	const stage = $derived<string | null>(session?.stage ?? null);
@@ -80,6 +105,11 @@
 		level === "traced" || level === "hunted" ? "#ff8a7a" : level === "noticed" ? "#ffe27a" : "#7dffa0"
 	);
 	const onHost = $derived(stage === "pivot" && deep.at !== "gw" ? deep.at : null);
+	/** Milliseconds left before their monitoring catches on (the server holds the real deadline). */
+	const clockLeft = $derived(deep.traced ? null : remainingMs(deep.deadline, new Date(nowMs)));
+	const clockTone = $derived(
+		clockLeft == null ? "#7dffa0" : clockLeft < 15_000 ? "#ff8a7a" : clockLeft < 30_000 ? "#ffe27a" : "#7dffa0"
+	);
 	const prompt = $derived(
 		`${asset.codename.toLowerCase().replace(/\s+/g, "-")}@${stage === "pivot" ? (onHost ?? session?.host ?? site.code) : "relay"}:${stage === "pivot" ? cwd : "~"}$`
 	);
@@ -116,6 +146,21 @@
 		void out.length;
 		void out.at(-1)?.shown;
 		if (screenEl) screenEl.scrollTop = screenEl.scrollHeight;
+	});
+
+	// The countdown: tick while a deadline is running. At zero, tell the player
+	// once and reload, so the server cuts the line and the page shows it.
+	$effect(() => {
+		if (!deep.deadline || deep.traced) return;
+		const timer = setInterval(() => (nowMs = Date.now()), 250);
+		return () => clearInterval(timer);
+	});
+	$effect(() => {
+		if (clockLeft !== 0 || timeUpFor === deep.deadline) return;
+		timeUpFor = deep.deadline;
+		say("[!] TIME'S UP · their monitoring caught up and cut the line", "bad");
+		crack = null;
+		void invalidateAll();
 	});
 
 	// ── Server ──────────────────────────────────────────────────────────────
@@ -185,7 +230,9 @@
 		["hosts", "map the internal network (free)"],
 		["hop <host>", `move to another host · ${money(TRACE.HOP_COST)}, free with the right key`],
 		["loot [n]", "list or take what's on this host"],
-		["cover", "cover your tracks: −trace, dearer and weaker each time"],
+		["cover", "cover your tracks: −trace and a little more time"],
+		["crack <host|file>", "pick a password lock (opens the code-breaker)"],
+		["guess <code>", `try a code on the open lock, e.g. ${CRACK.SYMBOLS.slice(0, CRACK.LENGTH)}`],
 		["trace · status", "the trace meter, keys and loot"],
 		["ls [dir] · cd <dir>", "look around the file share (once you're on it)"],
 		["cat <file>", "read a file"],
@@ -326,6 +373,22 @@
 				sayAll(d.deep.lines);
 				return;
 			}
+			case "crack":
+			case "brute":
+			case "guess": {
+				if (needPivot()) return;
+				const target = cmd === "guess" ? (crack?.target ?? "") : (args[0] ?? "");
+				const code = cmd === "guess" ? args.join("") : args.slice(1).join("");
+				if (!target)
+					return say(
+						cmd === "guess"
+							? "Nothing to guess at. `crack <host|file>` first."
+							: "crack what? `hosts` and `ls` mark the locks.",
+						"warn"
+					);
+				await sendCrack(target, code);
+				return;
+			}
 			case "loot":
 			case "take": {
 				if (needPivot()) return;
@@ -456,6 +519,45 @@
 		}
 	}
 
+	async function sendCrack(target: string, code: string) {
+		const fields: Record<string, string> = { move: "crack", item: target };
+		if (code) fields.guess = code;
+		if (code && !reduced) startSpin();
+		try {
+			const d = await post("deep", fields);
+			sayAll(d.deep.lines);
+			const c = d.deep.crack as Crack | null;
+			crack = c && !c.open && !c.jammed ? c : null;
+			slots = [];
+		} finally {
+			spin = null;
+		}
+	}
+	/** Fill the slots with flickering symbols until the server answers. */
+	function startSpin() {
+		const syms = crack?.symbols ?? CRACK.SYMBOLS;
+		const len = crack?.length ?? CRACK.LENGTH;
+		const roll = () => Array.from({ length: len }, () => syms[Math.floor(Math.random() * syms.length)]!);
+		spin = roll();
+		const timer = setInterval(() => {
+			if (spin === null) return clearInterval(timer);
+			spin = roll();
+		}, 70);
+	}
+	const crackKey = (ch: string) => {
+		if (!crack || busy || slots.length >= crack.length) return;
+		slots.push(ch);
+	};
+	const crackBack = () => {
+		if (!busy) slots.pop();
+	};
+	function crackTry() {
+		if (!crack || busy || slots.length !== crack.length) return;
+		void run(`crack ${crack.target} ${slots.join("")}`);
+	}
+	const pegs = (g: { exact: number; near: number }, len: number) =>
+		"●".repeat(g.exact) + "○".repeat(g.near) + "·".repeat(Math.max(0, len - g.exact - g.near));
+
 	// Context-sensitive one-tap suggestions (mobile has no fun keyboard).
 	const suggestions = $derived.by(() => {
 		const s: string[] = [];
@@ -473,7 +575,7 @@
 				...(systems?.cameras.length ? ["cams"] : []),
 				"deploy"
 			);
-		if (session && !deep.traced && deep.trace > 0) s.push("cover");
+		if (session && !deep.traced && (deep.trace > 0 || clockLeft != null)) s.push("cover");
 		s.push("status", "help", "exit");
 		return [...new Set(s)];
 	});
@@ -481,13 +583,29 @@
 	function onKey(e: KeyboardEvent) {
 		if (e.key === "Escape") {
 			e.preventDefault();
-			if (camsOpen) camsOpen = false;
+			if (crack) crack = null;
+			else if (camsOpen) camsOpen = false;
 			else onClose();
+			return;
+		}
+		// Type codes straight into the code-breaker when the command line is empty.
+		if (!crack || busy || input) return;
+		const ch = e.key.toUpperCase();
+		if (ch.length === 1 && crack.symbols.includes(ch)) {
+			e.preventDefault();
+			crackKey(ch);
+		} else if (e.key === "Backspace" && slots.length) {
+			e.preventDefault();
+			crackBack();
+		} else if (e.key === "Enter" && slots.length === crack.length) {
+			e.preventDefault();
+			crackTry();
 		}
 	}
 	function onInputKey(e: KeyboardEvent) {
 		if (e.key === "Enter") {
 			e.preventDefault();
+			if (!input && crack) return;
 			const v = input;
 			input = "";
 			void run(v);
@@ -652,6 +770,17 @@
 						<div class="trace-fill h-full bg-current" style="width: {deep.trace}%"></div>
 					</div>
 					<span class="shrink-0 tabular-nums">{deep.trace}% · {level}</span>
+					{#if clockLeft != null}
+						<span
+							class="shrink-0 tabular-nums"
+							class:clock-low={clockLeft < 15_000 && !reduced}
+							style="color: {clockTone}"
+							role="timer"
+							aria-label="Time left before you are traced"
+						>
+							⏱ {formatClock(clockLeft)}
+						</span>
+					{/if}
 					{#if stage === "pivot"}
 						<span class="hidden shrink-0 text-[#5fd389] sm:inline">
 							· on {onHost ?? "gw"} · {deep.keys.length} keys
@@ -692,6 +821,82 @@
 					</div>
 				{/if}
 			</div>
+
+			{#if crack}
+				<section
+					class="relative z-10 border-t border-[#1f6f3a]/70 bg-black/70 px-3 py-2 font-mono text-[#8dffb0]"
+					aria-label="Password cracker for {crack.label}"
+				>
+					<div
+						class="mb-1.5 flex items-center justify-between gap-2 text-[11px] tracking-[0.16em] text-[#5fd389] uppercase"
+					>
+						<span class="truncate">🔐 {crack.label} · {crack.left} of {crack.attempts} tries</span>
+						<button type="button" class="shrink-0 hover:text-[#d8ffe2]" onclick={() => (crack = null)}>
+							[x] close
+						</button>
+					</div>
+					<div class="flex flex-col gap-2 sm:flex-row sm:items-start sm:gap-4">
+						<ol class="max-h-24 min-w-0 overflow-y-auto text-[12px] sm:max-h-32 sm:w-44" aria-label="Guesses so far">
+							{#each crack.guesses as g, i (i)}
+								<li class="flex gap-3 tabular-nums">
+									<span class="tracking-[0.3em] text-[#d8ffe2]">{g.guess}</span>
+									<span
+										class="tracking-[0.15em] text-[#ffe27a]"
+										aria-label="{g.exact} right place, {g.near} wrong place"
+									>
+										{pegs(g, crack.length)}
+									</span>
+								</li>
+							{:else}
+								<li class="text-[#5fd389]">● right place · ○ wrong place</li>
+							{/each}
+						</ol>
+						<div class="flex min-w-0 flex-1 flex-col gap-2">
+							<div class="flex gap-1.5" aria-live="polite" aria-label="Your code">
+								{#each Array.from({ length: crack.length }) as _, i (i)}
+									<span
+										class="grid h-10 w-10 place-items-center border text-lg text-[#d8ffe2] {spin
+											? 'border-[#ffe27a] text-[#ffe27a]'
+											: 'border-[#1f6f3a]'}"
+									>
+										{(spin ?? slots)[i] ?? "_"}
+									</span>
+								{/each}
+							</div>
+							<div class="grid grid-cols-6 gap-1.5 sm:max-w-sm">
+								{#each crack.symbols.split("") as ch (ch)}
+									<button
+										type="button"
+										class="h-11 border border-[#1f6f3a] bg-black/70 text-base text-[#b6ffcb] hover:bg-[#0f3a1f] disabled:opacity-40"
+										disabled={busy || slots.length >= crack.length}
+										onclick={() => crackKey(ch)}
+									>
+										{ch}
+									</button>
+								{/each}
+							</div>
+							<div class="flex gap-1.5 sm:max-w-sm">
+								<button
+									type="button"
+									class="h-10 flex-1 border border-[#1f6f3a] bg-black/70 text-[12px] hover:bg-[#0f3a1f] disabled:opacity-40"
+									disabled={busy || !slots.length}
+									onclick={crackBack}
+								>
+									⌫ back
+								</button>
+								<button
+									type="button"
+									class="h-10 flex-[2] border border-[#5fd389] bg-[#0f3a1f] text-[12px] tracking-[0.16em] text-[#d8ffe2] uppercase hover:bg-[#14502a] disabled:opacity-40"
+									disabled={busy || slots.length !== crack.length}
+									onclick={crackTry}
+								>
+									{busy ? "cracking…" : "try code"}
+								</button>
+							</div>
+						</div>
+					</div>
+				</section>
+			{/if}
 
 			<div class="relative z-10 border-t border-[#1f6f3a]/70 px-3 pt-2 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
 				<div class="mb-2 flex flex-wrap gap-1.5" aria-label="Suggested commands">
@@ -759,6 +964,14 @@
 		text-shadow:
 			0 0 2px rgba(125, 255, 160, 0.8),
 			0 0 10px rgba(31, 191, 90, 0.45);
+	}
+	.clock-low {
+		animation: clock-blink 1s steps(2, start) infinite;
+	}
+	@keyframes clock-blink {
+		to {
+			opacity: 0.45;
+		}
 	}
 	.crt-input::placeholder {
 		color: rgba(125, 255, 160, 0.35);

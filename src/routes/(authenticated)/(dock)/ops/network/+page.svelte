@@ -766,6 +766,7 @@
 												assetId={selectedAsset.id}
 												{targetName}
 												{copiedIds}
+												cracks={siteSession.deep?.cracks}
 												onResult={(d) => {
 													if (d?.exfil) focusResult();
 												}}

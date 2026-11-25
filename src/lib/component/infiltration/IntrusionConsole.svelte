@@ -5,6 +5,7 @@
      transcript comes back from the server and is replayed as a terminal. -->
 <script lang="ts">
 	import { enhance } from "$app/forms";
+	import { invalidateAll } from "$app/navigation";
 	import {
 		ATTACK_VECTORS,
 		COVERT_OPS,
@@ -13,7 +14,9 @@
 		INTRUSION,
 		TRACE,
 		coverTracks,
+		formatClock,
 		readDeep,
+		remainingMs,
 		traceLevel,
 		type ExploitTier,
 		type LogLine
@@ -55,6 +58,21 @@
 	const deep = $derived(readDeep(session?.deep));
 	const level = $derived(traceLevel(deep.trace));
 	const nextCover = $derived(coverTracks(deep.covers));
+	// The countdown inside the network; the server holds the deadline and cuts the line at zero.
+	let nowMs = $state(Date.now());
+	$effect(() => {
+		if (!deep.deadline || deep.traced) return;
+		const timer = setInterval(() => (nowMs = Date.now()), 250);
+		return () => clearInterval(timer);
+	});
+	const clockLeft = $derived(deep.traced ? null : remainingMs(deep.deadline, new Date(nowMs)));
+	let expiredFor: string | null = null;
+	$effect(() => {
+		// At zero, reload once: the server cuts the line and the page shows it.
+		if (clockLeft !== 0 || expiredFor === deep.deadline) return;
+		expiredFor = deep.deadline;
+		void invalidateAll();
+	});
 
 	// `enhance` invokes the outer function on submit. Setting `busy` when this
 	// factory is called would disable every button as soon as the page renders.
@@ -109,6 +127,19 @@
 				<div class="h-full bg-current" style="width: {deep.trace}%"></div>
 			</div>
 			<span class="shrink-0 tabular-nums">{deep.trace}% · {level}</span>
+			{#if clockLeft != null}
+				<span
+					class="shrink-0 tabular-nums {clockLeft < 15_000
+						? 'text-[#ff8a7a]'
+						: clockLeft < 30_000
+							? 'text-[#ffe27a]'
+							: ''}"
+					role="timer"
+					aria-label="Time left before you are traced"
+				>
+					⏱ {formatClock(clockLeft)}
+				</span>
+			{/if}
 		</div>
 	{/if}
 

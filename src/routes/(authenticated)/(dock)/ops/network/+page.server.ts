@@ -15,6 +15,7 @@ import {
 	INTRUSION,
 	isExploitTier,
 	payloadBonus,
+	isExpired,
 	readDeep,
 	systemsView,
 	type CovertOpKind
@@ -37,6 +38,7 @@ import {
 	flipAsset,
 	filesFor,
 	grepSystem,
+	expireIfLate,
 	isPivoted,
 	lastPlantedAt,
 	networkTargets,
@@ -118,6 +120,13 @@ export const load: PageServerLoad = async ({ locals, url }) => {
 		enemyAssetsIn(db, stateId, now),
 		selectedTargetId ? lastPlantedAt(db, stateId, selectedTargetId) : Promise.resolve(null)
 	]);
+	// Sessions whose countdown ran out while nobody was looking get cut now.
+	const late = sessions.filter((s) => {
+		const d = readDeep(s.deep);
+		return !d.traced && isExpired(d.deadline, now);
+	});
+	for (const s of late) await expireIfLate(db, s.assetId, s.siteId, now);
+	const liveSessions = late.length && selectedTargetId ? await loadSessions(stateId, selectedTargetId) : sessions;
 	const readyAt = plantReadyAt(lastPlant);
 	const [state] = await db.select({ id: states.id, name: states.name }).from(states).where(eq(states.id, stateId));
 
@@ -131,7 +140,7 @@ export const load: PageServerLoad = async ({ locals, url }) => {
 		sites,
 		files,
 		actions,
-		sessions: withSystems(sessions, sites),
+		sessions: withSystems(liveSessions, sites),
 		treasury: authority ? (treasury?.balance ?? 0) : null,
 		maxAssets: INFILTRATION.MAX_ASSETS_PER_TARGET,
 		/** Set while recruiting in the selected target is on cooldown. */
@@ -267,9 +276,19 @@ export const actions: Actions = {
 				siteId: str(form.get("siteId")),
 				move,
 				host: str(form.get("host")) || undefined,
-				item: str(form.get("item")) || undefined
+				item: str(form.get("item")) || undefined,
+				guess: str(form.get("guess")) || undefined
 			});
-			return { deep: { move, success: result.success, lines: result.lines, cost: result.cost, state: result.deep } };
+			return {
+				deep: {
+					move,
+					success: result.success,
+					lines: result.lines,
+					cost: result.cost,
+					state: result.deep,
+					crack: result.crack ?? null
+				}
+			};
 		} catch (err) {
 			if (err instanceof InfiltrationError) return fail(400, { error: err.message });
 			throw err;
