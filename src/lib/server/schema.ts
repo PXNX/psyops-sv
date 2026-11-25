@@ -532,6 +532,23 @@ export const regionProgrammes = pgTable(
 	(t) => ({ regionEndsIdx: index("idx_region_programmes_region_ends").on(t.regionId, t.endsAt) })
 );
 
+// A region's own stockpile of raw materials: bought on the market by the
+// governor with the regional budget and spent on regional public works
+// (services/politics/regional-stockpile.ts).
+export const regionResourceInventory = pgTable(
+	"region_resource_inventory",
+	{
+		id: integer("id").generatedByDefaultAsIdentity().primaryKey(),
+		regionId: integer("region_id")
+			.notNull()
+			.references(() => regions.id, { onDelete: "cascade" }),
+		resourceType: resourceTypeEnum("resource_type").notNull(),
+		quantity: integer("quantity").default(0).notNull(),
+		updatedAt: timestamp("updated_at").defaultNow().notNull()
+	},
+	(t) => ({ regionResourceIdx: uniqueIndex("idx_region_resource").on(t.regionId, t.resourceType) })
+);
+
 export const regionsRelations = relations(regions, ({ one, many }) => ({
 	state: one(states, {
 		fields: [regions.stateId],

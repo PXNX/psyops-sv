@@ -9,6 +9,7 @@ import {
 	presidents,
 	regionBudgetLedger,
 	regionBudgets,
+	regionResourceInventory,
 	regions,
 	stateBuildings,
 	stateResourceInventory,
@@ -143,20 +144,24 @@ describe("governor spending", () => {
 		expect(await budget()).toBeGreaterThanOrEqual(0);
 	});
 
-	it("pays public works from the regional budget, materials from the stockpile", async () => {
+	it("pays public works from the regional budget, materials from the regional stockpile", async () => {
 		await handle.db.update(regions).set({ infrastructure: 0 }).where(eq(regions.id, regionId));
 		await handle.db.delete(stateBuildings).where(eq(stateBuildings.regionId, regionId));
 		const template = BUILDING_TEMPLATES.infrastructure;
 		for (const [resource, quantity] of Object.entries(template.costs)) {
 			if (resource === "currency") continue;
 			await handle.db
-				.insert(stateResourceInventory)
-				.values({ stateId, resourceType: resource as never, quantity: quantity * 2 })
+				.insert(regionResourceInventory)
+				.values({ regionId, resourceType: resource as never, quantity: quantity * 2 })
 				.onConflictDoUpdate({
-					target: [stateResourceInventory.stateId, stateResourceInventory.resourceType],
+					target: [regionResourceInventory.regionId, regionResourceInventory.resourceType],
 					set: { quantity: quantity * 2 }
 				});
 		}
+		const stateStockBefore = await handle.db
+			.select()
+			.from(stateResourceInventory)
+			.where(eq(stateResourceInventory.stateId, stateId));
 		const cost = template.costs.currency ?? 0;
 		await setBudget(cost);
 		const t = await treasury();
@@ -183,5 +188,17 @@ describe("governor spending", () => {
 			.from(regionBudgetLedger)
 			.where(and(eq(regionBudgetLedger.regionId, regionId), eq(regionBudgetLedger.kind, "construction")));
 		expect(line?.amount).toBe(-cost);
+		// Half of each material is left in the region; the state's is untouched.
+		const regionStock = await handle.db
+			.select()
+			.from(regionResourceInventory)
+			.where(eq(regionResourceInventory.regionId, regionId));
+		for (const [resource, quantity] of Object.entries(template.costs)) {
+			if (resource === "currency") continue;
+			expect(regionStock.find((r) => r.resourceType === resource)?.quantity).toBe(quantity);
+		}
+		expect(
+			await handle.db.select().from(stateResourceInventory).where(eq(stateResourceInventory.stateId, stateId))
+		).toEqual(stateStockBefore);
 	});
 });

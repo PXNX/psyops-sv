@@ -24,6 +24,7 @@ import {
 	type RegionalProgrammeKind
 } from "#lib/config/index.js";
 import { canManagePortfolio, stateRoles } from "../government/authority";
+import { regionStockpile } from "./regional-stockpile";
 
 type Tx = Parameters<Parameters<Database["transaction"]>[0]>[0];
 type Db = Database | Tx;
@@ -264,7 +265,7 @@ export async function regionShareOverrides(db: Db, stateId: number) {
 /** Everything the region page shows about the budget. */
 export async function regionBudgetSummary(db: Db, regionId: number, userId: string, now = new Date()) {
 	const dayAgo = new Date(now.getTime() - DAY);
-	const [[budget], shareInfo, [income], ledger, running, governor] = await Promise.all([
+	const [[budget], shareInfo, [income], ledger, running, governor, stockpile] = await Promise.all([
 		db.select().from(regionBudgets).where(eq(regionBudgets.regionId, regionId)).limit(1),
 		regionalShareFor(db, regionId),
 		db
@@ -284,7 +285,8 @@ export async function regionBudgetSummary(db: Db, regionId: number, userId: stri
 			.orderBy(desc(regionBudgetLedger.createdAt), desc(regionBudgetLedger.id))
 			.limit(8),
 		runningProgrammes(db, [regionId], now),
-		isGovernorOf(db, userId, regionId)
+		isGovernorOf(db, userId, regionId),
+		regionStockpile(db, regionId)
 	]);
 	return {
 		balance: budget?.balance ?? 0,
@@ -309,7 +311,12 @@ export async function regionBudgetSummary(db: Db, regionId: number, userId: stri
 			opinion: p.opinion,
 			endsAt: p.endsAt.toISOString()
 		})),
-		programmeOpinion: programmeOpinion(running)
+		programmeOpinion: programmeOpinion(running),
+		/** Raw materials the region holds for its own public works, most first. */
+		stockpile: Object.entries(stockpile)
+			.filter(([, quantity]) => quantity > 0)
+			.sort(([, a], [, b]) => b - a)
+			.map(([resource, quantity]) => ({ resource, quantity }))
 	};
 }
 

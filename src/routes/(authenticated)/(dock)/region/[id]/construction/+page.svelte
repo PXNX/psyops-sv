@@ -44,8 +44,8 @@
 	{:else}
 		<!-- What the state has to spend -->
 		<div class="panel rounded-sm p-4">
-			{#if data.isGovernor}
-				<!-- The governor picks who pays the money; materials always come from the state. -->
+			{#if data.isGovernor && data.canPayFromTreasury}
+				<!-- A governor who also holds a state office picks who pays. -->
 				<div class="flex flex-wrap items-center gap-2 mb-3" role="group" aria-label="Pay from">
 					<span class="text-[10px] text-[#8e9abb] uppercase tracking-wide">Pay from</span>
 					<a
@@ -75,7 +75,7 @@
 					{#if data.payFrom === "region"}
 						<p class="text-[10px] text-[#8e9abb] uppercase tracking-wide">Regional budget of {regionName}</p>
 						<p class="text-2xl font-bold font-mono text-[#ffcb6b]">${data.regionBudget.toLocaleString()}</p>
-						<p class="text-xs text-[#8e9abb]">Materials still come from the state stockpile.</p>
+						<p class="text-xs text-[#8e9abb]">Materials come from the regional stockpile.</p>
 					{:else}
 						<p class="text-[10px] text-[#8e9abb] uppercase tracking-wide">Treasury of {data.state.name}</p>
 						<p class="text-2xl font-bold font-mono text-[#aef3c9]">${data.treasury.toLocaleString()}</p>
@@ -88,7 +88,11 @@
 							<span class="font-mono">{quantity.toLocaleString()}</span>
 						</span>
 					{:else}
-						<span class="text-xs text-[#8e9abb]">The state stockpile is empty. Buy materials on the state market.</span>
+						<span class="text-xs text-[#8e9abb]">
+							{data.payFrom === "region"
+								? "The regional stockpile is empty."
+								: "The state stockpile is empty. Buy materials on the state market."}
+						</span>
 					{/each}
 				</div>
 			</div>
@@ -188,7 +192,11 @@
 						{:else if b.underway}
 							<p class="text-xs text-[#8e9abb]">The next level can be ordered once this one is finished.</p>
 						{:else if !b.canOrder}
-							<p class="text-xs text-[#8e9abb]">{b.problems[0] ?? "Built by the state's government."}</p>
+							<p class="text-xs text-[#8e9abb]">
+								{b.stateOnly && data.payFrom === "region"
+									? "Built by the state's government, not from the regional budget."
+									: (b.problems[0] ?? "Built by the state's government.")}
+							</p>
 						{:else if b.problems.length}
 							<p class="text-xs text-red-300">{b.problems.join(" ")}</p>
 						{:else}
@@ -197,7 +205,7 @@
 								action="?/build"
 								use:confirmSubmit={{
 									title: `Build ${b.name.toLowerCase()} in ${regionName}?`,
-									body: `It costs ${data.payFrom === "region" ? "the regional budget and the state stockpile" : "the state"} ${b.costs.map((c) => `${c.needed.toLocaleString()} ${c.resource === "currency" ? "money" : c.resource}`).join(", ")} and takes ${b.days} days.`,
+									body: `It costs ${data.payFrom === "region" ? "the region" : "the state"} ${b.costs.map((c) => `${c.needed.toLocaleString()} ${c.resource === "currency" ? "money" : c.resource}`).join(", ")} and takes ${b.days} days.`,
 									confirmLabel: "Build"
 								}}
 								use:enhance={() => {

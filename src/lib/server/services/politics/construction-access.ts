@@ -1,10 +1,18 @@
 // Who may order buildings directly, without a parliament vote: the
 // president builds anything, the economy minister civilian buildings, the
-// defense minister fortifications, and a region's governor anything in it.
+// defense minister fortifications (all paid by the state), and a region's
+// governor the civilian works in GOVERNOR_BUILDINGS, paid by the region.
+// Law-only buildings (the airbase) are never a direct order.
 import { and, eq } from "drizzle-orm";
 import type { Database } from "#lib/server/db.js";
 import { governors, ministers, parliamentMembers, presidents } from "#lib/server/schema.js";
-import { BUILDING_TEMPLATES, VALID_BUILDING_TYPES, type BuildingType } from "#lib/config/index.js";
+import {
+	BUILDING_TEMPLATES,
+	GOVERNOR_BUILDINGS,
+	VALID_BUILDING_TYPES,
+	isGovernorBuilding,
+	type BuildingType
+} from "#lib/config/index.js";
 
 export type ConstructionRole = "president" | "governor" | "economy" | "defense";
 
@@ -15,7 +23,15 @@ export async function canOrderConstruction(
 	userId: string,
 	stateId: number,
 	regionId: number
-): Promise<{ roles: ConstructionRole[]; types: BuildingType[] }> {
+): Promise<{
+	roles: ConstructionRole[];
+	/** Everything the user may order here, whoever pays. */
+	types: BuildingType[];
+	/** What they may order paid by the state (treasury and state stockpile). */
+	stateTypes: BuildingType[];
+	/** What they may order as governor, paid by the region (budget and regional stockpile). */
+	regionTypes: BuildingType[];
+}> {
 	const [president, governor, ministries] = await Promise.all([
 		db.query.presidents.findFirst({ where: and(eq(presidents.userId, userId), eq(presidents.stateId, stateId)) }),
 		db.query.governors.findFirst({ where: and(eq(governors.userId, userId), eq(governors.regionId, regionId)) }),
@@ -27,16 +43,21 @@ export async function canOrderConstruction(
 	if (governor) roles.push("governor");
 	for (const m of ministries) if (m.ministry === "economy" || m.ministry === "defense") roles.push(m.ministry);
 
-	const types = new Set<BuildingType>();
+	const stateTypes = new Set<BuildingType>();
 	// Law-only buildings (the airbase) go through parliament, never a direct order.
-	if (president || governor)
-		VALID_BUILDING_TYPES.filter((t) => !BUILDING_TEMPLATES[t].lawOnly).forEach((t) => types.add(t));
-	if (roles.includes("economy")) CIVILIAN.forEach((t) => types.add(t));
+	if (president) VALID_BUILDING_TYPES.filter((t) => !BUILDING_TEMPLATES[t].lawOnly).forEach((t) => stateTypes.add(t));
+	if (roles.includes("economy")) CIVILIAN.forEach((t) => stateTypes.add(t));
 	if (roles.includes("defense")) {
-		types.add("fortifications");
-		types.add("radar");
+		stateTypes.add("fortifications");
+		stateTypes.add("radar");
 	}
-	return { roles, types: [...types] };
+	const regionTypes = governor ? GOVERNOR_BUILDINGS.filter(isGovernorBuilding) : [];
+	return {
+		roles,
+		types: [...new Set([...stateTypes, ...regionTypes])],
+		stateTypes: [...stateTypes],
+		regionTypes
+	};
 }
 
 /** Whether the user may put proposals before this state's parliament. */

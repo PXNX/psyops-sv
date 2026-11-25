@@ -1,8 +1,13 @@
 // Public construction: the one place buildings are started and finished.
 // Parliament proposals and governors/economy ministers both start buildings
-// here. A building costs treasury money plus stockpile resources up front
-// (a governor may pay the money from the regional budget instead), then sits "under construction" for its template's constructionTime and
-// raises its region's level by one when finished.
+// here. A building costs money plus materials up front, then sits "under
+// construction" for its template's constructionTime and raises its region's
+// level by one when finished.
+//
+// Who pays: state orders take the money from the treasury and the materials
+// from the state stockpile. A governor's order (payFrom "region") takes both
+// from the region: the regional budget and the regional stockpile, never the
+// state's, and only for the civilian buildings in GOVERNOR_BUILDINGS.
 import { and, count, eq, gte, inArray, lte, sql } from "drizzle-orm";
 import type { Database } from "#lib/server/db.js";
 import {
@@ -13,8 +18,9 @@ import {
 	stateResourceInventory,
 	stateTreasury
 } from "#lib/server/schema.js";
-import { BUILDING_TEMPLATES, type BuildingType, type RegionStat } from "#lib/config/index.js";
+import { BUILDING_TEMPLATES, isGovernorBuilding, type BuildingType, type RegionStat } from "#lib/config/index.js";
 import { debitRegionBudget, isGovernorOf, RegionalBudgetError } from "./regional-budget";
+import { regionStockpile, takeRegionResource } from "./regional-stockpile";
 
 type Tx = Parameters<Parameters<Database["transaction"]>[0]>[0];
 type Region = typeof regions.$inferSelect;
@@ -85,7 +91,7 @@ export function checkConstruction(input: {
 			problems.push(
 				c.resource === "currency"
 					? `The ${input.fund === "region" ? "regional budget" : "treasury"} is ${(c.needed - c.available).toLocaleString()} short.`
-					: `The stockpile is ${(c.needed - c.available).toLocaleString()} ${c.resource} short.`
+					: `The ${input.fund === "region" ? "regional stockpile" : "stockpile"} is ${(c.needed - c.available).toLocaleString()} ${c.resource} short.`
 			);
 		}
 	}
@@ -133,7 +139,7 @@ export async function startConstruction(
 		quantity?: number;
 		builtBy: string;
 		proposalId?: number | null;
-		/** "region": the governor pays the money from the regional budget. */
+		/** "region": the governor pays from the regional budget and stockpile. */
 		payFrom?: "treasury" | "region";
 	}
 ): Promise<{ completesAt: Date }> {
@@ -149,6 +155,9 @@ export async function startConstruction(
 		const fromRegion = input.payFrom === "region";
 		if (fromRegion && !(await isGovernorOf(tx, input.builtBy, input.regionId))) {
 			throw new ConstructionError("Only the region's governor can spend its budget.");
+		}
+		if (fromRegion && !isGovernorBuilding(input.type)) {
+			throw new ConstructionError(`A ${template.name.toLowerCase()} is built by the state, not the region.`);
 		}
 		const [fund] = fromRegion
 			? await tx
@@ -166,7 +175,7 @@ export async function startConstruction(
 			region,
 			pending: (await pendingByType(tx, input.regionId))[input.type] ?? 0,
 			treasury: fund?.balance ?? 0,
-			stockpile: await stateStockpile(tx, input.stateId),
+			stockpile: fromRegion ? await regionStockpile(tx, input.regionId) : await stateStockpile(tx, input.stateId),
 			fund: fromRegion ? "region" : "treasury"
 		});
 		if (!check.ok) throw new ConstructionError(check.problems.join(" "));
@@ -182,6 +191,14 @@ export async function startConstruction(
 				} catch (err) {
 					if (err instanceof RegionalBudgetError) throw new ConstructionError(err.message);
 					throw err;
+				}
+				continue;
+			}
+			if (fromRegion) {
+				// Regions only stock raw materials; a finished product (hardware)
+				// can't come from here.
+				if (PRODUCT_COSTS.has(resource) || !(await takeRegionResource(tx, input.regionId, resource, needed))) {
+					throw new ConstructionError(`The regional stockpile doesn't have ${needed} ${resource} any more.`);
 				}
 				continue;
 			}

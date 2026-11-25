@@ -8,6 +8,8 @@
 	import FluentWallet20Filled from "~icons/fluent/wallet-20-filled";
 	import FluentBuilding20Filled from "~icons/fluent/building-20-filled";
 	import { Badge, Button } from "#lib/component/ui/index.js";
+	import ResourceIcon from "#lib/component/ResourceIcon.svelte";
+	import { goodLabel } from "#lib/config/index.js";
 	import { toastResult } from "#lib/ui/toast.svelte.js";
 	import { countdown } from "#lib/utils/military.js";
 	import { REGIONAL_PROGRAMMES, REGIONAL_PROGRAMME_KINDS, MAX_PROGRAMME_OPINION } from "#lib/config/index.js";
@@ -26,6 +28,7 @@
 			ledger: { id: number; kind: string; amount: number; description: string; at: string }[];
 			programmes: { id: number; kind: string; opinion: number; endsAt: string }[];
 			programmeOpinion: number;
+			stockpile: { resource: string; quantity: number }[];
 		};
 	}
 
@@ -91,6 +94,27 @@
 		</div>
 	{/if}
 
+	<!-- Materials the region holds for its own public works -->
+	<div class="space-y-1.5" data-testid="region-stockpile">
+		<h3 class="text-xs font-bold uppercase tracking-[0.2em] text-fg-muted">Regional stockpile</h3>
+		{#if budget.stockpile.length}
+			<ul class="flex flex-wrap gap-1.5">
+				{#each budget.stockpile as s (s.resource)}
+					<li
+						class="rounded-sm bg-surface-2/60 px-2 py-1 text-xs flex items-center gap-1.5"
+						title={goodLabel(s.resource)}
+					>
+						<ResourceIcon name={s.resource} class="size-4" />
+						<span class="sr-only">{goodLabel(s.resource)}</span>
+						<span class="font-mono">{s.quantity.toLocaleString()}</span>
+					</li>
+				{/each}
+			</ul>
+		{:else}
+			<p class="text-sm text-fg-muted">No materials stored. Regional public works draw from here.</p>
+		{/if}
+	</div>
+
 	<!-- Spending -->
 	<div class="space-y-2">
 		<h3 class="text-xs font-bold uppercase tracking-[0.2em] text-fg-muted">
@@ -145,17 +169,19 @@
 				: ""}.
 		</p>
 		<a
-			href="/region/{regionId}/construction"
+			href="/region/{regionId}/construction{budget.isGovernor ? '?fund=region' : ''}"
 			class="panel-interactive rounded-sm p-3 flex items-center gap-3 group"
 			data-testid="region-budget-works"
 		>
 			<FluentBuilding20Filled class="size-5 text-friendly shrink-0" />
 			<div class="min-w-0 flex-1">
-				<p class="text-sm font-bold text-fg group-hover:text-primary-hover">Public works</p>
+				<p class="text-sm font-bold text-fg group-hover:text-primary-hover">
+					{budget.isGovernor ? "Build as governor" : "Public works"}
+				</p>
 				<p class="text-xs text-fg-muted">
 					{budget.isGovernor
-						? "Build here and pay from the regional budget instead of the treasury."
-						: "The governor can pay for buildings here from this budget."}
+						? "Build roads, schools, hospitals, power and networks here, paid from this budget and stockpile."
+						: "The governor can pay for civilian buildings here from this budget."}
 				</p>
 			</div>
 		</a>

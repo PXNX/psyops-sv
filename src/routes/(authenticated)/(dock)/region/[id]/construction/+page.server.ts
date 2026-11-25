@@ -1,8 +1,9 @@
 // src/routes/(authenticated)/(dock)/region/[id]/construction/+page.server.ts
 // Building in one region: its levels, what's under construction and, for the
-// people allowed to order it, starting new buildings. Paid from the state
-// treasury and stockpile via the shared construction service; the governor
-// may pay the money from the regional budget instead (?fund=region).
+// people allowed to order it, starting new buildings. State leaders pay from
+// the treasury and state stockpile; the governor builds the civilian works in
+// GOVERNOR_BUILDINGS from the regional budget and regional stockpile
+// (?fund=region, the default for a governor without a state office).
 import { error, fail, redirect } from "@sveltejs/kit";
 import { reconTargetReason, viewerSide } from "#lib/server/services/military/recon.js";
 import { and, asc, desc, eq } from "drizzle-orm";
@@ -25,6 +26,7 @@ import {
 	canProposeIn,
 	type ConstructionRole
 } from "#lib/server/services/politics/construction-access.js";
+import { regionStockpile } from "#lib/server/services/politics/regional-stockpile.js";
 
 export const load: PageServerLoad = async ({ params, locals, url }) => {
 	const account = locals.account!;
@@ -49,32 +51,44 @@ export const load: PageServerLoad = async ({ params, locals, url }) => {
 	}
 
 	const stateId = region.stateId;
-	const [access, canPropose, treasury, stockpile, pending, queue, finished, regionBudget] = await Promise.all([
-		stateId
-			? canOrderConstruction(db, account.id, stateId, regionId)
-			: { roles: [] as ConstructionRole[], types: [] as BuildingType[] },
-		stateId ? canProposeIn(db, account.id, stateId) : false,
-		stateId ? db.query.stateTreasury.findFirst({ where: eq(stateTreasury.stateId, stateId) }) : undefined,
-		stateId ? stateStockpile(db, stateId) : ({} as Record<string, number>),
-		pendingByType(db, regionId),
-		db.query.stateBuildings.findMany({
-			where: and(eq(stateBuildings.regionId, regionId), eq(stateBuildings.isUnderConstruction, true)),
-			orderBy: asc(stateBuildings.constructionCompletesAt)
-		}),
-		db.query.stateBuildings.findMany({
-			where: and(eq(stateBuildings.regionId, regionId), eq(stateBuildings.isUnderConstruction, false)),
-			orderBy: desc(stateBuildings.constructionCompletesAt),
-			limit: 10
-		}),
-		db.query.regionBudgets.findFirst({ where: eq(regionBudgets.regionId, regionId) })
-	]);
+	const noAccess = {
+		roles: [] as ConstructionRole[],
+		types: [] as BuildingType[],
+		stateTypes: [] as BuildingType[],
+		regionTypes: [] as BuildingType[]
+	};
+	const [access, canPropose, treasury, stateStock, regionStock, pending, queue, finished, regionBudget] =
+		await Promise.all([
+			stateId ? canOrderConstruction(db, account.id, stateId, regionId) : noAccess,
+			stateId ? canProposeIn(db, account.id, stateId) : false,
+			stateId ? db.query.stateTreasury.findFirst({ where: eq(stateTreasury.stateId, stateId) }) : undefined,
+			stateId ? stateStockpile(db, stateId) : ({} as Record<string, number>),
+			regionStockpile(db, regionId),
+			pendingByType(db, regionId),
+			db.query.stateBuildings.findMany({
+				where: and(eq(stateBuildings.regionId, regionId), eq(stateBuildings.isUnderConstruction, true)),
+				orderBy: asc(stateBuildings.constructionCompletesAt)
+			}),
+			db.query.stateBuildings.findMany({
+				where: and(eq(stateBuildings.regionId, regionId), eq(stateBuildings.isUnderConstruction, false)),
+				orderBy: desc(stateBuildings.constructionCompletesAt),
+				limit: 10
+			}),
+			db.query.regionBudgets.findFirst({ where: eq(regionBudgets.regionId, regionId) })
+		]);
 	const treasuryBalance = treasury?.balance ?? 0;
 	const regionBalance = regionBudget?.balance ?? 0;
 	const isGovernor = access.roles.includes("governor");
-	// Only the governor spends the regional budget.
+	// Only the governor spends the regional budget; a governor with no state
+	// office has nothing else to pay from.
+	const fund = url.searchParams.get("fund");
 	const payFrom: "treasury" | "region" =
-		isGovernor && url.searchParams.get("fund") === "region" ? "region" : "treasury";
+		isGovernor && (fund === "region" || (fund !== "treasury" && access.stateTypes.length === 0))
+			? "region"
+			: "treasury";
 	const balance = payFrom === "region" ? regionBalance : treasuryBalance;
+	const stockpile = payFrom === "region" ? regionStock : stateStock;
+	const orderable = payFrom === "region" ? access.regionTypes : access.stateTypes;
 
 	return {
 		region: { id: region.id, infrastructure: regionLevel(region, "infrastructure") },
@@ -84,6 +98,7 @@ export const load: PageServerLoad = async ({ params, locals, url }) => {
 		treasury: treasuryBalance,
 		regionBudget: regionBalance,
 		isGovernor,
+		canPayFromTreasury: access.stateTypes.length > 0,
 		payFrom,
 		stockpile,
 		buildings: VALID_BUILDING_TYPES.map((type) => {
@@ -111,7 +126,9 @@ export const load: PageServerLoad = async ({ params, locals, url }) => {
 				maxLevel: check.maxLevel,
 				costs: check.costs,
 				problems: check.problems,
-				canOrder: access.types.includes(type),
+				canOrder: orderable.includes(type),
+				// Shown to a governor building on the regional budget.
+				stateOnly: isGovernor && !access.regionTypes.includes(type),
 				// The level going up right now, if any (one at a time).
 				underway: (() => {
 					const b = queue.find((q) => q.buildingType === type);
@@ -144,8 +161,15 @@ export const actions: Actions = {
 		if (!region?.stateId) return fail(400, { error: "Only regions that belong to a state can be built up." });
 
 		const access = await canOrderConstruction(db, account.id, region.stateId, regionId);
-		if (!access.types.includes(type)) {
-			return fail(403, { error: "Only the governor, the responsible minister or the president can order this." });
+		if (payFrom === "region" && !access.regionTypes.includes(type)) {
+			return fail(403, {
+				error: access.roles.includes("governor")
+					? `A ${BUILDING_TEMPLATES[type].name.toLowerCase()} is built by the state, not from the regional budget.`
+					: "Only the region's governor can build from the regional budget."
+			});
+		}
+		if (payFrom === "treasury" && !access.stateTypes.includes(type)) {
+			return fail(403, { error: "Only the president or the responsible minister can order this from the treasury." });
 		}
 
 		try {

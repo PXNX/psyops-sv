@@ -266,6 +266,28 @@ export const BUILDING_TEMPLATES: Record<BuildingType, BuildingTemplate> = {
 
 export const VALID_BUILDING_TYPES = Object.keys(BUILDING_TEMPLATES) as BuildingType[];
 
+/**
+ * What a region's governor may order on their own, paid from the regional
+ * budget and stockpile: civilian works that serve the people living there.
+ * Defences (forts, radar), the airbase (law only) and datacenters (a
+ * strategic cyber site that needs the state's server hardware) stay with
+ * the state's government.
+ */
+export const GOVERNOR_BUILDINGS: readonly BuildingType[] = [
+	"infrastructure",
+	"school",
+	"hospital",
+	"power_plant",
+	"grid",
+	"energy_storage",
+	"internet_backbone",
+	"network_switch",
+	"radio_mast"
+];
+
+export const isGovernorBuilding = (type: BuildingType): boolean =>
+	GOVERNOR_BUILDINGS.includes(type) && !BUILDING_TEMPLATES[type].lawOnly;
+
 export const isBuildingType = (value: string): value is BuildingType => value in BUILDING_TEMPLATES;
 
 // Border maintenance costs (for closed borders)

@@ -34,6 +34,7 @@ import {
 	regionBudgetLedger,
 	regionBudgets,
 	regionProgrammes,
+	regionResourceInventory,
 	presidents,
 	stateResourceInventory,
 	reconMissions,
@@ -476,6 +477,14 @@ export async function seedMockDatabase(db: PgDatabase<any>) {
 		startedAt: hoursAgo(30),
 		endsAt: new Date(hoursAgo(30).getTime() + 10 * 86_400_000)
 	});
+	// Region 2's own stockpile, enough for a road or a school from the
+	// regional budget; the rest is bought on the market as the region.
+	await db.insert(regionResourceInventory).values([
+		{ regionId: region2!.id, resourceType: "steel", quantity: 120 },
+		{ regionId: region2!.id, resourceType: "wood", quantity: 450 },
+		{ regionId: region2!.id, resourceType: "coal", quantity: 260 },
+		{ regionId: region2!.id, resourceType: "copper", quantity: 40 }
+	]);
 	await db.insert(stateResourceInventory).values([
 		{ stateId: state1!.id, resourceType: "steel", quantity: 400 },
 		{ stateId: state1!.id, resourceType: "wood", quantity: 600 },
