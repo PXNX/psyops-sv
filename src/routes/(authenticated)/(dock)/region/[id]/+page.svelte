@@ -1,6 +1,8 @@
 <!-- src/routes/(authenticated)/(dock)/region/[id]/+page.svelte -->
-<!-- A region as a gazetteer entry: coat of arms, facts and figures, its
-     governor and industry. Visas are a passport page, travel a ticket. -->
+<!-- A region at a glance: a live view of its ground (terrain, coast,
+     settlements, today's weather and daylight) under its name and coat of
+     arms, stat tiles, then the situation and intel tasking, governor and
+     industry. Visas are a passport page, travel a ticket. -->
 <script lang="ts">
 	import { goodLabel } from "#lib/config/index.js";
 	import { toastResult } from "#lib/ui/toast.svelte.js";
@@ -17,6 +19,19 @@
 	import FluentFire20Filled from "~icons/fluent/fire-20-filled";
 	import FluentBuilding20Filled from "~icons/fluent/building-20-filled";
 	import FluentLocation20Filled from "~icons/fluent/location-20-filled";
+	import FluentHome20Regular from "~icons/fluent/home-20-regular";
+	import FluentPeople20Regular from "~icons/fluent/people-20-regular";
+	import FluentBuilding20Regular from "~icons/fluent/building-20-regular";
+	import FluentFlash20Regular from "~icons/fluent/flash-20-regular";
+	import FluentShield20Regular from "~icons/fluent/shield-20-regular";
+	import FluentRadar20Regular from "~icons/fluent/radar-20-regular";
+	import FluentWater24Regular from "~icons/fluent/water-24-regular";
+	import FluentSun20Regular from "~icons/fluent/weather-sunny-20-regular";
+	import FluentMoon20Regular from "~icons/fluent/weather-moon-20-regular";
+	import FluentCloud20Regular from "~icons/fluent/weather-cloudy-20-regular";
+	import FluentRain20Regular from "~icons/fluent/weather-rain-20-regular";
+	import FluentFog20Regular from "~icons/fluent/weather-fog-20-regular";
+	import FluentMountain20Regular from "~icons/fluent/mountain-location-bottom-20-regular";
 
 	import Logo from "#lib/component/Logo.svelte";
 	import ResourceIcon from "#lib/component/ResourceIcon.svelte";
@@ -34,6 +49,10 @@
 	import ResidenceActions from "./ResidenceActions.svelte";
 	import TravelBanner from "./TravelBanner.svelte";
 	import RegionSituation from "./RegionSituation.svelte";
+	import GatherIntel from "./GatherIntel.svelte";
+	import { SensorImage } from "#lib/component/recon/index.js";
+	import { WEATHER_LABEL, localHour } from "#lib/config/index.js";
+	import type { ImageryInput } from "#lib/utils/sensor-image.js";
 	import CivilianNeeds from "./CivilianNeeds.svelte";
 	import Sparkline from "#lib/component/charts/Sparkline.svelte";
 	import { StrikeLog, StrikePlanner } from "#lib/component/strike/index.js";
@@ -56,6 +75,18 @@
 	let attackWarId = $state<string | undefined>(undefined);
 	$effect(() => {
 		if (!attackWarId && warItems.length) attackWarId = String(warItems[0].id);
+	});
+
+	const attackFromItems = $derived(
+		(data.borderingRegionsForAttack as { id: number; name: string; distanceKm: number }[]).map((b) => ({
+			id: b.id,
+			name: b.name,
+			hint: `${Math.round(b.distanceKm)} km`
+		}))
+	);
+	let attackFromId = $state<string | undefined>(undefined);
+	$effect(() => {
+		if (!attackFromId && attackFromItems.length) attackFromId = String(attackFromItems[0].id);
 	});
 
 	const isIndependent = $derived(!data.region.stateId);
@@ -95,37 +126,113 @@
 		].filter((r) => r.value)
 	);
 
+	const level = (v: number | null) => (v === null ? "?" : v || 0);
+	const construction = $derived(`/region/${data.region.id}/construction`);
 	const facts = $derived([
 		{
 			label: "Civilians",
 			value: formatPopulation(data.civilians.population),
 			href: "#strikes",
 			title: `${data.civilians.population.toLocaleString("en-US")} civilians · ${data.civilians.density}/km²`,
-			wide: true
+			icon: FluentPeople20Regular,
+			tone: "text-positive-fg bg-positive/12"
 		},
-		{ label: "Residents", value: data.population, href: `/region/${data.region.id}/population` },
+		{
+			label: "Residents",
+			value: data.population,
+			href: `/region/${data.region.id}/population`,
+			icon: FluentHome20Regular,
+			tone: "text-friendly-fg bg-friendly/12"
+		},
 		{
 			label: "Infrastructure",
-			value: data.region.infrastructure === null ? "?" : data.region.infrastructure || 0,
-			href: `/region/${data.region.id}/construction`
+			value: level(data.region.infrastructure),
+			href: construction,
+			icon: FluentBuilding20Regular,
+			tone: "text-primary-fg bg-primary/12"
 		},
 		{
 			label: "Power",
-			value: data.region.economy === null ? "?" : data.region.economy || 0,
-			href: `/region/${data.region.id}/construction`
+			value: level(data.region.economy),
+			href: construction,
+			icon: FluentFlash20Regular,
+			tone: "text-warning bg-warning/12"
 		},
 		{
 			label: "Fortifications",
-			value: data.region.fortifications === null ? "?" : data.region.fortifications || 0,
-			href: `/region/${data.region.id}/construction`
+			value: level(data.region.fortifications),
+			href: construction,
+			icon: FluentShield20Regular,
+			tone: "text-fg-soft bg-surface-8"
 		},
 		{
 			label: "Radar",
-			value: data.region.radar === null ? "?" : data.region.radar || 0,
-			href: `/region/${data.region.id}/construction`,
-			title: "Air-defence radar coverage"
+			value: level(data.region.radar),
+			href: construction,
+			title: "Air-defence radar coverage",
+			icon: FluentRadar20Regular,
+			tone: "text-hostile-fg bg-hostile/12"
 		}
 	]);
+
+	// The hero: a live frame of the region's ground under today's sky. Only
+	// public things are drawn (terrain, coast, how built-up it looks), never units.
+	let now = $state(new Date());
+	$effect(() => {
+		const t = setInterval(() => (now = new Date()), 60_000);
+		return () => clearInterval(t);
+	});
+	const scenery = $derived(data.situation.scenery);
+	const conditions = $derived(data.situation.conditions);
+	const heroInput = $derived<ImageryInput>({
+		reportId: data.region.id,
+		regionId: data.region.id,
+		// Satellites look down through clear skies; under cloud a drone flies beneath it.
+		sensor: conditions.weather === "clear" || conditions.weather === "fog" ? "sat_eo" : "drone_eo",
+		observedAt: new Date(Math.floor(now.getTime() / 600_000) * 600_000).toISOString(),
+		lat: scenery.lat,
+		lon: scenery.lon,
+		terrain: scenery.terrain,
+		infrastructure: scenery.infrastructure,
+		strikes: [],
+		findings: {
+			outcome: "ok",
+			conditions,
+			airDefence: null,
+			coverage: {},
+			categories: [],
+			unitTypes: null,
+			firingPositions: null,
+			buildings: null,
+			battle: null
+		}
+	});
+	const hour = $derived(localHour(scenery.lon ?? 0, now));
+	const clock = $derived(
+		`${String(Math.floor(hour)).padStart(2, "0")}:${String(Math.floor((hour % 1) * 60)).padStart(2, "0")}`
+	);
+	const WeatherIcon = $derived(
+		{
+			clear: conditions.night ? FluentMoon20Regular : FluentSun20Regular,
+			cloudy: FluentCloud20Regular,
+			rain: FluentRain20Regular,
+			fog: FluentFog20Regular
+		}[conditions.weather]
+	);
+	const TERRAIN_LABEL: Record<string, string> = {
+		shore: "Coastal",
+		lake: "Lakeland",
+		mountain: "Mountains",
+		hills: "Hills",
+		forest: "Forest",
+		jungle: "Jungle",
+		desert: "Desert",
+		urban: "Urban",
+		city: "City",
+		town: "Town",
+		fields: "Farmland",
+		plains: "Plains"
+	};
 </script>
 
 <svelte:head>
@@ -155,68 +262,93 @@
 </svelte:head>
 
 <PageContainer maxWidth="5xl">
-	<!-- Gazetteer entry -->
+	<!-- Hero: the region's ground, live -->
 	<article
-		class="panel rounded-sm overflow-hidden relative {data.ongoingBattle ? 'alarm-outline' : ''}"
+		class="panel rounded-sm overflow-hidden {data.ongoingBattle ? 'alarm-outline' : ''}"
 		style={data.rulingPartyColor ? `border-top: 3px solid ${data.rulingPartyColor};` : undefined}
 	>
-		{#if data.region.stateLogo}
-			<img
-				loading="lazy"
-				decoding="async"
-				src={data.region.stateLogo}
-				alt=""
-				aria-hidden="true"
-				class="pointer-events-none absolute -right-6 -top-6 size-40 object-cover opacity-[0.07] rounded-full"
-			/>
-		{/if}
-		<div class="relative p-5 flex items-start gap-4 sm:gap-5">
-			<Logo
-				src={regionCoatUrl(data.region.id)}
-				alt="Coat of arms of {data.region.name}"
-				class="size-20 sm:size-24 rounded-sm shrink-0"
-				placeholderIcon={FluentShield20Filled}
-				placeholderGradient="from-politics-bg/40 to-politics-bg/40"
-			/>
-			<div class="flex-1 min-w-0">
-				<h1 class="font-serif text-3xl sm:text-4xl font-bold text-fg break-words leading-tight">
-					{data.region.name}
-				</h1>
-				<div class="mt-1.5 flex flex-wrap items-center gap-2 text-sm">
-					{#if data.region.stateName}
-						<a
-							href="/state/{data.region.stateId}"
-							class="font-serif italic text-fg-soft hover:text-primary-hover transition-colors"
-						>
-							{data.region.stateName}
-						</a>
-					{:else}
-						<span class="font-serif italic text-primary-fg flex items-center gap-1.5">
-							<FluentFlag20Filled class="size-4" />
-							Unclaimed territory
+		<div class="relative h-64 sm:h-80 bg-black">
+			<SensorImage input={heroInput} variant="bare" fit="cover" class="absolute inset-0 !h-full" />
+			<div class="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/90 via-black/35 to-black/10"></div>
+			<span
+				class="absolute top-3 right-3 flex items-center gap-1.5 rounded-full bg-black/60 px-2 py-0.5 font-mono text-[10px] tracking-wide text-[#bfe8c8]"
+				title="A live view of the ground: terrain, coast, settlements, today's weather and daylight. Units only show up through recon."
+			>
+				<span class="size-1.5 animate-pulse rounded-full bg-[#5fd38a]"></span>
+				LIVE · {heroInput.sensor === "sat_eo" ? "SAT" : "UAV"} · {clock} LOCAL
+			</span>
+			<div class="absolute inset-x-0 bottom-0 flex items-end gap-3 p-4 sm:gap-4 sm:p-5">
+				<Logo
+					src={regionCoatUrl(data.region.id)}
+					alt="Coat of arms of {data.region.name}"
+					class="size-16 sm:size-20 rounded-sm shrink-0 ring-2 ring-black/40 shadow-lg"
+					placeholderIcon={FluentShield20Filled}
+					placeholderGradient="from-politics-bg/40 to-politics-bg/40"
+				/>
+				<div class="min-w-0 flex-1">
+					<h1
+						class="font-serif text-3xl sm:text-4xl font-bold text-white break-words leading-tight drop-shadow-[0_2px_6px_rgb(0_0_0/0.8)]"
+					>
+						{data.region.name}
+					</h1>
+					<div class="mt-1 flex flex-wrap items-center gap-1.5 text-xs">
+						{#if data.region.stateName}
+							<a
+								href="/state/{data.region.stateId}"
+								class="font-serif italic text-sm text-white/85 hover:text-primary-hover transition-colors mr-1"
+							>
+								{data.region.stateName}
+							</a>
+						{:else}
+							<span class="font-serif italic text-sm text-primary-fg flex items-center gap-1 mr-1">
+								<FluentFlag20Filled class="size-4" />
+								Unclaimed territory
+							</span>
+						{/if}
+						<span class="hero-chip">
+							{#if scenery.terrain === "shore" || scenery.terrain === "lake"}<FluentWater24Regular
+									class="size-3.5"
+								/>{:else}<FluentMountain20Regular class="size-3.5" />{/if}
+							{TERRAIN_LABEL[scenery.terrain] ?? scenery.terrain}
 						</span>
-					{/if}
-					{#if data.hasResidence}
-						<Badge tone="blue" icon={FluentLocation20Filled} class="animate-pop-in">You are here</Badge>
-					{/if}
+						<span class="hero-chip" title="Weather and daylight now">
+							<WeatherIcon class="size-3.5" />
+							{WEATHER_LABEL[conditions.weather]} · {conditions.night ? "night" : "day"}
+						</span>
+						{#if data.ongoingBattle}
+							<a href="/battle/{data.ongoingBattle.id}" class="hero-chip !border-hostile/60 !bg-hostile/30 !text-white">
+								<FluentFire20Filled class="size-3.5" /> Battle
+							</a>
+						{/if}
+						{#if data.hasResidence}
+							<span class="hero-chip !border-friendly/60 !bg-friendly/30 !text-white animate-pop-in">
+								<FluentLocation20Filled class="size-3.5" /> You are here
+							</span>
+						{/if}
+					</div>
 				</div>
 			</div>
 		</div>
 
-		<!-- Facts and figures -->
-		<div class="relative grid grid-cols-2 sm:grid-cols-5 gap-px bg-line/12 border-t border-line/15">
+		<!-- Stat tiles -->
+		<div class="grid grid-cols-2 gap-px border-t border-line/15 bg-line/12 sm:grid-cols-3 lg:grid-cols-6">
 			{#each facts as fact (fact.label)}
 				<a
 					href={fact.href}
 					title={"title" in fact ? fact.title : undefined}
-					class="group px-4 py-3 bg-[#1e2318] hover:bg-[#262c1e] transition-colors {'wide' in fact
-						? 'col-span-2 sm:col-span-1'
-						: ''}"
+					class="group flex items-center gap-3 bg-surface-2 px-3 py-3 transition-colors hover:bg-surface-4"
 				>
-					<p class="text-[10px] text-fg-muted uppercase tracking-wide">{fact.label}</p>
-					<p class="text-xl font-bold font-mono text-fg group-hover:text-primary-hover transition-colors">
-						{fact.value.toLocaleString()}
-					</p>
+					<span class="grid size-9 shrink-0 place-items-center rounded-sm {fact.tone}">
+						<fact.icon class="size-5" />
+					</span>
+					<span class="min-w-0">
+						<span class="block text-[10px] uppercase tracking-wide text-fg-muted">{fact.label}</span>
+						<span
+							class="block text-lg font-bold font-mono leading-tight text-fg group-hover:text-primary-hover transition-colors"
+						>
+							{fact.value.toLocaleString()}
+						</span>
+					</span>
 				</a>
 			{/each}
 		</div>
@@ -242,8 +374,19 @@
 		</div>
 	{/if}
 
-	<!-- Forces, intel and recon tasking -->
-	<RegionSituation situation={data.situation} walletBalance={data.walletBalance} hasBattle={!!data.ongoingBattle} />
+	<!-- Forces and the intel picture, then tasking recon -->
+	<RegionSituation situation={data.situation} hasBattle={!!data.ongoingBattle} />
+	{#if data.situation.recon.canTarget || data.situation.isHostileRegion}
+		<GatherIntel
+			regionId={data.region.id}
+			longitude={scenery.lon}
+			terrain={scenery.terrain}
+			conditions={data.situation.conditions}
+			airDefence={data.situation.airDefence}
+			recon={data.situation.recon}
+			walletBalance={data.walletBalance}
+		/>
+	{/if}
 
 	<!-- Airstrikes: lasting damage, the planner for leaders at war with the owner -->
 	{#if data.strike.effects.length}
@@ -308,9 +451,9 @@
 										<dt class="text-[9px] font-bold tracking-[0.2em] uppercase text-[#7a5427]/55">Fee paid</dt>
 										<dd class="text-sm font-mono">
 											${Number(data.visa.activeVisa.cost).toLocaleString()}
-											<span class="text-[#7a5427]/70"
-												>incl. ${Number(data.visa.activeVisa.taxPaid).toLocaleString()} tax</span
-											>
+											<span class="text-[#7a5427]/70">
+												incl. ${Number(data.visa.activeVisa.taxPaid).toLocaleString()} tax
+											</span>
 										</dd>
 									</div>
 								{/if}
@@ -504,14 +647,23 @@
 				<h2 class="section-title text-base">Population</h2>
 				{#if data.civilians.report}
 					<span class="font-mono text-xs {data.civilians.report.annualRate < 0 ? 'text-error' : 'text-positive-fg'}">
-						{data.civilians.report.annualRate >= 0 ? "+" : ""}{(data.civilians.report.annualRate * 100).toFixed(1)}% / year
+						{data.civilians.report.annualRate >= 0 ? "+" : ""}{(data.civilians.report.annualRate * 100).toFixed(1)}% /
+						year
 					</span>
 				{/if}
 			</div>
-			<Sparkline values={data.civilians.trend ?? []} label="Civilian population over the last 90 days" color="var(--color-positive)" />
+			<Sparkline
+				values={data.civilians.trend ?? []}
+				label="Civilian population over the last 90 days"
+				color="var(--color-positive)"
+			/>
 			<div class="mt-3 flex flex-wrap items-center justify-between gap-2 border-t border-line/10 pt-2 text-xs">
-				<span class="text-fg-muted" title="Share set by the region's education level: {(data.civilians.workforce.share * 100).toFixed(0)}%">
-					Civilian workforce · {(data.civilians.workforce.share * 100).toFixed(0)}% at education level {data.civilians.workforce.education}
+				<span
+					class="text-fg-muted"
+					title="Share set by the region's education level: {(data.civilians.workforce.share * 100).toFixed(0)}%"
+				>
+					Civilian workforce · {(data.civilians.workforce.share * 100).toFixed(0)}% at education level {data.civilians
+						.workforce.education}
 				</span>
 				<span class="font-mono text-fg-body" title="Civilians available to take a company shift">
 					{data.civilians.workforce.available.toLocaleString()} workers
@@ -522,7 +674,9 @@
 					{#each data.civilians.report.contributions as c}
 						<div class="flex justify-between gap-2 border-b border-line/10 py-1">
 							<span class="text-fg-muted">{c.label}</span>
-							<span class="font-mono {c.value < 0 ? 'text-error' : 'text-positive-fg'}">{c.value >= 0 ? "+" : ""}{c.value.toLocaleString()}</span>
+							<span class="font-mono {c.value < 0 ? 'text-error' : 'text-positive-fg'}">
+								{c.value >= 0 ? "+" : ""}{c.value.toLocaleString()}
+							</span>
 						</div>
 					{/each}
 				</div>
@@ -602,9 +756,9 @@
 					<div class="text-sm text-fg-soft">
 						<span class="text-red-300 font-bold">{data.ongoingBattle.attackerState.name}</span>
 						<span class="text-fg-muted"> → </span>
-						<span class="text-friendly-fg font-bold"
-							>{data.ongoingBattle.defenderState?.name || data.region.stateName}</span
-						>
+						<span class="text-friendly-fg font-bold">
+							{data.ongoingBattle.defenderState?.name || data.region.stateName}
+						</span>
 					</div>
 				</div>
 				<span class="text-fg-muted group-hover:text-red-300 transition-colors">→</span>
@@ -695,11 +849,14 @@
 
 				<div>
 					<label class="field-label" for="attackFromRegionId">Attack From</label>
-					<select id="attackFromRegionId" name="attackFromRegionId" class="field-control rounded-sm px-3 py-2.5 w-full">
-						{#each data.borderingRegionsForAttack as border}
-							<option value={border.id}>{border.name} ({Math.round(border.distanceKm)} km)</option>
-						{/each}
-					</select>
+					<SearchSelect
+						id="attackFromRegionId"
+						name="attackFromRegionId"
+						items={attackFromItems}
+						bind:value={attackFromId}
+						placeholder="Choose a region…"
+						showId
+					/>
 				</div>
 
 				<Button type="submit" variant="danger" block icon={FluentFire20Filled} disabled={isAttacking}>
@@ -728,3 +885,17 @@
 	<!-- Bordering Regions -->
 	<BorderingRegions borderingRegions={data.borderingRegions} />
 </PageContainer>
+
+<style>
+	.hero-chip {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.25rem;
+		border-radius: 9999px;
+		border: 1px solid rgb(255 255 255 / 0.2);
+		background: rgb(0 0 0 / 0.45);
+		padding: 0.125rem 0.5rem;
+		color: rgb(255 255 255 / 0.85);
+		backdrop-filter: blur(4px);
+	}
+</style>

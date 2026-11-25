@@ -607,6 +607,16 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 			friendly: [...friendlyByType].map(([unitType, e]) => ({ unitType, ...e })),
 			picture,
 			imagery,
+			// The latest air defence a pass reported (drones risk it), never the truth.
+			airDefence:
+				imagery.map((i) => i.input.findings.airDefence).find((a) => a != null)?.units ?? (isHostileRegion ? null : 0),
+			// Public ground for the live view and the planner: where and what the region is.
+			scenery: {
+				lat: region.latitude != null ? Number(region.latitude) : null,
+				lon: region.longitude != null ? Number(region.longitude) : null,
+				terrain: regionTerrain(region),
+				infrastructure: seenBuildings ? (seenBuildings.infrastructure ?? 0) : null
+			},
 			recon: {
 				canTarget: !recon.targetReason,
 				targetReason: recon.targetReason,

@@ -9,5 +9,6 @@ export { default as ActionListItem } from "./ActionListItem.svelte";
 export { default as BackLink } from "./BackLink.svelte";
 export { default as ToolbarButton } from "./ToolbarButton.svelte";
 export { default as SearchSelect } from "./SearchSelect.svelte";
+export { default as OddsRing } from "./OddsRing.svelte";
 export { buttonClass, badgeClass } from "./styles";
 export type { ButtonVariant, ButtonSize, ButtonShape, BadgeTone, BadgeSize } from "./styles";

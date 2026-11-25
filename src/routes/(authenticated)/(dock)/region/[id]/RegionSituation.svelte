@@ -1,38 +1,18 @@
 <!-- src/routes/(authenticated)/(dock)/region/[id]/RegionSituation.svelte -->
-<!-- The region as the viewer's side sees it: viewing conditions, own forces,
-     hostile forces through fresh intel only (fog of war), and the recon
-     tasking form. -->
+<!-- The region as the viewer's side sees it: the latest recon frame, own
+     forces, and hostile forces through fresh intel only (fog of war). -->
 <script lang="ts">
-	import { enhance } from "$app/forms";
-	import { invalidateAll } from "$app/navigation";
-	import { tick } from "svelte";
-	import { toastResult } from "#lib/ui/toast.svelte.js";
-	import { celebrate } from "#lib/utils/celebrate.js";
-	import { Badge, Button } from "#lib/component/ui/index.js";
-	import { Conditions, UnitBadge } from "#lib/component/tactical/index.js";
-	import { UNIT_CATEGORIES, type Cover, type Weather } from "#lib/config/index.js";
-	import { ageLabel, countdown } from "#lib/utils/military.js";
-	import IconRadar from "~icons/fluent/radar-20-regular";
+	import { Badge, Button, OddsRing } from "#lib/component/ui/index.js";
+	import { UnitBadge } from "#lib/component/tactical/index.js";
+	import { SENSORS, UNIT_CATEGORIES, type SensorId } from "#lib/config/index.js";
+	import { ageLabel } from "#lib/utils/military.js";
 	import IconDocument from "~icons/fluent/document-search-20-regular";
 	import IconImage from "~icons/fluent/image-multiple-20-regular";
-	import { ImageryStrip, type ImageryItem } from "#lib/component/recon/index.js";
+	import IconEyeOff from "~icons/fluent/eye-off-20-regular";
+	import { ImageryStrip, SensorImage, type ImageryItem } from "#lib/component/recon/index.js";
 
-	interface SensorOption {
-		id: string;
-		label: string;
-		short: string;
-		kind: string;
-		platform: string;
-		cost: number;
-		durationMinutes: number;
-		cooldownMinutes: number;
-		cooldownScope: "user" | "state";
-		cooldownEndsAt: string | null;
-		blockedReason: string | null;
-	}
 	interface Props {
 		situation: {
-			conditions: { weather: Weather; night: boolean; cover: Cover };
 			isHostileRegion: boolean;
 			friendly: { unitType: string; count: number; mine: number }[];
 			picture: {
@@ -45,18 +25,11 @@
 				latestObservedAt: string | null;
 			} | null;
 			imagery: ImageryItem[];
-			recon: {
-				canTarget: boolean;
-				targetReason: string | null;
-				sensors: SensorOption[];
-				inFlight: { id: number; sensor: string; completesAt: string }[];
-			};
 		};
-		walletBalance: number;
 		hasBattle: boolean;
 	}
 
-	let { situation, walletBalance, hasBattle }: Props = $props();
+	let { situation, hasBattle }: Props = $props();
 
 	let now = $state(new Date());
 	$effect(() => {
@@ -64,15 +37,12 @@
 		return () => clearInterval(t);
 	});
 
-	let sensor = $state("drone_eo");
-	let launching = $state(false);
-	let panel: HTMLElement | undefined = $state();
-
-	const chosen = $derived(situation.recon.sensors.find((s) => s.id === sensor));
-	const chosenCooldown = $derived(chosen?.cooldownEndsAt ? countdown(chosen.cooldownEndsAt, now) : null);
+	let strip: ImageryStrip | undefined = $state();
 	const pic = $derived(situation.picture);
+	const latest = $derived(situation.imagery[0] ?? null);
 	const showHostile = $derived(situation.isHostileRegion || hasBattle || !!pic);
 	const levelTone = { none: "neutral", low: "amber", medium: "blue", high: "green" } as const;
+	const ago = (at: string) => (ageLabel(at, now) === "now" ? "just now" : `${ageLabel(at, now)} ago`);
 	const LABEL: Record<string, string> = {
 		infantry: "Infantry",
 		armor: "Armour",
@@ -86,160 +56,132 @@
 	};
 </script>
 
-<section bind:this={panel} id="region-situation" class="panel rounded-sm p-4 space-y-4">
+<section id="region-situation" class="panel rounded-sm p-4 space-y-4">
 	<div class="flex flex-wrap items-center justify-between gap-2">
 		<h2 class="section-title">Situation</h2>
-		<Conditions {...situation.conditions} />
-	</div>
-
-	<div class="grid gap-4 sm:grid-cols-2">
-		<!-- Own / friendly forces -->
-		<div>
-			<p class="mb-1.5 text-[10px] uppercase tracking-wide text-fg-muted">Friendly forces</p>
-			{#if situation.friendly.length}
-				<ul class="space-y-1">
-					{#each situation.friendly as u (u.unitType)}
-						<li class="flex items-center gap-2 text-sm">
-							<UnitBadge affiliation="friend" unitType={u.unitType} count={u.count} size={18} />
-							<span class="text-fg-soft">{LABEL[u.unitType] ?? u.unitType}</span>
-							{#if u.mine}<span class="ml-auto font-mono text-[11px] text-friendly-fg">{u.mine} yours</span>{/if}
-						</li>
-					{/each}
-				</ul>
-			{:else}
-				<p class="text-sm text-fg-muted">None stationed here.</p>
-			{/if}
-		</div>
-
-		<!-- Hostile forces, through intel only -->
-		{#if showHostile}
-			<div>
-				<div class="mb-1.5 flex items-center gap-2">
-					<p class="text-[10px] uppercase tracking-wide text-fg-muted">Hostile forces</p>
-					{#if pic}
-						<Badge tone={levelTone[pic.level]} size="xs">{pic.level} · {Math.round(pic.confidence * 100)}%</Badge>
-						{#if pic.latestObservedAt}
-							<span class="font-mono text-[11px] text-fg-muted"
-								>{ageLabel(pic.latestObservedAt, now) === "now"
-									? "just now"
-									: `${ageLabel(pic.latestObservedAt, now)} ago`}</span
-							>
-						{/if}
-					{/if}
-				</div>
-				{#if pic}
-					<ul class="space-y-1">
-						{#each UNIT_CATEGORIES as c}
-							{@const cat = pic.categories[c]}
-							<li class="flex items-center gap-2 text-sm">
-								{#if cat.coverage === 0}
-									<UnitBadge affiliation="unknown" size={18} />
-									<span class="text-fg-muted">{LABEL[c]}</span>
-									<span class="ml-auto font-mono text-[11px] text-fg-faint">not observed</span>
-								{:else}
-									<UnitBadge
-										affiliation="hostile"
-										unitType={c}
-										count={cat.count ?? 0}
-										estimated={cat.estimated}
-										size={18}
-									/>
-									<span class="text-fg-soft">{LABEL[c]}</span>
-									<span class="ml-auto font-mono text-[11px] text-fg-muted">{Math.round(cat.coverage * 100)}%</span>
-								{/if}
-							</li>
-						{/each}
-					</ul>
-					{#if pic.firingPositions?.count}
-						<p class="mt-1.5 text-xs text-hostile-fg">
-							{pic.firingPositions.count} firing position{pic.firingPositions.count === 1 ? "" : "s"} located (thermal)
-						</p>
-					{/if}
-				{:else}
-					<div class="flex items-center gap-2 text-sm">
-						<UnitBadge affiliation="unknown" size={18} />
-						<span class="text-fg-muted">Unknown: no fresh intel on this region.</span>
-					</div>
-				{/if}
+		{#if pic}
+			<div class="flex items-center gap-2">
+				<Badge tone={levelTone[pic.level]} size="xs">{pic.level} confidence</Badge>
+				{#if pic.latestObservedAt}<span class="font-mono text-[11px] text-fg-muted">
+						{ago(pic.latestObservedAt)}
+					</span>{/if}
 			</div>
 		{/if}
 	</div>
 
-	<!-- Imagery from the latest passes -->
-	{#if situation.imagery.length}
-		<div class="border-t border-line/15 pt-3 space-y-2">
-			<p class="flex items-center gap-1.5 text-[10px] uppercase tracking-wide text-fg-muted">
-				<IconImage class="size-4 text-primary-fg" /> Imagery
-			</p>
-			<ImageryStrip items={situation.imagery} max={4} />
-		</div>
-	{/if}
-
-	<!-- Recon tasking -->
-	{#if situation.recon.canTarget}
-		<div class="border-t border-line/15 pt-3 space-y-2">
-			<p class="text-[10px] uppercase tracking-wide text-fg-muted">Task recon</p>
-			<form
-				method="POST"
-				action="?/launchRecon"
-				class="flex flex-col sm:flex-row gap-2"
-				use:enhance={() => {
-					launching = true;
-					return async ({ result }) => {
-						launching = false;
-						toastResult(result);
-						if (result.type === "success") {
-							await invalidateAll();
-							await tick();
-							celebrate(panel);
-						}
-					};
-				}}
-			>
-				<select name="sensor" bind:value={sensor} class="field-control rounded-sm px-3 py-2 text-sm flex-1 min-w-0">
-					{#each situation.recon.sensors as s (s.id)}
-						<option value={s.id} disabled={!!s.blockedReason}>
-							{s.label} · ${s.cost.toLocaleString()} · {s.durationMinutes} min{s.blockedReason ? " (out of range)" : ""}
-						</option>
-					{/each}
-				</select>
-				<Button
-					type="submit"
-					size="sm"
-					icon={IconRadar}
-					loading={launching}
-					disabled={!chosen || !!chosen.blockedReason || !!chosenCooldown || walletBalance < (chosen?.cost ?? 0)}
+	<div class="grid gap-4 {latest ? 'lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]' : ''}">
+		<!-- The latest frame, large -->
+		{#if latest}
+			<div class="space-y-2 min-w-0">
+				<button
+					type="button"
+					class="group relative block w-full overflow-hidden rounded-sm border border-line/20 bg-black text-left transition-colors hover:border-primary/60"
+					onclick={() => strip?.show(latest.input.reportId)}
+					aria-label="Open the latest imagery"
 				>
-					{chosenCooldown ? `Ready in ${chosenCooldown}` : "Launch"}
-				</Button>
-			</form>
-			{#if chosen}
-				<p class="field-hint">
-					{#if chosen.platform === "drone"}Drones can be shot down by air defence; rain and fog blind them.
-					{:else if chosen.platform === "satellite"}Satellites ignore air defence. {chosen.kind === "visual"
-							? "Clouds and darkness block visual passes."
-							: chosen.kind === "radar"
-								? "Radar sees through clouds but barely picks up infantry."
-								: "Thermal works at night and spots firing positions."} Revisit every {Math.round(
-							chosen.cooldownMinutes / 60
-						)} h for your state.
-					{:else}Short-range radar from a neighbouring region: good on aircraft and vehicles.{/if}
+					<SensorImage input={latest.input} class={latest.fresh ? "" : "opacity-70"} />
+					<span
+						class="absolute bottom-2 left-1/2 -translate-x-1/2 rounded-full bg-black/70 px-2.5 py-0.5 font-mono text-[10px] text-fg-soft opacity-0 transition-opacity group-hover:opacity-100"
+					>
+						Open viewer
+					</span>
+				</button>
+				<p class="flex items-center justify-between gap-2 font-mono text-[11px] text-fg-muted">
+					<span class="text-primary-fg">
+						{SENSORS[latest.input.sensor as SensorId]?.label ?? latest.input.sensor}
+					</span>
+					<span>{ago(latest.input.observedAt)}{latest.fresh ? "" : " · stale"}</span>
 				</p>
-			{/if}
-			{#if situation.recon.inFlight.length}
-				<ul class="text-xs text-fg-soft font-mono space-y-0.5">
-					{#each situation.recon.inFlight as m (m.id)}
-						<li>
-							{situation.recon.sensors.find((s) => s.id === m.sensor)?.short ?? m.sensor} en route · {countdown(
-								m.completesAt,
-								now
-							) ?? "landing"}
-						</li>
-					{/each}
-				</ul>
+				{#if situation.imagery.length > 1}
+					<div>
+						<p class="mb-1.5 flex items-center gap-1.5 text-[10px] uppercase tracking-wide text-fg-muted">
+							<IconImage class="size-4 text-primary-fg" /> All passes
+						</p>
+					</div>
+				{/if}
+				<div class={situation.imagery.length > 1 ? "" : "hidden"}>
+					<ImageryStrip bind:this={strip} items={situation.imagery} max={6} />
+				</div>
+			</div>
+		{/if}
+
+		<div class="grid gap-4 content-start {latest ? '' : 'sm:grid-cols-2'}">
+			<!-- Own / friendly forces -->
+			<div>
+				<p class="mb-1.5 text-[10px] uppercase tracking-wide text-fg-muted">Friendly forces</p>
+				{#if situation.friendly.length}
+					<ul class="flex flex-wrap gap-1.5">
+						{#each situation.friendly as u (u.unitType)}
+							<li
+								class="flex items-center gap-1.5 rounded-full border border-friendly/30 bg-friendly/8 py-0.5 pl-1 pr-2.5 text-xs"
+							>
+								<UnitBadge affiliation="friend" unitType={u.unitType} count={u.count} size={18} />
+								<span class="text-fg-soft">{LABEL[u.unitType] ?? u.unitType}</span>
+								{#if u.mine}<span class="font-mono text-[10px] text-friendly-fg">{u.mine} yours</span>{/if}
+							</li>
+						{/each}
+					</ul>
+				{:else}
+					<p class="text-sm text-fg-muted">None stationed here.</p>
+				{/if}
+			</div>
+
+			<!-- Hostile forces, through intel only -->
+			{#if showHostile}
+				<div>
+					<p class="mb-1.5 text-[10px] uppercase tracking-wide text-fg-muted">Hostile forces</p>
+					{#if pic}
+						<div class="flex items-start gap-3">
+							<OddsRing value={pic.confidence} size={52} label="Intel confidence" textClass="text-xs" />
+							<ul class="min-w-0 flex-1 space-y-1.5">
+								{#each UNIT_CATEGORIES as c (c)}
+									{@const cat = pic.categories[c]}
+									<li class="flex items-center gap-2 text-sm">
+										{#if !cat || cat.coverage === 0}
+											<UnitBadge affiliation="unknown" size={18} />
+											<span class="text-fg-muted">{LABEL[c]}</span>
+											<span class="ml-auto font-mono text-[10px] text-fg-faint">not observed</span>
+										{:else}
+											<UnitBadge
+												affiliation="hostile"
+												unitType={c}
+												count={cat.count ?? 0}
+												estimated={cat.estimated}
+												size={18}
+											/>
+											<span class="text-fg-soft">{LABEL[c]}</span>
+											<span
+												class="ml-auto flex items-center gap-1.5"
+												title="Coverage {Math.round(cat.coverage * 100)}%"
+											>
+												<span class="h-1 w-12 overflow-hidden rounded-full bg-surface-8">
+													<span class="block h-full rounded-full bg-hostile" style="width: {cat.coverage * 100}%"
+													></span>
+												</span>
+												<span class="w-8 text-right font-mono text-[10px] text-fg-muted">
+													{Math.round(cat.coverage * 100)}%
+												</span>
+											</span>
+										{/if}
+									</li>
+								{/each}
+							</ul>
+						</div>
+						{#if pic.firingPositions?.count}
+							<p class="mt-2 text-xs text-hostile-fg">
+								{pic.firingPositions.count} firing position{pic.firingPositions.count === 1 ? "" : "s"} located (thermal)
+							</p>
+						{/if}
+					{:else}
+						<div class="flex items-center gap-3 rounded-sm border border-dashed border-line/25 p-3 text-sm">
+							<IconEyeOff class="size-6 shrink-0 text-fg-muted" />
+							<span class="text-fg-muted">No fresh intel on this region. Task a pass below to see what's here.</span>
+						</div>
+					{/if}
+				</div>
 			{/if}
 		</div>
-	{/if}
+	</div>
 
 	<div class="flex justify-end">
 		<Button href="/intel" variant="ghost" size="xs" icon={IconDocument}>Intel reports</Button>
