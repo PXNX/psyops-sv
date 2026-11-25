@@ -1,6 +1,7 @@
 // src/routes/(authenticated)/(dock)/user/[id]/+page.server.ts
 import { db } from "#lib/server/db.js";
-import { dividendYieldPercent, dividendYields, sharePrices } from "#lib/server/services/economy/dividends.js";
+import { netWorth as netWorthFor } from "#lib/server/services/economy/net-worth.js";
+import { dividendYieldPercent, dividendYields } from "#lib/server/services/economy/dividends.js";
 import { regionOpinion } from "#lib/server/services/politics/civic.service.js";
 import { portfolioReturns } from "#lib/server/services/economy/returns.js";
 import {
@@ -28,7 +29,6 @@ import {
 	blocLeaderElections,
 	blocLeaderCandidates,
 	companyShares,
-	shareHoldings,
 	shareTransactions,
 	factories,
 	newspaperSubscriptions
@@ -495,21 +495,8 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 		.where(eq(userProfiles.accountId, params.id));
 	const reputation = residence?.regionId ? Math.round(await regionOpinion(db, residence.regionId)) : null;
 
-	// Net worth = cash plus every share held at its current market quote.
-	const [walletRow, holdings] = await Promise.all([
-		db.select({ balance: userWallets.balance }).from(userWallets).where(eq(userWallets.userId, params.id)).limit(1),
-		db
-			.select({ companyId: shareHoldings.companyId, quantity: shareHoldings.quantity })
-			.from(shareHoldings)
-			.where(eq(shareHoldings.userId, params.id))
-	]);
-	const prices = await sharePrices(
-		db,
-		holdings.map((h) => h.companyId)
-	);
-	const cash = Number(walletRow[0]?.balance ?? 0);
-	const stockValue = Math.round(holdings.reduce((sum, h) => sum + h.quantity * (prices.get(h.companyId) ?? 0), 0));
-	const netWorth = { cash, stocks: stockValue, total: cash + stockValue, positions: holdings.length };
+	// The profile shows the headline; the subpage breaks it down.
+	const netWorth = await netWorthFor(db, params.id);
 
 	return {
 		userNotFound: false as const,

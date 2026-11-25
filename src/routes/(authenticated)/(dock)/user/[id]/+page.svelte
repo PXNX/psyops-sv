@@ -504,8 +504,15 @@
 						>
 							Net worth
 						</dt>
-						<dd class="text-fg-body border-b border-dotted border-line/40 pb-0.5 font-mono">
-							${data.netWorth.total.toLocaleString()}
+						<dd class="border-b border-dotted border-line/40 pb-0.5 font-mono">
+							<a
+								href="/user/{data.user.id}/networth"
+								class="font-mono text-fg-body hover:text-fg hover:underline"
+								title="{data.netWorth.shareHoldings
+									.length} share positions · ${data.netWorth.cash.toLocaleString()} cash · ${data.netWorth.resources.toLocaleString()} stockpile · ${data.netWorth.bonds.toLocaleString()} bonds"
+							>
+								${data.netWorth.total.toLocaleString()}
+							</a>
 						</dd>
 					</div>
 					<div class="min-w-0">
