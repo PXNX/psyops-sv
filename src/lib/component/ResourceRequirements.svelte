@@ -161,17 +161,29 @@
 							<span class="capitalize">{req.label}</span>
 						</span>
 					{/if}
-					<span class="font-mono text-xs" class:text-fg={req.hasEnough} class:text-red-400={!req.hasEnough}>
-						{req.kind === "money" ? "$" : ""}{req.needed.toLocaleString()}{req.unit ? ` ${req.unit}` : ""}
-						{#if req.tracked}
-							<span class="text-fg-muted/70">/ {req.available.toLocaleString()}</span>
+					{#if req.tracked}
+						<!-- What you have against what it takes: "120 / 200". -->
+						<span
+							class="font-mono text-xs tabular-nums"
+							title="You have {req.available.toLocaleString()} · needs {req.needed.toLocaleString()}"
+						>
+							<span class="font-bold {req.hasEnough ? 'text-positive-fg' : 'text-error'}">
+								{req.kind === "money" ? "$" : ""}{req.available.toLocaleString()}
+							</span>
+							<span class="text-fg-muted">
+								/ {req.kind === "money" ? "$" : ""}{req.needed.toLocaleString()}{req.unit ? ` ${req.unit}` : ""}
+							</span>
 							{#if req.hasEnough}
-								<span class="text-positive ml-1">✓</span>
+								<span class="text-positive ml-1" aria-label="enough">✓</span>
 							{:else}
-								<span class="text-red-400 ml-1">✗</span>
+								<span class="text-error ml-1" aria-label="not enough">✗</span>
 							{/if}
-						{/if}
-					</span>
+						</span>
+					{:else}
+						<span class="font-mono text-xs tabular-nums text-fg">
+							{req.kind === "money" ? "$" : ""}{req.needed.toLocaleString()}{req.unit ? ` ${req.unit}` : ""}
+						</span>
+					{/if}
 				</div>
 			{/each}
 		</div>

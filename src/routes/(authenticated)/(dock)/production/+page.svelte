@@ -345,9 +345,7 @@
 									class="sr-only"
 								/>
 								<ResourceIcon name={product} class="size-8 mx-auto mb-1" />
-								<span
-									class="block text-xs font-medium truncate {selected ? 'text-primary-fg' : 'text-fg-muted'}"
-								>
+								<span class="block text-xs font-medium truncate {selected ? 'text-primary-fg' : 'text-fg-muted'}">
 									{goodLabel(product)}
 								</span>
 								<span class="block text-[10px] font-mono text-fg-muted">{productMap.get(product) || 0} in stock</span>
@@ -376,7 +374,10 @@
 						{@const costs = Object.fromEntries(
 							Object.entries(recipe.inputs).map(([resource, amount]) => [resource, amount * productionQuantity])
 						)}
-						{@const availableResources = Object.fromEntries(Array.from(resourceMap.entries()))}
+						{@const availableResources = Object.fromEntries(
+							// 0 when the stockpile has none, so every row reads "have / need".
+							Object.keys(recipe.inputs).map((resource) => [resource, resourceMap.get(resource) ?? 0])
+						)}
 
 						<ResourceRequirements {costs} available={availableResources} />
 
