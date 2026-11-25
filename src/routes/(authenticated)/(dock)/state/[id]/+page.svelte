@@ -423,62 +423,26 @@
 		</div>
 	</section>
 
-	{#if data.power && data.stability !== null}
-		<section class="panel rounded-sm p-4 sm:p-5 mt-4 space-y-3" aria-label="Regime strength">
-			<div class="flex flex-wrap items-baseline justify-between gap-2">
-				<h2 class="section-title">Regime strength</h2>
-				<a href="/state/{data.state.id}/power" class="text-xs text-fg-muted hover:text-primary-fg">
-					Full power breakdown →
-				</a>
-			</div>
-			<div class="grid gap-3 sm:grid-cols-2">
-				<div>
-					<div class="flex items-baseline justify-between text-xs">
-						<span class="text-fg-muted">National power</span>
-						<span class="font-mono font-bold text-fg">{data.power.score} pts</span>
-					</div>
-					<div class="mt-1 h-2 rounded-full bg-white/10 overflow-hidden">
-						<div
-							class="h-full bg-positive/80"
-							style="width: {Math.min(
-								100,
-								(data.power.score / Math.max(1, Math.max(...(data.powerRanking ?? []).map((r) => r.score), 1))) * 100
-							)}%"
-						></div>
-					</div>
-					{#if data.powerRanking}
-						<p class="mt-1 text-[11px] text-fg-muted">
-							Rank {data.powerRanking.findIndex((r) => r.id === data.state.id) + 1} of {data.powerRanking.length}
-							states
-						</p>
-					{/if}
-				</div>
-				<div>
-					<div class="flex items-baseline justify-between text-xs">
-						<span class="text-fg-muted">Regime stability</span>
-						<span class="font-mono font-bold text-fg">{data.stability}/100</span>
-					</div>
-					<div class="mt-1 h-2 rounded-full bg-white/10 overflow-hidden">
-						<div class="h-full bg-warning/80" style="width: {data.stability}%"></div>
-					</div>
-					<p class="mt-1 text-[11px] text-fg-muted">
-						{data.stability < 30 ? "At risk of unrest" : data.stability < 60 ? "Uneasy" : "Loyal civilians"}
-					</p>
-				</div>
-			</div>
-			{#if data.power.components.length}
-				<ul class="grid gap-1 text-xs sm:grid-cols-3">
-					{#each [...data.power.components]
-						.sort((a, b) => b.points - a.points)
-						.slice(0, 3) as component (component.key)}
-						<li class="flex justify-between gap-2 border-b border-line/10 py-1">
-							<span class="truncate text-fg-muted">{component.label}</span>
-							<span class="font-mono text-fg">{component.points} pts</span>
-						</li>
-					{/each}
-				</ul>
-			{/if}
-		</section>
+	{#if data.stability !== null}
+		<a
+			href="/state/{data.state.id}/stability"
+			class="panel rounded-sm p-4 sm:p-5 mt-4 flex flex-wrap items-center gap-3 hover:border-primary/40 transition-colors"
+			aria-label="Regime stability — see how it is calculated"
+		>
+			<span class="min-w-0 flex-1">
+				<span class="section-title">Regime stability</span>
+				<span class="block text-[11px] text-fg-muted">
+					{data.stability < 30 ? "At risk of unrest" : data.stability < 60 ? "Uneasy" : "Loyal civilians"} · see how this
+					is calculated →
+				</span>
+			</span>
+			<span class="font-mono text-xl font-bold text-fg">
+				{data.stability}<span class="text-sm text-fg-muted">/100</span>
+			</span>
+			<span class="h-2 w-32 rounded-full bg-white/10 overflow-hidden">
+				<span class="block h-full bg-warning/80" style="width: {data.stability}%"></span>
+			</span>
+		</a>
 	{/if}
 
 	<div class="mt-5 grid items-start gap-6 lg:grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)]">
