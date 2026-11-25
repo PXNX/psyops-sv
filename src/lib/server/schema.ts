@@ -458,8 +458,8 @@ export const migrationFlows = pgTable(
 );
 
 // An active disease outbreak in a region. Cases rise with the disease's spread
-// rate, fall with recoveries, and kill civilians each day; hospitals, clean
-// water and nutrition blunt both the spread and the mortality.
+// rate, fall with recoveries, and a lethal disease can kill civilians each day;
+// hospitals, clean water and nutrition blunt both the spread and the mortality.
 export const diseaseOutbreaks = pgTable(
 	"disease_outbreaks",
 	{
@@ -654,7 +654,6 @@ export const regionsRelations = relations(regions, ({ one, many }) => ({
 	residences: many(residences, { relationName: "residenceRegion" }),
 	homeResidences: many(residences, { relationName: "homeRegion" }),
 	revolutions: many(revolutions),
-
 	militaryUnits: many(militaryUnits)
 }));
 
