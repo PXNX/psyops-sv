@@ -212,6 +212,11 @@
 	/** Aerial mode: the air sector under the pointer and the one picked. */
 	let hoverSectorId = $state<string | null>(null);
 	let selectedSectorId = $state<string | null>(null);
+	/** Naval mode: a coastal region's EEZ band under the pointer and the one
+	 *  picked (by its region id); the hex clicked inside it can be drilled into. */
+	let hoverEezId = $state<number | null>(null);
+	let selectedEezId = $state<number | null>(null);
+	let selectedEezHexKey = $state<string | null>(null);
 	let highlightedId = $state<number | null>(null);
 	let highlightTimeout: ReturnType<typeof setTimeout> | null = null;
 	let now = $state(new Date());
@@ -623,6 +628,11 @@
 		const p = mapPoint(e);
 		return hexKey(mapToHex(p.x, p.y));
 	}
+	/** The coastal region whose EEZ band is under the pointer, if any. */
+	function eezAt(e: PointerEvent): number | null {
+		const id = (e.target as Element | null)?.closest?.("[data-eez]")?.getAttribute("data-eez");
+		return id ? Number(id) : null;
+	}
 	/** Aerial mode: the air sector under the pointer. A region, its EEZ band
 	 *  and a sea cell each resolve to their sector; anything else (open map)
 	 *  falls back to the sector grid. */
@@ -648,9 +658,22 @@
 			sheetOpen = !!selectedSectorId;
 			return;
 		}
+		const multi = e.ctrlKey || e.metaKey || multiSelect;
+		// Naval mode: a plain click on an EEZ band picks the whole zone.
+		const eez = mode === "naval" && !multi ? eezAt(e) : null;
+		if (eez != null) {
+			selectedEezId = eez;
+			selectedEezHexKey = hexKeyAt(e);
+			selectedHexKey = null;
+			selectedHexKeys = new Set();
+			selectedId = null;
+			sheetOpen = false;
+			return;
+		}
 		const key = hexKeyAt(e);
 		if (key) {
-			if (e.ctrlKey || e.metaKey || multiSelect) {
+			selectedEezId = null;
+			if (multi) {
 				const next = new Set(selectedHexKeys);
 				if (next.has(key)) next.delete(key);
 				else next.add(key);
@@ -670,6 +693,7 @@
 			if (!isNaN(id) && id > 0 && data.regionMap[id]) {
 				// Naval mode only deals with the coast.
 				if (mode === "naval" && !shoreIds.has(id)) return;
+				selectedEezId = null;
 				openRegion(id);
 				return;
 			}
@@ -681,12 +705,14 @@
 			hoverHexKey = null;
 			hoverSectorId = sectorAt(e);
 		} else {
-			hoverHexKey = hexKeyAt(e);
+			hoverEezId = mode === "naval" ? eezAt(e) : null;
+			hoverHexKey = hoverEezId != null ? null : hexKeyAt(e);
 		}
 		cursor = mapPoint(e);
 	}
 
 	function openRegion(id: number) {
+		selectedEezId = null;
 		selectedId = id;
 		selectedHexKey = null;
 		selectedHexKeys = new Set();
@@ -707,6 +733,11 @@
 		if (mode !== "aerial") {
 			selectedSectorId = null;
 			hoverSectorId = null;
+		}
+		// EEZ bands are picked as a whole only in naval mode.
+		if (mode !== "naval") {
+			selectedEezId = null;
+			hoverEezId = null;
 		}
 	});
 
@@ -1070,6 +1101,31 @@
 			intel: data.sea.intel?.[selectedHexKey] ?? null
 		};
 	});
+
+	/** Naval mode: the picked EEZ band, its waters and what sails in them. */
+	const selectedEez = $derived.by(() => {
+		if (selectedEezId == null) return null;
+		const regionId = selectedEezId;
+		const keys = new Set<string>();
+		for (const [key, o] of eezByHex) if (o.regionId === regionId) keys.add(key);
+		const inZone = (x: { q: number; r: number }) => keys.has(hexKey(x));
+		const stateId = data.regionMap[regionId]?.stateId ?? null;
+		return {
+			regionId,
+			name: getRegionName(regionId),
+			stateName: stateId ? (stateById.get(stateId)?.name ?? `State #${stateId}`) : "Unclaimed",
+			hexes: keys.size,
+			ports: data.sea.ports.filter(inZone),
+			ships: data.sea.ships.filter((x) => x.status !== "sunk" && inZone(x)),
+			mines: data.sea.mines.filter(inZone).length,
+			d: eezPieces.find((p) => p.regionId === regionId)?.d ?? ""
+		};
+	});
+	const hoverEezD = $derived(
+		hoverEezId != null && hoverEezId !== selectedEezId
+			? (eezPieces.find((p) => p.regionId === hoverEezId)?.d ?? "")
+			: ""
+	);
 
 	/** Hexes currently held for a formation order (ctrl/cmd-click adds more). */
 	const assignedHexes = $derived([...selectedHexKeys].map(parseHexKey));
@@ -1492,6 +1548,34 @@
 					</g>
 				{/if}
 
+				{#if mode === "naval"}
+					<!-- EEZ bands: the hovered and the picked one outlined -->
+					<g pointer-events="none">
+						{#if hoverEezD}
+							<path
+								d={hoverEezD}
+								fill="#f8fafc"
+								fill-opacity="0.06"
+								stroke="#f8fafc"
+								stroke-opacity="0.5"
+								style:stroke-width="{1 * k}px"
+								stroke-linejoin="round"
+							/>
+						{/if}
+						{#if selectedEez?.d}
+							<path
+								d={selectedEez.d}
+								fill="#f8fafc"
+								fill-opacity="0.14"
+								stroke="#f8fafc"
+								stroke-opacity="0.95"
+								style:stroke-width="{1.6 * k}px"
+								stroke-linejoin="round"
+							/>
+						{/if}
+					</g>
+				{/if}
+
 				{#if showSea && overlays.sea}
 					<!-- Selected and hovered hexes; the band hides the cells beneath it -->
 					<g pointer-events="none">
@@ -1830,6 +1914,72 @@
 		/>
 		<IconButton icon={IconDocument} label="Intel reports" size="sm" shape="square" variant="ghost" href="/intel" />
 	</nav>
+
+	<!-- Selected EEZ band (naval mode) -->
+	{#if selectedEez}
+		<div
+			class="panel absolute right-2 top-28 z-20 w-64 rounded-sm p-3 text-xs shadow-lg animate-pop-in"
+			data-testid="eez-panel"
+		>
+			<div class="flex items-center justify-between gap-2">
+				<h3 class="font-semibold text-heading">EEZ · {selectedEez.name}</h3>
+				<IconButton
+					icon={IconDismiss}
+					label="Close"
+					size="xs"
+					shape="square"
+					variant="ghost"
+					onclick={() => (selectedEezId = null)}
+				/>
+			</div>
+			<div class="mt-1 text-fg-muted">
+				{selectedEez.stateName} · {selectedEez.hexes} sea hex{selectedEez.hexes === 1 ? "" : "es"} from the coast to the open
+				grid
+			</div>
+			{#if selectedEez.ports.length}
+				<div class="mt-2">
+					Port{selectedEez.ports.length === 1 ? "" : "s"}: {selectedEez.ports.map((p) => p.name).join(", ")}
+				</div>
+			{/if}
+			<div class="mt-1">
+				{#if selectedEez.ships.length}
+					Ships: {selectedEez.ships.map((x) => SHIP_CLASSES[x.shipClass]?.short ?? x.shipClass).join(", ")}
+				{:else}
+					<span class="text-fg-muted">No ships in the zone.</span>
+				{/if}
+			</div>
+			{#if selectedEez.mines}
+				<div class="mt-1 text-error">{selectedEez.mines} minefield{selectedEez.mines === 1 ? "" : "s"}</div>
+			{/if}
+			<div class="mt-2 flex flex-wrap gap-x-3 gap-y-1 border-t border-line/20 pt-2">
+				<button
+					type="button"
+					class="text-[11px] text-primary-fg hover:underline"
+					onclick={() => {
+						const id = selectedEez!.regionId;
+						selectedEezId = null;
+						openRegion(id);
+					}}
+				>
+					Coastal region →
+				</button>
+				{#if selectedEezHexKey}
+					{@const key = selectedEezHexKey}
+					<button
+						type="button"
+						class="text-[11px] text-primary-fg hover:underline"
+						onclick={() => {
+							selectedEezId = null;
+							selectedHexKeys = new Set([key]);
+							selectedHexKey = key;
+						}}
+					>
+						Hex {key} →
+					</button>
+				{/if}
+			</div>
+		</div>
+	{/if}
 
 	<!-- Selected sea hex -->
 	{#if selectedHexInfo}
