@@ -32,6 +32,7 @@ import {
 	INFILTRATION_ASSETS,
 	actionChance,
 	assetCodename,
+	burnedGoneAt,
 	effectiveHeat,
 	fileFor,
 	plantReadyAt,
@@ -93,13 +94,19 @@ export interface NetworkAsset {
 	access: number;
 	heat: number;
 	status: "active" | "burned";
+	/** For a burned asset: when it drops off the network. */
+	goneAt: string | null;
 	plantedAt: string;
 	plantedBy: string | null;
 	handler: string | null;
 	usable: boolean;
 }
 
-/** Assets a state holds in a target, with idle heat decay applied for display. */
+/**
+ * Assets a state holds in a target, with idle heat decay applied for display.
+ * Burned assets disappear a day after burning; the rows stay so the
+ * operations log and copied files keep their source.
+ */
 export async function assetsFor(
 	db: Db,
 	stateId: number,
@@ -115,8 +122,13 @@ export async function assetsFor(
 		.leftJoin(userProfiles, eq(infiltrationAssets.plantedBy, userProfiles.accountId))
 		.where(and(eq(infiltrationAssets.stateId, stateId), eq(infiltrationAssets.targetStateId, targetStateId)))
 		.orderBy(desc(infiltrationAssets.plantedAt));
-	return rows.map(({ asset, handler }) => {
+	const visible = rows.filter(({ asset }) => {
+		const goneAt = burnedGoneAt(asset);
+		return !goneAt || goneAt > now;
+	});
+	return visible.map(({ asset, handler }) => {
 		const heat = effectiveHeat(asset, now);
+		const goneAt = burnedGoneAt(asset);
 		return {
 			id: asset.id,
 			codename: asset.codename,
@@ -128,6 +140,7 @@ export async function assetsFor(
 			access: asset.access,
 			heat,
 			status: asset.status as "active" | "burned",
+			goneAt: goneAt?.toISOString() ?? null,
 			plantedAt: asset.plantedAt.toISOString(),
 			plantedBy: asset.plantedBy,
 			handler,

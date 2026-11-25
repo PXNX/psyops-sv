@@ -119,6 +119,8 @@ export const INFILTRATION = {
 	PLANT_COOLDOWN_HOURS: 4,
 	/** Heat at which an asset is burned and can no longer be used. */
 	HEAT_MAX: 100,
+	/** A burned asset stays on the board this long, then its slot is cleared. */
+	BURNED_VISIBLE_HOURS: 24,
 	/** Heat an idle asset sheds per hour. */
 	HEAT_DECAY_PER_HOUR: 3,
 	/** A found file's body is capped so the ledger stays readable. */
@@ -274,6 +276,15 @@ export function plantReadyAt(lastPlantedAt: string | Date | null | undefined): D
 	const last = new Date(lastPlantedAt).getTime();
 	if (!Number.isFinite(last)) return null;
 	return new Date(last + INFILTRATION.PLANT_COOLDOWN_HOURS * 3600_000);
+}
+
+/**
+ * When a burned asset leaves the network. Burning is always the asset's last
+ * action, so its last-action time is the moment it was burned.
+ */
+export function burnedGoneAt(asset: { status: string; lastActionAt: string | Date }): Date | null {
+	if (asset.status !== "burned") return null;
+	return new Date(new Date(asset.lastActionAt).getTime() + INFILTRATION.BURNED_VISIBLE_HOURS * 3600_000);
 }
 
 /**

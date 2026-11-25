@@ -136,6 +136,23 @@ describe("using the network", () => {
 		const logged = await handle.db.select().from(infiltrationActions).where(eq(infiltrationActions.assetId, assetId));
 		expect(logged.length).toBeGreaterThanOrEqual(4);
 	});
+
+	it("keeps a burned asset on the board for a day, then clears it", async () => {
+		const [row] = await handle.db.select().from(infiltrationAssets).where(eq(infiltrationAssets.id, assetId));
+		const burnedAt = row!.lastActionAt.getTime();
+		const hour = 3600_000;
+		const soon = await assetsFor(handle.db, freedonia, sylvania, new Date(burnedAt + hour));
+		const shown = soon.find((a) => a.id === assetId)!;
+		expect(shown.status).toBe("burned");
+		expect(new Date(shown.goneAt!).getTime()).toBe(burnedAt + INFILTRATION.BURNED_VISIBLE_HOURS * hour);
+		const later = await assetsFor(
+			handle.db,
+			freedonia,
+			sylvania,
+			new Date(burnedAt + (INFILTRATION.BURNED_VISIBLE_HOURS + 1) * hour)
+		);
+		expect(later.find((a) => a.id === assetId)).toBeUndefined();
+	});
 });
 
 describe("the network feeds covert operations", () => {

@@ -84,7 +84,7 @@ export const load: PageServerLoad = async ({ locals, url }) => {
 	const [treasury, targetNames, assets, sites, files, actions, sessions, enemyAssets, lastPlant] = await Promise.all([
 		db.query.stateTreasury.findFirst({ where: (t, { eq }) => eq(t.stateId, stateId) }),
 		Promise.all(targets.map(async (t) => ({ ...t, logo: await getLogoUrl(t.logo) }))),
-		selectedTargetId ? assetsFor(db, stateId, selectedTargetId) : Promise.resolve([]),
+		selectedTargetId ? assetsFor(db, stateId, selectedTargetId, now) : Promise.resolve([]),
 		selectedTargetId ? sitesFor(db, stateId, selectedTargetId, now, getRegionName) : Promise.resolve([]),
 		selectedTargetId ? filesFor(db, stateId, selectedTargetId) : Promise.resolve([]),
 		selectedTargetId ? actionsFor(db, stateId, selectedTargetId) : Promise.resolve([]),

@@ -129,7 +129,7 @@
 	);
 	const atCapacity = $derived(activeAssets.length >= INFILTRATION.MAX_ASSETS_PER_TARGET);
 
-	// A ticking clock for the recruitment cooldown.
+	// A ticking clock for the recruitment cooldown and burned-asset timers.
 	let clock = $state(new Date());
 	$effect(() => {
 		const timer = setInterval(() => (clock = new Date()), 30_000);
@@ -427,7 +427,16 @@
 											{#if asset.compromised}
 												<Badge size="xs" tone="red">Double</Badge>
 											{:else if asset.status === "burned"}
+												{@const left = asset.goneAt ? countdown(asset.goneAt, clock) : null}
 												<Badge size="xs" tone="red">Burned</Badge>
+												{#if left}
+													<span
+														class="data text-[10px] text-fg-faint"
+														title="Burned assets leave the network {INFILTRATION.BURNED_VISIBLE_HOURS}h after burning."
+													>
+														gone in {left}
+													</span>
+												{/if}
 											{:else}
 												<span class="flex gap-0.5" title="Access level {asset.access}">
 													{#each [1, 2, 3] as l (l)}
