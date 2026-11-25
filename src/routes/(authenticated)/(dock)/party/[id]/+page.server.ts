@@ -17,6 +17,7 @@ import { getContext } from "#lib/server/context.js";
 import { superValidate, message } from "sveltekit-superforms";
 import { valibot } from "sveltekit-superforms/adapters/valibot";
 import { createPartySchema } from "../create/schema";
+import { recordRename } from "#lib/server/services/history/renames.js";
 
 // Configuration constants for the party edit flow (ported from the old /edit route).
 const EDIT_COST = 5000;
@@ -520,6 +521,13 @@ export const actions: Actions = {
 					.where(eq(politicalParties.id, partyId));
 
 				// Update or create edit history
+				await recordRename(tx, {
+					entityType: "party",
+					entityId: partyId,
+					oldName: party.name,
+					newName: name,
+					changedBy: account.id
+				});
 				if (editHistory) {
 					await tx
 						.update(partyEditHistory)

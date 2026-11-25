@@ -68,6 +68,7 @@ import { stateDebt, bailoutState, BailoutError } from "#lib/server/services/econ
 import { stateDebtCreditors, stateGdp, statePowerReport } from "#lib/server/services/economy/state-metrics.js";
 import { stateStabilities } from "#lib/server/services/stability.js";
 import { takeFirstTimeDetail } from "#lib/server/services/politics/first-time.js";
+import { recordRename } from "#lib/server/services/history/renames.js";
 import { ECONOMY_CONFIG } from "#lib/config/index.js";
 import { dossierFiles, intelViewer, stateIntel } from "#lib/server/services/military/state-intel.js";
 import { RESOURCE_NAMES, stateStats } from "./state-stats";
@@ -880,6 +881,15 @@ export const actions: Actions = {
 						logo: logoFileId
 					})
 					.where(eq(states.id, stateId));
+
+				await recordRename(tx, {
+					entityType: "state",
+					entityId: stateId,
+					oldName: state.name,
+					newName: name,
+					changedBy: account.id,
+					now
+				});
 
 				await tx
 					.insert(stateEditCooldowns)

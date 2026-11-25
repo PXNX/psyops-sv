@@ -65,7 +65,7 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 					}
 				}
 			},
-			orderBy: (partyMembers, { desc }) => [desc(partyMembers.joinedAt)]
+			orderBy: (partyMembers, { asc }) => [asc(partyMembers.joinedAt), asc(partyMembers.id)]
 		}),
 		// Calculate party rank - get all parties with their member counts
 		db

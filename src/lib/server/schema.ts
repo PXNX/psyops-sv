@@ -1956,6 +1956,28 @@ export const userTravelsRelations = relations(userTravels, ({ one }) => ({
 	toRegion: one(regions, { fields: [userTravels.toRegionId], references: [regions.id] })
 }));
 
+export const renameEntityEnum = pgEnum("rename_entity", ["party", "user", "state", "bloc"]);
+
+/** Every recorded name change, so entity timelines can show renames too. */
+export const renameHistory = pgTable(
+	"rename_history",
+	{
+		id: integer("id").generatedByDefaultAsIdentity().primaryKey(),
+		entityType: renameEntityEnum("entity_type").notNull(),
+		entityId: text("entity_id").notNull(),
+		oldName: text("old_name").notNull(),
+		newName: text("new_name").notNull(),
+		changedBy: text("changed_by")
+			.notNull()
+			.references(() => accounts.id, { onDelete: "cascade" }),
+		changedAt: timestamp("changed_at").defaultNow().notNull()
+	},
+	(t) => ({
+		entityIdx: index("idx_rename_entity").on(t.entityType, t.entityId),
+		whenIdx: index("idx_rename_when").on(t.changedAt)
+	})
+);
+
 export const partyEditHistory = pgTable("party_edit_history", {
 	id: integer("id").generatedByDefaultAsIdentity().primaryKey(),
 	partyId: integer("party_id")

@@ -145,12 +145,14 @@ export async function battlesInRegion(db: Database, regionId: number): Promise<B
 	}));
 }
 
-// ── Unified timeline for states, blocs and parties ───────────────────────────
+import { renamesFor } from "../history/renames.js";
+
+// ── Unified timeline for states, blocs, parties and users ────────────────────
 
 export interface HistoryEntry {
 	id: string;
 	at: Date;
-	kind: "founded" | "leader" | "member" | "war" | "bailout";
+	kind: "founded" | "leader" | "member" | "war" | "bailout" | "rename";
 	title: string;
 	detail?: string;
 	tone: "neutral" | "blue" | "green" | "red" | "amber";
@@ -170,12 +172,49 @@ async function personFor(db: Database, userId: string): Promise<{ id: string; na
 }
 
 /** Merge the dated records that already exist into one readable timeline. */
-export async function historyFor(db: Database, kind: "state" | "bloc" | "party", id: number): Promise<HistoryEntry[]> {
+export async function historyFor(
+	db: Database,
+	kind: "state" | "bloc" | "party" | "user",
+	id: number | string,
+	opts: { oldestFirst?: boolean } = {}
+): Promise<HistoryEntry[]> {
 	const entries: HistoryEntry[] = [];
-	if (kind === "state") {
+	const renames = await renamesFor(db, kind, id);
+	for (const rename of renames) {
+		const person = await personFor(db, rename.changedBy);
+		entries.push({
+			id: rename.id,
+			at: rename.changedAt,
+			kind: "rename",
+			title: `renamed from ${rename.oldName} to ${rename.newName}`,
+			detail: "name change",
+			tone: "amber",
+			person
+		});
+	}
+	if (kind === "user") {
+		const [account] = await db
+			.select()
+			.from(accounts)
+			.where(eq(accounts.id, String(id)));
+		if (account?.createdAt)
+			entries.push({
+				id: `joined-${id}`,
+				at: account.createdAt,
+				kind: "founded",
+				title: "Joined PsyOps",
+				tone: "green"
+			});
+	} else if (kind === "state") {
 		const [state] = await db.select().from(states).where(eq(states.id, id));
 		if (state?.createdAt)
-			entries.push({ id: `founded-${id}`, at: state.createdAt, kind: "founded", title: "State founded", tone: "green" });
+			entries.push({
+				id: `founded-${id}`,
+				at: state.createdAt,
+				kind: "founded",
+				title: "State founded",
+				tone: "green"
+			});
 		const [president] = await db
 			.select({ at: presidents.electedAt, userId: presidents.userId, term: presidents.term })
 			.from(presidents)
@@ -187,7 +226,7 @@ export async function historyFor(db: Database, kind: "state" | "bloc" | "party",
 				id: `president-${id}`,
 				at: president.at,
 				kind: "leader",
-				title: 'elected president',
+				title: "elected president",
 				detail: `Term ${president.term}`,
 				tone: "blue",
 				person
@@ -204,7 +243,7 @@ export async function historyFor(db: Database, kind: "state" | "bloc" | "party",
 				id: `minister-${m.userId}-${m.ministry}-${m.at.getTime()}`,
 				at: m.at,
 				kind: "leader",
-				title: 'appointed minister',
+				title: "appointed minister",
 				detail: m.ministry.replaceAll("_", " "),
 				tone: "neutral",
 				person
@@ -243,7 +282,7 @@ export async function historyFor(db: Database, kind: "state" | "bloc" | "party",
 				id: `leader-${l.userId}-${l.at.getTime()}`,
 				at: l.at,
 				kind: "leader",
-				title: 'became bloc leader',
+				title: "became bloc leader",
 				tone: "blue",
 				person
 			});
@@ -259,7 +298,7 @@ export async function historyFor(db: Database, kind: "state" | "bloc" | "party",
 				id: `diplomat-${d.userId}-${d.at.getTime()}`,
 				at: d.at,
 				kind: "leader",
-				title: 'appointed diplomat',
+				title: "appointed diplomat",
 				tone: "neutral",
 				person
 			});
@@ -276,7 +315,13 @@ export async function historyFor(db: Database, kind: "state" | "bloc" | "party",
 	} else {
 		const [party] = await db.select().from(politicalParties).where(eq(politicalParties.id, id));
 		if (party?.foundedAt)
-			entries.push({ id: `founded-${id}`, at: party.foundedAt, kind: "founded", title: "Party founded", tone: "green" });
+			entries.push({
+				id: `founded-${id}`,
+				at: party.foundedAt,
+				kind: "founded",
+				title: "Party founded",
+				tone: "green"
+			});
 		const members = await db
 			.select({ at: partyMembers.joinedAt, userId: partyMembers.userId, role: partyMembers.role })
 			.from(partyMembers)
@@ -288,12 +333,14 @@ export async function historyFor(db: Database, kind: "state" | "bloc" | "party",
 				id: `member-${m.userId}-${m.at.getTime()}`,
 				at: m.at,
 				kind: "member",
-				title: 'joined the party',
+				title: m.role === "leader" ? "became party leader" : "joined the party",
 				detail: m.role,
 				tone: "blue",
 				person
 			});
 		}
 	}
-	return entries.sort((a, b) => b.at.getTime() - a.at.getTime()).slice(0, 60);
+	return entries
+		.sort((a, b) => (opts.oldestFirst ? a.at.getTime() - b.at.getTime() : b.at.getTime() - a.at.getTime()))
+		.slice(0, 60);
 }

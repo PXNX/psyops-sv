@@ -5,6 +5,7 @@ import { dividendYieldPercent, dividendYields } from "#lib/server/services/econo
 import { regionOpinion } from "#lib/server/services/politics/civic.service.js";
 import { portfolioReturns } from "#lib/server/services/economy/returns.js";
 import { karmaWithMedals } from "#lib/server/services/content/karma.js";
+import { recordRename } from "#lib/server/services/history/renames.js";
 import {
 	accounts,
 	partyMembers,
@@ -710,6 +711,14 @@ export const actions: Actions = {
 						logo: logoFileId || null
 					});
 				}
+
+				await recordRename(tx, {
+					entityType: "user",
+					entityId: account.id,
+					oldName: existingProfile?.name ?? account.email.split("@")[0],
+					newName: name,
+					changedBy: account.id
+				});
 			});
 
 			return message(form, "Profile updated successfully");

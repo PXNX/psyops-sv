@@ -507,6 +507,14 @@
 						</dd>
 					</div>
 					<div class="min-w-0">
+						<dt class="font-mono text-[11px] uppercase tracking-[0.15em] text-fg-muted">History</dt>
+						<dd class="border-b border-dotted border-line/40 pb-0.5 font-mono">
+							<a href="/user/{data.user.id}/history" class="text-fg-body hover:text-fg hover:underline">
+								Name changes & milestones →
+							</a>
+						</dd>
+					</div>
+					<div class="min-w-0">
 						<dt class="font-mono text-[11px] uppercase tracking-[0.15em] text-fg-muted">Articles</dt>
 						<dd class="text-fg-body border-b border-dotted border-line/40 pb-0.5 font-mono">
 							{data.articleCount}

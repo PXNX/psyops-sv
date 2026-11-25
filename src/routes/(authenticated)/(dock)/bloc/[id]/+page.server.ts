@@ -41,6 +41,7 @@ import { superValidate, message } from "sveltekit-superforms";
 import { valibot } from "sveltekit-superforms/adapters/valibot";
 import { editBlocSchema } from "./schema.js";
 import { warsOfBloc } from "#lib/server/services/military/history.js";
+import { recordRename } from "#lib/server/services/history/renames.js";
 import { statePowerReport } from "#lib/server/services/economy/state-metrics.js";
 import { stateStabilities } from "#lib/server/services/stability.js";
 
@@ -715,6 +716,14 @@ export const actions: Actions = {
 					defenceSpendingGuideline: guideline
 				})
 				.where(eq(blocs.id, blocId));
+
+			await recordRename(db, {
+				entityType: "bloc",
+				entityId: blocId,
+				oldName: bloc.name,
+				newName: name,
+				changedBy: account.id
+			});
 
 			return message(form, "Bloc updated successfully");
 		} catch (e) {
