@@ -96,7 +96,8 @@
 
 	// Why the travel button is locked, or null when it isn't.
 	const lockReason = $derived.by(() => {
-		if (!isIndependent && !allowsFreeMovement && entryBlockedReason) return entryBlockedReason;
+		// The server's entry check is the source of truth: refused means no travel.
+		if (!isIndependent && (entryBlockedReason || visa.blockedReason)) return entryBlockedReason ?? visa.blockedReason;
 		if (!travelInfo) return "You need a residence to travel from.";
 		if (!canAfford)
 			return `The fare is $${travelInfo.cost.toLocaleString()}, you have $${walletBalance.toLocaleString()}.`;
