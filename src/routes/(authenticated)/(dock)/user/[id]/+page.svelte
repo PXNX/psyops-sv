@@ -496,7 +496,25 @@
 						</dd>
 					</div>
 					<div class="min-w-0">
-						<dt class="font-mono text-[11px] uppercase tracking-[0.15em] text-fg-muted" title="Earned from community upvotes on posts and comments">Karma</dt>
+						<dt
+							class="font-mono text-[11px] uppercase tracking-[0.15em] text-fg-muted"
+							title="Cash plus {data.netWorth.positions} share position{data.netWorth.positions === 1
+								? ''
+								: 's'} at the current market price · ${data.netWorth.cash.toLocaleString()} cash + ${data.netWorth.stocks.toLocaleString()} in stocks"
+						>
+							Net worth
+						</dt>
+						<dd class="text-fg-body border-b border-dotted border-line/40 pb-0.5 font-mono">
+							${data.netWorth.total.toLocaleString()}
+						</dd>
+					</div>
+					<div class="min-w-0">
+						<dt
+							class="font-mono text-[11px] uppercase tracking-[0.15em] text-fg-muted"
+							title="Earned from community upvotes on posts and comments"
+						>
+							Karma
+						</dt>
 						<dd class="border-b border-dotted border-line/40 pb-0.5 font-mono">
 							<a
 								href="/user/{data.user.id}/karma"
@@ -508,7 +526,12 @@
 						</dd>
 					</div>
 					<div class="min-w-0">
-						<dt class="font-mono text-[11px] uppercase tracking-[0.15em] text-fg-muted" title="How much civilians in the home region like you">Reputation</dt>
+						<dt
+							class="font-mono text-[11px] uppercase tracking-[0.15em] text-fg-muted"
+							title="How much civilians in the home region like you"
+						>
+							Reputation
+						</dt>
 						<dd class="border-b border-dotted border-line/40 pb-0.5 font-mono">
 							<a
 								href="/user/{data.user.id}/reputation"
