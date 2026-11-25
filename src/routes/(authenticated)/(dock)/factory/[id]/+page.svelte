@@ -250,6 +250,14 @@
 			<p class="text-[10px] text-fg-muted uppercase tracking-wide">Crew on the books</p>
 
 			<div class="mt-4 w-full grid grid-cols-2 gap-2">
+				<div class="panel-muted rounded-sm p-3" title="Civilians in this region available for factory work">
+					<p class="text-[10px] text-fg-muted uppercase tracking-wide">Civilians available</p>
+					<p class="mt-0.5 text-sm font-bold text-fg font-mono">{data.workforce.available.toLocaleString()}</p>
+				</div>
+				<div class="panel-muted rounded-sm p-3" title="Wage workers would accept here, based on local pay and hardship">
+					<p class="text-[10px] text-fg-muted uppercase tracking-wide">Fair wage</p>
+					<p class="mt-0.5 text-sm font-bold text-fg font-mono">{data.strikeRisk.fairWage.toLocaleString()}</p>
+				</div>
 				<div class="panel-muted rounded-sm p-3">
 					<p class="text-[10px] text-fg-muted uppercase tracking-wide">Output / shift</p>
 					<p class="mt-0.5 flex items-center gap-1.5 text-sm font-bold text-fg">
@@ -285,10 +293,28 @@
 			{#if data.strike.active}
 				<p class="mt-3 w-full text-xs text-warning flex items-center gap-1.5">
 					<FluentWarning20Filled class="size-3.5 shrink-0" />
-					Strike (severity {data.strike.severity}%) — output at {Math.round(100 - data.strike.severity)}%.
-					Pay {data.strike.demandedWage?.toLocaleString()} to settle; it becomes the minimum wage.
+					Strike (severity {data.strike.severity}%) — output at {Math.round(100 - data.strike.severity)}%. Pay {data.strike.demandedWage?.toLocaleString()}
+					to settle; it becomes the minimum wage.
 				</p>
-			{:else if data.productivity.bonusPercent > 0}
+			{:else}
+				<p
+					class="mt-3 w-full text-xs flex items-center gap-1.5 {data.strikeRisk.level === 'high'
+						? 'text-hostile-fg'
+						: data.strikeRisk.level === 'elevated'
+							? 'text-warning'
+							: 'text-fg-muted'}"
+					title={data.strikeRisk.level === "cooldown"
+						? `A crew can strike again after ${data.strikeRisk.cooldownEndsAt ? new Date(data.strikeRisk.cooldownEndsAt).toLocaleString() : "the cooldown ends"}`
+						: `Workers accept ${data.strikeRisk.fairWage.toLocaleString()}; the current gap would cost ${data.strikeRisk.severity}% output`}
+				>
+					<FluentWarning20Filled class="size-3.5 shrink-0" />
+					Strike risk: {data.strikeRisk.level}
+					{#if data.strikeRisk.level === "elevated" || data.strikeRisk.level === "high"}
+						· pay {data.strikeRisk.fairWage.toLocaleString()} to settle
+					{/if}
+				</p>
+			{/if}
+			{#if data.productivity.bonusPercent > 0 && !data.strike.active}
 				<p class="mt-3 w-full text-xs text-positive-fg flex items-center gap-1.5">
 					<FluentCheckmark20Filled class="size-3.5 shrink-0" />
 					{data.productivity.shifts} uninterrupted shifts · +{data.productivity.bonusPercent}% productivity
@@ -364,8 +390,9 @@
 				<div class="mt-4">
 					<div class="flex items-center justify-between text-xs mb-1.5">
 						<span class="text-fg-muted">8h shift</span>
-						<span class="font-mono font-bold text-primary-fg">{data.shiftProgress >= 100 ? "Done" : timeRemaining}</span
-						>
+						<span class="font-mono font-bold text-primary-fg">
+							{data.shiftProgress >= 100 ? "Done" : timeRemaining}
+						</span>
 					</div>
 					<div class="h-2.5 bg-surface-4 rounded-full overflow-hidden border border-primary/20">
 						<div

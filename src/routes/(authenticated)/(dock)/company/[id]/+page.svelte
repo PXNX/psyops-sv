@@ -208,7 +208,7 @@
 				</dd>
 			</div>
 
-			<div class="py-3 sm:pr-4 border-b sm:border-b-0 border-line/10 grid grid-cols-3 gap-3">
+			<div class="py-3 sm:pr-4 border-b sm:border-b-0 border-line/10 grid grid-cols-2 sm:grid-cols-4 gap-3">
 				<div>
 					<dt class="text-[10px] uppercase tracking-wide text-fg-muted">Established</dt>
 					<dd class="text-sm font-semibold text-fg">{formatDate(data.company.foundedAt)}</dd>
@@ -219,6 +219,15 @@
 						{data.totalWorkers} in {data.factories.length}
 						{data.factories.length === 1 ? "factory" : "factories"}
 					</dd>
+				</div>
+				<div>
+					<dt
+						class="text-[10px] uppercase tracking-wide text-fg-muted"
+						title="Civilians available for work in the regions where this company operates"
+					>
+						Civilians available
+					</dt>
+					<dd class="text-sm font-semibold font-mono text-fg">{data.civilianWorkforce.toLocaleString()}</dd>
 				</div>
 				<div>
 					<dt

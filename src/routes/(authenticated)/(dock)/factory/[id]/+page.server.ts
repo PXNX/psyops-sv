@@ -21,13 +21,19 @@ import { error, fail } from "@sveltejs/kit";
 import { and, desc, eq, sql } from "drizzle-orm";
 import {
 	FACTORY_FINANCE,
+	canStrike,
+	civilianLabour,
 	expansionCost,
 	expansionDueAt,
 	factoryEbitda,
+	fairWage,
 	goodValue,
 	productivityFactor,
-	strikeOutputFactor
+	regionPopulation,
+	strikeOutputFactor,
+	strikeSeverity
 } from "#lib/config/index.js";
+import { regionsCivilianNeeds } from "#lib/server/services/civilians/supply.js";
 import type { Actions, PageServerLoad } from "./$types";
 import { superValidate, message } from "sveltekit-superforms";
 import { valibot } from "sveltekit-superforms/adapters/valibot";
@@ -73,6 +79,12 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 			companyLogo: companies.logo,
 			ownerId: companies.ownerId,
 			regionId: factories.regionId,
+			population: regions.population,
+			education: regions.education,
+			terrain: regions.terrain,
+			infrastructure: regions.infrastructure,
+			economy: regions.economy,
+			hospitals: regions.hospitals,
 			stateName: states.name,
 			stateId: regions.stateId
 		})
@@ -164,7 +176,9 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 		stateEnergyData,
 		[wallet],
 		factoryEditData,
-		owner
+		owner,
+		hardship,
+		peerWages
 	] = await Promise.all([
 		// Check whether an embargo between the company's headquarters state and the
 		// viewer's state blocks starting a new shift here.
@@ -228,10 +242,51 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 				name: profile?.name ?? null,
 				avatar: profile?.logoKey ? await getSignedDownloadUrl(profile.logoKey) : null
 			};
-		})()
+		})(),
+		// Civilian hardship and neighbouring wages are what workers compare their pay with.
+		regionsCivilianNeeds(db, [factory.regionId]).then((needs) => needs.get(factory.regionId)?.hardship ?? 0),
+		db
+			.select({ wage: factories.workerWage })
+			.from(factories)
+			.where(and(eq(factories.regionId, factory.regionId), sql`${factories.id} != ${factoryId}`))
 	]);
 
 	const canAffordWage = companyBudget ? companyBudget.balance >= factory.workerWage : false;
+
+	const homeRegion = {
+		id: factory.regionId,
+		population: factory.population,
+		terrain: factory.terrain,
+		infrastructure: factory.infrastructure,
+		economy: factory.economy,
+		education: factory.education,
+		hospitals: factory.hospitals
+	};
+	const civilianAvailable = civilianLabour(regionPopulation(homeRegion), factory.education ?? 0);
+	const peerWage = peerWages.length
+		? Math.round(peerWages.reduce((sum, row) => sum + Number(row.wage), 0) / peerWages.length)
+		: null;
+	const demandedWage = fairWage({
+		paidWage: Number(factory.workerWage),
+		peerWage,
+		hardship,
+		companyBudget: companyBudget?.balance ?? 0,
+		workerCount: workerCount.count
+	});
+	const gap = strikeSeverity(Number(factory.workerWage), demandedWage);
+	const eligible = canStrike(factory.lastStrikeAt);
+	const strikeLevel = factory.strikeActive
+		? "active"
+		: !eligible
+			? "cooldown"
+			: gap >= 15
+				? "high"
+				: gap > 0
+					? "elevated"
+					: "low";
+	const cooldownEndsAt = eligible
+		? null
+		: new Date(new Date(factory.lastStrikeAt!).getTime() + FACTORY_FINANCE.STRIKE_MIN_INTERVAL_DAYS * 86_400_000);
 
 	// Calculate shift status
 	const shiftStatus = currentUserJob?.lastWorked
@@ -289,6 +344,18 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 		canAffordExpansion: (companyBudget?.balance ?? 0) >= expansion.cost,
 		workers: workerCount.count,
 		maxWorkers: factory.maxWorkers,
+		workforce: {
+			available: civilianAvailable,
+			employed: workerCount.count,
+			education: factory.education ?? 0
+		},
+		strikeRisk: {
+			level: strikeLevel,
+			severity: gap,
+			fairWage: demandedWage,
+			eligible,
+			cooldownEndsAt: cooldownEndsAt?.toISOString() ?? null
+		},
 		currentUserJob,
 		isWorkingHere,
 		canWork: shiftStatus.canWork,

@@ -27,10 +27,12 @@ import { error, fail } from "@sveltejs/kit";
 import {
 	ECONOMY_CONFIG,
 	STOCKS,
+	civilianLabour,
 	factoryEbitda,
 	ipoSharePrice,
 	listingDueAt,
 	productivityFactor,
+	regionPopulation,
 	strikeOutputFactor
 } from "#lib/config/index.js";
 import { getRegionName } from "#lib/utils/formatting.js";
@@ -306,6 +308,27 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 
 	const uniqueRegions = Array.from(new Map(companyFactories.map((f) => [f.regionId, { id: f.regionId }])).values());
 
+	// Civilians available for work in every region the company operates in.
+	const companyRegionIds = uniqueRegions.map((r) => r.id);
+	const workforceRegions = companyRegionIds.length
+		? await db
+				.select({
+					id: regions.id,
+					population: regions.population,
+					education: regions.education,
+					terrain: regions.terrain,
+					infrastructure: regions.infrastructure,
+					economy: regions.economy,
+					hospitals: regions.hospitals
+				})
+				.from(regions)
+				.where(inArray(regions.id, companyRegionIds))
+		: [];
+	const civilianWorkforce = workforceRegions.reduce(
+		(sum, region) => sum + civilianLabour(regionPopulation(region), region.education ?? 0),
+		0
+	);
+
 	// Calculate how many shifts can be funded with current budget
 	const shiftsAffordable = totalWageCost > 0 ? Math.floor(Number(budget.balance) / totalWageCost) : 0;
 
@@ -453,6 +476,7 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 		},
 		shiftsAffordable,
 		ownerBalance,
+		civilianWorkforce,
 		shares: shares
 			? {
 					totalShares: shares.totalShares,
