@@ -52,6 +52,8 @@ import {
 import { companyEarnings } from "#lib/server/services/economy/earnings.js";
 import { StockError, buyShares, cancelShareListing, listShares } from "#lib/server/services/economy/stock-market.js";
 import { takeFirstTimeDetail } from "#lib/server/services/politics/first-time.js";
+import { loadCandles, loadLastPricesBefore } from "../../market/price-history.server.js";
+import { buildSeries, DAY, HOUR } from "../../market/series.js";
 import type { PageServerLoad, Actions } from "./$types";
 
 // Edit cost/cooldown for the "Edit Company" bottom sheet — ported as-is from the
@@ -431,6 +433,16 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 		}));
 	}
 
+	// Share price history: every trade writes a `stock:<id>` row to the same
+	// table the market charts use.
+	const stockKey = `stock:${companyId}`;
+	const chartEnd = Date.now();
+	const chartStart = chartEnd - 30 * DAY;
+	const [candles, opening] = await Promise.all([
+		loadCandles(new Date(chartStart), 12 * 3600, stockKey).then((m) => m.get(stockKey) ?? []),
+		loadLastPricesBefore(new Date(chartStart), stockKey).then((m) => m.get(stockKey) ?? null)
+	]);
+
 	return {
 		company: {
 			...company,
@@ -491,6 +503,12 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 			: null,
 		dividends,
 		earnings: await companyEarnings(db, companyId),
+		stockChart: {
+			series: buildSeries(candles, opening, chartStart, chartEnd, 12 * HOUR),
+			start: chartStart,
+			end: chartEnd,
+			last: candles.at(-1)?.close ?? opening ?? (shares ? Number(shares.ipoPrice) : 0)
+		},
 		dividendConfig: {
 			cooldownHours: ECONOMY_CONFIG.DIVIDEND_COOLDOWN_HOURS,
 			minPerShare: ECONOMY_CONFIG.DIVIDEND_MIN_PER_SHARE,

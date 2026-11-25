@@ -29,6 +29,7 @@
 	import { Button, IconButton, Badge } from "#lib/component/ui/index.js";
 	import EditCompanySheet from "./EditCompanySheet.svelte";
 	import DividendsPanel from "./DividendsPanel.svelte";
+	import PriceChart from "../../market/PriceChart.svelte";
 
 	let { data } = $props();
 
@@ -263,6 +264,21 @@
 			<p class="text-sm">{data.embargoReason}</p>
 		</div>
 	{/if}
+
+	<!-- Share price history -->
+	<section class="panel rounded-sm p-4 sm:p-5 mt-4 space-y-2">
+		<div class="flex flex-wrap items-baseline justify-between gap-2">
+			<h2 class="section-title">Share price</h2>
+			<p class="font-mono text-sm text-fg">
+				${money(data.stockChart.last)}
+				<span class="text-[11px] font-sans text-fg-muted">· last 30 days of trades</span>
+			</p>
+		</div>
+		<PriceChart points={data.stockChart.series} start={data.stockChart.start} end={data.stockChart.end} height={200} />
+		{#if !data.stockChart.series.length}
+			<p class="text-xs text-fg-muted">No share trades recorded yet — the chart starts with the first sale.</p>
+		{/if}
+	</section>
 
 	<!-- Balance sheet (owner only) -->
 	{#if data.isOwner}
