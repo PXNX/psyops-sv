@@ -68,6 +68,8 @@ import { stateDebt, bailoutState, BailoutError } from "#lib/server/services/econ
 import { stateDebtCreditors, stateGdp, statePowerReport } from "#lib/server/services/economy/state-metrics.js";
 import { takeFirstTimeDetail } from "#lib/server/services/politics/first-time.js";
 import { ECONOMY_CONFIG } from "#lib/config/index.js";
+import { intelViewer, stateIntel } from "#lib/server/services/military/state-intel.js";
+import { RESOURCE_NAMES, stateStats } from "./state-stats";
 
 /** The state an account can spend on: its president, else its economy minister. */
 async function bailoutAuthority(userId: string, targetStateId: number) {
@@ -541,11 +543,18 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 			region: e.regionId ? getRegionName(e.regionId) : null
 		}));
 	})();
+	// Fog of war: what the viewer's state knows about this one.
+	const intelPromise = intelViewer(db, accountId).then(async (viewer) => {
+		const foreignOps = !!viewer.authority && viewer.stateId != null && viewer.stateId !== stateId;
+		return { intel: await stateIntel(db, viewer.stateId, stateId, now), canRun: foreignOps };
+	});
 	// A grid attack takes part of the capacity offline for a while.
-	const [covertEffects, liveEnergy] = await Promise.all([
+	const [covertEffects, liveEnergy, intelInfo] = await Promise.all([
 		covertEffectsPromise,
-		energyData ? effectiveEnergy(db, stateId, energyData) : null
+		energyData ? effectiveEnergy(db, stateId, energyData) : null,
+		intelPromise
 	]);
+	const { intel } = intelInfo;
 
 	const actualPopulation = populationResult[0]?.total || 0;
 
@@ -596,6 +605,25 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 
 	// Check if current user is president of this state
 	const isPresident = presidentData?.userId === locals.account?.id;
+
+	// Exact figures stay on the server unless the viewer's intel confirms them.
+	const resourceTotals = Object.fromEntries(
+		RESOURCE_NAMES.map((name) => [name, stateRegions.reduce((sum, r) => sum + (r[name] || 0), 0)])
+	) as Record<(typeof RESOURCE_NAMES)[number], number>;
+	const stats = stateStats(intel, {
+		civilians,
+		residents: actualPopulation,
+		power: powerReport.focus?.score ?? 0,
+		debt,
+		gdp: gdpReport.gdp,
+		debtToGdp: gdpReport.debtToGdp,
+		energy: liveEnergy
+			? { used: liveEnergy.usedProduction, available: liveEnergy.totalProduction - liveEnergy.usedProduction }
+			: null,
+		regions: stateRegions.map((r) => ({ id: r.id, population: r.population || 0 })),
+		resources: resourceTotals
+	});
+	const exact = intel.exact;
 	const firstPresidentDetail = isPresident && accountId ? await takeFirstTimeDetail(db, accountId, "president") : false;
 
 	const hasActiveVisa = !!userActiveVisa && new Date(userActiveVisa.expiresAt) > new Date();
@@ -629,7 +657,7 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 			logo: stateLogo,
 			background: state.background,
 			description: state.description,
-			population: actualPopulation,
+			population: exact ? actualPopulation : null,
 			rating: state.rating,
 			martialLawUntil: state.martialLawUntil?.toISOString() ?? null,
 			createdAt: state.createdAt
@@ -690,16 +718,9 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 			name: getRegionName(region.id),
 			logo: regionCoatUrl(region.id),
 			rating: region.rating,
-			population: region.population || 0
+			population: exact ? region.population || 0 : null
 		})),
-		resources: {
-			oil: stateRegions.reduce((sum, r) => sum + (r.oil || 0), 0),
-			steel: stateRegions.reduce((sum, r) => sum + (r.steel || 0), 0),
-			chromium: stateRegions.reduce((sum, r) => sum + (r.chromium || 0), 0),
-			tungsten: stateRegions.reduce((sum, r) => sum + (r.tungsten || 0), 0),
-			rubber: stateRegions.reduce((sum, r) => sum + (r.rubber || 0), 0),
-			aluminium: stateRegions.reduce((sum, r) => sum + (r.aluminium || 0), 0)
-		},
+		resources: exact ? resourceTotals : null,
 		nextElection: nextElection
 			? {
 					id: nextElection.id,
@@ -716,22 +737,31 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 			taxRate: tax.taxRate,
 			implementedAt: tax.implementedAt
 		})),
-		energy: liveEnergy
-			? {
-					totalProduction: liveEnergy.totalProduction,
-					usedProduction: liveEnergy.usedProduction,
-					available: liveEnergy.totalProduction - liveEnergy.usedProduction,
-					gridDegraded: liveEnergy.gridDegraded
-				}
-			: null,
+		energy:
+			liveEnergy && exact
+				? {
+						totalProduction: liveEnergy.totalProduction,
+						usedProduction: liveEnergy.usedProduction,
+						available: liveEnergy.totalProduction - liveEnergy.usedProduction,
+						gridDegraded: liveEnergy.gridDegraded
+					}
+				: null,
 		covertEffects,
-		civilians,
+		civilians: exact ? civilians : null,
 		ihl,
-		debt,
-		power: powerReport.focus,
-		powerRanking: powerReport.ranking,
-		gdp: gdpReport,
-		creditors,
+		debt: exact ? debt : null,
+		power: exact ? powerReport.focus : null,
+		powerRanking: exact ? powerReport.ranking : null,
+		gdp: exact ? gdpReport : null,
+		creditors: exact ? creditors : null,
+		/** Every figure above as the viewer may see it (estimates for foreign states). */
+		stats,
+		intel: {
+			relation: intel.relation,
+			level: intel.level,
+			exact,
+			canRunOps: intelInfo.canRun
+		},
 		stancesAbout,
 		stancesHeld,
 		bailoutHistory,

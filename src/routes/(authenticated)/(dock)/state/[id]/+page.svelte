@@ -40,7 +40,10 @@
 	import { enhance } from "$app/forms";
 	import EditStateSheet from "./EditStateSheet.svelte";
 	import { IhlRecord } from "#lib/component/strike/index.js";
-	import { formatPopulation, STANCE_TONE, stanceLabel } from "#lib/config/index.js";
+	import { STANCE_TONE, stanceLabel } from "#lib/config/index.js";
+	import IntelValue from "#lib/component/intel/IntelValue.svelte";
+	import IntelPanel from "#lib/component/intel/IntelPanel.svelte";
+	import type { Estimate } from "#lib/utils/intel-estimate.js";
 
 	const { data } = $props();
 
@@ -82,8 +85,8 @@
 
 	const resourceEntries = $derived(
 		(["oil", "steel", "chromium", "tungsten", "rubber", "aluminium"] as const)
-			.map((name) => ({ name, value: data.resources[name] }))
-			.filter((r) => r.value)
+			.map((name) => ({ name, estimate: data.stats.resources[name] }))
+			.filter((r): r is { name: typeof r.name; estimate: Estimate } => !!r.estimate)
 	);
 
 	const taxNames: Record<string, string> = {
@@ -93,7 +96,12 @@
 		income: "Income"
 	};
 
-	const sortedRegions = $derived([...data.regions].sort((a, b) => b.population - a.population));
+	// Foreign populations are estimates: sort by what the viewer believes.
+	const regionPop = (id: number) => data.stats.regionPopulation[id];
+	const sortedRegions = $derived(
+		[...data.regions].sort((a, b) => (regionPop(b.id)?.value ?? 0) - (regionPop(a.id)?.value ?? 0))
+	);
+	const foreign = $derived(data.intel.relation !== "self");
 
 	const donorStance = $derived(
 		data.bailoutDonor ? (data.stancesAbout.find((s) => s.stateId === data.bailoutDonor!.stateId)?.stance ?? 0) : 0
@@ -324,7 +332,7 @@
 	<section aria-label="Key figures">
 		{#snippet statCard(
 			label: string,
-			value: string,
+			value: Estimate,
 			Icon: typeof FluentPeople20Filled,
 			tone: string,
 			href: string,
@@ -332,35 +340,33 @@
 		)}
 			<a
 				{href}
-				title={hint}
+				title={value.kind === "exact" ? hint : undefined}
 				class="panel-interactive group rounded-sm p-3 sm:p-4 no-underline"
 			>
 				<span class="flex items-center gap-1.5 text-[10px] uppercase tracking-[0.14em] text-fg-muted">
 					<Icon class="size-3.5 {tone}" />{label}
 				</span>
-				<span class="mt-1 block truncate font-mono text-lg font-bold text-fg group-hover:text-primary-hover sm:text-xl">
-					{value}
-				</span>
+				<IntelValue estimate={value} variant="block" class="mt-1 group-hover:text-primary-hover" />
 			</a>
 		{/snippet}
 		<div class="grid grid-cols-2 gap-2 sm:grid-cols-4">
-			{@render statCard("Civilians", formatPopulation(data.civilians), FluentPeople20Filled, "text-friendly", `/state/${data.state.id}/civilians`)}
-			{@render statCard("Residents", data.state.population.toLocaleString(), FluentPeople20Filled, "text-friendly", `/state/${data.state.id}/residents`)}
-			{@render statCard("Power", (data.power?.score ?? 0).toLocaleString(), FluentShield20Filled, "text-positive", `/state/${data.state.id}/power`, "Breakdown and ranking")}
-			{@render statCard("State debt", data.debt.toLocaleString(), FluentMoney20Filled, "text-amber-300", `/state/${data.state.id}/debt`, "Lenders and debt-to-GDP")}
+			{@render statCard("Civilians", data.stats.civilians, FluentPeople20Filled, "text-friendly", `/state/${data.state.id}/civilians`)}
+			{@render statCard("Residents", data.stats.residents, FluentPeople20Filled, "text-friendly", `/state/${data.state.id}/residents`)}
+			{@render statCard("Power", data.stats.power, FluentShield20Filled, "text-positive", `/state/${data.state.id}/power`, "Breakdown and ranking")}
+			{@render statCard("State debt", data.stats.debt, FluentMoney20Filled, "text-amber-300", `/state/${data.state.id}/debt`, "Lenders and debt-to-GDP")}
 		</div>
 		<div class="mt-2 flex flex-wrap gap-2">
 			<a href="/state/{data.state.id}/region" class="panel-muted rounded-sm px-2.5 py-1.5 text-xs text-fg-soft hover:text-primary-fg">
 				<span class="text-fg-muted">Regions</span> <strong class="font-mono text-fg">{data.regions.length}</strong>
 			</a>
 			<a href="/state/{data.state.id}/debt" class="panel-muted rounded-sm px-2.5 py-1.5 text-xs text-fg-soft hover:text-primary-fg">
-				<span class="text-fg-muted">GDP (est.)</span> <strong class="font-mono text-fg">{data.gdp.gdp.toLocaleString()}</strong>
+				<span class="text-fg-muted">GDP (est.)</span> <strong class="text-fg"><IntelValue estimate={data.stats.gdp} /></strong>
 			</a>
 			<a href="/state/{data.state.id}/debt" class="panel-muted rounded-sm px-2.5 py-1.5 text-xs text-fg-soft hover:text-primary-fg">
-				<span class="text-fg-muted">Debt / GDP</span> <strong class="font-mono text-fg">{data.gdp.debtToGdp == null ? "—" : `${data.gdp.debtToGdp}%`}</strong>
+				<span class="text-fg-muted">Debt / GDP</span> <strong class="text-fg">{#if data.stats.debtToGdp}<IntelValue estimate={data.stats.debtToGdp} unit="%" />{:else}—{/if}</strong>
 			</a>
 			<a href="/state/{data.state.id}/energyusage" class="panel-muted rounded-sm px-2.5 py-1.5 text-xs text-fg-soft hover:text-primary-fg">
-				<span class="text-fg-muted">Energy</span> <strong class="font-mono text-fg">{data.energy?.usedProduction ?? 0} / {data.energy?.available ?? 0} MW</strong>
+				<span class="text-fg-muted">Energy</span> <strong class="text-fg">{#if data.stats.energy}<IntelValue estimate={data.stats.energy.used} /> / <IntelValue estimate={data.stats.energy.available} unit=" MW" />{:else}<span class="font-mono">0 / 0 MW</span>{/if}</strong>
 			</a>
 		</div>
 	</section>
@@ -504,7 +510,7 @@
 									{region.name}
 								</span>
 								<span class="block text-xs text-fg-muted">
-									{region.population.toLocaleString()} residents · rating {region.rating ?? 0}
+									{#if regionPop(region.id)}<IntelValue estimate={regionPop(region.id)!} />{:else}—{/if} residents · rating {region.rating ?? 0}
 								</span>
 							</span>
 						</a>
@@ -527,6 +533,17 @@
 
 		</div>
 		<div class="space-y-6">
+	<!-- Fog of war: what the viewer's state knows here -->
+	{#if foreign}
+		<IntelPanel
+			stateId={data.state.id}
+			stateName={data.state.name}
+			relation={data.intel.relation}
+			level={data.intel.level}
+			canRunOps={data.intel.canRunOps}
+		/>
+	{/if}
+
 	<!-- Conduct in war: public international humanitarian law record -->
 	<IhlRecord record={data.ihl} />
 
@@ -701,9 +718,7 @@
 							<li class="panel-muted rounded-sm px-3 py-2 flex items-center gap-2 min-w-0">
 								<ResourceIcon name={resource.name} class="size-5 shrink-0" />
 								<span class="text-xs text-fg-muted truncate">{goodLabel(resource.name)}</span>
-								<span class="ml-auto text-sm font-bold font-mono text-fg">
-									{resource.value.toLocaleString()}
-								</span>
+								<IntelValue estimate={resource.estimate} class="ml-auto text-sm font-bold text-fg" />
 							</li>
 						{/each}
 					</ul>
