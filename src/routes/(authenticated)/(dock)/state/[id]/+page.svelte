@@ -43,6 +43,7 @@
 	import { STANCE_TONE, stanceLabel } from "#lib/config/index.js";
 	import IntelValue from "#lib/component/intel/IntelValue.svelte";
 	import IntelPanel from "#lib/component/intel/IntelPanel.svelte";
+	import StateDossier from "#lib/component/intel/StateDossier.svelte";
 	import type { Estimate } from "#lib/utils/intel-estimate.js";
 
 	const { data } = $props();
@@ -533,7 +534,7 @@
 
 		</div>
 		<div class="space-y-6">
-	<!-- Fog of war: what the viewer's state knows here -->
+	<!-- Fog of war: what the viewer's state knows here, and its dossier -->
 	{#if foreign}
 		<IntelPanel
 			stateId={data.state.id}
@@ -542,6 +543,9 @@
 			level={data.intel.level}
 			canRunOps={data.intel.canRunOps}
 		/>
+		{#if data.dossier}
+			<StateDossier files={data.dossier} stateId={data.state.id} />
+		{/if}
 	{/if}
 
 	<!-- Conduct in war: public international humanitarian law record -->

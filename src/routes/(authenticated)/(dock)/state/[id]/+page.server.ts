@@ -68,7 +68,7 @@ import { stateDebt, bailoutState, BailoutError } from "#lib/server/services/econ
 import { stateDebtCreditors, stateGdp, statePowerReport } from "#lib/server/services/economy/state-metrics.js";
 import { takeFirstTimeDetail } from "#lib/server/services/politics/first-time.js";
 import { ECONOMY_CONFIG } from "#lib/config/index.js";
-import { intelViewer, stateIntel } from "#lib/server/services/military/state-intel.js";
+import { dossierFiles, intelViewer, stateIntel } from "#lib/server/services/military/state-intel.js";
 import { RESOURCE_NAMES, stateStats } from "./state-stats";
 
 /** The state an account can spend on: its president, else its economy minister. */
@@ -543,10 +543,15 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 			region: e.regionId ? getRegionName(e.regionId) : null
 		}));
 	})();
-	// Fog of war: what the viewer's state knows about this one.
+	// Fog of war: what the viewer's state knows about this one, and the dossier
+	// its network has copied here (readable by the officials who run ops).
 	const intelPromise = intelViewer(db, accountId).then(async (viewer) => {
 		const foreignOps = !!viewer.authority && viewer.stateId != null && viewer.stateId !== stateId;
-		return { intel: await stateIntel(db, viewer.stateId, stateId, now), canRun: foreignOps };
+		const [intel, files] = await Promise.all([
+			stateIntel(db, viewer.stateId, stateId, now),
+			foreignOps ? dossierFiles(db, viewer.stateId!, stateId) : null
+		]);
+		return { intel, files, canRun: foreignOps };
 	});
 	// A grid attack takes part of the capacity offline for a while.
 	const [covertEffects, liveEnergy, intelInfo] = await Promise.all([
@@ -762,6 +767,7 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 			exact,
 			canRunOps: intelInfo.canRun
 		},
+		dossier: intelInfo.files,
 		stancesAbout,
 		stancesHeld,
 		bailoutHistory,
