@@ -11,6 +11,7 @@ import {
 	regionBorders,
 	residences,
 	userWallets,
+	resourceInventory,
 	stateTreasury,
 	companies,
 	companyBudgets,
@@ -368,6 +369,17 @@ export async function seedMockDatabase(db: PgDatabase<any>) {
 		{ userId: "user-3", balance: 10000 },
 		{ userId: "user-4", balance: 35000 },
 		{ userId: "user-5", balance: 100000 }
+	]);
+
+	// ============ Personal stockpile ============
+	// Enough for some workshop recipes but not others, so the production page
+	// shows both met and short requirements.
+	await db.insert(resourceInventory).values([
+		{ userId: "user-1", resourceType: "iron", quantity: 40 },
+		{ userId: "user-1", resourceType: "steel", quantity: 12 },
+		{ userId: "user-1", resourceType: "wood", quantity: 25 },
+		{ userId: "user-1", resourceType: "copper", quantity: 6 },
+		{ userId: "user-1", resourceType: "gunpowder", quantity: 3 }
 	]);
 
 	// ============ State Treasury ============
@@ -988,7 +1000,9 @@ export async function seedMockDatabase(db: PgDatabase<any>) {
 	// ============ Fleet at sea ============
 	// Ports sit on the sea hex offshore of a coastal region, so they land in
 	// the same place on the world map's hex layer and in the navy console.
-	const seedRegions = await db.select({ id: regions.id, latitude: regions.latitude, longitude: regions.longitude }).from(regions);
+	const seedRegions = await db
+		.select({ id: regions.id, latitude: regions.latitude, longitude: regions.longitude })
+		.from(regions);
 	const occupiedHexes = new Set<string>();
 	const libHex = portHexForRegion(freedoniaCoast!, seedRegions, occupiedHexes)!;
 	occupiedHexes.add(hexKey(libHex));
