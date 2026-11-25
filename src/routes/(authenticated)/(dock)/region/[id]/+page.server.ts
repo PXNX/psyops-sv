@@ -58,6 +58,7 @@ import {
 	labourShare,
 	CIVILIAN_NEEDS,
 	NEED_META,
+	REVOLUTION_CONFIG,
 	type StrikeTarget,
 	type StrikeWeapon
 } from "#lib/config/index.js";
@@ -77,6 +78,14 @@ import {
 } from "#lib/server/services/politics/regional-budget.js";
 import { regionPopulationReport } from "#lib/server/services/population-report.js";
 import { populationHistory } from "#lib/server/services/snapshot-history.js";
+import {
+	RevolutionError,
+	fightForFreedom,
+	joinRevolution,
+	revolutionHistory,
+	revolutionView,
+	startRevolution
+} from "#lib/server/services/politics/revolution.js";
 
 export const load: PageServerLoad = async ({ params, locals }) => {
 	const account = locals.account!;
@@ -560,16 +569,21 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 
 	// What this region's civilians can actually get today: food from the land
 	// and imports, power and heat from the grid, water from the local supply.
-	const [civilianNeeds, populationReport, populationTrend, patronage, regionBudget] = await Promise.all([
-		regionCivilianNeeds(db, regionId),
-		regionPopulationReport(db, regionId),
-		populationHistory(regionId),
-		regionCivicSummary(db, regionId, account.id),
-		// The region's own purse; only states hand out a regional share.
-		region.stateId ? regionBudgetSummary(db, regionId, account.id) : null
-	]);
+	const [civilianNeeds, populationReport, populationTrend, patronage, regionBudget, revolution, pastRevolutions] =
+		await Promise.all([
+			regionCivilianNeeds(db, regionId),
+			regionPopulationReport(db, regionId),
+			populationHistory(regionId),
+			regionCivicSummary(db, regionId, account.id),
+			// The region's own purse; only states hand out a regional share.
+			region.stateId ? regionBudgetSummary(db, regionId, account.id) : null,
+			revolutionView(db, regionId, account.id),
+			revolutionHistory(db, regionId)
+		]);
 
 	const result = {
+		revolution,
+		pastRevolutions,
 		patronage,
 		regionBudget,
 		strike: {
@@ -721,6 +735,55 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 };
 
 export const actions: Actions = {
+	// Residents declare an uprising while their civilians reject the state.
+	startRevolution: async ({ params, locals }) => {
+		try {
+			await startRevolution(db, { userId: locals.account!.id, regionId: parseInt(params.id) });
+			return {
+				success: true,
+				message: `Revolution declared — ${REVOLUTION_CONFIG.RIFLE_COST.toLocaleString()} rifles and $${REVOLUTION_CONFIG.MONEY_COST.toLocaleString()} spent. Rally three conspirators before the fight for freedom.`
+			};
+		} catch (err) {
+			if (err instanceof InsufficientFundsError) {
+				return fail(400, {
+					error: `Starting a revolution costs $${REVOLUTION_CONFIG.MONEY_COST.toLocaleString()}. You don't have enough cash.`
+				});
+			}
+			if (err instanceof RevolutionError) return fail(400, { error: err.message });
+			throw err;
+		}
+	},
+
+	joinRevolution: async ({ request, locals }) => {
+		const form = await request.formData();
+		try {
+			await joinRevolution(db, { userId: locals.account!.id, revolutionId: Number(form.get("revolutionId")) });
+			return { success: true, message: "You joined the revolution." };
+		} catch (err) {
+			if (err instanceof RevolutionError) return fail(400, { error: err.message });
+			throw err;
+		}
+	},
+
+	fightForFreedom: async ({ request, locals }) => {
+		const form = await request.formData();
+		try {
+			const result = await fightForFreedom(db, {
+				userId: locals.account!.id,
+				revolutionId: Number(form.get("revolutionId"))
+			});
+			const message =
+				result.outcome === "defeat"
+					? "The rising was crushed. The region stays in the state."
+					: result.outcome === "draw"
+						? "The fight for freedom ended in a draw — the region is independent!"
+						: "Victory! The region is independent.";
+			return { success: true, message };
+		} catch (err) {
+			if (err instanceof RevolutionError) return fail(400, { error: err.message });
+			throw err;
+		}
+	},
 	// The governor runs a programme paid from the regional budget.
 	startProgramme: async ({ request, params, locals }) => {
 		const form = await request.formData();

@@ -51,6 +51,7 @@
 	import { WEATHER_LABEL, localHour } from "#lib/config/index.js";
 	import type { ImageryInput } from "#lib/utils/sensor-image.js";
 	import CivilianNeeds from "./CivilianNeeds.svelte";
+	import Revolution from "./Revolution.svelte";
 	import Sparkline from "#lib/component/charts/Sparkline.svelte";
 	import { StrikeLog, StrikePlanner } from "#lib/component/strike/index.js";
 	import { formatPopulation } from "#lib/config/index.js";
@@ -474,6 +475,8 @@
 
 		<!-- What the civilians here live on -->
 		<CivilianNeeds needs={data.civilianNeeds} />
+
+		<Revolution regionId={data.region.id} revolution={data.revolution} pastRevolutions={data.pastRevolutions} />
 
 		<section class="panel rounded-sm p-4">
 			<div class="flex flex-wrap items-center justify-between gap-3">

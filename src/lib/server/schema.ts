@@ -103,6 +103,8 @@ export const exploitationPolicyEnum = pgEnum("exploitation_policy", [
 	"unrestricted"
 ]);
 export const borderStatusEnum = pgEnum("border_status", ["open", "closed"]);
+export const revolutionStatusEnum = pgEnum("revolution_status", ["organizing", "fighting", "independent", "crushed"]);
+export const revolutionOutcomeEnum = pgEnum("revolution_outcome", ["victory", "draw", "defeat"]);
 export const taxTypeEnum = pgEnum("tax_type", ["mining", "production", "market_transaction", "income"]);
 export const electionStatusEnum = pgEnum("election_status", ["scheduled", "active", "completed"]);
 export const militaryUnitTypeEnum = pgEnum("military_unit_type", [
@@ -379,6 +381,57 @@ export const regions = pgTable("regions", {
 	createdAt: timestamp("created_at").defaultNow().notNull()
 });
 
+// A region rises against its state. Only one uprising per region can be live
+// at a time; a crushed one may be tried again once civilian support is low.
+export const revolutions = pgTable(
+	"revolutions",
+	{
+		id: integer("id").generatedByDefaultAsIdentity().primaryKey(),
+		regionId: integer("region_id")
+			.notNull()
+			.references(() => regions.id, { onDelete: "cascade" }),
+		stateId: integer("state_id")
+			.notNull()
+			.references(() => states.id, { onDelete: "cascade" }),
+		startedBy: text("started_by")
+			.notNull()
+			.references(() => accounts.id, { onDelete: "cascade" }),
+		status: revolutionStatusEnum("status").notNull().default("organizing"),
+		outcome: revolutionOutcomeEnum("outcome"),
+		/** Civilian opinion of the state when the uprising began. */
+		opinionAtStart: integer("opinion_at_start").notNull(),
+		rebelPower: integer("rebel_power"),
+		governmentPower: integer("government_power"),
+		startedAt: timestamp("started_at").defaultNow().notNull(),
+		foughtAt: timestamp("fought_at"),
+		resolvedAt: timestamp("resolved_at")
+	},
+	(t) => ({
+		regionIdx: index("idx_revolution_region").on(t.regionId),
+		oneLiveIdx: uniqueIndex("uq_revolution_live_region")
+			.on(t.regionId)
+			.where(sql`${t.status} in ('organizing', 'fighting')`)
+	})
+);
+
+/** The conspirators who joined an uprising (three are needed to fight). */
+export const revolutionMembers = pgTable(
+	"revolution_members",
+	{
+		id: integer("id").generatedByDefaultAsIdentity().primaryKey(),
+		revolutionId: integer("revolution_id")
+			.notNull()
+			.references(() => revolutions.id, { onDelete: "cascade" }),
+		userId: text("user_id")
+			.notNull()
+			.references(() => accounts.id, { onDelete: "cascade" }),
+		joinedAt: timestamp("joined_at").defaultNow().notNull()
+	},
+	(t) => ({
+		memberIdx: uniqueIndex("uq_revolution_member").on(t.revolutionId, t.userId)
+	})
+);
+
 // An active disease outbreak in a region. Cases rise with the disease's spread
 // rate, fall with recoveries, and kill civilians each day; hospitals, clean
 // water and nutrition blunt both the spread and the mortality.
@@ -549,6 +602,18 @@ export const regionResourceInventory = pgTable(
 	(t) => ({ regionResourceIdx: uniqueIndex("idx_region_resource").on(t.regionId, t.resourceType) })
 );
 
+export const revolutionsRelations = relations(revolutions, ({ one, many }) => ({
+	region: one(regions, { fields: [revolutions.regionId], references: [regions.id] }),
+	state: one(states, { fields: [revolutions.stateId], references: [states.id] }),
+	starter: one(accounts, { fields: [revolutions.startedBy], references: [accounts.id] }),
+	members: many(revolutionMembers)
+}));
+
+export const revolutionMembersRelations = relations(revolutionMembers, ({ one }) => ({
+	revolution: one(revolutions, { fields: [revolutionMembers.revolutionId], references: [revolutions.id] }),
+	user: one(accounts, { fields: [revolutionMembers.userId], references: [accounts.id] })
+}));
+
 export const regionsRelations = relations(regions, ({ one, many }) => ({
 	state: one(states, {
 		fields: [regions.stateId],
@@ -563,6 +628,7 @@ export const regionsRelations = relations(regions, ({ one, many }) => ({
 	plants: many(powerPlants),
 	residences: many(residences, { relationName: "residenceRegion" }),
 	homeResidences: many(residences, { relationName: "homeRegion" }),
+	revolutions: many(revolutions),
 
 	militaryUnits: many(militaryUnits)
 }));
