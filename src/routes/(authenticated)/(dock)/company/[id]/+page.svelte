@@ -525,7 +525,7 @@
 			<!-- Order book -->
 			<div>
 				<div class="flex items-baseline justify-between mb-2">
-					<h3 class="text-[10px] uppercase tracking-wide text-fg-muted">Offers to sell</h3>
+					<h3 class="text-[10px] uppercase tracking-wide text-fg-muted">Best offer</h3>
 					{#if data.embargoReason}
 						<span class="text-xs text-red-300">Buying blocked by embargo</span>
 					{/if}

@@ -25,11 +25,12 @@ describe("market price is the lowest offer", () => {
 		expect(bestAsk([{ pricePerUnit: 10, quantity: 0 }])).toBeNull();
 	});
 
-	it("counts only units still on offer", () => {
+	it("counts the units available at the cheapest offer", () => {
 		expect(
 			offeredQuantity([
 				{ pricePerUnit: 5, quantity: 0 },
-				{ pricePerUnit: 9, quantity: 3 }
+				{ pricePerUnit: 9, quantity: 3 },
+				{ pricePerUnit: 12, quantity: 40 }
 			])
 		).toBe(3);
 	});

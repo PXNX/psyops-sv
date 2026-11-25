@@ -7,7 +7,7 @@ import {
 	resourceTypeEnum,
 	productTypeEnum
 } from "#lib/server/schema.js";
-import { eq, min, sql } from "drizzle-orm";
+import { eq, gt } from "drizzle-orm";
 import { fail } from "@sveltejs/kit";
 import type { Actions, PageServerLoad } from "./$types";
 import { loadCandles, loadLastPricesBefore } from "./price-history.server";
@@ -46,27 +46,29 @@ export const load: PageServerLoad = async ({ locals }) => {
 	const dayAgo = new Date(now - DAY);
 	const weekAgo = new Date(now - 7 * DAY);
 
-	const [[wallet], resources, products, asks, weekCandles, dayCandles, openWeek, openDay, lastEver, stocks] = await Promise.all(
-		[
+	const [[wallet], resources, products, asks, weekCandles, dayCandles, openWeek, openDay, lastEver, stocks] =
+		await Promise.all([
 			db.select().from(userWallets).where(eq(userWallets.userId, account.id)),
 			db.select().from(resourceInventory).where(eq(resourceInventory.userId, account.id)),
 			db.select().from(productInventory).where(eq(productInventory.userId, account.id)),
+			// Only the cheapest live offer per good: that is the ask shown, and the
+			// units available at it. The rest of the book stays out of the market.
 			db
-				.select({
+				.selectDistinctOn([marketListings.itemName], {
 					itemName: marketListings.itemName,
-					lowestPrice: min(marketListings.pricePerUnit).as("lowest_price"),
-					totalQuantity: sql<number>`sum(${marketListings.quantity})`.as("total_quantity")
+					lowestPrice: marketListings.pricePerUnit,
+					quantity: marketListings.quantity
 				})
 				.from(marketListings)
-				.groupBy(marketListings.itemName),
+				.where(gt(marketListings.quantity, 0))
+				.orderBy(marketListings.itemName, marketListings.pricePerUnit, marketListings.id),
 			loadCandles(weekAgo, 6 * 3600),
 			loadCandles(dayAgo, 3600),
 			loadLastPricesBefore(weekAgo),
 			loadLastPricesBefore(dayAgo),
 			loadLastPricesBefore(new Date(now + 60_000)),
 			stockBoard(db, account.id)
-		]
-	);
+		]);
 
 	const askMap = new Map(asks.map((a) => [a.itemName, a]));
 	const held = new Map<string, number>([
@@ -85,7 +87,7 @@ export const load: PageServerLoad = async ({ locals }) => {
 			name,
 			last: lastEver.get(name) ?? null,
 			ask: ask ? Number(ask.lowestPrice) : null,
-			unitsOnOffer: ask ? Number(ask.totalQuantity) : 0,
+			unitsOnOffer: ask ? Number(ask.quantity) : 0,
 			held: held.get(name) ?? 0,
 			change24h: changePct(day),
 			change7d: changePct(week),
@@ -110,7 +112,7 @@ export const load: PageServerLoad = async ({ locals }) => {
 	return {
 		now,
 		earnings: await earningsPulse(db),
-		stocks: await stockBoard(db, account.id),
+		stocks,
 		wallet: wallet || { balance: 10000, userId: account.id },
 		groups: [
 			{ title: "Raw materials", quotes: RESOURCES.map((r) => quote(r)) },

@@ -47,8 +47,6 @@
 			toastResult(result);
 		};
 
-	const OFFERS_SHOWN = 5;
-	let showAllOffers = $state(false);
 	let buyQuantities = $state<Record<string, number>>({});
 
 	let createQty = $state(1);
@@ -81,7 +79,10 @@
 	const rangeChange = $derived(changePct(series));
 
 	const lastTrade = $derived(data.candles.at(-1)?.close ?? data.openingPrice);
-	const liveOffers = $derived([...(data.myListing ? [data.myListing] : []), ...data.otherListings]);
+	const liveOffers = $derived([
+		...(data.myListing ? [data.myListing] : []),
+		...(data.bestOffer ? [data.bestOffer] : [])
+	]);
 	const currentPrice = $derived(bestAsk(liveOffers) ?? lastTrade);
 	const shownPrice = $derived(hover?.price ?? currentPrice);
 
@@ -100,8 +101,7 @@
 	const bestAskPrice = $derived(bestAsk(liveOffers));
 	const unitsOnOffer = $derived(offeredQuantity(liveOffers));
 	const totalAvailableForListing = $derived(data.userItemQuantity + (data.myListing?.quantity ?? 0));
-	const visibleOffers = $derived(showAllOffers ? data.otherListings : data.otherListings.slice(0, OFFERS_SHOWN));
-	const deepest = $derived(Math.max(1, ...data.otherListings.map((l) => l.quantity)));
+	const deepest = $derived(Math.max(1, data.bestOffer?.quantity ?? 1));
 
 	const cooldownDisplay = $derived.by(() => {
 		if (cooldownTimeRemaining <= 0) return null;
@@ -279,113 +279,93 @@
 	</section>
 
 	<div class="grid gap-4 lg:grid-cols-[minmax(0,1fr)_20rem] items-start">
-		<!-- Order book -->
+		<!-- Best offer: the market shows only the cheapest ask, never the rest of the book. -->
 		<section class="panel rounded-sm overflow-hidden">
 			<div class="flex items-center justify-between gap-3 px-4 py-3 border-b border-white/10">
-				<h2 class="section-title">Order book</h2>
+				<h2 class="section-title">Best offer</h2>
 				{#if data.taxRate}
 					<span class="text-xs text-warning">+{data.taxRate}% tax</span>
 				{/if}
 			</div>
 
-			{#if data.otherListings.length === 0}
-				<p class="px-4 py-8 text-center text-sm text-fg-muted">No asks on the board.</p>
-			{:else}
+			{#if data.bestOffer}
+				{@const listing = data.bestOffer}
+				{@const buyQty = buyQuantities[listing.id] || 1}
+				{@const itemCost = listing.pricePerUnit * buyQty}
+				{@const taxAmount = data.taxRate ? Math.floor((itemCost * data.taxRate) / 100) : 0}
 				<ol class="divide-y divide-white/[0.06]">
-					{#each visibleOffers as listing, i (listing.id)}
-						{@const isBest = i === 0}
-						{@const buyQty = buyQuantities[listing.id] || 1}
-						{@const itemCost = listing.pricePerUnit * buyQty}
-						{@const taxAmount = data.taxRate ? Math.floor((itemCost * data.taxRate) / 100) : 0}
-						<li
-							out:vanish
-							bind:this={rowEls[listing.id]}
-							class="relative animate-rise-in px-4 py-3 flex flex-col sm:flex-row sm:items-center gap-2.5 sm:gap-4"
-							style="--rise-delay: {Math.min(i, 8) * 40}ms"
-						>
-							<span
-								aria-hidden="true"
-								class="pointer-events-none absolute inset-y-1 right-0 transition-[width] duration-500 {isBest
-									? 'bg-success/10'
-									: 'bg-line/5'}"
-								style="width: {Math.max(4, (listing.quantity / deepest) * 100)}%"
-							></span>
-							<div class="relative flex items-center gap-3 min-w-0 flex-1">
-								<div class="w-24 shrink-0">
-									<p
-										class="font-mono text-lg font-bold tabular-nums leading-tight {isBest
-											? 'text-positive-fg'
-											: 'text-fg'}"
-									>
-										${listing.pricePerUnit.toLocaleString()}
-									</p>
-									<p class="text-xs text-fg-muted">
-										<span class="font-mono">{listing.quantity.toLocaleString()}</span> units
-									</p>
-								</div>
-								<UserLink id={listing.sellerId} name={listing.sellerName} avatar={listing.sellerAvatar} size="sm" />
-								{#if isBest}
-									<Badge tone="green" size="xs" class="ml-auto sm:ml-0 shrink-0">Best</Badge>
-								{/if}
-							</div>
-
-							<div class="relative flex items-center gap-2">
-								<form
-									method="POST"
-									action="?/buyListing"
-									use:enhance={submitWith(() => rowEls[listing.id] ?? ticketEl)}
-									class="flex items-center gap-2 flex-1 sm:flex-none"
-								>
-									<input type="hidden" name="listingId" value={listing.id} />
-									<input
-										type="number"
-										name="quantity"
-										min="1"
-										max={listing.quantity}
-										value={buyQty}
-										aria-label="Units to buy"
-										class="field-control rounded-sm h-9 w-16 px-2 text-sm text-center font-mono"
-										oninput={(e) => {
-											buyQuantities[listing.id] = parseInt(e.currentTarget.value) || 1;
-										}}
-									/>
-									<span
-										class="flex-1 sm:w-24 text-right font-mono text-sm tabular-nums text-fg"
-										title={taxAmount ? `incl. $${taxAmount.toLocaleString()} tax` : undefined}
-									>
-										${(itemCost + taxAmount).toLocaleString()}
-									</span>
-									<Button type="submit" size="sm" variant={isBest ? "primary" : "secondary"}>Buy</Button>
-								</form>
-								{#if data.governmentState}
-									<form method="POST" action="?/buyListingAsState" use:enhance={submitWith(() => rowEls[listing.id])}>
-										<input type="hidden" name="listingId" value={listing.id} />
-										<input type="hidden" name="quantity" value={buyQty} />
-										<Button
-											type="submit"
-											size="sm"
-											variant="soft-amber"
-											icon={FluentBuildingGovernment20Filled}
-											title="Buy for {data.governmentState
-												.name} (treasury ${data.governmentState.treasuryBalance.toLocaleString()})"
-										>
-											<span class="sr-only sm:not-sr-only">State</span>
-										</Button>
-									</form>
-								{/if}
-							</div>
-						</li>
-					{/each}
-				</ol>
-				{#if data.otherListings.length > OFFERS_SHOWN}
-					<button
-						type="button"
-						class="tap-target w-full px-4 py-2.5 border-t border-white/[0.06] text-xs text-fg-muted hover:text-primary-fg transition-colors"
-						onclick={() => (showAllOffers = !showAllOffers)}
+					<li
+						out:vanish
+						bind:this={rowEls[listing.id]}
+						class="relative animate-rise-in px-4 py-3 flex flex-col sm:flex-row sm:items-center gap-2.5 sm:gap-4"
 					>
-						{showAllOffers ? "Show fewer" : `Show ${data.otherListings.length - OFFERS_SHOWN} more asks`}
-					</button>
-				{/if}
+						<span
+							aria-hidden="true"
+							class="pointer-events-none absolute inset-y-1 right-0 bg-success/10 transition-[width] duration-500"
+							style="width: {Math.max(4, (listing.quantity / deepest) * 100)}%"
+						></span>
+						<div class="relative flex items-center gap-3 min-w-0 flex-1">
+							<div class="w-24 shrink-0">
+								<p class="font-mono text-lg font-bold tabular-nums leading-tight text-positive-fg">
+									${listing.pricePerUnit.toLocaleString()}
+								</p>
+								<p class="text-xs text-fg-muted">
+									<span class="font-mono">{listing.quantity.toLocaleString()}</span> units
+								</p>
+							</div>
+							<UserLink id={listing.sellerId} name={listing.sellerName} avatar={listing.sellerAvatar} size="sm" />
+							<Badge tone="green" size="xs" class="ml-auto sm:ml-0 shrink-0">Best</Badge>
+						</div>
+
+						<div class="relative flex items-center gap-2">
+							<form
+								method="POST"
+								action="?/buyListing"
+								use:enhance={submitWith(() => rowEls[listing.id] ?? ticketEl)}
+								class="flex items-center gap-2 flex-1 sm:flex-none"
+							>
+								<input type="hidden" name="listingId" value={listing.id} />
+								<input
+									type="number"
+									name="quantity"
+									min="1"
+									max={listing.quantity}
+									value={buyQty}
+									aria-label="Units to buy"
+									class="field-control rounded-sm h-9 w-16 px-2 text-sm text-center font-mono"
+									oninput={(e) => {
+										buyQuantities[listing.id] = parseInt(e.currentTarget.value) || 1;
+									}}
+								/>
+								<span
+									class="flex-1 sm:w-24 text-right font-mono text-sm tabular-nums text-fg"
+									title={taxAmount ? `incl. $${taxAmount.toLocaleString()} tax` : undefined}
+								>
+									${(itemCost + taxAmount).toLocaleString()}
+								</span>
+								<Button type="submit" size="sm" variant="primary">Buy</Button>
+							</form>
+							{#if data.governmentState}
+								<form method="POST" action="?/buyListingAsState" use:enhance={submitWith(() => rowEls[listing.id])}>
+									<input type="hidden" name="listingId" value={listing.id} />
+									<input type="hidden" name="quantity" value={buyQty} />
+									<Button
+										type="submit"
+										size="sm"
+										variant="soft-amber"
+										icon={FluentBuildingGovernment20Filled}
+										title="Buy for {data.governmentState
+											.name} (treasury ${data.governmentState.treasuryBalance.toLocaleString()})"
+									>
+										<span class="sr-only sm:not-sr-only">State</span>
+									</Button>
+								</form>
+							{/if}
+						</div>
+					</li>
+				</ol>
+			{:else}
+				<p class="px-4 py-8 text-center text-sm text-fg-muted">No asks on the board.</p>
 			{/if}
 		</section>
 

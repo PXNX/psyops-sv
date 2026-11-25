@@ -27,10 +27,13 @@ export class StockError extends Error {}
 // These two helpers live in SvelteKit-aware modules (they import $app/env), so
 // they are resolved lazily and can be stubbed in tests that import this file.
 type EmbargoCheck = (companyStateId: number | null, userId: string) => Promise<string | null>;
+type EmbargoMapCheck = (companyStateIds: Array<number | null>, userId: string) => Promise<Map<number, string>>;
 type SaleNotifier = (userId: string, kind: string, payload: Record<string, unknown>) => Promise<unknown>;
 
 const defaultEmbargoCheck: EmbargoCheck = async (stateId, userId) =>
 	(await import("#lib/server/embargo.js")).getEmbargoReason(stateId, userId);
+const defaultEmbargoMapCheck: EmbargoMapCheck = async (stateIds, userId) =>
+	(await import("#lib/server/embargo.js")).getEmbargoReasons(stateIds, userId);
 const defaultNotifier: SaleNotifier = async (userId, kind, payload) =>
 	(await import("#lib/server/services/push-notification.service.js")).sendNotificationIfEnabled(
 		userId,
@@ -38,18 +41,26 @@ const defaultNotifier: SaleNotifier = async (userId, kind, payload) =>
 		payload as never
 	);
 
-/** Every listed company with its current quote and the viewer's holding. */
-export async function stockBoard(db: Database, userId: string) {
+/** Every listed company with its current quote, the viewer's holding, and
+ * whether an embargo blocks the viewer from buying in. Only the cheapest open
+ * offer is quoted: the rest of the book is not shown. */
+export async function stockBoard(
+	db: Database,
+	userId: string,
+	{ checkEmbargoes = defaultEmbargoMapCheck }: { checkEmbargoes?: EmbargoMapCheck } = {}
+) {
 	const publicShares = await db
 		.select({
 			companyId: companyShares.companyId,
 			name: companies.name,
 			ipoPrice: companyShares.ipoPrice,
 			listedAt: companyShares.listedAt,
-			founderLockedShares: companyShares.founderLockedShares
+			founderLockedShares: companyShares.founderLockedShares,
+			stateId: regions.stateId
 		})
 		.from(companyShares)
 		.innerJoin(companies, eq(companies.id, companyShares.companyId))
+		.leftJoin(regions, eq(companies.regionId, regions.id))
 		.where(isNotNull(companyShares.listedAt))
 		.orderBy(companies.name);
 	if (!publicShares.length) return [];
@@ -72,17 +83,21 @@ export async function stockBoard(db: Database, userId: string) {
 			.where(eq(shareHoldings.userId, userId)),
 		sharePrices(db, companyIds)
 	]);
+	// Ordered cheapest first, so the first ask per company is the only one quoted.
 	const askByCompany = new Map<number, { id: number; price: number; units: number }>();
 	for (const ask of openAsks) {
-		const current = askByCompany.get(ask.companyId) ?? {
+		if (askByCompany.has(ask.companyId)) continue;
+		askByCompany.set(ask.companyId, {
 			id: ask.id,
 			price: Number(ask.pricePerUnit),
-			units: 0
-		};
-		current.units += ask.quantity;
-		askByCompany.set(ask.companyId, current);
+			units: ask.quantity
+		});
 	}
 	const heldByCompany = new Map(holdings.map((h) => [h.companyId, h.quantity]));
+	const embargoReasons = await checkEmbargoes(
+		publicShares.map((s) => s.stateId),
+		userId
+	);
 
 	return publicShares.map((s) => {
 		const ask = askByCompany.get(s.companyId);
@@ -95,7 +110,8 @@ export async function stockBoard(db: Database, userId: string) {
 			bestAskId: ask?.id ?? null,
 			unitsOnOffer: ask?.units ?? 0,
 			held: heldByCompany.get(s.companyId) ?? 0,
-			founderLockedShares: s.founderLockedShares
+			founderLockedShares: s.founderLockedShares,
+			embargoReason: (s.stateId !== null ? embargoReasons.get(s.stateId) : null) ?? null
 		};
 	});
 }
@@ -117,9 +133,19 @@ export async function stockOffers(db: Database, companyId: number) {
 /** Offer shares for sale. The founder can never list below their locked block. */
 export async function listShares(
 	db: Database,
-	{ userId, companyId, quantity, pricePerUnit }: { userId: string; companyId: number; quantity: number; pricePerUnit: number }
+	{
+		userId,
+		companyId,
+		quantity,
+		pricePerUnit
+	}: { userId: string; companyId: number; quantity: number; pricePerUnit: number }
 ) {
-	if (!Number.isSafeInteger(quantity) || quantity < 1 || !Number.isSafeInteger(pricePerUnit) || pricePerUnit < ECONOMY_CONFIG.MIN_SHARE_PRICE) {
+	if (
+		!Number.isSafeInteger(quantity) ||
+		quantity < 1 ||
+		!Number.isSafeInteger(pricePerUnit) ||
+		pricePerUnit < ECONOMY_CONFIG.MIN_SHARE_PRICE
+	) {
 		throw new StockError("Invalid listing data.");
 	}
 	const [company] = await db.select({ ownerId: companies.ownerId }).from(companies).where(eq(companies.id, companyId));
@@ -137,7 +163,9 @@ export async function listShares(
 		.where(and(eq(shareHoldings.companyId, companyId), eq(shareHoldings.userId, userId)));
 	if (!holding || holding.quantity < quantity) throw new StockError("You don't own enough shares.");
 	if (userId === company.ownerId && holding.quantity - quantity < shares.founderLockedShares) {
-		throw new StockError(`As the founder you must keep at least ${shares.founderLockedShares.toLocaleString()} locked shares.`);
+		throw new StockError(
+			`As the founder you must keep at least ${shares.founderLockedShares.toLocaleString()} locked shares.`
+		);
 	}
 
 	await db.transaction(async (tx) => {
@@ -166,9 +194,7 @@ export async function cancelShareListing(db: Database, { userId, listingId }: { 
 				.set({ quantity: holding.quantity + listing.quantity, updatedAt: new Date() })
 				.where(and(eq(shareHoldings.companyId, listing.companyId), eq(shareHoldings.userId, userId)));
 		} else {
-			await tx
-				.insert(shareHoldings)
-				.values({ companyId: listing.companyId, userId, quantity: listing.quantity });
+			await tx.insert(shareHoldings).values({ companyId: listing.companyId, userId, quantity: listing.quantity });
 		}
 		await tx.delete(shareListings).where(eq(shareListings.id, listingId));
 	});

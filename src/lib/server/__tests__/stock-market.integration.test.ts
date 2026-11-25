@@ -1,9 +1,17 @@
 // Shares trading on the market board against a real (in-memory) Postgres:
 // quotes, buying from an order, posting an offer and withdrawing it.
 import { afterAll, beforeAll, describe, expect, it } from "@rstest/core";
-import { and, eq } from "drizzle-orm";
+import { and, eq, isNotNull } from "drizzle-orm";
 import { createMockDb, type MockDbHandle } from "../mock-db";
-import { companies, companyShares, shareHoldings, shareListings, shareTransactions, userWallets } from "../schema";
+import {
+	companies,
+	companyShares,
+	regions,
+	shareHoldings,
+	shareListings,
+	shareTransactions,
+	userWallets
+} from "../schema";
 import { StockError, buyShares, cancelShareListing, listShares, stockBoard } from "../services/economy/stock-market";
 
 let handle: MockDbHandle;
@@ -25,7 +33,9 @@ beforeAll(async () => {
 	const [company] = await handle.db.select().from(companies).where(eq(companies.name, "Freedonia Mining Corp"));
 	companyId = company!.id;
 	// listAt/listedAt default to now, so this company is already tradeable.
-	await handle.db.insert(companyShares).values({ companyId, totalShares: 1000, founderLockedShares: 510, ipoPrice: 50 });
+	await handle.db
+		.insert(companyShares)
+		.values({ companyId, totalShares: 1000, founderLockedShares: 510, ipoPrice: 50 });
 	await handle.db.insert(shareHoldings).values([
 		{ companyId, userId: "user-1", quantity: 600 },
 		{ companyId, userId: "user-2", quantity: 300 }
@@ -43,13 +53,56 @@ afterAll(async () => {
 
 describe("stock market", () => {
 	it("shows each public company with its quote, best ask and the viewer's holding", async () => {
-		const board = await stockBoard(handle.db, "user-2");
+		const board = await stockBoard(handle.db, "user-2", { checkEmbargoes: async () => new Map() });
 		const row = board.find((s) => s.companyId === companyId)!;
 		expect(row.name).toBe("Freedonia Mining Corp");
 		expect(row.ask).toBe(60);
 		expect(row.bestAskId).toBe(firstListingId);
 		expect(row.unitsOnOffer).toBe(10);
 		expect(row.held).toBe(300);
+		expect(row.embargoReason).toBeNull();
+	});
+
+	it("quotes only the cheapest offer and the units available at it", async () => {
+		await handle.db.insert(shareListings).values({ companyId, sellerId: "user-1", quantity: 7, pricePerUnit: 80 });
+		const board = await stockBoard(handle.db, "user-2", { checkEmbargoes: async () => new Map() });
+		const row = board.find((s) => s.companyId === companyId)!;
+		expect(row.ask).toBe(60);
+		expect(row.unitsOnOffer).toBe(10);
+		await handle.db
+			.delete(shareListings)
+			.where(and(eq(shareListings.companyId, companyId), eq(shareListings.pricePerUnit, 80)));
+	});
+
+	it("flags a company whose headquarters state is embargoed for the viewer", async () => {
+		// Give the company a headquarters in a state so the embargo check has one.
+		const [region] = await handle.db
+			.select({ id: regions.id })
+			.from(regions)
+			.where(isNotNull(regions.stateId))
+			.limit(1);
+		await handle.db.update(companies).set({ regionId: region!.id }).where(eq(companies.id, companyId));
+
+		const board = await stockBoard(handle.db, "user-2", {
+			checkEmbargoes: async (stateIds) =>
+				new Map(stateIds.filter((id): id is number => id !== null).map((id) => [id, "Embargoed"] as const))
+		});
+		const row = board.find((s) => s.companyId === companyId)!;
+		expect(row.embargoReason).toBe("Embargoed");
+	});
+
+	it("refuses to buy shares when an embargo applies", async () => {
+		const buyerBefore = await wallet("user-2");
+		await expect(
+			buyShares(handle.db, {
+				userId: "user-2",
+				listingId: firstListingId,
+				quantity: 1,
+				checkEmbargo: async () => "Trade is blocked by an embargo.",
+				notify: async () => undefined
+			})
+		).rejects.toThrow(/embargo/);
+		expect(await wallet("user-2")).toBe(buyerBefore);
 	});
 
 	it("moves cash and shares when buying, and records the trade", async () => {

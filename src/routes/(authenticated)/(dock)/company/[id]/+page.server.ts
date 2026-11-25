@@ -371,7 +371,11 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 				.select({ quantity: shareHoldings.quantity })
 				.from(shareHoldings)
 				.where(and(eq(shareHoldings.companyId, companyId), eq(shareHoldings.userId, account.id))),
-			db.select().from(shareListings).where(eq(shareListings.companyId, companyId)).orderBy(shareListings.pricePerUnit),
+			db
+				.select()
+				.from(shareListings)
+				.where(eq(shareListings.companyId, companyId))
+				.orderBy(shareListings.pricePerUnit, shareListings.id),
 			db
 				.select({ userId: shareHoldings.userId, quantity: shareHoldings.quantity })
 				.from(shareHoldings)
@@ -383,7 +387,14 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 
 		floatOutstanding = rawListings.reduce((sum, l) => sum + l.quantity, 0);
 
-		const holderIds = Array.from(new Set([...holderRows.map((h) => h.userId), ...rawListings.map((l) => l.sellerId)]));
+		// Only the cheapest offer you can actually buy is shown; your own offers
+		// stay visible so you can withdraw them.
+		const bestOtherListingId = rawListings.find((l) => l.sellerId !== account.id)?.id ?? null;
+		const shownListings = rawListings.filter((l) => l.sellerId === account.id || l.id === bestOtherListingId);
+
+		const holderIds = Array.from(
+			new Set([...holderRows.map((h) => h.userId), ...shownListings.map((l) => l.sellerId)])
+		);
 		const profiles =
 			holderIds.length > 0
 				? await db.query.userProfiles.findMany({
@@ -395,7 +406,7 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 			await Promise.all(profiles.map(async (p) => [p.accountId, await getLogoUrl(p.logo)] as const))
 		);
 
-		listings = rawListings.map((l) => ({
+		listings = shownListings.map((l) => ({
 			id: l.id,
 			sellerId: l.sellerId,
 			sellerName: nameByUserId.get(l.sellerId) ?? null,

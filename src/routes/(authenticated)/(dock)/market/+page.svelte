@@ -86,7 +86,10 @@
 			<div class="px-4 pt-4 sm:px-5 sm:pt-5 flex flex-wrap items-start justify-between gap-x-4 gap-y-3">
 				<a href={hero.href ?? `/market/${hero.name}`} class="group flex items-center gap-3 min-w-0">
 					<span class="size-12 shrink-0 flex items-center justify-center rounded-sm panel-muted">
-						{#if hero.kind === "stock"}<span class="text-2xl">📈</span>{:else}<ResourceIcon name={hero.name} class="size-7" />{/if}
+						{#if hero.kind === "stock"}<span class="text-2xl">📈</span>{:else}<ResourceIcon
+								name={hero.name}
+								class="size-7"
+							/>{/if}
 					</span>
 					<span class="min-w-0">
 						<span
@@ -125,7 +128,10 @@
 									hover = null;
 								}}
 							>
-								{#if m.kind === "stock"}<span class="text-sm">📈</span>{:else}<ResourceIcon name={m.name} class="size-4" />{/if}
+								{#if m.kind === "stock"}<span class="text-sm">📈</span>{:else}<ResourceIcon
+										name={m.name}
+										class="size-4"
+									/>{/if}
 								<span>{goodLabel(m.label ?? m.name)}</span>
 								{#if pct !== null}
 									<span class="font-mono tabular-nums {pct >= 0 ? 'text-positive' : 'text-hostile'}">
@@ -170,7 +176,10 @@
 								<span
 									class="size-10 shrink-0 flex items-center justify-center rounded-sm bg-white/[0.04] border border-white/10 transition-colors group-hover:border-primary/45"
 								>
-									{#if q.kind === "stock"}<span class="text-xl">📈</span>{:else}<ResourceIcon name={q.name} class="size-6" />{/if}
+									{#if q.kind === "stock"}<span class="text-xl">📈</span>{:else}<ResourceIcon
+											name={q.name}
+											class="size-6"
+										/>{/if}
 								</span>
 								<span class="min-w-0 flex-1">
 									<span
@@ -244,8 +253,8 @@
 			<a href="/company" class="text-xs text-fg-muted hover:text-primary-fg">Browse companies →</a>
 		</div>
 		<p class="mt-1 text-xs text-fg-muted">
-			Public company shares trade here. Buy the cheapest open offer or post your own; a company's shares only
-			trade 72 hours after its IPO.
+			Public company shares trade here. Buy the cheapest open offer or post your own; a company's shares only trade 72
+			hours after its IPO.
 		</p>
 		{#if form?.error}
 			<p class="field-error mt-2">{form.error}</p>
@@ -280,7 +289,15 @@
 								<td class="py-2 pr-3 text-right font-mono text-xs">{stock.unitsOnOffer.toLocaleString()}</td>
 								<td class="py-2 pr-3 text-right font-mono text-xs text-primary-fg">{stock.held.toLocaleString()}</td>
 								<td class="py-2 text-right">
-									<div class="flex flex-wrap justify-end gap-1.5">
+									<div class="flex flex-wrap items-center justify-end gap-1.5">
+										{#if stock.embargoReason}
+											<span
+												class="text-[10px] font-semibold uppercase tracking-wide text-hostile-fg"
+												title={stock.embargoReason}
+											>
+												Embargoed
+											</span>
+										{/if}
 										{#if stock.bestAskId !== null}
 											<form method="POST" action="?/buyStock" use:enhance={() => stockEnhance("buy", stock.companyId)}>
 												<input type="hidden" name="listingId" value={stock.bestAskId} />
@@ -292,18 +309,26 @@
 													value="1"
 													aria-label="Shares to buy"
 													class="field-control w-16 rounded-sm px-1.5 py-1 text-xs font-mono"
+													disabled={!!stock.embargoReason}
 												/>
 												<Button
 													type="submit"
 													size="xs"
 													variant="primary"
 													loading={buyingStock === stock.companyId}
-												>Buy</Button
+													disabled={!!stock.embargoReason}
+													title={stock.embargoReason ?? undefined}
 												>
+													Buy
+												</Button>
 											</form>
 										{/if}
 										{#if stock.held > 0}
-											<form method="POST" action="?/listStock" use:enhance={() => stockEnhance("list", stock.companyId)}>
+											<form
+												method="POST"
+												action="?/listStock"
+												use:enhance={() => stockEnhance("list", stock.companyId)}
+											>
 												<input type="hidden" name="companyId" value={stock.companyId} />
 												<input
 													type="number"
@@ -322,13 +347,9 @@
 													aria-label="Price per share"
 													class="field-control w-20 rounded-sm px-1.5 py-1 text-xs font-mono"
 												/>
-												<Button
-													type="submit"
-													size="xs"
-													variant="secondary"
-													loading={listingStock === stock.companyId}
-												>Sell</Button
-												>
+												<Button type="submit" size="xs" variant="secondary" loading={listingStock === stock.companyId}>
+													Sell
+												</Button>
 											</form>
 										{/if}
 									</div>

@@ -24,7 +24,7 @@ import {
 	transactionHistory,
 	userProfiles
 } from "#lib/server/schema.js";
-import { eq, and, gte, inArray, isNull, sql } from "drizzle-orm";
+import { eq, and, gt, gte, isNull, sql } from "drizzle-orm";
 import { getLogoUrl } from "#lib/server/backblaze.js";
 import { error, fail } from "@sveltejs/kit";
 import { calculateAndCollectTax } from "#lib/server/taxes.js";
@@ -131,12 +131,18 @@ export const load: PageServerLoad = async ({ locals, params, url }) => {
 			.limit(1),
 		loadCandles(thirtyDaysAgo, 3600, itemName).then((m) => m.get(itemName) ?? []),
 		loadLastPricesBefore(thirtyDaysAgo, itemName).then((m) => m.get(itemName) ?? null),
-		// All listings ordered by price, then split
+		// Live listings ordered by price; only the cheapest one is shown.
 		db
 			.select()
 			.from(marketListings)
-			.where(and(eq(marketListings.itemType, itemType), eq(marketListings.itemName, itemName)))
-			.orderBy(marketListings.pricePerUnit),
+			.where(
+				and(
+					eq(marketListings.itemType, itemType),
+					eq(marketListings.itemName, itemName),
+					gt(marketListings.quantity, 0)
+				)
+			)
+			.orderBy(marketListings.pricePerUnit, marketListings.id),
 		db.select().from(marketListingCooldowns).where(eq(marketListingCooldowns.userId, account.id)),
 		// Check if user is president or minister of economy of any state
 		Promise.all([
@@ -182,26 +188,28 @@ export const load: PageServerLoad = async ({ locals, params, url }) => {
 		(l.sellerId === account.id && !l.sellerRegionId) || (!!l.sellerRegionId && myRegionIds.includes(l.sellerRegionId));
 	const myListing = allListings.find((l) => l.sellerId === account.id && !l.sellerRegionId) ?? null;
 
-	// Seller name + avatar for the order book.
-	const sellerIds = [...new Set(allListings.filter((l) => !isMine(l)).map((l) => l.sellerId))];
-	const sellerProfiles = sellerIds.length
-		? await db
-				.select({ userId: userProfiles.accountId, name: userProfiles.name, logo: userProfiles.logo })
+	// Only the cheapest offer you can buy is shown: the rest of the book stays hidden.
+	const bestListing = allListings.find((l) => !isMine(l)) ?? null;
+	let bestOffer:
+		| ((typeof allListings)[number] & {
+				sellerName: string | null;
+				sellerAvatar: string | null;
+		  })
+		| null = null;
+	if (bestListing) {
+		let sellerName: string | null = null;
+		let sellerAvatar: string | null = null;
+		if (!bestListing.sellerRegionId) {
+			const [profile] = await db
+				.select({ name: userProfiles.name, logo: userProfiles.logo })
 				.from(userProfiles)
-				.where(inArray(userProfiles.accountId, sellerIds))
-		: [];
-	const sellers = new Map(
-		await Promise.all(
-			sellerProfiles.map(async (p) => [p.userId, { name: p.name, avatar: await getLogoUrl(p.logo) }] as const)
-		)
-	);
-	const otherListings = allListings
-		.filter((l) => !isMine(l))
-		.map((l) => ({
-			...l,
-			sellerName: sellers.get(l.sellerId)?.name ?? null,
-			sellerAvatar: sellers.get(l.sellerId)?.avatar ?? null
-		}));
+				.where(eq(userProfiles.accountId, bestListing.sellerId))
+				.limit(1);
+			sellerName = profile?.name ?? null;
+			sellerAvatar = await getLogoUrl(profile?.logo ?? null);
+		}
+		bestOffer = { ...bestListing, sellerName, sellerAvatar };
+	}
 
 	let cooldownRemaining = 0;
 	if (cooldown) {
@@ -219,7 +227,7 @@ export const load: PageServerLoad = async ({ locals, params, url }) => {
 		candles,
 		openingPrice,
 		myListing,
-		otherListings,
+		bestOffer,
 		taxRate,
 		userItemQuantity,
 		cooldownRemaining,
