@@ -223,22 +223,32 @@ desk, so the two pages never disagree.
 
 Military hardware has its own market (`/armaments`), separate from ordinary
 goods. Rifles, ammunition, artillery, vehicles and explosives can be offered to
-anyone or reserved for a specific buyer. An offer aimed at a state **outside the
-seller's bloc** is not tradable until the seller's **defence minister** (or
-president) approves it; the page shows pending deals to anyone holding that
-office, with approve and refuse buttons. Refusing returns the units to the
-seller. Approved external sales pay a 5% export levy into the seller state's
-treasury.
+your own state and bloc, or reserved for one foreign state. A foreign offer
+needs an **export licence** from the seller's **defence minister** (or
+president) before it goes live, and only the licensed state can buy it.
+Refusing a licence returns the units to the seller. Sanctions and bloc
+embargoes between the two states block listings, licences and purchases.
 
-| Sale | Approval |
-| --- | --- |
-| Same bloc, or no target state | None — cleared immediately |
-| Outside the bloc | Defence minister or president must approve |
-| Refused | Units returned, offer closed |
+| Sale                          | Licence                       | Levy                                         | Delivery |
+| ----------------------------- | ----------------------------- | -------------------------------------------- | -------- |
+| Same state                    | None                          | —                                            | 1 h      |
+| Same bloc                     | None                          | —                                            | 4 h      |
+| Foreign (licensed state only) | Defence minister or president | 5% of the proceeds, to the seller's treasury | 10 h     |
+
+Bigger shipments take an extra hour per tenfold in size. The buyer pays at
+once; the hardware lands in their stock on arrival.
+
+Each good has a **guide price** that follows supply (units on offer) and demand
+(units traded in the past week); offers must be priced between a quarter and
+four times the guide. Hardware bought on the market arrives **second-hand**: it
+loses 12 condition points per change of hands (never below 30), and worn
+hardware has a lower guide price. Sellers choose whether to offer new or
+second-hand stock.
 
 The rules live in `game/armaments.config.ts` and the deals in
 `services/economy/armaments.ts`. The corresponding market data is in
-`arms_listings`.
+`arms_listings`, `arms_trades` (sales and shipments) and `arms_surplus`
+(second-hand stock).
 
 ## 12. Datacenters and connectivity by law
 
@@ -266,15 +276,15 @@ visuals never get in the way of the information.
 
 ## Reference: scheduled jobs behind these features
 
-| Cron | Schedule | What it does |
-| --- | --- | --- |
-| `workforce` | Weekly | Staffs factories from the educated civilian pool, pays wages, taxes them |
-| `strikes` | Weekly (Mon 04:00) | Starts/resolves fair-pay strikes, sets wage floors |
-| `factory-expansion` | Hourly | Brings paid factory expansions online |
-| `share-listings` | Hourly | Lists IPO floats after their 72-hour window |
-| `earnings` | Weekly | Publishes fortnightly reports, including EBITDA |
-| `world-snapshot` | Daily | Captures the map day replayed by `?history=` |
-| `diseases` | Daily (00:30) | Spreads/recovers outbreaks, applies mortality, seeds new ones |
+| Cron                | Schedule           | What it does                                                             |
+| ------------------- | ------------------ | ------------------------------------------------------------------------ |
+| `workforce`         | Weekly             | Staffs factories from the educated civilian pool, pays wages, taxes them |
+| `strikes`           | Weekly (Mon 04:00) | Starts/resolves fair-pay strikes, sets wage floors                       |
+| `factory-expansion` | Hourly             | Brings paid factory expansions online                                    |
+| `share-listings`    | Hourly             | Lists IPO floats after their 72-hour window                              |
+| `earnings`          | Weekly             | Publishes fortnightly reports, including EBITDA                          |
+| `world-snapshot`    | Daily              | Captures the map day replayed by `?history=`                             |
+| `diseases`          | Daily (00:30)      | Spreads/recovers outbreaks, applies mortality, seeds new ones            |
 
 See [Society](/docs/society) for population, [Economy](/docs/economy) for
 companies and money, [Conflict](/docs/conflict) for how commanders change

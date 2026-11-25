@@ -1050,12 +1050,59 @@ export const armsListings = pgTable(
 		/** null for inside-the-bloc sales; otherwise the account that approved it. */
 		approvedBy: text("approved_by").references(() => accounts.id, { onDelete: "set null" }),
 		rejected: boolean("rejected").default(false).notNull(),
+		/** 0-100. Factory-fresh stock is 100; second-hand surplus is lower. */
+		condition: integer("condition").default(100).notNull(),
 		createdAt: timestamp("created_at").defaultNow().notNull()
 	},
 	(t) => ({
 		stateIdx: index("idx_arms_listing_state").on(t.sellerStateId),
 		approvalIdx: index("idx_arms_listing_approval").on(t.approvedBy)
 	})
+);
+
+/** Completed arms sales. Each row is also the shipment: the units reach the
+ *  buyer at `arrivesAt` and are booked into their stock once `deliveredAt` is set. */
+export const armsTrades = pgTable(
+	"arms_trades",
+	{
+		id: integer("id").generatedByDefaultAsIdentity().primaryKey(),
+		good: varchar("good", { length: 30 }).notNull(),
+		quantity: integer("quantity").notNull(),
+		pricePerUnit: bigint("price_per_unit", { mode: "number" }).notNull(),
+		condition: integer("condition").default(100).notNull(),
+		sellerId: text("seller_id").references(() => accounts.id, { onDelete: "set null" }),
+		buyerId: text("buyer_id")
+			.notNull()
+			.references(() => accounts.id, { onDelete: "cascade" }),
+		sellerStateId: integer("seller_state_id").references(() => states.id, { onDelete: "set null" }),
+		buyerStateId: integer("buyer_state_id").references(() => states.id, { onDelete: "set null" }),
+		/** domestic | bloc | foreign */
+		route: varchar("route", { length: 12 }).notNull(),
+		levy: bigint("levy", { mode: "number" }).default(0).notNull(),
+		createdAt: timestamp("created_at").defaultNow().notNull(),
+		arrivesAt: timestamp("arrives_at").notNull(),
+		deliveredAt: timestamp("delivered_at")
+	},
+	(t) => ({
+		goodTimeIdx: index("idx_arms_trade_good_time").on(t.good, t.createdAt),
+		buyerIdx: index("idx_arms_trade_buyer").on(t.buyerId, t.deliveredAt)
+	})
+);
+
+/** Second-hand armaments a player holds: the part of their product stock that
+ *  came through the arms market, with its average condition. */
+export const armsSurplus = pgTable(
+	"arms_surplus",
+	{
+		id: integer("id").generatedByDefaultAsIdentity().primaryKey(),
+		userId: text("user_id")
+			.notNull()
+			.references(() => accounts.id, { onDelete: "cascade" }),
+		good: varchar("good", { length: 30 }).notNull(),
+		quantity: integer("quantity").default(0).notNull(),
+		condition: integer("condition").default(100).notNull()
+	},
+	(t) => ({ userGoodIdx: uniqueIndex("idx_arms_surplus_user_good").on(t.userId, t.good) })
 );
 
 export const marketTransactions = pgTable("market_transactions", {

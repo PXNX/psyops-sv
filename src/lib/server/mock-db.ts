@@ -14,6 +14,7 @@ import type { PostgresJsDatabase } from "drizzle-orm/postgres-js";
 import * as schema from "./schema";
 import * as investments from "./schema-investments";
 import { seedMockDatabase } from "./mock-seed";
+import { seedArmsMarket } from "./mock-seed-arms";
 
 const fullSchema = { ...schema, ...investments };
 
@@ -47,6 +48,7 @@ export async function createMockDb({ seed = true }: MockDbOptions = {}): Promise
 
 	if (seed) {
 		await seedMockDatabase(db as unknown as Parameters<typeof seedMockDatabase>[0]);
+		await seedArmsMarket(db as unknown as Parameters<typeof seedArmsMarket>[0]);
 	}
 
 	return { db, close: () => client.close() };
