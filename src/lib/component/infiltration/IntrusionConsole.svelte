@@ -5,7 +5,19 @@
      transcript comes back from the server and is replayed as a terminal. -->
 <script lang="ts">
 	import { enhance } from "$app/forms";
-	import { ATTACK_VECTORS, COVERT_OPS, INTRUSION, type LogLine } from "#lib/config/index.js";
+	import {
+		ATTACK_VECTORS,
+		COVERT_OPS,
+		EXPLOIT_TIERS,
+		EXPLOIT_TIER_ORDER,
+		INTRUSION,
+		TRACE,
+		coverTracks,
+		readDeep,
+		traceLevel,
+		type ExploitTier,
+		type LogLine
+	} from "#lib/config/index.js";
 	import { toastResult } from "#lib/ui/toast.svelte.js";
 	import IconTerminal from "~icons/mdi/console";
 	import IconFullscreen from "~icons/mdi/fullscreen";
@@ -39,6 +51,10 @@
 	let payloadKind = $state<(typeof payloads)[number]>("grid_attack");
 	let busy = $state<string | null>(null);
 	let terminalOpen = $state(false);
+	let tier = $state<ExploitTier>("standard");
+	const deep = $derived(readDeep(session?.deep));
+	const level = $derived(traceLevel(deep.trace));
+	const nextCover = $derived(coverTracks(deep.covers));
 
 	// `enhance` invokes the outer function on submit. Setting `busy` when this
 	// factory is called would disable every button as soon as the page renders.
@@ -70,6 +86,31 @@
 			{session ? `${session.host} · ${session.ip}` : "no session"}
 		</span>
 	</div>
+
+	{#if session}
+		<div
+			class="flex items-center gap-2 border-b border-[#1f6f3a]/70 px-3 py-1.5 text-[10px] tracking-[0.14em] uppercase {level ===
+			'quiet'
+				? 'text-[#7dffa0]'
+				: level === 'noticed'
+					? 'text-[#ffe27a]'
+					: 'text-[#ff8a7a]'}"
+		>
+			<span class="shrink-0">trace</span>
+			<div
+				class="h-1.5 min-w-0 flex-1 border border-current/50 bg-black/60"
+				role="meter"
+				aria-label="Trace meter"
+				aria-valuemin={0}
+				aria-valuemax={TRACE.MAX}
+				aria-valuenow={deep.trace}
+				aria-valuetext="{deep.trace}%, {level}"
+			>
+				<div class="h-full bg-current" style="width: {deep.trace}%"></div>
+			</div>
+			<span class="shrink-0 tabular-nums">{deep.trace}% · {level}</span>
+		</div>
+	{/if}
 
 	<button
 		type="button"
@@ -111,7 +152,31 @@
 					$ nmap -sV {site.code} · ${INTRUSION.SCAN_COST.toLocaleString()}
 				</button>
 			</form>
+		{:else if deep.traced}
+			<p class="text-[#ff8a7a]">
+				[!] Traced. The target cut the line and {asset.codename} lies low. Reset the session to try again.
+			</p>
 		{:else if stage === "scan"}
+			<div class="flex flex-wrap items-center gap-1.5" role="radiogroup" aria-label="Exploit style">
+				<span class="text-[#5fd389]">Style:</span>
+				{#each EXPLOIT_TIER_ORDER as t (t)}
+					<button
+						type="button"
+						role="radio"
+						aria-checked={tier === t}
+						title={EXPLOIT_TIERS[t].blurb}
+						onclick={() => (tier = t)}
+						class="rounded-sm border border-[#1f6f3a] px-2 py-0.5 text-[10px] uppercase aria-checked:bg-[#1f6f3a] aria-checked:text-black"
+					>
+						{t}
+					</button>
+				{/each}
+				<span class="text-[10px] text-[#5fd389]/80">
+					{EXPLOIT_TIERS[tier].chance >= 0 ? "+" : ""}{Math.round(EXPLOIT_TIERS[tier].chance * 100)}% odds · trace +{EXPLOIT_TIERS[
+						tier
+					].noise.ok}/+{EXPLOIT_TIERS[tier].noise.fail}
+				</span>
+			</div>
 			<p class="text-[#5fd389]">Pick an exposed service:</p>
 			<div class="grid gap-1.5 sm:grid-cols-2">
 				{#each vectors as vector (vector.id)}
@@ -120,15 +185,18 @@
 						<input type="hidden" name="siteId" value={site.id} />
 						<input type="hidden" name="step" value="access" />
 						<input type="hidden" name="vector" value={vector.id} />
+						<input type="hidden" name="tier" value={tier} />
 						<button
 							type="submit"
 							title={vector.blurb}
-							disabled={!!busy || asset.access < vector.accessNeeded || (treasury ?? 0) < INTRUSION.ACCESS_COST}
+							disabled={!!busy ||
+								asset.access < vector.accessNeeded + EXPLOIT_TIERS[tier].extraAccess ||
+								(treasury ?? 0) < INTRUSION.ACCESS_COST}
 							class="w-full rounded-sm border border-[#1f6f3a] bg-black/40 px-2 py-1.5 text-left hover:bg-[#0f3a1f] disabled:opacity-40"
 						>
 							<span class="block truncate text-[#d8ffe2]">{vector.label}</span>
 							<span class="block truncate text-[10px] text-[#5fd389]">
-								{vector.service} · needs L{vector.accessNeeded} · ${INTRUSION.ACCESS_COST.toLocaleString()}
+								{vector.service} · needs L{vector.accessNeeded + EXPLOIT_TIERS[tier].extraAccess} · ${INTRUSION.ACCESS_COST.toLocaleString()}
 							</span>
 						</button>
 					</form>
@@ -184,6 +252,21 @@
 					class="w-full rounded-sm bg-[#1fbf5a] px-2 py-1.5 font-semibold text-black hover:bg-[#7dffa0] disabled:opacity-40"
 				>
 					Deploy {COVERT_OPS[payloadKind].label.toLowerCase()}
+				</button>
+			</form>
+		{/if}
+
+		{#if session && !deep.traced && deep.trace > 0}
+			<form method="POST" action="?/deep" use:enhance={submit("cover")}>
+				<input type="hidden" name="assetId" value={asset.id} />
+				<input type="hidden" name="siteId" value={site.id} />
+				<input type="hidden" name="move" value="cover" />
+				<button
+					type="submit"
+					disabled={!!busy || (treasury ?? 0) < nextCover.cost}
+					class="w-full rounded-sm border border-[#1f6f3a] bg-black/40 px-2 py-1.5 text-left text-[#d8ffe2] hover:bg-[#0f3a1f] disabled:opacity-40"
+				>
+					$ cover tracks · −{nextCover.drop} trace · ${nextCover.cost.toLocaleString()}
 				</button>
 			</form>
 		{/if}

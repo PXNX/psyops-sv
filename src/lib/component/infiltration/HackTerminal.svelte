@@ -9,7 +9,21 @@
 	import { deserialize } from "$app/forms";
 	import { invalidateAll } from "$app/navigation";
 	import { onMount, tick } from "svelte";
-	import { ATTACK_VECTORS, COVERT_OPS, INFILTRATION_ACTIONS, INTRUSION, type LogLine } from "#lib/config/index.js";
+	import {
+		ATTACK_VECTORS,
+		COVERT_OPS,
+		EXPLOIT_TIERS,
+		INFILTRATION_ACTIONS,
+		INTRUSION,
+		TRACE,
+		coverTracks,
+		exploitsFor,
+		parseCommand,
+		parseExploitArgs,
+		readDeep,
+		traceLevel,
+		type LogLine
+	} from "#lib/config/index.js";
 	import CameraWall from "./CameraWall.svelte";
 
 	interface Props {
@@ -56,8 +70,15 @@
 		((session?.ports ?? []) as { port: number; service: string; vector?: string }[]).filter((p) => p.vector)
 	);
 	const camsReady = $derived(camsTapped || (site?.cameras ?? 0) > 0);
+	/** Trace meter, hosts, keys and loot, as the server last reported them. */
+	const deep = $derived(readDeep(session?.deep));
+	const level = $derived(traceLevel(deep.trace));
+	const traceTone = $derived(
+		level === "traced" || level === "hunted" ? "#ff8a7a" : level === "noticed" ? "#ffe27a" : "#7dffa0"
+	);
+	const onHost = $derived(stage === "pivot" && deep.at !== "gw" ? deep.at : null);
 	const prompt = $derived(
-		`${asset.codename.toLowerCase().replace(/\s+/g, "-")}@${stage === "pivot" ? (session?.host ?? site.code) : "relay"}:${stage === "pivot" ? cwd : "~"}$`
+		`${asset.codename.toLowerCase().replace(/\s+/g, "-")}@${stage === "pivot" ? (onHost ?? session?.host ?? site.code) : "relay"}:${stage === "pivot" ? cwd : "~"}$`
 	);
 
 	// ── Output ──────────────────────────────────────────────────────────────
@@ -133,25 +154,43 @@
 		return hit ? hit.id : resolvePath(arg).slice(1);
 	};
 	const needPivot = () => {
+		if (deep.traced) {
+			say("The line is dead: you were traced. `reset` to start a fresh session.", "bad");
+			return true;
+		}
 		if (stage === "pivot") return false;
 		say("Not inside yet! Scan, exploit, sudo and ssh first. (try `help`)", "warn");
 		return true;
+	};
+	const sayTrace = () => {
+		if (!session) return;
+		const filled = Math.round((deep.trace / TRACE.MAX) * 20);
+		say(
+			`trace [${"█".repeat(filled)}${"░".repeat(20 - filled)}] ${deep.trace}% · ${level}`,
+			level === "quiet" ? "info" : level === "noticed" ? "warn" : "bad"
+		);
 	};
 
 	// ── Commands ────────────────────────────────────────────────────────────
 	const HELP: [string, string][] = [
 		["help", "this friendly list"],
 		["scan", `map the host's open ports · ${money(INTRUSION.SCAN_COST)}`],
-		["exploit <port>", `try a way in through a port · ${money(INTRUSION.ACCESS_COST)}`],
+		["exploit", "list the exploits for every open port"],
+		["exploit <port> [quiet|loud]", `try a way in · ${money(INTRUSION.ACCESS_COST)} · quiet is subtle, loud is likely`],
 		["sudo", `escalate to admin · ${money(INTRUSION.ESCALATE_COST)}`],
-		["ssh <host>", `hop into the internal network · ${money(INTRUSION.PIVOT_COST)}`],
+		["ssh", `break into the internal network · ${money(INTRUSION.PIVOT_COST)}`],
+		["hosts", "map the internal network (free)"],
+		["hop <host>", `move to another host · ${money(TRACE.HOP_COST)}, free with the right key`],
+		["loot [n]", "list or take what's on this host"],
+		["cover", "cover your tracks: −trace, dearer and weaker each time"],
+		["trace · status", "the trace meter, keys and loot"],
 		["ls [dir] · cd <dir>", "look around the host"],
 		["cat <file>", "read a file"],
 		["grep <word>", "search every file"],
 		["copy <file>", "copy a file into the dossier (adds heat)"],
 		["cams", `the camera wall (first tap ${money(INFILTRATION_ACTIONS.camera.cost)})`],
 		["probe", `count the guards · ${money(INFILTRATION_ACTIONS.probe.cost)}`],
-		["wipe logs", `cover your tracks, −heat · ${money(INFILTRATION_ACTIONS.cover.cost)}`],
+		["wipe logs", `rest the operator, −heat · ${money(INFILTRATION_ACTIONS.cover.cost)}`],
 		["deploy <payload>", "launch a cyber payload once inside"],
 		["reset", "drop the session and start over"],
 		["rain", "toggle the falling glyphs"],
@@ -165,11 +204,10 @@
 		history.unshift(line);
 		historyAt = -1;
 		say(`${prompt} ${line}`, "cmd");
-		const [cmd = "", ...rest] = line.split(/\s+/);
-		const arg = rest.join(" ");
+		const { cmd, args } = parseCommand(line);
 		busy = true;
 		try {
-			await exec(cmd.toLowerCase(), arg);
+			await exec(cmd, args.join(" "), args);
 		} catch (err) {
 			say(`✗ ${(err as Error).message}`, "bad");
 		} finally {
@@ -179,7 +217,7 @@
 		}
 	}
 
-	async function exec(cmd: string, arg: string) {
+	async function exec(cmd: string, arg: string, args: string[] = []) {
 		switch (cmd) {
 			case "help":
 			case "?":
@@ -221,18 +259,32 @@
 			}
 			case "exploit": {
 				if (!session) return say("Scan first so we know which doors exist.", "warn");
+				if (deep.traced) return say("The line is dead: you were traced. `reset` to start over.", "bad");
 				if (stage !== "scan") return say("You already have a way in. Next up: `sudo`.", "info");
-				const port = Number(arg);
-				const target = exploitable.find((p) => p.port === port) ?? (arg ? undefined : exploitable[0]);
-				if (!target?.vector) {
-					return say(
-						`Port ${arg || "?"} has no known way in. Try: ${exploitable.map((p) => p.port).join(", ")}`,
-						"warn"
-					);
+				const { port, tier, bad } = parseExploitArgs(args);
+				if (bad) return say(`Usage: exploit <port> [quiet|standard|loud] (not "${bad}")`, "warn");
+				if (port == null) {
+					say("Exploits on offer (quiet = subtle but harder, loud = likely but noisy):", "info");
+					for (const p of exploitable) {
+						const v = ATTACK_VECTORS[p.vector!];
+						say(`  :${p.port} ${p.service} · ${v?.label ?? p.vector} · needs L${v?.accessNeeded ?? 1}`, "ok");
+						for (const e of exploitsFor(site, p)) {
+							const edge = Math.round(e.chance * 100);
+							say(
+								`     ${e.tier.padEnd(9)} ${e.name.padEnd(20)} ${edge >= 0 ? "+" : ""}${edge}% odds · trace +${e.noise.ok}/+${e.noise.fail}${e.extraAccess ? ` · L+${e.extraAccess}` : ""}`,
+								"plain"
+							);
+						}
+					}
+					return say("Run one with e.g. `exploit 22 quiet`.", "info");
 				}
-				const v = ATTACK_VECTORS[target.vector];
-				say(`Trying ${v?.label ?? target.vector} on :${target.port}…`, "info");
-				const d = await post("intrude", { step: "access", vector: target.vector });
+				const target = exploitable.find((p) => p.port === port);
+				if (!target?.vector) {
+					return say(`Port ${port} has no known way in. Try: ${exploitable.map((p) => p.port).join(", ")}`, "warn");
+				}
+				const exploit = exploitsFor(site, target).find((e) => e.tier === tier)!;
+				say(`Running ${exploit.name} (${tier}) on :${target.port}… ${EXPLOIT_TIERS[tier].blurb}`, "info");
+				const d = await post("intrude", { step: "access", port: target.port, tier });
 				sayAll(d.intrusion?.lines);
 				return;
 			}
@@ -250,10 +302,45 @@
 				if (stage === "pivot")
 					return say(`You're already inside ${session.segment ?? "the network"}. Make yourself at home.`, "info");
 				if (stage !== "escalate") return say("The jump host wants admin rights. Run `sudo` first.", "warn");
-				say(`Hopping to ${arg || "the internal segment"}…`, "info");
+				say("Slipping into the internal segment…", "info");
 				const d = await post("intrude", { step: "pivot" });
 				sayAll(d.intrusion?.lines);
-				if (d.intrusion?.success) say("Welcome in! Try `ls`, `cams` or `deploy`.", "ok");
+				if (d.intrusion?.success) say("Welcome in! Try `hosts`, `loot`, `ls`, `cams` or `deploy`.", "ok");
+				return;
+			}
+			case "hosts":
+			case "map":
+			case "net": {
+				if (needPivot()) return;
+				const d = await post("deep", { move: "hosts" });
+				sayAll(d.deep.lines);
+				return;
+			}
+			case "hop": {
+				if (needPivot()) return;
+				if (!arg) return say("hop where? `hosts` lists them, e.g. `hop cams`.", "warn");
+				const d = await post("deep", { move: "hop", host: arg });
+				sayAll(d.deep.lines);
+				return;
+			}
+			case "loot":
+			case "take": {
+				if (needPivot()) return;
+				const d = await post("deep", { move: "loot", item: arg });
+				sayAll(d.deep.lines);
+				if (!arg) say("Take one with `loot <n>`.", "info");
+				return;
+			}
+			case "trace":
+			case "status": {
+				if (!session) return say("No session yet. `scan` to start.", "info");
+				sayTrace();
+				if (stage === "pivot") {
+					say(`on ${onHost ?? "gw"} · hosts held: ${deep.owned.join(", ") || "none"}`, "info");
+					say(`keys: ${deep.keys.join(", ") || "none"} · loot taken: ${deep.loot.length}`, "info");
+				}
+				const next = coverTracks(deep.covers);
+				say(`next cover: ${money(next.cost)} for −${next.drop} trace`, "info");
 				return;
 			}
 			case "ls":
@@ -317,9 +404,15 @@
 				say(d.outcome.detail, d.outcome.success ? "ok" : "bad");
 				return;
 			}
-			case "wipe":
 			case "cover": {
-				if (cmd === "wipe" && arg && !/^logs?$/i.test(arg)) return say("Usage: `wipe logs`", "warn");
+				if (!session) return say("Nothing to cover yet. `scan` first.", "info");
+				if (deep.traced) return say("Too late to cover anything: you were traced. `reset`.", "bad");
+				const d = await post("deep", { move: "cover" });
+				sayAll(d.deep.lines);
+				return;
+			}
+			case "wipe": {
+				if (arg && !/^logs?$/i.test(arg)) return say("Usage: `wipe logs`", "warn");
 				say("Sweeping the logs under the rug…", "info");
 				const d = await post("act", { action: "cover" });
 				say(`🧹 ${d.outcome.detail} Heat now ${d.outcome.heatAfter}%.`, "ok");
@@ -362,11 +455,20 @@
 	const suggestions = $derived.by(() => {
 		const s: string[] = [];
 		if (!session) s.push("scan");
-		else if (stage === "scan") s.push(...exploitable.map((p) => `exploit ${p.port}`), "scan");
+		else if (deep.traced) s.push("reset");
+		else if (stage === "scan") s.push("exploit", ...exploitable.map((p) => `exploit ${p.port}`));
 		else if (stage === "access") s.push("sudo");
-		else if (stage === "escalate") s.push(`ssh ${session.segment ?? "jump-host"}`);
-		else s.push("ls", ...listing.slice(0, 2).map((f) => `cat ${f.name}`), "grep plan", "deploy");
-		s.push("cams", "wipe logs", "help", "exit");
+		else if (stage === "escalate") s.push("ssh");
+		else
+			s.push(
+				"hosts",
+				"loot",
+				...["gw", "cams", "files", "badge", "core"].filter((h) => h !== deep.at).map((h) => `hop ${h}`),
+				"ls",
+				"deploy"
+			);
+		if (session && !deep.traced && deep.trace > 0) s.push("cover");
+		s.push("cams", "status", "help", "exit");
 		return [...new Set(s)];
 	});
 
@@ -526,6 +628,32 @@
 				</span>
 			</header>
 
+			{#if session}
+				<div
+					class="relative z-10 flex items-center gap-2 border-b border-[#1f6f3a]/40 px-3 py-1.5 font-mono text-[10px] tracking-[0.16em] uppercase sm:text-[11px]"
+					style="color: {traceTone}"
+				>
+					<span class="shrink-0">trace</span>
+					<div
+						class="h-2 min-w-0 flex-1 border border-current/50 bg-black/60"
+						role="meter"
+						aria-label="Trace meter"
+						aria-valuemin={0}
+						aria-valuemax={TRACE.MAX}
+						aria-valuenow={deep.trace}
+						aria-valuetext="{deep.trace}%, {level}"
+					>
+						<div class="trace-fill h-full bg-current" style="width: {deep.trace}%"></div>
+					</div>
+					<span class="shrink-0 tabular-nums">{deep.trace}% · {level}</span>
+					{#if stage === "pivot"}
+						<span class="hidden shrink-0 text-[#5fd389] sm:inline">
+							· on {onHost ?? "gw"} · {deep.keys.length} keys
+						</span>
+					{/if}
+				</div>
+			{/if}
+
 			<!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
 			<div
 				bind:this={screenEl}
@@ -554,7 +682,7 @@
 							<span>camera wall · {site.name}</span>
 							<button type="button" class="hover:text-[#d8ffe2]" onclick={() => (camsOpen = false)}>[x] close</button>
 						</div>
-						<CameraWall {site} observedAt={site.lastSeen ?? undefined} terminal />
+						<CameraWall {site} observedAt={site.lastSeen ?? undefined} owned={deep.owned} terminal />
 					</div>
 				{/if}
 			</div>
@@ -640,6 +768,9 @@
 	.crt-vignette {
 		background: radial-gradient(ellipse at center, transparent 55%, rgba(0, 0, 0, 0.75) 100%);
 	}
+	.trace-fill {
+		transition: width 0.5s ease;
+	}
 	.flicker {
 		animation: flicker 6s infinite steps(1, end);
 	}
@@ -673,6 +804,9 @@
 		.flicker,
 		.caret {
 			animation: none;
+		}
+		.trace-fill {
+			transition: none;
 		}
 	}
 </style>

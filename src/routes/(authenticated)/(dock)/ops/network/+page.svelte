@@ -694,7 +694,7 @@
 									{/if}
 
 									{#if site.cameras > 0}
-										<CameraWall {site} observedAt={site.lastSeen ?? undefined} />
+										<CameraWall {site} observedAt={site.lastSeen ?? undefined} owned={siteSession?.deep?.owned ?? []} />
 									{/if}
 
 									{#if selectedAsset}
