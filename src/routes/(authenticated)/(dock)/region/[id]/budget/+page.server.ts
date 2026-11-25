@@ -6,6 +6,9 @@ import { and, asc, eq } from "drizzle-orm";
 import { error, fail } from "@sveltejs/kit";
 import type { Actions, PageServerLoad } from "./$types";
 import { getRegionName } from "#lib/utils/formatting.js";
+import { BUILDING_TEMPLATES } from "#lib/config/index.js";
+import { canOrderConstruction } from "#lib/server/services/politics/construction-access.js";
+import { actions as constructionActions } from "../construction/+page.server.js";
 import {
 	RegionalBudgetError,
 	regionBudgetSummary,
@@ -27,10 +30,25 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 			orderBy: asc(stateBuildings.constructionCompletesAt)
 		})
 	]);
+	const access = region.stateId ? await canOrderConstruction(db, locals.account!.id, region.stateId, regionId) : null;
+	const canPayFromRegion = !!access?.roles.includes("governor");
+	const payFrom: "region" | "treasury" = canPayFromRegion && access!.stateTypes.length === 0 ? "region" : "treasury";
+	const buildOptions = (payFrom === "region" ? access!.regionTypes : access!.stateTypes).map((type) => {
+		const template = BUILDING_TEMPLATES[type];
+		return {
+			type,
+			label: `${template.icon} ${template.name}`,
+			days: template.constructionTime,
+			currency: template.costs.currency
+		};
+	});
 
 	return {
 		region: { id: region.id, name: getRegionName(region.id), stateId: region.stateId },
 		budget,
+		payFrom,
+		canPayFromRegion,
+		buildOptions,
 		queue: queue.map((b) => ({
 			id: b.id,
 			name: b.name || b.buildingType,
@@ -42,6 +60,8 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 };
 
 export const actions: Actions = {
+	// Ordering works from here uses exactly the same rules as the construction page.
+	build: constructionActions.build,
 	startProgramme: async ({ request, params, locals }) => {
 		const form = await request.formData();
 		try {

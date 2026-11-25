@@ -343,6 +343,34 @@
 		</div>
 	</article>
 
+	<!-- Region desks: always available, whatever the region's status. -->
+	<nav class="mt-4 flex flex-wrap gap-2" aria-label="Region pages">
+		<a
+			href="/region/{data.region.id}/population"
+			class="panel-muted rounded-sm px-3 py-2 text-xs text-fg-soft hover:text-primary-fg transition-colors"
+		>
+			Population & supplies
+		</a>
+		<a
+			href="/region/{data.region.id}/budget"
+			class="panel-muted rounded-sm px-3 py-2 text-xs text-fg-soft hover:text-primary-fg transition-colors"
+		>
+			Budget & construction queue
+		</a>
+		<a
+			href="/region/{data.region.id}/construction"
+			class="panel-muted rounded-sm px-3 py-2 text-xs text-fg-soft hover:text-primary-fg transition-colors"
+		>
+			Build
+		</a>
+		<a
+			href="/region/{data.region.id}/patronage"
+			class="panel-muted rounded-sm px-3 py-2 text-xs text-fg-soft hover:text-primary-fg transition-colors"
+		>
+			Patronage
+		</a>
+	</nav>
+
 	<!-- On the road -->
 	{#if data.activeTravel}
 		<TravelBanner activeTravel={data.activeTravel} />
@@ -495,6 +523,13 @@
 				<div class="min-w-0 flex-1">
 					<p class="text-sm font-bold text-fg group-hover:text-primary-hover">Population</p>
 					<p class="text-xs text-fg-muted truncate">Civilians, supplies and the civil register</p>
+				</div>
+			</a>
+			<a href="/region/{data.region.id}/budget" class="panel-interactive rounded-sm p-3 flex items-center gap-3 group">
+				<FluentWallet20Filled class="size-5 text-warning shrink-0" />
+				<div class="min-w-0 flex-1">
+					<p class="text-sm font-bold text-fg group-hover:text-primary-hover">Budget</p>
+					<p class="text-xs text-fg-muted truncate">Public funds and the construction queue</p>
 				</div>
 			</a>
 		{/if}
