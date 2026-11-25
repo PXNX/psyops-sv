@@ -37,6 +37,7 @@ import {
 	warPsyopsExhaustion
 } from "../services/military/state-effects";
 import { COVERT_OPS, CYBER, CYBER_DEFENCE, PSYOPS, covertOdds } from "#lib/config/index.js";
+import { fillLeaflet } from "#lib/config/game/leaflets.config.js";
 
 let handle: MockDbHandle;
 let freedonia: number;
@@ -235,13 +236,13 @@ describe("attribution and casus belli", () => {
 			userId: "user-1",
 			kind: "leaflet_drop",
 			targetStateId: borduria,
-			message: "Your king   is lying to you.",
+			leafletTemplate: "lies",
 			now,
 			rng: WIN_TRACED()
 		});
 		expect(r.operation.atWar).toBe(false);
 		expect(r.operation.attributed).toBe(true);
-		expect(r.operation.message).toBe("Your king is lying to you.");
+		expect(r.operation.message).toBe(fillLeaflet("lies", "Kingdom of Borduria"));
 		// Odds were worse in peacetime.
 		expect(r.operation.attributionChance).toBe(Math.round((0.6 + CYBER.PEACETIME_ATTRIBUTION) * 100));
 
@@ -256,7 +257,7 @@ describe("attribution and casus belli", () => {
 		expect(inbox.at(-1)?.content).toMatch(/Republic of Freedonia/);
 
 		const leaflets = await activeLeaflets(handle.db, borduria, now);
-		expect(leaflets[0]?.message).toBe("Your king is lying to you.");
+		expect(leaflets[0]?.message).toMatch(/radio in Kingdom of Borduria/);
 		expect(leaflets[0]?.attributed).toBe(true);
 	});
 
@@ -290,17 +291,17 @@ describe("attribution and casus belli", () => {
 		).rejects.toThrow(/needs a war/);
 	});
 
-	it("leaflets need text that fits", async () => {
+	it("leaflets only take printed templates, never free text", async () => {
 		await expect(
 			launchOperation(handle.db, {
 				userId: "user-1",
 				kind: "leaflet_drop",
 				targetStateId: sylvania,
-				message: "x".repeat(PSYOPS.LEAFLET_MAX_CHARS + 1),
+				leafletTemplate: "Anything I like to say",
 				now: tick(),
 				notify: false
 			})
-		).rejects.toThrow(/fit/);
+		).rejects.toThrow(/printed leaflets/);
 	});
 });
 

@@ -70,7 +70,7 @@ export const PSYOPS_OPS = {
 		domain: "psyops",
 		label: "Leaflet drop",
 		blurb:
-			"Your message, dropped over their cities: every resident sees it on their overview. Cheap, loud, often traced back.",
+			"Printed propaganda dropped over their cities: every resident finds it on their overview. Cheap, loud, often traced back.",
 		cost: 8_000,
 		baseSuccess: 0.85,
 		baseAttribution: 0.6,
@@ -110,9 +110,7 @@ export const PSYOPS = {
 	INFLATE: 80,
 	CONCEAL: -60,
 	/** Inflatable tanks: vehicles added to a picture on top of the inflated count. */
-	DECOY_VEHICLES: 2,
-	/** Leaflet text limit. */
-	LEAFLET_MAX_CHARS: 240
+	DECOY_VEHICLES: 2
 } as const;
 
 export type DisinfoPosture = "inflate" | "conceal";

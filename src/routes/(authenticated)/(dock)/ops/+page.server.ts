@@ -145,7 +145,8 @@ export const actions: Actions = {
 				targetStateId,
 				regionId,
 				posture,
-				message: str(form.get("message"))
+				// Leaflets are picked from printed templates; any submitted free text is ignored.
+				leafletTemplate: str(form.get("leafletTemplate")) || undefined
 			});
 			return {
 				outcome: {

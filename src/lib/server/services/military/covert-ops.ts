@@ -30,7 +30,6 @@ import {
 import {
 	COVERT_OPS,
 	CYBER,
-	PSYOPS,
 	covertOdds,
 	cyberDefenceUpgradeCost,
 	datacenterCyberBonus,
@@ -43,6 +42,7 @@ import {
 	type Odds,
 	type StateEffectKind
 } from "#lib/config/index.js";
+import { fillLeaflet, resolveLeaflet } from "#lib/config/game/leaflets.config.js";
 import { enemiesOf, sideOf } from "./recon";
 import { activeEffects, hasCasusBelli, isResilient } from "./state-effects";
 import { aiLevel, datacenterStocks } from "./ai";
@@ -210,8 +210,8 @@ export interface LaunchInput {
 	/** Disinformation: the region of yours whose picture you falsify. */
 	regionId?: number;
 	posture?: DisinfoPosture;
-	/** Leaflet drop: the text. */
-	message?: string;
+	/** Leaflet drop: a template id from LEAFLET_TEMPLATES, or "random". Free text isn't accepted. */
+	leafletTemplate?: string;
 	now?: Date;
 	/** Random source for the rolls (tests); default Math.random. */
 	rng?: () => number;
@@ -291,11 +291,9 @@ export async function launchOperation(db: Database, input: LaunchInput): Promise
 
 		let message: string | null = null;
 		if (input.kind === "leaflet_drop") {
-			message = (input.message ?? "").trim().replace(/\s+/g, " ");
-			if (!message) throw new CovertOpError("Write what the leaflet says.");
-			if (message.length > PSYOPS.LEAFLET_MAX_CHARS) {
-				throw new CovertOpError(`Leaflets fit ${PSYOPS.LEAFLET_MAX_CHARS} characters.`);
-			}
+			const template = resolveLeaflet(input.leafletTemplate, rng);
+			if (!template) throw new CovertOpError("Pick one of the printed leaflets.");
+			message = fillLeaflet(template, target.name);
 		}
 
 		const cooldown = await opCooldownEndsAt(tx, stateId, input.kind, now);
@@ -328,28 +326,29 @@ export async function launchOperation(db: Database, input: LaunchInput): Promise
 
 		// Roll. The computing base (stocked hardware and datacenters) is read
 		// alongside AI capability: both states' machines shape the odds.
-		const [defenceLevel, recent, resilient, attackerAi, defenderAi, attackerDc, defenderDc, networkAssets] = await Promise.all([
-			spec.self ? 0 : cyberDefenceLevel(tx, target.id),
-			spec.self ? 0 : recentOps(tx, stateId, target.id, now),
-			spec.self || spec.domain !== "psyops" ? false : isResilient(tx, target.id, now),
-			spec.self ? 0 : aiLevel(tx, stateId),
-			spec.self ? 0 : aiLevel(tx, target.id),
-			spec.self ? { hardware: 0, datacenters: 0 } : datacenterStocks(tx, stateId),
-			spec.self ? { hardware: 0, datacenters: 0 } : datacenterStocks(tx, target.id),
-			spec.self
-				? Promise.resolve(0)
-				: tx
-						.select({ id: infiltrationAssets.id })
-						.from(infiltrationAssets)
-						.where(
-							and(
-								eq(infiltrationAssets.stateId, stateId),
-								eq(infiltrationAssets.targetStateId, target.id),
-								eq(infiltrationAssets.status, "active")
+		const [defenceLevel, recent, resilient, attackerAi, defenderAi, attackerDc, defenderDc, networkAssets] =
+			await Promise.all([
+				spec.self ? 0 : cyberDefenceLevel(tx, target.id),
+				spec.self ? 0 : recentOps(tx, stateId, target.id, now),
+				spec.self || spec.domain !== "psyops" ? false : isResilient(tx, target.id, now),
+				spec.self ? 0 : aiLevel(tx, stateId),
+				spec.self ? 0 : aiLevel(tx, target.id),
+				spec.self ? { hardware: 0, datacenters: 0 } : datacenterStocks(tx, stateId),
+				spec.self ? { hardware: 0, datacenters: 0 } : datacenterStocks(tx, target.id),
+				spec.self
+					? Promise.resolve(0)
+					: tx
+							.select({ id: infiltrationAssets.id })
+							.from(infiltrationAssets)
+							.where(
+								and(
+									eq(infiltrationAssets.stateId, stateId),
+									eq(infiltrationAssets.targetStateId, target.id),
+									eq(infiltrationAssets.status, "active")
+								)
 							)
-						)
-						.then((rows) => rows.length)
-		]);
+							.then((rows) => rows.length)
+			]);
 		const odds = covertOdds(input.kind, {
 			defenceLevel,
 			atWar: atWar || casusBelli,

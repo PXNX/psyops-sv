@@ -11,6 +11,12 @@
 	import { Badge, Button, SearchSelect } from "#lib/component/ui/index.js";
 	import ResourceRequirements from "#lib/component/ResourceRequirements.svelte";
 	import {
+		LEAFLET_RANDOM,
+		LEAFLET_TEMPLATES,
+		fillLeaflet,
+		isLeafletTemplate
+	} from "#lib/config/game/leaflets.config.js";
+	import {
 		COVERT_OPS,
 		COVERT_OP_KINDS,
 		CYBER,
@@ -71,7 +77,7 @@
 	});
 	let regionId = $state<string | undefined>(undefined);
 	let posture = $state<"inflate" | "conceal">("inflate");
-	let message = $state("");
+	let leafletTemplate = $state<string | undefined>(LEAFLET_RANDOM);
 	let launching = $state(false);
 	let upgrading = $state(false);
 
@@ -82,9 +88,18 @@
 	const kindsOf = (d: CovertDomain) => COVERT_OP_KINDS.filter((k) => COVERT_OPS[k].domain === d);
 
 	const spec = $derived(COVERT_OPS[kind]);
+	const leafletItems = [
+		{ id: LEAFLET_RANDOM, name: "Let the print shop choose", hint: "random" },
+		...LEAFLET_TEMPLATES.map((t) => ({ id: t.id, name: t.label }))
+	];
 	const SpecIcon = $derived(OP_ICON[kind]);
 	const targets = $derived(data.planner?.targets ?? []);
 	const target = $derived(targets.find((t) => String(t.id) === targetId) ?? null);
+	const leafletPreview = $derived(
+		leafletTemplate && isLeafletTemplate(leafletTemplate)
+			? fillLeaflet(leafletTemplate, target?.name ?? "the target")
+			: "One of the printed slogans, picked at random, with the target's name."
+	);
 	const targetItems = $derived(
 		targets.map((t) => ({
 			id: t.id,
@@ -129,7 +144,7 @@
 				return `Needs a war (or a casus belli) with ${target.name}.`;
 		}
 		if (spec.needsRegion && !regionId) return "Choose one of your regions.";
-		if (kind === "leaflet_drop" && !message.trim()) return "Write the leaflet.";
+		if (kind === "leaflet_drop" && !leafletTemplate) return "Pick a leaflet.";
 		return null;
 	});
 
@@ -473,7 +488,6 @@
 								toastResult(result);
 								if (result.type === "success" && result.data?.outcome) {
 									outcome = result.data.outcome as typeof outcome;
-									message = "";
 									queueMicrotask(() => consoleEl?.scrollIntoView({ block: "nearest", behavior: "smooth" }));
 								}
 							};
@@ -553,16 +567,18 @@
 
 							{#if kind === "leaflet_drop"}
 								<div>
-									<label class="field-label" for="ops-leaflet">Leaflet text</label>
-									<textarea
+									<label class="field-label" for="ops-leaflet">Leaflet</label>
+									<SearchSelect
 										id="ops-leaflet"
-										name="message"
-										bind:value={message}
-										maxlength={PSYOPS.LEAFLET_MAX_CHARS}
-										rows="3"
-										class="field-control textarea w-full resize-none"
-										placeholder="Soldiers of …, your leaders have abandoned you."></textarea>
-									<p class="field-hint data text-right">{message.length}/{PSYOPS.LEAFLET_MAX_CHARS}</p>
+										name="leafletTemplate"
+										items={leafletItems}
+										bind:value={leafletTemplate}
+										placeholder="Choose a leaflet…"
+										searchPlaceholder="Search slogans…"
+									/>
+									<p class="mt-2 rounded-sm bg-surface-2 px-3 py-2 font-serif text-sm leading-snug text-fg">
+										{leafletPreview}
+									</p>
 								</div>
 							{/if}
 
