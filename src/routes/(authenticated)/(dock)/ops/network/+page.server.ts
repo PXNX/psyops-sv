@@ -138,7 +138,9 @@ export const load: PageServerLoad = async ({ locals, url }) => {
 		assets,
 		enemyAssets,
 		sites,
-		files,
+		/** Which records were copied, to mark them in the file explorer. The
+		 *  documents themselves are read in the dossier on the target's state page. */
+		files: files.map((f) => ({ id: f.id, siteId: f.siteId, recordId: f.recordId })),
 		actions,
 		sessions: withSystems(liveSessions, sites),
 		treasury: authority ? (treasury?.balance ?? 0) : null,

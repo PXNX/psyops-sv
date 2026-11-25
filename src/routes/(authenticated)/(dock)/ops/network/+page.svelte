@@ -84,7 +84,6 @@
 	const treasury = $derived<number>(data.treasury ?? 0);
 	const available = $derived({ currency: treasury });
 	let openSiteId = $state<string | null>(null);
-	let openFileId = $state<number | null>(null);
 	let lastAction = $state<Outcome | null>(null);
 	let lastPayload = $state<any>(null);
 	let planting = $state(false);
@@ -101,7 +100,7 @@
 	const targetName = $derived<string>(
 		data.targets.find((t: any) => t.id === data.selectedTargetId)?.name ?? "the target"
 	);
-	// Picking a state opens its dossier straight away.
+	// Picking a state opens its network straight away.
 	let pickedTarget = $state<string | undefined>(undefined);
 	$effect(() => {
 		pickedTarget = data.selectedTargetId ? String(data.selectedTargetId) : undefined;
@@ -127,6 +126,7 @@
 	const copiedIds = $derived(
 		chosenSite ? data.files.filter((f: any) => f.siteId === chosenSite.id).map((f: any) => f.recordId) : []
 	);
+	const dossierHref = $derived(data.selectedTargetId ? `/state/${data.selectedTargetId}#dossier-title` : null);
 	const atCapacity = $derived(activeAssets.length >= INFILTRATION.MAX_ASSETS_PER_TARGET);
 
 	// A ticking clock for the recruitment cooldown and burned-asset timers.
@@ -188,11 +188,6 @@
 			: n >= 1000
 				? `$${+(n / 1000).toFixed(n % 1000 ? 1 : 0)}k`
 				: `$${n}`;
-	const CLASS_TONE: Record<string, string> = {
-		"TOP SECRET": "border-hostile",
-		SECRET: "border-orange-400",
-		CONFIDENTIAL: "border-warning"
-	};
 	function focusResult() {
 		queueMicrotask(() => resultEl?.scrollIntoView({ block: "nearest", behavior: "smooth" }));
 	}
@@ -226,7 +221,6 @@
 				lastAction = outcome;
 				selectedAssetId = data.assets.find((a: any) => a.codename === outcome.codename)?.id ?? selectedAssetId;
 				if (outcome.success && kind === "camera") openSiteId = outcome.siteId;
-				if (outcome.fileId) openFileId = outcome.fileId;
 				focusResult();
 			}
 		};
@@ -253,6 +247,14 @@
 						· burned
 					</span>{/if}
 			</p>
+			{#if a.fileId && dossierHref}
+				<a
+					href={dossierHref}
+					class="mt-1 inline-flex items-center gap-1 text-xs font-semibold text-primary-fg hover:underline"
+				>
+					<IconLock class="size-3.5" /> Read it in the dossier on {targetName}'s page →
+				</a>
+			{/if}
 		</div>
 	</div>
 {/snippet}
@@ -365,7 +367,10 @@
 				<div class="min-w-0">
 					<dt class="section-title">Dossier</dt>
 					<dd class="data text-lg text-fg">{data.files.length}</dd>
-					<dd class="text-[11px] text-fg-faint">files copied</dd>
+					<dd class="text-[11px] text-fg-faint">
+						files copied{#if dossierHref}
+							{" "}· <a href={dossierHref} class="text-primary-fg hover:underline">read →</a>{/if}
+					</dd>
 				</div>
 			</div>
 		</dl>
@@ -377,7 +382,7 @@
 		{/if}
 
 		<div class="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,21rem)]">
-			<!-- ── Main: network, sites, dossier, log ─────────────────────── -->
+			<!-- ── Main: network, sites, dossier link, log ────────────────── -->
 			<div class="min-w-0 space-y-6">
 				<!-- Our network -->
 				<section aria-labelledby="network-title">
@@ -781,61 +786,25 @@
 					{/if}
 				</section>
 
-				<!-- Dossier -->
-				<section aria-labelledby="dossier-title">
-					<h2 id="dossier-title" class="section-title mb-2">
-						<IconLock class="size-4" /> Dossier
-						{#if data.files.length}<span class="data ml-auto tracking-normal">{data.files.length}</span>{/if}
-					</h2>
-					{#if data.files.length}
-						<ul class="grid grid-cols-1 gap-2 sm:grid-cols-2">
-							{#each data.files as file (file.id)}
-								{@const open = openFileId === file.id}
-								<li
-									class="min-w-0 rounded-sm border border-l-2 border-line/15 bg-surface-2 {CLASS_TONE[
-										file.classification
-									] ?? 'border-l-warning'} {open ? 'sm:col-span-2' : ''}"
-								>
-									<button
-										type="button"
-										onclick={() => (openFileId = open ? null : file.id)}
-										aria-expanded={open}
-										class="flex w-full items-center justify-between gap-3 px-3 py-2.5 text-left hover:bg-surface-4"
-									>
-										<span class="min-w-0">
-											<span class="block truncate text-sm font-medium text-fg">{file.title}</span>
-											<span class="data block truncate text-[11px] text-fg-muted">
-												{file.path ?? file.siteId} · {dtg(file.capturedAt)}
-											</span>
-										</span>
-										<Badge
-											size="xs"
-											tone={file.classification === "TOP SECRET"
-												? "red"
-												: file.classification === "SECRET"
-													? "orange"
-													: "amber"}
-										>
-											{file.classification}
-										</Badge>
-									</button>
-									{#if open}
-										<div class="border-t border-line/10 px-3 py-3" transition:slide={{ duration: 140 }}>
-											<p class="mb-2 font-mono text-[10px] tracking-[0.18em] text-hostile-fg uppercase">
-												{file.classification} // copied via network asset
-											</p>
-											<div class="text-sm leading-relaxed whitespace-pre-line text-fg-soft">{file.body}</div>
-										</div>
-									{/if}
-								</li>
-							{/each}
-						</ul>
-					{:else}
-						<div class="panel">
-							{@render emptyState(IconLock, "Nothing copied yet. Open a site and pull its files.")}
-						</div>
-					{/if}
-				</section>
+				<!-- Dossier: the copied documents are read on the target's state page. -->
+				{#if dossierHref}
+					<a
+						href={dossierHref}
+						class="panel flex items-center gap-3 p-3 text-sm hover:bg-surface-4"
+						aria-label="Dossier on {targetName}: open the state page"
+					>
+						<IconLock class="size-5 shrink-0 text-warning" />
+						<span class="min-w-0 flex-1">
+							<span class="section-title block">Dossier</span>
+							<span class="block truncate text-fg">
+								{data.files.length
+									? `${data.files.length} file${data.files.length === 1 ? "" : "s"} on ${targetName}`
+									: `Nothing copied from ${targetName} yet`}
+							</span>
+						</span>
+						<span class="shrink-0 text-xs font-semibold text-primary-fg">{targetName} page →</span>
+					</a>
+				{/if}
 
 				<!-- Activity log -->
 				<section class="panel p-4" aria-labelledby="log-title">
