@@ -11,7 +11,7 @@
 	import PageContainer from "#lib/component/PageContainer.svelte";
 	import { Badge, Button, SearchSelect } from "#lib/component/ui/index.js";
 	import ResourceRequirements from "#lib/component/ResourceRequirements.svelte";
-	import CameraFeed from "#lib/component/infiltration/CameraFeed.svelte";
+	import CameraWall from "#lib/component/infiltration/CameraWall.svelte";
 	import IntrusionConsole from "#lib/component/infiltration/IntrusionConsole.svelte";
 	import FileSystemExplorer from "#lib/component/infiltration/FileSystemExplorer.svelte";
 	import SpyPortrait from "#lib/component/infiltration/SpyPortrait.svelte";
@@ -694,7 +694,7 @@
 									{/if}
 
 									{#if site.cameras > 0}
-										<CameraFeed {site} observedAt={site.lastSeen ?? undefined} />
+										<CameraWall {site} observedAt={site.lastSeen ?? undefined} />
 									{/if}
 
 									{#if selectedAsset}

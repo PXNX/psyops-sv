@@ -6,6 +6,7 @@
 	import { onMount } from "svelte";
 	import { hash32, seededRandom } from "#lib/config/index.js";
 	import type { Site } from "#lib/config/index.js";
+	import { drawView, type CamLens, type CamMode, type CamView } from "./camera-views";
 
 	interface Props {
 		site: Site;
@@ -13,8 +14,27 @@
 		observedAt?: string;
 		compact?: boolean;
 		class?: string;
+		/** Which camera on the site; "main" is the establishing shot. */
+		view?: CamView;
+		/** Day, night vision or thermal. */
+		mode?: CamMode;
+		/** Pan-tilt-zoom pan, -1 (left) to 1 (right). */
+		pan?: number;
+		lens?: CamLens;
+		/** Caption override for the bottom bar. */
+		label?: string;
 	}
-	let { site, observedAt, compact = false, class: className = "" }: Props = $props();
+	let {
+		site,
+		observedAt,
+		compact = false,
+		class: className = "",
+		view = "main",
+		mode = "day",
+		pan = 0,
+		lens = "wide",
+		label
+	}: Props = $props();
 
 	type Shape =
 		| {
@@ -50,6 +70,18 @@
 			shapes.push({ k: "rect", x, y, w, h, fill, op, stroke, sw: stroke ? 0.8 : undefined });
 		const circle = (cx: number, cy: number, r: number, fill: string, op = 1) =>
 			shapes.push({ k: "circle", cx, cy, r, fill, op });
+
+		if (view !== "main") {
+			drawView(view, seededRandom(hash32(site.seed, view.length, view.charCodeAt(0))), {
+				line,
+				rect,
+				circle,
+				poly: (pts, fill, stroke, op) => shapes.push({ k: "poly", pts, fill, stroke, sw: stroke ? 1 : undefined, op }),
+				blip: (x, y, r, delay) => blips.push({ x, y, r, delay })
+			});
+			for (let i = 0; i < 26; i++) circle(rng() * W, rng() * H, 0.6 + rng(), "#d7e7d9", 0.06 + rng() * 0.12);
+			return { shapes, blips };
+		}
 
 		// Ground and horizon, common to every outdoor site.
 		const indoor = site.kind === "datacenter" || site.kind === "command";
@@ -216,7 +248,19 @@
 		return () => clearInterval(timer);
 	});
 	const stamp = $derived((clock || observedAt || "").replace("T", " ").slice(0, 19) + "Z");
-	const camNo = $derived(String((hash32(site.seed, 4) % 16) + 1).padStart(2, "0"));
+	const camNo = $derived(
+		String(((hash32(site.seed, 4) + ["main", "gate", "lobby", "server", "perimeter"].indexOf(view)) % 16) + 1).padStart(
+			2,
+			"0"
+		)
+	);
+	// PTZ: zoom in a little and slide the picture; the fisheye squeezes it into a bubble.
+	const zoom = $derived(lens === "fisheye" ? 1.12 : pan ? 1.3 : 1);
+	const shift = $derived(-pan * (W * (zoom - 1)) * 0.5);
+	const sceneTransform = $derived(
+		`transform: translate(${W / 2 + shift}px, ${H / 2}px) scale(${zoom}) translate(${-W / 2}px, ${-H / 2}px)`
+	);
+	const modeTag = $derived(mode === "night" ? "NV" : mode === "thermal" ? "IR·WHT" : "");
 </script>
 
 <div class="cctv relative overflow-hidden rounded-sm border border-line/30 bg-[#0d1310] {className}">
@@ -235,31 +279,75 @@
 				<feTurbulence type="fractalNoise" baseFrequency="0.85" numOctaves="2" seed={site.seed % 100} />
 				<feColorMatrix type="saturate" values="0" />
 			</filter>
+			<!-- Night vision: lift the shadows and paint everything phosphor green. -->
+			<filter id="{uid}-night" color-interpolation-filters="sRGB">
+				<feColorMatrix type="matrix" values="0.2 0.5 0.1 0 0  0.6 1.4 0.3 0 0.08  0.15 0.35 0.1 0 0  0 0 0 1 0" />
+			</filter>
+			<!-- Thermal: brightness mapped onto an iron palette, warm things glow. -->
+			<filter id="{uid}-thermal" color-interpolation-filters="sRGB">
+				<feColorMatrix type="matrix" values="0.5 0.9 0.3 0 0  0.5 0.9 0.3 0 0  0.5 0.9 0.3 0 0  0 0 0 1 0" />
+				<feComponentTransfer>
+					<feFuncR type="table" tableValues="0.02 0.25 0.7 0.95 1 1" />
+					<feFuncG type="table" tableValues="0.0 0.02 0.12 0.45 0.85 1" />
+					<feFuncB type="table" tableValues="0.12 0.45 0.4 0.08 0.2 0.9" />
+				</feComponentTransfer>
+			</filter>
+			<clipPath id="{uid}-bubble">
+				<ellipse cx={W / 2} cy={H / 2} rx={W * 0.47} ry={H * 0.49} />
+			</clipPath>
 		</defs>
-		{#each scene.shapes as s, i (i)}
-			{#if s.k === "rect"}
-				<rect
-					x={s.x}
-					y={s.y}
-					width={s.w}
-					height={s.h}
-					fill={s.fill}
-					opacity={s.op ?? 1}
-					stroke={s.stroke}
-					stroke-width={s.sw}
-				/>
-			{:else if s.k === "circle"}
-				<circle cx={s.cx} cy={s.cy} r={s.r} fill={s.fill} opacity={s.op ?? 1} stroke={s.stroke} stroke-width={s.sw} />
-			{:else if s.k === "poly"}
-				<polygon points={s.pts} fill={s.fill} opacity={s.op ?? 1} stroke={s.stroke} stroke-width={s.sw} />
-			{:else}
-				<path d={s.d} fill={s.fill ?? "none"} opacity={s.op ?? 1} stroke={s.stroke} stroke-width={s.sw} />
-			{/if}
-		{/each}
-		{#each scene.blips as b, i (i)}
-			<circle class="blip" cx={b.x} cy={b.y} r={b.r} fill={amber} style="animation-delay: {b.delay}s" />
-		{/each}
+		<rect width={W} height={H} fill="#050806" />
+		<g
+			clip-path={lens === "fisheye" ? `url(#${uid}-bubble)` : undefined}
+			filter={mode === "day" ? undefined : `url(#${uid}-${mode})`}
+		>
+			<g style={sceneTransform} class="ptz">
+				{#each scene.shapes as s, i (i)}
+					{#if s.k === "rect"}
+						<rect
+							x={s.x}
+							y={s.y}
+							width={s.w}
+							height={s.h}
+							fill={s.fill}
+							opacity={s.op ?? 1}
+							stroke={s.stroke}
+							stroke-width={s.sw}
+						/>
+					{:else if s.k === "circle"}
+						<circle
+							cx={s.cx}
+							cy={s.cy}
+							r={s.r}
+							fill={s.fill}
+							opacity={s.op ?? 1}
+							stroke={s.stroke}
+							stroke-width={s.sw}
+						/>
+					{:else if s.k === "poly"}
+						<polygon points={s.pts} fill={s.fill} opacity={s.op ?? 1} stroke={s.stroke} stroke-width={s.sw} />
+					{:else}
+						<path d={s.d} fill={s.fill ?? "none"} opacity={s.op ?? 1} stroke={s.stroke} stroke-width={s.sw} />
+					{/if}
+				{/each}
+				{#each scene.blips as b, i (i)}
+					<circle class="blip" cx={b.x} cy={b.y} r={b.r} fill={amber} style="animation-delay: {b.delay}s" />
+				{/each}
+			</g>
+		</g>
 		<rect width={W} height={H} fill="url(#{uid}-vig)" />
+		{#if lens === "fisheye"}
+			<ellipse
+				cx={W / 2}
+				cy={H / 2}
+				rx={W * 0.47}
+				ry={H * 0.49}
+				fill="none"
+				stroke="#000"
+				stroke-width="18"
+				opacity="0.6"
+			/>
+		{/if}
 		<rect width={W} height={H} filter="url(#{uid}-grain)" opacity="0.12" style="mix-blend-mode: overlay" />
 		<!-- HUD -->
 		<g fill="none" stroke={tint} stroke-width="1.4" opacity="0.7">
@@ -267,7 +355,7 @@
 		</g>
 		<rect x="0" y="0" width={W} height="26" fill="#000" opacity="0.62" />
 		<text x="14" y="17" font-size="11" fill={tint} font-family="ui-monospace, monospace" letter-spacing="1.2">
-			CAM {camNo} · {site.code}
+			CAM {camNo} · {site.code}{modeTag ? ` · ${modeTag}` : ""}{pan ? ` · PTZ ${pan > 0 ? "▶" : "◀"}` : ""}
 		</text>
 		<circle class="rec" cx={W - 76} cy="13" r="4" fill="#ff5b4d" />
 		<text x={W - 66} y="17" font-size="10" fill="#ff8b80" font-family="ui-monospace, monospace" letter-spacing="1">
@@ -276,7 +364,7 @@
 		<rect x="0" y={H - 24} width={W} height="24" fill="#000" opacity="0.62" />
 		{#if !compact}
 			<text x="14" y={H - 8} font-size="10" fill={tint} font-family="ui-monospace, monospace" opacity="0.85">
-				{site.camera} · {site.name}
+				{label ?? `${site.camera} · ${site.name}`}
 			</text>
 		{/if}
 		<text x={W - 14} y={H - 8} text-anchor="end" font-size="10" fill={tint} font-family="ui-monospace, monospace">
@@ -303,6 +391,9 @@
 	}
 	.blip {
 		animation: blip 2.4s ease-in-out infinite;
+	}
+	.ptz {
+		transition: transform 0.6s ease;
 	}
 	@keyframes rec {
 		0%,
@@ -331,6 +422,9 @@
 		.rec,
 		.blip {
 			animation: none;
+		}
+		.ptz {
+			transition: none;
 		}
 	}
 </style>
