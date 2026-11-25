@@ -124,7 +124,7 @@
 		};
 	});
 
-	const canCreate = !data.isOnCooldown && data.canAfford;
+	const canCreate = !data.isOnCooldown && data.canAfford && !!data.registrationRegion;
 
 	const dropzoneClass = $derived(
 		[
@@ -307,11 +307,26 @@
 				<span class="font-mono font-bold text-fg">{data.companyCost.toLocaleString()}</span>
 			</div>
 			<div class="flex justify-between gap-3 text-xs">
+				<span class="text-fg-muted">Registered in</span>
+				<span class="font-mono {data.registrationRegion ? 'text-fg-body' : 'text-red-300'}">
+					{#if data.registrationRegion}
+						<a href="/region/{data.registrationRegion.id}" class="hover:underline">
+							{data.registrationRegion.name}
+						</a>
+					{:else}
+						No residence
+					{/if}
+				</span>
+			</div>
+			<div class="flex justify-between gap-3 text-xs">
 				<span class="text-fg-muted">Your wallet</span>
 				<span class="font-mono {data.canAfford ? 'text-positive-fg' : 'text-red-300'}">
 					{data.userBalance.toLocaleString()}
 				</span>
 			</div>
+			{#if !data.registrationRegion}
+				<p class="field-error">You need a residence before you can register a company.</p>
+			{/if}
 			{#if !data.canAfford}
 				<p class="field-error">Not enough money for the fee.</p>
 			{/if}

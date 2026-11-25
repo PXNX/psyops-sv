@@ -1,10 +1,11 @@
 // src/routes/company/create/+page.server.ts
 import { db } from "#lib/server/db.js";
-import { companies, companyCreationCooldown, userWallets, files } from "#lib/server/schema.js";
+import { companies, companyCreationCooldown, userWallets, files, residences } from "#lib/server/schema.js";
 import { redirect } from "@sveltejs/kit";
 import { eq, sql } from "drizzle-orm";
 import type { Actions, PageServerLoad } from "./$types";
 import { uploadFileFromForm } from "#lib/server/backblaze.js";
+import { getRegionName } from "#lib/utils/formatting.js";
 import { superValidate, message } from "sveltekit-superforms";
 import { valibot } from "sveltekit-superforms/adapters/valibot";
 import { createCompanySchema } from "./schema";
@@ -16,14 +17,16 @@ const COOLDOWN_DAYS = 30;
 export const load: PageServerLoad = async ({ locals }) => {
 	const account = locals.account!;
 
-	// Wallet, cooldown and existing company only depend on the account, so fetch them in parallel
-	const [wallet, cooldown, , form] = await Promise.all([
+	// Wallet, cooldown, residence and existing company only depend on the account.
+	const [wallet, cooldown, residence, , form] = await Promise.all([
 		db.query.userWallets.findFirst({
 			where: eq(userWallets.userId, account.id)
 		}),
 		db.query.companyCreationCooldown.findFirst({
 			where: eq(companyCreationCooldown.userId, account.id)
 		}),
+		// A filed company is registered in the region the founder currently lives in.
+		db.select({ regionId: residences.regionId }).from(residences).where(eq(residences.userId, account.id)).limit(1),
 		// Check if user already has a company (redirects as soon as it resolves)
 		db.query.companies
 			.findFirst({
@@ -61,7 +64,10 @@ export const load: PageServerLoad = async ({ locals }) => {
 		canAfford,
 		isOnCooldown,
 		cooldownEndsAt: cooldownEndsAt?.toISOString() ?? null,
-		cooldownDays: COOLDOWN_DAYS
+		cooldownDays: COOLDOWN_DAYS,
+		registrationRegion: residence[0]?.regionId
+			? { id: residence[0].regionId, name: getRegionName(residence[0].regionId) }
+			: null
 	};
 };
 
@@ -116,6 +122,16 @@ export const actions: Actions = {
 
 		if (existingCompany) {
 			return message(form, "You already own a company", { status: 400 });
+		}
+
+		// Register the company where the founder currently lives.
+		const [residence] = await db
+			.select({ regionId: residences.regionId })
+			.from(residences)
+			.where(eq(residences.userId, account.id))
+			.limit(1);
+		if (!residence?.regionId) {
+			return message(form, "You need a residence to register a company.", { status: 400 });
 		}
 
 		// Create company with transaction
@@ -175,6 +191,7 @@ export const actions: Actions = {
 					name: name.trim(),
 					logo: logoFileId,
 					description: description?.trim() || null,
+					regionId: residence.regionId,
 					ownerId: account.id
 				})
 				.returning();
