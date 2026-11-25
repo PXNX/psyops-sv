@@ -2,6 +2,7 @@
 import type { db } from "#lib/server/db.js";
 import { stateTaxes, taxRevenue, stateTreasury, governmentBudgetTransactions } from "#lib/server/schema.js";
 import { eq, and, sql } from "drizzle-orm";
+import { creditRegionalShare } from "#lib/server/services/politics/regional-budget.js";
 
 export type DbClient = typeof db | Parameters<Parameters<typeof db.transaction>[0]>[0];
 
@@ -38,6 +39,9 @@ const TAX_TYPE_LABELS: Record<string, string> = {
  * @param grossAmount - The total amount before taxes
  * @param userId - The user paying the tax
  * @param dbClient - Optional database client (transaction or db instance)
+ * @param regionId - The region the tax was raised in. When given, the state's
+ *   regional share of it goes to that region's budget (regional-budget.ts) and
+ *   only the rest reaches the treasury.
  * @returns Tax calculation breakdown
  */
 export async function calculateAndCollectTax(
@@ -45,7 +49,8 @@ export async function calculateAndCollectTax(
 	taxType: "mining" | "production" | "market_transaction" | "income",
 	grossAmount: number,
 	userId: string,
-	clientOpt?: DbClient
+	clientOpt?: DbClient,
+	regionId?: number | null
 ): Promise<TaxCalculation> {
 	const dbClient = await resolveDb(clientOpt);
 	// No state (e.g. independent region) means no taxes are collected
@@ -98,38 +103,51 @@ export async function calculateAndCollectTax(
 		});
 	}
 
+	// The region keeps its share; the treasury gets the rest.
+	const label = TAX_TYPE_LABELS[taxType] || taxType;
+	const { regional, state: stateAmount } =
+		regionId != null
+			? await creditRegionalShare(dbClient as never, {
+					stateId,
+					regionId,
+					taxAmount: totalTaxAmount,
+					label,
+					payerId: userId
+				})
+			: { regional: 0, state: totalTaxAmount };
+
 	// Update state treasury
 	const [treasury] = await dbClient.select().from(stateTreasury).where(eq(stateTreasury.stateId, stateId));
 
 	let newBalance: number;
 	if (treasury) {
-		newBalance = treasury.balance + totalTaxAmount;
+		newBalance = treasury.balance + stateAmount;
 		await dbClient
 			.update(stateTreasury)
 			.set({
-				balance: newBalance,
-				totalCollected: sql`${stateTreasury.totalCollected} + ${totalTaxAmount}`,
+				balance: sql`${stateTreasury.balance} + ${stateAmount}`,
+				totalCollected: sql`${stateTreasury.totalCollected} + ${stateAmount}`,
 				updatedAt: new Date()
 			})
 			.where(eq(stateTreasury.stateId, stateId));
 	} else {
-		newBalance = totalTaxAmount;
+		newBalance = stateAmount;
 		await dbClient.insert(stateTreasury).values({
 			stateId,
-			balance: totalTaxAmount,
-			totalCollected: totalTaxAmount,
+			balance: stateAmount,
+			totalCollected: stateAmount,
 			totalSpent: 0
 		});
 	}
 
 	// Record government budget transaction
-	const label = TAX_TYPE_LABELS[taxType] || taxType;
+	const regionalNote = regional > 0 ? `, $${regional.toLocaleString()} kept by the region` : "";
 	await dbClient.insert(governmentBudgetTransactions).values({
 		stateId,
 		transactionType: "tax_collection",
-		amount: totalTaxAmount,
+		amount: stateAmount,
 		balanceAfter: newBalance,
-		description: `${label} collected: $${totalTaxAmount.toLocaleString()} (${applicableTaxes.map((t) => `${t.rate}%`).join(" + ")})`,
+		description: `${label} collected: $${totalTaxAmount.toLocaleString()} (${applicableTaxes.map((t) => `${t.rate}%`).join(" + ")})${regionalNote}`,
 		authorizedBy: userId
 	});
 

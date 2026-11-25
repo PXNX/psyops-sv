@@ -31,6 +31,9 @@ import {
 	userVisas,
 	regionDeposits,
 	governors,
+	regionBudgetLedger,
+	regionBudgets,
+	regionProgrammes,
 	presidents,
 	stateResourceInventory,
 	reconMissions,
@@ -43,6 +46,7 @@ import {
 	fleetEvents
 } from "./schema";
 import type { PgDatabase } from "drizzle-orm/pg-core";
+import { eq } from "drizzle-orm";
 import {
 	hash32,
 	hexKey,
@@ -396,7 +400,82 @@ export async function seedMockDatabase(db: PgDatabase<any>) {
 		{ userId: "user-1", stateId: state1!.id },
 		{ userId: "user-3", stateId: state2!.id }
 	]);
-	await db.insert(governors).values({ userId: "user-2", regionId: region1!.id });
+	// Alice also governs Freedonia's second region, so mock mode shows the
+	// regional budget with its spending actions; region 1 shows it read-only.
+	await db.insert(governors).values([
+		{ userId: "user-2", regionId: region1!.id },
+		{ userId: "user-1", regionId: region2!.id }
+	]);
+
+	// ============ Regional budgets ============
+	// Freedonia leaves 25% of local tax to its regions, with region 2 at 30%.
+	await db.update(states).set({ regionalTaxShare: 25 }).where(eq(states.id, state1!.id));
+	const hoursAgo = (h: number) => new Date(Date.now() - h * 3_600_000);
+	await db.insert(regionBudgets).values([
+		{ regionId: region1!.id, balance: 37_400, totalCollected: 52_400, totalSpent: 15_000 },
+		{ regionId: region2!.id, balance: 124_750, totalCollected: 164_750, totalSpent: 40_000, shareOverride: 30 }
+	]);
+	await db.insert(regionBudgetLedger).values([
+		{
+			regionId: region2!.id,
+			kind: "tax_share",
+			amount: 150_000,
+			balanceAfter: 150_000,
+			description: "30% of income tax",
+			createdAt: hoursAgo(60)
+		},
+		{
+			regionId: region2!.id,
+			kind: "programme",
+			amount: -40_000,
+			balanceAfter: 110_000,
+			description: "🧹 Street clean-up (10 days)",
+			actorId: "user-1",
+			createdAt: hoursAgo(30)
+		},
+		{
+			regionId: region2!.id,
+			kind: "tax_share",
+			amount: 9_600,
+			balanceAfter: 119_600,
+			description: "30% of income tax",
+			createdAt: hoursAgo(9)
+		},
+		{
+			regionId: region2!.id,
+			kind: "tax_share",
+			amount: 5_150,
+			balanceAfter: 124_750,
+			description: "30% of mining tax",
+			createdAt: hoursAgo(2)
+		},
+		{
+			regionId: region1!.id,
+			kind: "tax_share",
+			amount: 52_400,
+			balanceAfter: 52_400,
+			description: "25% of income tax",
+			createdAt: hoursAgo(40)
+		},
+		{
+			regionId: region1!.id,
+			kind: "programme",
+			amount: -15_000,
+			balanceAfter: 37_400,
+			description: "🎉 Town festival (3 days)",
+			actorId: "user-2",
+			createdAt: hoursAgo(20)
+		}
+	]);
+	await db.insert(regionProgrammes).values({
+		regionId: region2!.id,
+		kind: "cleanup",
+		opinion: 4,
+		cost: 40_000,
+		startedBy: "user-1",
+		startedAt: hoursAgo(30),
+		endsAt: new Date(hoursAgo(30).getTime() + 10 * 86_400_000)
+	});
 	await db.insert(stateResourceInventory).values([
 		{ stateId: state1!.id, resourceType: "steel", quantity: 400 },
 		{ stateId: state1!.id, resourceType: "wood", quantity: 600 },

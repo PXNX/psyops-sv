@@ -25,13 +25,7 @@ import { regionSupply } from "#lib/server/services/military/logistics.js";
 import { factorySourcing } from "#lib/server/services/economy/autonomy.js";
 import { factoryWaterFactor } from "#lib/config/index.js";
 import { regionsCivilianNeeds } from "#lib/server/services/civilians/supply.js";
-import {
-	efficiencyFactor,
-	dueForWear,
-	nextEfficiency,
-	nextQuality,
-	qualityFactor
-} from "#lib/config/index.js";
+import { efficiencyFactor, dueForWear, nextEfficiency, nextQuality, qualityFactor } from "#lib/config/index.js";
 
 const SHIFT_DURATION = 8 * 60 * 60 * 1000; // 8 hours in milliseconds
 
@@ -317,7 +311,14 @@ export async function collectWages(userId: string, factoryId: number): Promise<C
 			if (!claimed) throw new AlreadyCollected();
 
 			// Calculate income tax (inside transaction for atomicity)
-			const incomeTaxResult = await calculateAndCollectTax(factory.stateId, "income", wageToCollect, userId, tx);
+			const incomeTaxResult = await calculateAndCollectTax(
+				factory.stateId,
+				"income",
+				wageToCollect,
+				userId,
+				tx,
+				factory.regionId
+			);
 
 			// Calculate mining tax if applicable
 			let miningTaxResult: Awaited<ReturnType<typeof calculateAndCollectTax>> | null = null;
@@ -364,7 +365,8 @@ export async function collectWages(userId: string, factoryId: number): Promise<C
 						"mining",
 						estimatedResourceValue,
 						factory.ownerId,
-						tx
+						tx,
+						factory.regionId
 					);
 					const taxPercentage = miningTaxResult.taxAmount / estimatedResourceValue;
 					netResourceQuantity = Math.floor(extraction.produced * (1 - taxPercentage));
@@ -501,7 +503,15 @@ export async function collectWages(userId: string, factoryId: number): Promise<C
 				relatedEntityId: factoryId
 			});
 
-			return { incomeTaxResult, miningTaxResult, resourcesProduced, deposit, output, efficiency: newEfficiency, quality: newQuality };
+			return {
+				incomeTaxResult,
+				miningTaxResult,
+				resourcesProduced,
+				deposit,
+				output,
+				efficiency: newEfficiency,
+				quality: newQuality
+			};
 		});
 	} catch (err) {
 		if (err instanceof AlreadyCollected) return { success: false, error: "This shift has already been collected." };

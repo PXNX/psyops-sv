@@ -334,6 +334,9 @@ export const states = pgTable("states", {
 	lastSalaryPaidAt: timestamp("last_salary_paid_at"),
 	// While in the future, parliamentary elections cannot start or be voted in.
 	martialLawUntil: timestamp("martial_law_until"),
+	// Percent of the tax raised in each region that goes to that region's own
+	// budget instead of the treasury (regional-budget.config.ts, 0-50).
+	regionalTaxShare: integer("regional_tax_share").default(20).notNull(),
 	createdAt: timestamp("created_at").defaultNow().notNull()
 });
 
@@ -472,6 +475,62 @@ export const governors = pgTable("governors", {
 	appointedAt: timestamp("appointed_at").defaultNow().notNull(),
 	term: integer("term").default(1)
 });
+
+// A region's own purse: its share of the tax raised there, spent by the
+// governor (services/politics/regional-budget.ts). No row means nothing has
+// been collected yet and the state's share applies.
+export const regionBudgets = pgTable("region_budgets", {
+	id: integer("id").generatedByDefaultAsIdentity().primaryKey(),
+	regionId: integer("region_id")
+		.notNull()
+		.references(() => regions.id, { onDelete: "cascade" })
+		.unique(),
+	balance: bigint("balance", { mode: "number" }).default(0).notNull(),
+	totalCollected: bigint("total_collected", { mode: "number" }).default(0).notNull(),
+	totalSpent: bigint("total_spent", { mode: "number" }).default(0).notNull(),
+	/** Overrides the state's regional share for this region; null follows the state. */
+	shareOverride: integer("share_override"),
+	updatedAt: timestamp("updated_at").defaultNow().notNull()
+});
+
+// Every movement of a regional budget: tax shares in (positive), spending out
+// (negative), with the balance it left behind.
+export const regionBudgetLedger = pgTable(
+	"region_budget_ledger",
+	{
+		id: integer("id").generatedByDefaultAsIdentity().primaryKey(),
+		regionId: integer("region_id")
+			.notNull()
+			.references(() => regions.id, { onDelete: "cascade" }),
+		/** tax_share | construction | programme */
+		kind: varchar("kind", { length: 20 }).notNull(),
+		amount: bigint("amount", { mode: "number" }).notNull(),
+		balanceAfter: bigint("balance_after", { mode: "number" }).notNull(),
+		description: text("description").notNull(),
+		actorId: text("actor_id").references(() => accounts.id, { onDelete: "set null" }),
+		createdAt: timestamp("created_at").defaultNow().notNull()
+	},
+	(t) => ({ regionCreatedIdx: index("idx_region_budget_ledger_region_created").on(t.regionId, t.createdAt) })
+);
+
+// Short programmes a governor runs from the regional budget; each lifts
+// civilian opinion in the region until it ends.
+export const regionProgrammes = pgTable(
+	"region_programmes",
+	{
+		id: integer("id").generatedByDefaultAsIdentity().primaryKey(),
+		regionId: integer("region_id")
+			.notNull()
+			.references(() => regions.id, { onDelete: "cascade" }),
+		kind: varchar("kind", { length: 20 }).notNull(),
+		opinion: integer("opinion").notNull(),
+		cost: bigint("cost", { mode: "number" }).notNull(),
+		startedBy: text("started_by").references(() => accounts.id, { onDelete: "set null" }),
+		startedAt: timestamp("started_at").defaultNow().notNull(),
+		endsAt: timestamp("ends_at").notNull()
+	},
+	(t) => ({ regionEndsIdx: index("idx_region_programmes_region_ends").on(t.regionId, t.endsAt) })
+);
 
 export const regionsRelations = relations(regions, ({ one, many }) => ({
 	state: one(states, {

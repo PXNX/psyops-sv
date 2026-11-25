@@ -44,10 +44,42 @@
 	{:else}
 		<!-- What the state has to spend -->
 		<div class="panel rounded-sm p-4">
+			{#if data.isGovernor}
+				<!-- The governor picks who pays the money; materials always come from the state. -->
+				<div class="flex flex-wrap items-center gap-2 mb-3" role="group" aria-label="Pay from">
+					<span class="text-[10px] text-[#8e9abb] uppercase tracking-wide">Pay from</span>
+					<a
+						href="?fund=treasury"
+						data-sveltekit-noscroll
+						aria-current={data.payFrom === "treasury" ? "true" : undefined}
+						class="rounded-sm border px-2.5 py-1 text-xs {data.payFrom === 'treasury'
+							? 'border-[#4fd88a]/50 bg-[#4fd88a]/12 text-[#aef3c9]'
+							: 'border-[#8ea6e0]/20 text-[#c2cbe3] hover:border-[#8ea6e0]/40'}"
+					>
+						State treasury
+					</a>
+					<a
+						href="?fund=region"
+						data-sveltekit-noscroll
+						aria-current={data.payFrom === "region" ? "true" : undefined}
+						class="rounded-sm border px-2.5 py-1 text-xs {data.payFrom === 'region'
+							? 'border-[#f5a524]/50 bg-[#f5a524]/12 text-[#ffcb6b]'
+							: 'border-[#8ea6e0]/20 text-[#c2cbe3] hover:border-[#8ea6e0]/40'}"
+					>
+						Regional budget
+					</a>
+				</div>
+			{/if}
 			<div class="flex flex-wrap items-center justify-between gap-3">
 				<div>
-					<p class="text-[10px] text-[#8e9abb] uppercase tracking-wide">Treasury of {data.state.name}</p>
-					<p class="text-2xl font-bold font-mono text-[#aef3c9]">${data.treasury.toLocaleString()}</p>
+					{#if data.payFrom === "region"}
+						<p class="text-[10px] text-[#8e9abb] uppercase tracking-wide">Regional budget of {regionName}</p>
+						<p class="text-2xl font-bold font-mono text-[#ffcb6b]">${data.regionBudget.toLocaleString()}</p>
+						<p class="text-xs text-[#8e9abb]">Materials still come from the state stockpile.</p>
+					{:else}
+						<p class="text-[10px] text-[#8e9abb] uppercase tracking-wide">Treasury of {data.state.name}</p>
+						<p class="text-2xl font-bold font-mono text-[#aef3c9]">${data.treasury.toLocaleString()}</p>
+					{/if}
 				</div>
 				<div class="flex flex-wrap gap-2">
 					{#each Object.entries(data.stockpile).filter(([, q]) => q > 0) as [resource, quantity]}
@@ -63,9 +95,9 @@
 			{#if !canOrderAny && data.canPropose}
 				<p class="text-xs text-[#8e9abb] mt-3">
 					Only the president, governor and responsible ministers build directly. You can
-					<a href="/state/{data.state.id}/proposal/create" class="text-[#ffcb6b] hover:text-[#ffc857]"
-						>propose a building to parliament</a
-					>.
+					<a href="/state/{data.state.id}/proposal/create" class="text-[#ffcb6b] hover:text-[#ffc857]">
+						propose a building to parliament
+					</a>.
 				</p>
 			{/if}
 		</div>
@@ -165,7 +197,7 @@
 								action="?/build"
 								use:confirmSubmit={{
 									title: `Build ${b.name.toLowerCase()} in ${regionName}?`,
-									body: `It costs the state ${b.costs.map((c) => `${c.needed.toLocaleString()} ${c.resource === "currency" ? "money" : c.resource}`).join(", ")} and takes ${b.days} days.`,
+									body: `It costs ${data.payFrom === "region" ? "the regional budget and the state stockpile" : "the state"} ${b.costs.map((c) => `${c.needed.toLocaleString()} ${c.resource === "currency" ? "money" : c.resource}`).join(", ")} and takes ${b.days} days.`,
 									confirmLabel: "Build"
 								}}
 								use:enhance={() => {
@@ -180,6 +212,7 @@
 							>
 								<input type="hidden" name="buildingType" value={b.type} />
 								<input type="hidden" name="quantity" value="1" />
+								<input type="hidden" name="payFrom" value={data.payFrom} />
 								<Button
 									type="submit"
 									variant="soft-emerald"

@@ -87,7 +87,8 @@ export async function runCivilianWork(
 	const labour = new Map<number, number>(
 		regionRows.map((r) => {
 			const strain = r.stateId != null ? pressure.get(r.stateId) : undefined;
-			const participation = (strain ? conscriptionWorkforce(strain.pressure) : 1) * healthyWorkforce(strain?.hospital ?? 1);
+			const participation =
+				(strain ? conscriptionWorkforce(strain.pressure) : 1) * healthyWorkforce(strain?.hospital ?? 1);
 			// A region's school level decides how much of its population can work
 			// a factory shift in the first place.
 			return [r.id, Math.floor(civilianLabour(regionPopulation(r), r.education ?? 0) * participation)];
@@ -114,13 +115,7 @@ export async function runCivilianWork(
 
 		const weeklyWage = civilianWage(factory.workerWage);
 		const wagePerWorker = Math.max(1, Math.round(weeklyWage * (days / 7)));
-		const workers = employableCivilians(
-			available,
-			freeSlots,
-			budgets.get(factory.companyId) ?? 0,
-			weeklyWage,
-			days
-		);
+		const workers = employableCivilians(available, freeSlots, budgets.get(factory.companyId) ?? 0, weeklyWage, days);
 		if (workers <= 0) continue;
 
 		const wages = wagePerWorker * workers;
@@ -146,7 +141,7 @@ export async function runCivilianWork(
 				.where(and(eq(companyBudgets.companyId, factory.companyId), gte(companyBudgets.balance, wages)))
 				.returning({ id: companyBudgets.id });
 			if (!updated.length) return null;
-			return calculateAndCollectTax(stateId ?? null, "income", wages, ownerId, tx);
+			return calculateAndCollectTax(stateId ?? null, "income", wages, ownerId, tx, factory.regionId);
 		});
 		if (!applied) continue;
 

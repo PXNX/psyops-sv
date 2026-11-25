@@ -25,7 +25,7 @@
 		needsVisa: boolean;
 		hasActiveVisa: boolean;
 		hasPendingApplication: boolean;
-		settings: { visaRequired: boolean; visaCost: number | string; visaTaxRate: number; autoApprove: boolean } | null;
+		settings?: { visaRequired: boolean; visaCost: number | string; visaTaxRate: number; autoApprove: boolean } | null;
 		activeVisa: { expiresAt: string; cost: number; taxPaid: number } | null;
 		blocVisaFree: boolean;
 		blockedReason: string | null;

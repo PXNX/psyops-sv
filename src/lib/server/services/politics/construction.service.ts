@@ -1,11 +1,12 @@
 // Public construction: the one place buildings are started and finished.
 // Parliament proposals and governors/economy ministers both start buildings
-// here. A building costs treasury money plus stockpile resources up front,
-// then sits "under construction" for its template's constructionTime and
+// here. A building costs treasury money plus stockpile resources up front
+// (a governor may pay the money from the regional budget instead), then sits "under construction" for its template's constructionTime and
 // raises its region's level by one when finished.
 import { and, count, eq, gte, inArray, lte, sql } from "drizzle-orm";
 import type { Database } from "#lib/server/db.js";
 import {
+	regionBudgets,
 	regions,
 	stateBuildings,
 	stateProductInventory,
@@ -13,6 +14,7 @@ import {
 	stateTreasury
 } from "#lib/server/schema.js";
 import { BUILDING_TEMPLATES, type BuildingType, type RegionStat } from "#lib/config/index.js";
+import { debitRegionBudget, isGovernorOf, RegionalBudgetError } from "./regional-budget";
 
 type Tx = Parameters<Parameters<Database["transaction"]>[0]>[0];
 type Region = typeof regions.$inferSelect;
@@ -48,6 +50,8 @@ export function checkConstruction(input: {
 	pending: number;
 	treasury: number;
 	stockpile: Record<string, number>;
+	/** Where the money comes from; only changes the wording. */
+	fund?: "treasury" | "region";
 }): ConstructionCheck {
 	const template = BUILDING_TEMPLATES[input.type];
 	const level = regionLevel(input.region, template.stat);
@@ -80,7 +84,7 @@ export function checkConstruction(input: {
 		if (c.available < c.needed) {
 			problems.push(
 				c.resource === "currency"
-					? `The treasury is ${(c.needed - c.available).toLocaleString()} short.`
+					? `The ${input.fund === "region" ? "regional budget" : "treasury"} is ${(c.needed - c.available).toLocaleString()} short.`
 					: `The stockpile is ${(c.needed - c.available).toLocaleString()} ${c.resource} short.`
 			);
 		}
@@ -129,6 +133,8 @@ export async function startConstruction(
 		quantity?: number;
 		builtBy: string;
 		proposalId?: number | null;
+		/** "region": the governor pays the money from the regional budget. */
+		payFrom?: "treasury" | "region";
 	}
 ): Promise<{ completesAt: Date }> {
 	const template = BUILDING_TEMPLATES[input.type];
@@ -140,21 +146,45 @@ export async function startConstruction(
 			throw new ConstructionError("That region doesn't belong to this state.");
 		}
 
-		const [treasury] = await tx
-			.select({ balance: stateTreasury.balance })
-			.from(stateTreasury)
-			.where(eq(stateTreasury.stateId, input.stateId));
+		const fromRegion = input.payFrom === "region";
+		if (fromRegion && !(await isGovernorOf(tx, input.builtBy, input.regionId))) {
+			throw new ConstructionError("Only the region's governor can spend its budget.");
+		}
+		const [fund] = fromRegion
+			? await tx
+					.select({ balance: regionBudgets.balance })
+					.from(regionBudgets)
+					.where(eq(regionBudgets.regionId, input.regionId))
+					.for("update")
+			: await tx
+					.select({ balance: stateTreasury.balance })
+					.from(stateTreasury)
+					.where(eq(stateTreasury.stateId, input.stateId));
 		const check = checkConstruction({
 			type: input.type,
 			quantity: input.quantity ?? 1,
 			region,
 			pending: (await pendingByType(tx, input.regionId))[input.type] ?? 0,
-			treasury: treasury?.balance ?? 0,
-			stockpile: await stateStockpile(tx, input.stateId)
+			treasury: fund?.balance ?? 0,
+			stockpile: await stateStockpile(tx, input.stateId),
+			fund: fromRegion ? "region" : "treasury"
 		});
 		if (!check.ok) throw new ConstructionError(check.problems.join(" "));
 
 		for (const { resource, needed } of check.costs) {
+			if (resource === "currency" && fromRegion) {
+				try {
+					await debitRegionBudget(tx, input.regionId, needed, {
+						kind: "construction",
+						description: `${template.icon} ${template.name} level ${check.level + 1}`,
+						actorId: input.builtBy
+					});
+				} catch (err) {
+					if (err instanceof RegionalBudgetError) throw new ConstructionError(err.message);
+					throw err;
+				}
+				continue;
+			}
 			const paid =
 				resource === "currency"
 					? await tx

@@ -4,7 +4,9 @@
 import { afterAll, beforeAll, describe, expect, it } from "@rstest/core";
 import { eq } from "drizzle-orm";
 import { createMockDb, type MockDbHandle } from "../mock-db";
-import { companyBudgets, factories, factoryWorkers, regions, stateTaxes, taxRevenue } from "../schema";
+import { companyBudgets, factories, factoryWorkers, regionBudgets, regions, stateTaxes, taxRevenue } from "../schema";
+import { splitTax } from "#lib/config/index.js";
+import { regionalShareFor } from "../services/politics/regional-budget";
 import { runCivilianWork } from "../services/economy/civilian-work";
 
 let handle: MockDbHandle;
@@ -39,10 +41,7 @@ beforeAll(async () => {
 		.where(eq(factories.id, factoryId));
 	await handle.db.delete(factoryWorkers).where(eq(factoryWorkers.factoryId, factoryId));
 	// A mid-level school gives a known, education-driven labour pool.
-	await handle.db
-		.update(regions)
-		.set({ population: 100_000, education: 4 })
-		.where(eq(regions.id, regionId));
+	await handle.db.update(regions).set({ population: 100_000, education: 4 }).where(eq(regions.id, regionId));
 	await handle.db.update(companyBudgets).set({ balance: 1_000_000 }).where(eq(companyBudgets.companyId, companyId));
 	if (stateId != null) {
 		await handle.db.insert(stateTaxes).values({ stateId, taxType: "income", taxRate: 10, isActive: true });
@@ -56,6 +55,8 @@ afterAll(async () => {
 describe("runCivilianWork", () => {
 	it("staffs the free shifts, pays wages, earns revenue and collects income tax", async () => {
 		const revenueBefore = (await handle.db.select().from(taxRevenue)).length;
+		const regionalBefore =
+			(await handle.db.select().from(regionBudgets).where(eq(regionBudgets.regionId, regionId)))[0]?.balance ?? 0;
 		const result = await runCivilianWork(handle.db, now, 7);
 		expect(result.factoriesStaffed).toBe(1);
 		expect(result.civiliansEmployed).toBeGreaterThan(0);
@@ -65,6 +66,12 @@ describe("runCivilianWork", () => {
 		if (stateId != null) {
 			expect(result.taxCollected).toBeGreaterThan(0);
 			expect((await handle.db.select().from(taxRevenue)).length).toBeGreaterThan(revenueBefore);
+			// The region where the wage was earned keeps its share of the tax.
+			const { share } = await regionalShareFor(handle.db, regionId);
+			const regionalAfter =
+				(await handle.db.select().from(regionBudgets).where(eq(regionBudgets.regionId, regionId)))[0]?.balance ?? 0;
+			expect(regionalAfter - regionalBefore).toBe(splitTax(result.taxCollected, share).regional);
+			if (share > 0) expect(regionalAfter).toBeGreaterThan(regionalBefore);
 		}
 	});
 

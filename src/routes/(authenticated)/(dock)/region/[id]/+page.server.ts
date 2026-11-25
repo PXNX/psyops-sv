@@ -70,6 +70,11 @@ import {
 } from "#lib/server/services/military/strike.js";
 import { regionCivilianNeeds } from "#lib/server/services/civilians/supply.js";
 import { regionCivicSummary } from "#lib/server/services/politics/civic.service.js";
+import {
+	RegionalBudgetError,
+	regionBudgetSummary,
+	startProgramme
+} from "#lib/server/services/politics/regional-budget.js";
 import { regionPopulationReport } from "#lib/server/services/population-report.js";
 import { populationHistory } from "#lib/server/services/snapshot-history.js";
 
@@ -555,15 +560,18 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 
 	// What this region's civilians can actually get today: food from the land
 	// and imports, power and heat from the grid, water from the local supply.
-	const [civilianNeeds, populationReport, populationTrend, patronage] = await Promise.all([
+	const [civilianNeeds, populationReport, populationTrend, patronage, regionBudget] = await Promise.all([
 		regionCivilianNeeds(db, regionId),
 		regionPopulationReport(db, regionId),
 		populationHistory(regionId),
-		regionCivicSummary(db, regionId, account.id)
+		regionCivicSummary(db, regionId, account.id),
+		// The region's own purse; only states hand out a regional share.
+		region.stateId ? regionBudgetSummary(db, regionId, account.id) : null
 	]);
 
 	const result = {
 		patronage,
+		regionBudget,
 		strike: {
 			// Only offered to someone who could order it (a leader at war with the owner).
 			options: strikePlan && !strikePlan.reason ? strikePlan : null,
@@ -712,6 +720,22 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 };
 
 export const actions: Actions = {
+	// The governor runs a programme paid from the regional budget.
+	startProgramme: async ({ request, params, locals }) => {
+		const form = await request.formData();
+		const kind = String(form.get("kind") ?? "");
+		try {
+			const { endsAt } = await startProgramme(db, {
+				regionId: parseInt(params.id),
+				userId: locals.account!.id,
+				kind
+			});
+			return { success: true, message: `Programme running until ${endsAt.toLocaleDateString("en-GB")}.` };
+		} catch (err) {
+			if (err instanceof RegionalBudgetError) return fail(400, { error: err.message });
+			throw err;
+		}
+	},
 	launchStrike: async ({ request, params, locals }) => {
 		const formData = await request.formData();
 		const target = String(formData.get("target") ?? "") as StrikeTarget;

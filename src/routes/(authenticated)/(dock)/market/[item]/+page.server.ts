@@ -317,7 +317,7 @@ export const actions: Actions = {
 		if (quantity < 1 || quantity > listing.quantity) return fail(400, { message: "Invalid quantity" });
 
 		const [buyerResidence] = await db
-			.select({ stateId: regions.stateId })
+			.select({ stateId: regions.stateId, regionId: regions.id })
 			.from(residences)
 			.innerJoin(regions, eq(residences.regionId, regions.id))
 			.where(eq(residences.userId, account.id))
@@ -345,7 +345,8 @@ export const actions: Actions = {
 						"market_transaction",
 						grossAmount,
 						account.id,
-						tx
+						tx,
+						buyerResidence.regionId
 					);
 				}
 

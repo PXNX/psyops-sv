@@ -14,6 +14,7 @@
 	import FluentChevronLeft20Filled from "~icons/fluent/chevron-left-20-filled";
 	import FluentChevronRight20Filled from "~icons/fluent/chevron-right-20-filled";
 	import { dtgDate, dtgTime } from "#lib/utils/dtg.js";
+	import RegionalShare from "./RegionalShare.svelte";
 
 	let { data } = $props();
 
@@ -135,6 +136,9 @@
 			</ul>
 		{/if}
 	</section>
+
+	<!-- How local tax is split with the regions -->
+	<RegionalShare split={data.regionalShare} />
 
 	<!-- Ledger -->
 	<section class="panel rounded-sm overflow-hidden">

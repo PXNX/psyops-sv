@@ -26,6 +26,7 @@ import {
 } from "#lib/config/game/civic.config.js";
 import { opinionLossFromHardship, type RegionNeeds } from "#lib/config/game/civilian-supply.config.js";
 import { regionsCivilianNeeds } from "../civilians/supply.js";
+import { regionProgrammeOpinion } from "./regional-budget.js";
 
 const DAY = 86_400_000;
 
@@ -271,12 +272,14 @@ export async function regionOpinionBreakdown(
 	await completeCivicProjects(db, now);
 	const [region] = await db.select().from(regions).where(eq(regions.id, regionId)).limit(1);
 	if (!region) return null;
-	const [allocations, casualties] = await Promise.all([
+	const [allocations, casualties, programmes] = await Promise.all([
 		civicAllocations(db, [regionId]),
 		db
 			.select({ total: sql<number>`coalesce(sum(${strikes.civilianCasualties}), 0)`.mapWith(Number) })
 			.from(strikes)
-			.where(eq(strikes.regionId, regionId))
+			.where(eq(strikes.regionId, regionId)),
+		// The governor's programmes, paid from the regional budget.
+		regionProgrammeOpinion(db, regionId, now)
 	]);
 
 	const levels = [
@@ -326,6 +329,16 @@ export async function regionOpinionBreakdown(
 			label: `${building.icon} ${building.name}`,
 			detail: `${agg.n} built, worth ${agg.value}${saturated ? ` (${Math.round((agg.effective / agg.value) * 100)}% after saturation)` : ""}`,
 			points
+		});
+	}
+
+	if (programmes) {
+		score += programmes;
+		components.push({
+			key: "programmes",
+			label: "Regional programmes",
+			detail: "run by the governor from the regional budget",
+			points: programmes
 		});
 	}
 

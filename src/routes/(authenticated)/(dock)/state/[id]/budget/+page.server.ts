@@ -2,9 +2,15 @@
 import { db } from "#lib/server/db.js";
 import { states, governmentBudgetTransactions, userProfiles, accounts, stateTreasury } from "#lib/server/schema.js";
 import { and, eq, gte, sql, desc } from "drizzle-orm";
-import { error } from "@sveltejs/kit";
+import { error, fail } from "@sveltejs/kit";
 import { getLogoUrl } from "#lib/server/backblaze.js";
-import type { PageServerLoad } from "./$types";
+import {
+	RegionalBudgetError,
+	setRegionShareOverride,
+	setStateRegionalShare,
+	stateRegionalShares
+} from "#lib/server/services/politics/regional-budget.js";
+import type { Actions, PageServerLoad } from "./$types";
 
 const PAGE_SIZE = 20;
 
@@ -17,7 +23,7 @@ function parseMetadata(raw: string): unknown {
 	}
 }
 
-export const load: PageServerLoad = async ({ params, url }) => {
+export const load: PageServerLoad = async ({ params, url, locals }) => {
 	const stateId = parseInt(params.id);
 
 	// Get page from URL query params (default to 1)
@@ -87,6 +93,8 @@ export const load: PageServerLoad = async ({ params, url }) => {
 	]);
 
 	const totalPages = Math.ceil(count / PAGE_SIZE);
+	// How local tax is split between each region's budget and the treasury.
+	const regionalShare = await stateRegionalShares(db, stateId, locals.account!.id);
 
 	// Calculate analytics
 	let totalIncome = 0;
@@ -141,6 +149,7 @@ export const load: PageServerLoad = async ({ params, url }) => {
 			id: state.id,
 			name: state.name
 		},
+		regionalShare,
 		transactions: formattedTransactions,
 		pagination: {
 			currentPage: page,
@@ -163,4 +172,56 @@ export const load: PageServerLoad = async ({ params, url }) => {
 			}))
 		}
 	};
+};
+
+/** Parse a percent field; empty means "no value". */
+function percent(raw: FormDataEntryValue | null): number | null {
+	const s = String(raw ?? "").trim();
+	if (s === "") return null;
+	const n = Number(s);
+	return Number.isFinite(n) ? n : NaN;
+}
+
+export const actions: Actions = {
+	// President or economy minister: the state's default regional share.
+	setRegionalShare: async ({ params, request, locals }) => {
+		const form = await request.formData();
+		const share = percent(form.get("share"));
+		if (share === null || Number.isNaN(share)) return fail(400, { error: "Enter a share in percent." });
+		try {
+			const applied = await setStateRegionalShare(db, {
+				stateId: parseInt(params.id),
+				userId: locals.account!.id,
+				share
+			});
+			return { success: true, message: `Regions now keep ${applied}% of the tax raised in them.` };
+		} catch (err) {
+			if (err instanceof RegionalBudgetError) return fail(403, { error: err.message });
+			throw err;
+		}
+	},
+	// One region's override; an empty share clears it.
+	setRegionOverride: async ({ params, request, locals }) => {
+		const form = await request.formData();
+		const regionId = Number(form.get("regionId"));
+		const share = percent(form.get("share"));
+		if (!Number.isInteger(regionId)) return fail(400, { error: "Pick a region." });
+		if (Number.isNaN(share)) return fail(400, { error: "Enter a share in percent." });
+		try {
+			const applied = await setRegionShareOverride(db, {
+				stateId: parseInt(params.id),
+				regionId,
+				userId: locals.account!.id,
+				share
+			});
+			return {
+				success: true,
+				message:
+					applied === null ? "Override cleared; the region follows the state share." : `Override set to ${applied}%.`
+			};
+		} catch (err) {
+			if (err instanceof RegionalBudgetError) return fail(403, { error: err.message });
+			throw err;
+		}
+	}
 };

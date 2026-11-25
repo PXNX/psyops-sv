@@ -43,6 +43,7 @@
 	import BorderingRegions from "./BorderingRegions.svelte";
 	import BattleHistory from "#lib/component/BattleHistory.svelte";
 	import TravelEntry from "./TravelEntry.svelte";
+	import RegionBudget from "./RegionBudget.svelte";
 	import TravelBanner from "./TravelBanner.svelte";
 	import RegionSituation from "./RegionSituation.svelte";
 	import GatherIntel from "./GatherIntel.svelte";
@@ -410,6 +411,11 @@
 		visa={data.visa}
 		entryBlockedReason={data.entry.allowed ? null : data.entry.reason}
 	/>
+
+	<!-- The region's own budget: the governor spends it, everyone can read it -->
+	{#if data.regionBudget}
+		<RegionBudget regionId={data.region.id} budget={data.regionBudget} />
+	{/if}
 
 	<div class="grid grid-cols-1 md:grid-cols-2 gap-4 items-start">
 		<!-- Administration -->
