@@ -55,7 +55,26 @@ import {
 	spyName,
 	spyPortrait,
 	rollSpyTraits,
-	spyTraitModifiers
+	spyTraitModifiers,
+	TRACE,
+	addTrace,
+	coverTracks,
+	exploitChance,
+	exploitsFor,
+	hopCheck,
+	hostById,
+	moveRng,
+	networkFor,
+	readDeep,
+	resolveHost,
+	resolveLoot,
+	tracePenalty,
+	traceLevel,
+	EXPLOIT_TIERS,
+	KEY_LABEL,
+	type DeepState,
+	type TargetNetwork,
+	type ExploitTier
 } from "#lib/config/index.js";
 import { opsAuthority } from "./covert-ops";
 import { sideOf, viewerSide } from "./recon";
@@ -244,6 +263,25 @@ async function charge(tx: Tx, stateId: number, cost: number, description: string
 		stateId,
 		transactionType: "covert_operation",
 		amount: -cost,
+		balanceAfter: paid.balance,
+		description,
+		authorizedBy: userId,
+		createdAt: now
+	});
+}
+
+/** Pay money into the treasury (skimmed loot) inside an open transaction. */
+async function credit(tx: Tx, stateId: number, amount: number, description: string, userId: string, now: Date) {
+	const [paid] = await tx
+		.update(stateTreasury)
+		.set({ balance: sqlPlus(stateTreasury.balance, amount), updatedAt: now })
+		.where(eq(stateTreasury.stateId, stateId))
+		.returning({ balance: stateTreasury.balance });
+	if (!paid) return;
+	await tx.insert(governmentBudgetTransactions).values({
+		stateId,
+		transactionType: "covert_operation",
+		amount,
 		balanceAfter: paid.balance,
 		description,
 		authorizedBy: userId,
@@ -716,10 +754,10 @@ export function sessionFor(db: Db, assetId: number, siteId: string) {
 	});
 }
 
-/** True when an operator has pivoted into this site's systems. */
+/** True when an operator has pivoted into this site's systems and hasn't been traced out. */
 export async function isPivoted(db: Db, assetId: number, siteId: string): Promise<boolean> {
 	const session = await sessionFor(db, assetId, siteId);
-	return session?.stage === "pivot";
+	return session?.stage === "pivot" && !readDeep(session.deep).traced;
 }
 
 export interface IntrusionResult {
@@ -736,10 +774,20 @@ export interface IntrusionResult {
 export async function runIntrusion(
 	db: Database,
 	userId: string,
-	input: { assetId: number; siteId: string; step: IntrusionStep; vector?: string; now?: Date; rng?: () => number }
+	input: {
+		assetId: number;
+		siteId: string;
+		step: IntrusionStep;
+		vector?: string;
+		/** The port to attack; picks the vector from the scan. */
+		port?: number;
+		/** Exploit tier for the access step: quiet, standard (default) or loud. */
+		tier?: ExploitTier;
+		now?: Date;
+		rng?: () => number;
+	}
 ): Promise<IntrusionResult> {
 	const now = input.now ?? new Date();
-	const rng = input.rng ?? Math.random;
 	const stamp = dtg(now);
 	return db.transaction(async (tx) => {
 		const authority = await opsAuthority(tx, userId);
@@ -770,6 +818,13 @@ export async function runIntrusion(
 			return { session: null, success: null, lines: [] };
 		}
 
+		const deep: DeepState = readDeep(existing?.deep);
+		if (deep.traced) {
+			throw new InfiltrationError("The target traced this connection and cut it. Reset the session to start over.");
+		}
+		// Server-side dice: seeded by the site, the asset, the hour and the move count.
+		const rng = input.rng ?? moveRng(site.seed, asset.id, deep.moves, now);
+
 		const stageOrder: Record<IntrusionStage, number> = { scan: 0, access: 1, escalate: 2, pivot: 3 };
 		if (existing && stageOrder[input.step as IntrusionStage] <= stageOrder[existing.stage as IntrusionStage]) {
 			throw new InfiltrationError(
@@ -792,7 +847,7 @@ export async function runIntrusion(
 					host: existing.host,
 					ip: existing.ip,
 					os: existing.os,
-					subnet: existing.segment ?? "",
+					subnet: existing.segment ?? scanFor(site, targetName).subnet,
 					ports: existing.ports,
 					notes: []
 				}
@@ -805,17 +860,30 @@ export async function runIntrusion(
 		let privileges = "unauthenticated";
 		let segment: string | null = null;
 		let vector: string | null = null;
+		let traceDelta = 0;
 
 		if (input.step === "scan") {
 			lines = stageLines("scan", report, undefined, true, targetName, stamp);
+			traceDelta = TRACE.SCAN;
 		} else {
 			if (!existing) throw new InfiltrationError("Scan the site first.");
 			if (!report.ports.some((p) => p.vector)) throw new InfiltrationError("No exposed service to attack here.");
-			const vectorId = input.vector ?? report.ports.find((p) => p.vector)?.vector;
+			const port =
+				input.step === "access" && input.port != null ? report.ports.find((p) => p.port === input.port) : undefined;
+			if (input.step === "access" && input.port != null && !port?.vector) {
+				throw new InfiltrationError(`Port ${input.port} has no known way in.`);
+			}
+			const vectorId = port?.vector ?? input.vector ?? report.ports.find((p) => p.vector)?.vector;
 			const spec = vectorId ? ATTACK_VECTORS[vectorId] : undefined;
 			if (!vectorId || !spec) throw new InfiltrationError("Choose an exposed service to attack.");
-			if (asset.access < spec.accessNeeded) {
-				throw new InfiltrationError(`${spec.label} needs level ${spec.accessNeeded} access.`);
+			const tier: ExploitTier = input.step === "access" ? (input.tier ?? "standard") : "standard";
+			const tierSpec = EXPLOIT_TIERS[tier];
+			if (!tierSpec) throw new InfiltrationError("Unknown exploit tier.");
+			const accessNeeded = spec.accessNeeded + (input.step === "access" ? tierSpec.extraAccess : 0);
+			if (asset.access < accessNeeded) {
+				throw new InfiltrationError(
+					`${input.step === "access" && tier !== "standard" ? `A ${tier} ${spec.label.toLowerCase()}` : spec.label} needs level ${accessNeeded} access.`
+				);
 			}
 			if (input.step === "access" && !report.ports.some((p) => p.vector === vectorId)) {
 				throw new InfiltrationError("That service wasn't found in the scan.");
@@ -826,15 +894,34 @@ export async function runIntrusion(
 					: input.step === "escalate"
 						? INTRUSION.ESCALATE_COST
 						: INTRUSION.PIVOT_COST;
-			const chance = intrusionChance(
+			const base = intrusionChance(
 				input.step,
 				{ access: asset.access, heat },
 				site,
 				input.step === "access" ? vectorId : undefined
 			);
+			const chance =
+				input.step === "access"
+					? exploitChance(base, tier, deep.trace)
+					: Math.round(Math.max(0.05, base - tracePenalty(deep.trace)) * 100) / 100;
 			success = rng() < chance;
 			heatDelta = success ? INTRUSION.SUCCESS_HEAT : INTRUSION.FAIL_HEAT;
 			lines = stageLines(input.step, report, vectorId, success, targetName, stamp);
+			if (input.step === "access") {
+				const attackPort = port ?? report.ports.find((p) => p.vector === vectorId);
+				const exploit = attackPort ? exploitsFor(site, attackPort).find((e) => e.tier === tier) : undefined;
+				if (exploit) {
+					lines.splice(1, 0, {
+						t: stamp,
+						line: `> ${exploit.name} (${tier}) against :${attackPort!.port}`,
+						tone: "info"
+					});
+				}
+				traceDelta = success ? tierSpec.noise.ok : tierSpec.noise.fail;
+			} else {
+				const noise = input.step === "escalate" ? TRACE.ESCALATE : TRACE.PIVOT;
+				traceDelta = success ? noise.ok : noise.fail;
+			}
 			if (success) lines.push({ t: stamp, line: `> roll ${Math.round(chance * 100)}% · accepted`, tone: "ok" });
 			else lines.push({ t: stamp, line: `> roll ${Math.round(chance * 100)}% · logged by target SOC`, tone: "bad" });
 			stage = success ? input.step : (existing.stage as IntrusionStage);
@@ -846,8 +933,16 @@ export async function runIntrusion(
 				privileges = "user";
 			}
 			if (success && input.step === "escalate") privileges = "SYSTEM";
-			if (success && input.step === "pivot") segment = `10.${(asset.targetStateId % 40) + 20}.7.0/24`;
+			if (success && input.step === "pivot") {
+				segment = `10.${(asset.targetStateId % 40) + 20}.7.0/24`;
+				deep.owned = ["gw"];
+				deep.at = "gw";
+			}
 		}
+
+		const traced = applyTrace(deep, traceDelta, stamp, lines);
+		deep.moves += 1;
+		if (traced) heatDelta += TRACE.BURN_HEAT;
 
 		await tx
 			.select({ id: stateTreasury.id })
@@ -877,14 +972,235 @@ export async function runIntrusion(
 				vector,
 				privileges,
 				segment,
-				log
+				log,
+				deep
 			})
 			.onConflictDoUpdate({
 				target: [intrusionSessions.assetId, intrusionSessions.siteId],
-				set: { stage, vector, privileges, segment, log, updatedAt: now }
+				set: { stage, vector, privileges, segment, log, deep, updatedAt: now }
 			})
 			.returning();
 		return { session, success, lines };
+	});
+}
+
+/**
+ * Move the trace meter and narrate it. Returns true when this move filled the
+ * meter: the session is marked traced and the caller adds the burn heat.
+ */
+function applyTrace(deep: DeepState, delta: number, t: string, lines: LogLine[]): boolean {
+	if (!delta) return false;
+	const before = deep.trace;
+	const next = addTrace(before, delta);
+	deep.trace = next.trace;
+	const level = traceLevel(next.trace);
+	if (next.trace !== before) {
+		const diff = next.trace - before;
+		lines.push({
+			t,
+			line: `> trace ${next.trace}% (${diff > 0 ? "+" : ""}${diff}) · ${level}`,
+			tone: level === "quiet" ? "info" : level === "noticed" ? "warn" : "bad"
+		});
+	}
+	if (next.traced && !deep.traced) {
+		deep.traced = true;
+		lines.push({ t, line: "[!] TRACE COMPLETE · the target's security team cut the line", tone: "bad" });
+		lines.push({ t, line: `> the operator lies low (+${TRACE.BURN_HEAT} heat). Reset to try again.`, tone: "warn" });
+		return true;
+	}
+	return false;
+}
+
+export type DeepMove = "hosts" | "hop" | "loot" | "cover";
+export const DEEP_MOVES: DeepMove[] = ["hosts", "hop", "loot", "cover"];
+
+export interface DeepMoveResult {
+	session: NonNullable<Awaited<ReturnType<typeof sessionFor>>>;
+	deep: DeepState;
+	success: boolean | null;
+	lines: LogLine[];
+	/** Money spent (positive) or skimmed into the treasury (negative). */
+	cost: number;
+}
+
+const hopOdds = (net: TargetNetwork, deep: DeepState, id: string, asset: { access: number; heat: number }) => {
+	const c = hopCheck(net, deep, id, asset);
+	return c.ok ? c.chance : 0;
+};
+
+/**
+ * One move inside the target network once the gateway is held: map the hosts,
+ * hop to another host, take loot from the current one, or cover tracks. The
+ * server rolls the dice and keeps the state; the terminal only renders it.
+ */
+export async function runDeepMove(
+	db: Database,
+	userId: string,
+	input: {
+		assetId: number;
+		siteId: string;
+		move: DeepMove;
+		/** Host to hop to (id, name, short name or last IP octet). */
+		host?: string;
+		/** Loot to take (id, number or label). Omit to list. */
+		item?: string;
+		now?: Date;
+		rng?: () => number;
+	}
+): Promise<DeepMoveResult> {
+	const now = input.now ?? new Date();
+	const t = dtg(now);
+	return db.transaction(async (tx) => {
+		// Covering tracks works from the first scan; everything else needs the gateway.
+		const { asset, session, targetName, stateId } = await requirePivot(
+			tx,
+			userId,
+			input.assetId,
+			input.siteId,
+			input.move === "cover"
+		);
+		const site = (await sitesIn(tx, session.targetStateId)).find((s) => s.id === input.siteId);
+		if (!site) throw new InfiltrationError("That site is not in the target's catalogue.");
+		const deep = readDeep(session.deep);
+		// Sessions pivoted before the deep layer existed start on the gateway.
+		if (session.stage === "pivot" && !deep.owned.length) deep.owned = ["gw"];
+		const net = networkFor(site, targetName, session.host);
+		const here = hostById(net, deep.at) ?? net.hosts[0]!;
+		const heat = effectiveHeat(asset, now);
+		const effective = { access: asset.access + spyTraitModifiers(asset.traitIds ?? []).access, heat };
+		const lines: LogLine[] = [];
+		const line = (text: string, tone: LogLine["tone"] = "info") => lines.push({ t, line: text, tone });
+		let cost = 0;
+		let success: boolean | null = null;
+		let traceDelta = 0;
+		let counts = true;
+
+		if (input.move === "hosts") {
+			counts = false;
+			line("$ netmap --internal");
+			for (const h of net.hosts) {
+				const owned = deep.owned.includes(h.id);
+				const status = h.id === deep.at ? "you are here" : owned ? "owned" : h.locked ? "locked" : "unowned";
+				const key = h.keys.find((k) => deep.keys.includes(k));
+				const reach = !owned && deep.owned.some((id) => hostById(net, id)?.links.includes(h.id));
+				const hint = owned
+					? ""
+					: !reach
+						? " · out of reach"
+						: key
+							? ` · key: ${KEY_LABEL[key] ?? key}`
+							: h.locked
+								? ` · needs ${h.keys.map((k) => KEY_LABEL[k] ?? k).join(" or ")}`
+								: ` · force ${Math.round(hopOdds(net, deep, h.id, effective) * 100)}%`;
+				line(
+					`${h.id.padEnd(6)} ${h.ip.padEnd(14)} ${h.name}  [${status}]${hint}`,
+					owned ? "ok" : h.locked && !key ? "warn" : "info"
+				);
+			}
+			line(`trace ${deep.trace}% · keys: ${deep.keys.map((k) => KEY_LABEL[k] ?? k).join(", ") || "none"}`);
+		} else if (input.move === "hop") {
+			const target = resolveHost(net, input.host ?? "");
+			if (!target) throw new InfiltrationError(`No host called "${input.host ?? ""}". Try "hosts".`);
+			const check = hopCheck(net, deep, target.id, effective);
+			if (!check.ok) throw new InfiltrationError(check.reason);
+			line(`$ hop ${target.name}`);
+			if (check.already) {
+				success = true;
+				line(`[+] back on ${target.name}`, "ok");
+			} else {
+				cost = TRACE.HOP_COST;
+				if (check.keyed) {
+					success = true;
+					traceDelta = TRACE.HOP_KEYED;
+					line(`> the ${KEY_LABEL[check.key!] ?? check.key} opens ${target.name} without a fuss`, "ok");
+				} else {
+					const rng = input.rng ?? moveRng(site.seed, asset.id, deep.moves, now);
+					success = rng() < check.chance;
+					traceDelta = success ? TRACE.HOP.ok : TRACE.HOP.fail;
+					line(`> forcing ${target.name} · ${Math.round(check.chance * 100)}% chance`);
+				}
+				if (success) {
+					deep.owned.push(target.id);
+					line(`[+] shell on ${target.name} (${target.ip})`, "ok");
+					line(`> ${target.blurb}`);
+					if (target.role === "cameras") line("[+] the lobby and server room cameras are yours now", "ok");
+				} else {
+					line(`[-] ${target.name} slammed the door · the attempt was logged`, "bad");
+				}
+			}
+			if (success) deep.at = target.id;
+		} else if (input.move === "loot") {
+			if (!input.item) {
+				counts = false;
+				line(`$ loot @ ${here.name}`);
+				here.loot.forEach((l, i) => {
+					const taken = deep.loot.includes(l.id);
+					const cash = l.kind === "cash" ? ` · $${(l.amount ?? 0).toLocaleString()}` : "";
+					line(`${i + 1}. ${l.label}${cash}${taken ? " · taken" : ""}`, taken ? "info" : "ok");
+					if (!taken) line(`   ${l.blurb}`);
+				});
+				if (!here.loot.length) line("Nothing worth taking here.");
+			} else {
+				const item = resolveLoot(here, input.item);
+				if (!item) throw new InfiltrationError(`Nothing called "${input.item}" on ${here.name}. Try "loot".`);
+				if (deep.loot.includes(item.id)) throw new InfiltrationError("You already took that.");
+				deep.loot.push(item.id);
+				success = true;
+				line(`$ loot ${item.id}`);
+				traceDelta = TRACE.LOOT;
+				if (item.kind === "key") {
+					deep.keys.push(item.id);
+					line(`[+] ${KEY_LABEL[item.id] ?? item.label} in hand · ${item.blurb}`, "ok");
+				} else if (item.kind === "cash") {
+					const amount = item.amount ?? 0;
+					cost = -amount;
+					line(`[+] $${amount.toLocaleString()} skimmed into the treasury`, "ok");
+				} else {
+					traceDelta = TRACE.LOOT - (item.amount ?? 0);
+					line(`[+] ${item.label} · ${item.blurb}`, "ok");
+				}
+			}
+		} else if (input.move === "cover") {
+			const c = coverTracks(deep.covers);
+			cost = c.cost;
+			success = true;
+			deep.covers += 1;
+			traceDelta = -c.drop;
+			line("$ tidy-up --logs --new-relay");
+			line(
+				`[+] tracks covered · −${c.drop} trace · next cover $${coverTracks(deep.covers).cost.toLocaleString()}`,
+				"ok"
+			);
+		} else {
+			throw new InfiltrationError("Unknown move.");
+		}
+
+		const traced = applyTrace(deep, traceDelta, t, lines);
+		if (counts) deep.moves += 1;
+
+		if (cost > 0) {
+			await tx
+				.select({ id: stateTreasury.id })
+				.from(stateTreasury)
+				.where(eq(stateTreasury.stateId, stateId))
+				.for("update");
+			await charge(tx, stateId, cost, `${input.move} via ${asset.codename} on ${site.code}`, userId, now);
+		} else if (cost < 0) {
+			await credit(tx, stateId, -cost, `Funds skimmed via ${asset.codename} on ${site.code}`, userId, now);
+		}
+		if (traced) {
+			const nextHeat = clamp(heat + TRACE.BURN_HEAT, 0, INFILTRATION.HEAT_MAX);
+			await tx
+				.update(infiltrationAssets)
+				.set({ heat: nextHeat, status: nextHeat >= INFILTRATION.HEAT_MAX ? "burned" : "active", lastActionAt: now })
+				.where(eq(infiltrationAssets.id, asset.id));
+		}
+		const [updated] = await tx
+			.update(intrusionSessions)
+			.set({ deep, log: [...(session.log ?? []), ...lines], updatedAt: now })
+			.where(eq(intrusionSessions.id, session.id))
+			.returning();
+		return { session: updated!, deep, success, lines, cost };
 	});
 }
 
@@ -908,7 +1224,7 @@ async function trace(tx: Tx, sessionId: number, lines: LogLine[], now: Date) {
 }
 
 /** Require an established pivot before the player can work inside the host. */
-async function requirePivot(tx: Tx, userId: string, assetId: number, siteId: string) {
+async function requirePivot(tx: Tx, userId: string, assetId: number, siteId: string, anyStage = false) {
 	const authority = await opsAuthority(tx, userId);
 	if (!authority) throw new InfiltrationError("Only your state's leadership can work inside a host.");
 	const [row] = await tx
@@ -924,7 +1240,11 @@ async function requirePivot(tx: Tx, userId: string, assetId: number, siteId: str
 		.from(intrusionSessions)
 		.where(and(eq(intrusionSessions.assetId, assetId), eq(intrusionSessions.siteId, siteId)))
 		.limit(1);
-	if (!session || session.stage !== "pivot") throw new InfiltrationError("You need a pivot into this site first.");
+	if (!session) throw new InfiltrationError("Scan the site first.");
+	if (!anyStage && session.stage !== "pivot") throw new InfiltrationError("You need a pivot into this site first.");
+	if (readDeep(session.deep).traced) {
+		throw new InfiltrationError("The target traced this connection and cut it. Reset the session to start over.");
+	}
 	const targetName = await assertTarget(tx, authority.stateId, asset.targetStateId);
 	return { asset, session, targetName, stateId: authority.stateId };
 }

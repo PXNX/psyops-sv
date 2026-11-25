@@ -4009,6 +4009,17 @@ export const intrusionSessions = pgTable(
 		privileges: text("privileges").default("unauthenticated").notNull(),
 		segment: text("segment"),
 		log: jsonb("log").$type<{ t: string; line: string; tone: "info" | "ok" | "warn" | "bad" }[]>().notNull(),
+		/** Trace meter, hosts held, keys and loot inside the target network (see intrusion-deep.config). */
+		deep: jsonb("deep").$type<{
+			trace: number;
+			traced: boolean;
+			at: string;
+			owned: string[];
+			keys: string[];
+			loot: string[];
+			covers: number;
+			moves: number;
+		}>(),
 		createdAt: timestamp("created_at").defaultNow().notNull(),
 		updatedAt: timestamp("updated_at").defaultNow().notNull()
 	},

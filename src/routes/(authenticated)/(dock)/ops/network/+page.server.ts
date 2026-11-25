@@ -10,7 +10,7 @@ import { db } from "#lib/server/db.js";
 import { intrusionSessions, states } from "#lib/server/schema.js";
 import { getLogoUrl } from "#lib/server/backblaze.js";
 import { getRegionName } from "#lib/utils/formatting.js";
-import { COVERT_OPS, INTRUSION, type CovertOpKind } from "#lib/config/index.js";
+import { COVERT_OPS, INTRUSION, isExploitTier, payloadBonus, readDeep, type CovertOpKind } from "#lib/config/index.js";
 import {
 	CovertOpError,
 	OPS_ROLE_LABEL,
@@ -19,6 +19,7 @@ import {
 } from "#lib/server/services/military/covert-ops.js";
 import { viewerSide } from "#lib/server/services/military/recon.js";
 import {
+	DEEP_MOVES,
 	InfiltrationError,
 	actionsFor,
 	assetsFor,
@@ -34,8 +35,11 @@ import {
 	plantAsset,
 	readSystemRecord,
 	runAction,
+	runDeepMove,
 	runIntrusion,
+	sessionFor,
 	sitesFor,
+	type DeepMove,
 	type IntrusionStep
 } from "#lib/server/services/military/infiltration.js";
 import {
@@ -171,12 +175,17 @@ export const actions: Actions = {
 		if (!["scan", "access", "escalate", "pivot", "reset"].includes(step)) {
 			return fail(400, { error: "Unknown intrusion step." });
 		}
+		const tier = str(form.get("tier"));
+		if (tier && !isExploitTier(tier)) return fail(400, { error: "Pick quiet, standard or loud." });
+		const port = str(form.get("port"));
 		try {
 			const result = await runIntrusion(db, locals.account!.id, {
 				assetId: int(form.get("assetId")),
 				siteId: str(form.get("siteId")),
 				step,
-				vector: str(form.get("vector")) || undefined
+				vector: str(form.get("vector")) || undefined,
+				port: port ? int(port) : undefined,
+				tier: tier && isExploitTier(tier) ? tier : undefined
 			});
 			return { intrusion: result, assetId: int(form.get("assetId")), siteId: str(form.get("siteId")) };
 		} catch (err) {
@@ -198,11 +207,12 @@ export const actions: Actions = {
 			if (!(await isPivoted(db, assetId, siteId))) {
 				throw new InfiltrationError("The operator must pivot into the site before deploying a payload.");
 			}
+			const session = await sessionFor(db, assetId, siteId);
 			const result = await launchOperation(db, {
 				userId: locals.account!.id,
 				kind,
 				targetStateId,
-				extraFootholds: INTRUSION.PAYLOAD_FOOTHOLDS,
+				extraFootholds: INTRUSION.PAYLOAD_FOOTHOLDS + payloadBonus(readDeep(session?.deep)),
 				notify: false
 			});
 			return {
@@ -221,6 +231,25 @@ export const actions: Actions = {
 			if (err instanceof InfiltrationError || err instanceof CovertOpError) {
 				return fail(400, { error: err.message });
 			}
+			throw err;
+		}
+	},
+
+	deep: async ({ request, locals }) => {
+		const form = await request.formData();
+		const move = str(form.get("move")) as DeepMove;
+		if (!DEEP_MOVES.includes(move)) return fail(400, { error: "Unknown move." });
+		try {
+			const result = await runDeepMove(db, locals.account!.id, {
+				assetId: int(form.get("assetId")),
+				siteId: str(form.get("siteId")),
+				move,
+				host: str(form.get("host")) || undefined,
+				item: str(form.get("item")) || undefined
+			});
+			return { deep: { move, success: result.success, lines: result.lines, cost: result.cost, state: result.deep } };
+		} catch (err) {
+			if (err instanceof InfiltrationError) return fail(400, { error: err.message });
 			throw err;
 		}
 	},
