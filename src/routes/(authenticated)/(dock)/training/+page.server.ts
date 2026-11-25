@@ -22,10 +22,12 @@ import {
 	MILITARY_UNIT_TEMPLATES,
 	type MilitaryUnitTemplate,
 	EXERCISE_CONFIG,
-	calculateExerciseExperienceGain
+	calculateExerciseExperienceGain,
+	aircraftOf
 } from "#lib/config/index.js";
 import { manpowerCheck, regionManpower, reserveManpower } from "#lib/server/services/military/manpower.js";
 import { fleetLoad, fleetActions } from "#lib/server/services/military/fleet-page.js";
+import { stationFor } from "#lib/server/services/military/airbases.js";
 import { commanderActions, commanderPageLoad } from "#lib/server/services/military/commander-page.js";
 
 type ResourceType =
@@ -418,6 +420,17 @@ export const actions: Actions = {
 			});
 		}
 
+		// Squadrons are stationed at an airbase: this region's, else the state's nearest.
+		let regionId = residence.regionId;
+		if (aircraftOf(template.unitType)) {
+			const station = await stationFor(db, residence.stateId, residence.regionId);
+			if (station === null)
+				return fail(400, {
+					error: "Your state has no airbase. Parliament has to enact one by law before squadrons can be raised."
+				});
+			regionId = station;
+		}
+
 		// Get existing units for name generation
 		const existingUnits = await db.select().from(militaryUnits).where(eq(militaryUnits.ownerId, account.id));
 		const unitName = generateUnitName(template.unitType, existingUnits);
@@ -434,7 +447,7 @@ export const actions: Actions = {
 					name: unitName,
 					ownerId: account.id,
 					stateId: residence.stateId,
-					regionId: residence.regionId,
+					regionId,
 					unitType: template.unitType,
 					organization: 100,
 					health: 100,

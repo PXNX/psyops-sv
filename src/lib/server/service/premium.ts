@@ -25,7 +25,8 @@ import {
 	MILITARY_UNIT_TEMPLATES,
 	type MilitaryUnitTemplate
 } from "#lib/config/index.js";
-import { canCoverManpower, manpowerCostOf } from "#lib/config/index.js";
+import { aircraftOf, canCoverManpower, manpowerCostOf } from "#lib/config/index.js";
+import { stationFor } from "#lib/server/services/military/airbases.js";
 import { reserveManpower, regionManpower } from "#lib/server/services/military/manpower.js";
 import { calculateShiftStatus, collectWages, startWorkShift } from "#lib/server/service/factoryWork.js";
 import { sendSystemNotification } from "#lib/server/service/inbox.js";
@@ -323,9 +324,14 @@ async function automateTraining(accountId: string, summary: AutomationSummary): 
 	// A unit also needs bodies: the region's civilian manpower pool must be
 	// able to spare the recruits above the population floor.
 	const civilians = await regionManpower(db, residence.regionId);
+	// Squadrons need an airbase to be stationed at.
+	const airStation = await stationFor(db, residence.stateId!, residence.regionId);
 	const affordable = Object.values(MILITARY_UNIT_TEMPLATES)
 		.filter(
-			(t) => canAffordUnit(t, balance, resourceMap, productMap) && canCoverManpower(civilians, manpowerCostOf(t.unitType))
+			(t) =>
+				(airStation !== null || !aircraftOf(t.unitType)) &&
+				canAffordUnit(t, balance, resourceMap, productMap) &&
+				canCoverManpower(civilians, manpowerCostOf(t.unitType))
 		)
 		.sort((a, b) => a.currencyCost - b.currencyCost)[0];
 	if (!affordable) return;
@@ -377,7 +383,7 @@ async function automateTraining(accountId: string, summary: AutomationSummary): 
 			name: unitName,
 			ownerId: accountId,
 			stateId: residence.stateId!,
-			regionId: residence.regionId,
+			regionId: aircraftOf(affordable.unitType) ? airStation! : residence.regionId,
 			unitType: affordable.unitType as (typeof militaryUnitTypeEnum.enumValues)[number],
 			organization: 100,
 			health: 100,

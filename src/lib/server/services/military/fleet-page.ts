@@ -4,7 +4,9 @@ import { fail } from "@sveltejs/kit";
 import { db } from "#lib/server/db.js";
 import { viewerSide } from "#lib/server/services/military/recon.js";
 import { airSupportOf } from "#lib/server/services/military/fleet.js";
-import { airMissionLedger, launchAirMission } from "#lib/server/services/military/air-missions.js";
+import { airMissionLedger, launchAirMission, rebaseSquadron } from "#lib/server/services/military/air-missions.js";
+import { airbasesOf } from "#lib/server/services/military/airbases.js";
+import { regionHex } from "#lib/config/index.js";
 import { eq } from "drizzle-orm";
 import { regions } from "#lib/server/schema.js";
 import { launchSeaIntel, seaIntelOptions, seaPicture } from "#lib/server/services/military/sea-intel.js";
@@ -43,7 +45,9 @@ export const fleetLoad = async (userId: string) => {
 	const world = await loadFleetWorld(db, side?.stateId);
 	let canCommand = false;
 	if (side) canCommand = (await fleetAuthority(db, userId).catch(() => null)) !== null;
-	const regionRows = await db.select({ id: regions.id, stateId: regions.stateId, latitude: regions.latitude, longitude: regions.longitude }).from(regions);
+	const regionRows = await db
+		.select({ id: regions.id, stateId: regions.stateId, latitude: regions.latitude, longitude: regions.longitude })
+		.from(regions);
 	const [sensorOptions, picture, air] = await Promise.all([
 		seaIntelOptions(db, userId, { q: 0, r: 0 }),
 		side ? seaPicture(db, world.side?.stateIds ?? []) : Promise.resolve({}),
@@ -54,12 +58,21 @@ export const fleetLoad = async (userId: string) => {
 		seaSensors: sensorOptions.sensors,
 		seaIntel: picture,
 		airSupport: air,
-		regionList: regionRows.map((r) => ({ id: r.id, stateId: r.stateId, label: `Region #${r.id} (${r.latitude}, ${r.longitude})` })),
-		airMissions: side ? (await airMissionLedger(db, side.stateId)).map((m) => ({
-			...m,
-			launchedAt: iso(m.launchedAt),
-			completesAt: iso(m.completesAt)
-		})) : [],
+		regionList: regionRows.map((r) => ({
+			id: r.id,
+			stateId: r.stateId,
+			label: `Region #${r.id} (${r.latitude}, ${r.longitude})`,
+			hex: regionHex(r)
+		})),
+		/** Regions where squadrons can be stationed and fly from. */
+		airbases: side ? await airbasesOf(db, side.stateId) : [],
+		airMissions: side
+			? (await airMissionLedger(db, side.stateId)).map((m) => ({
+					...m,
+					launchedAt: iso(m.launchedAt),
+					completesAt: iso(m.completesAt)
+				}))
+			: [],
 		myStateId: side?.stateId ?? null,
 		canCommand,
 		ports: world.ports.map((p) => ({ ...p, createdAt: iso(p.createdAt) })),
@@ -92,7 +105,7 @@ export const fleetLoad = async (userId: string) => {
 
 export type FleetPageData = Awaited<ReturnType<typeof fleetLoad>>;
 
-export const fleetActions: import('@sveltejs/kit').Actions = {
+export const fleetActions: import("@sveltejs/kit").Actions = {
 	buildPort: async ({ request, locals }) => {
 		const f = await request.formData();
 		const name = String(f.get("name") ?? "");
@@ -219,6 +232,15 @@ export const fleetActions: import('@sveltejs/kit').Actions = {
 			return fail(400, { error: message(err) });
 		}
 	},
+	rebaseSquadron: async ({ request, locals }) => {
+		const f = await request.formData();
+		try {
+			await rebaseSquadron(db, locals.account!.id, Number(f.get("unitId")), Number(f.get("regionId")));
+			return { success: true, message: "Squadron rebased." };
+		} catch (err) {
+			return fail(400, { error: message(err) });
+		}
+	},
 	launchSeaIntel: async ({ request, locals }) => {
 		const f = await request.formData();
 		try {
@@ -259,7 +281,10 @@ export const fleetActions: import('@sveltejs/kit').Actions = {
 		try {
 			const hexes = JSON.parse(String(f.get("hexes") ?? "[]")) as { q: number; r: number }[];
 			const result = await assignFleet(db, locals.account!.id, Number(f.get("fleetId")), hexes);
-			return { success: true, message: `Fleet ordered to hold ${result.hexes} hex(es); ${result.sailing} ship(s) under way.` };
+			return {
+				success: true,
+				message: `Fleet ordered to hold ${result.hexes} hex(es); ${result.sailing} ship(s) under way.`
+			};
 		} catch (err) {
 			return fail(400, { error: message(err) });
 		}

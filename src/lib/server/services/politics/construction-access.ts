@@ -4,7 +4,7 @@
 import { and, eq } from "drizzle-orm";
 import type { Database } from "#lib/server/db.js";
 import { governors, ministers, parliamentMembers, presidents } from "#lib/server/schema.js";
-import { VALID_BUILDING_TYPES, type BuildingType } from "#lib/config/index.js";
+import { BUILDING_TEMPLATES, VALID_BUILDING_TYPES, type BuildingType } from "#lib/config/index.js";
 
 export type ConstructionRole = "president" | "governor" | "economy" | "defense";
 
@@ -28,7 +28,9 @@ export async function canOrderConstruction(
 	for (const m of ministries) if (m.ministry === "economy" || m.ministry === "defense") roles.push(m.ministry);
 
 	const types = new Set<BuildingType>();
-	if (president || governor) VALID_BUILDING_TYPES.forEach((t) => types.add(t));
+	// Law-only buildings (the airbase) go through parliament, never a direct order.
+	if (president || governor)
+		VALID_BUILDING_TYPES.filter((t) => !BUILDING_TEMPLATES[t].lawOnly).forEach((t) => types.add(t));
 	if (roles.includes("economy")) CIVILIAN.forEach((t) => types.add(t));
 	if (roles.includes("defense")) {
 		types.add("fortifications");

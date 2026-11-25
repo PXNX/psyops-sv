@@ -86,6 +86,7 @@ export const proposalTypeEnum = pgEnum("proposal_type", [
 	"power_plant",
 	"fortifications",
 	"radar",
+	"airbase",
 	"grid",
 	"energy_storage",
 	"border_control",
@@ -357,6 +358,9 @@ export const regions = pgTable("regions", {
 	// Air-defence radar coverage (0-3), raised by the radar installation and
 	// knocked down by a strike on it. Cues the air defence (recon.config.ts).
 	radar: integer("radar").default(0),
+	// Airbase (0-1), enacted by law. Squadrons are stationed at and fly only
+	// from airbases; ranges count from here (config/game/range.config.ts).
+	airbase: integer("airbase").default(0),
 	oil: integer("oil").default(0),
 	aluminium: integer("aluminium").default(0),
 	rubber: integer("rubber").default(0),
@@ -2420,7 +2424,8 @@ export const buildingTypeEnum = pgEnum("building_type", [
 	"datacenter",
 	"internet_backbone",
 	"network_switch",
-	"radio_mast"
+	"radio_mast",
+	"airbase"
 ]);
 
 export const stateBuildings = pgTable("state_buildings", {

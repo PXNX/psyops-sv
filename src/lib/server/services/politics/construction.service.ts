@@ -272,7 +272,9 @@ export const CONQUEST_DAMAGE: Record<RegionStat, number> = {
 	economy: 0.25,
 	hospitals: 0.2,
 	education: 0.2,
-	connectivity: 0.3
+	connectivity: 0.3,
+	// Runways are cratered; the conqueror has to enact its own airbase.
+	airbase: 1
 };
 
 /** Levels lost per stat when a region is conquered (at least one of anything built). */

@@ -6,7 +6,7 @@
 	import FluentShieldTask20Filled from "~icons/fluent/shield-task-20-filled";
 	import FluentCheckmark20Filled from "~icons/fluent/checkmark-20-filled";
 	import { superForm } from "sveltekit-superforms";
-	import { valibotClient } from "sveltekit-superforms/adapters";
+	import { valibotClient } from "sveltekit-superforms/adapters/valibot";
 	import { createProposalSchema } from "./schema";
 	import { getRegionName, regionCoatUrl } from "#lib/utils/formatting.js";
 	import ResourceRequirements from "#lib/component/ResourceRequirements.svelte";
@@ -43,12 +43,22 @@
 		| "infrastructure"
 		| "fortifications"
 		| "radar"
+		| "airbase"
 		| "border_control"
 		| "exploitation"
 		| "declare_war"
 		| "salary"
 		| "martial_law";
-	type BuildingType = "hospital" | "school" | "power_plant" | "infrastructure" | "fortifications" | "radar";
+	type BuildingType = "hospital" | "school" | "power_plant" | "infrastructure" | "fortifications" | "radar" | "airbase";
+	const BUILDING_PROPOSALS: string[] = [
+		"hospital",
+		"school",
+		"power_plant",
+		"infrastructure",
+		"fortifications",
+		"radar",
+		"airbase"
+	];
 
 	type ProposalGroup = { label: string; hint: string; types: { type: ProposalType; label: string }[] };
 	const PROPOSAL_GROUPS: ProposalGroup[] = [
@@ -72,7 +82,8 @@
 				{ type: "power_plant", label: "Power plant" },
 				{ type: "infrastructure", label: "Infrastructure" },
 				{ type: "fortifications", label: "Fortifications" },
-				{ type: "radar", label: "Air-defence radar" }
+				{ type: "radar", label: "Air-defence radar" },
+				{ type: "airbase", label: "Airbase" }
 			]
 		},
 		{
@@ -112,8 +123,10 @@
 		foreign_affairs: ["border_control", "martial_law"],
 		defense: ["fortifications", "radar", "martial_law"]
 	};
+	// Law-only buildings (the airbase) always go to a parliament vote.
 	const autoFor = (type: string) =>
-		data.isPresident || (!!data.userMinistry && (MINISTRY_POWERS[data.userMinistry]?.includes(type) ?? false));
+		!(type in data.buildingTemplates && data.buildingTemplates[type as BuildingType].lawOnly) &&
+		(data.isPresident || (!!data.userMinistry && (MINISTRY_POWERS[data.userMinistry]?.includes(type) ?? false)));
 	const canAutoExecute = $derived(() => !!$formData.proposalType && autoFor($formData.proposalType));
 
 	const isTaxProposal = $derived($formData.proposalType === "tax");
@@ -122,17 +135,10 @@
 	const isExploitationProposal = $derived($formData.proposalType === "exploitation");
 	const isSalaryProposal = $derived($formData.proposalType === "salary");
 	const isMartialLawProposal = $derived($formData.proposalType === "martial_law");
-	const isBuildingProposal = $derived(
-		["hospital", "school", "power_plant", "infrastructure", "fortifications", "radar"].includes(
-			$formData.proposalType || ""
-		)
-	);
+	const isBuildingProposal = $derived(BUILDING_PROPOSALS.includes($formData.proposalType || ""));
 
 	const isValidBuildingType = (type: string | undefined): type is BuildingType => {
-		return (
-			type !== undefined &&
-			["hospital", "school", "power_plant", "infrastructure", "fortifications", "radar"].includes(type)
-		);
+		return type !== undefined && BUILDING_PROPOSALS.includes(type);
 	};
 
 	const totalCosts = $derived(() => {
@@ -248,8 +254,10 @@
 										<span
 											class="flex-1 min-w-0 text-sm font-semibold truncate {type === 'declare_war'
 												? 'text-red-300'
-												: 'text-fg'}">{label}</span
+												: 'text-fg'}"
 										>
+											{label}
+										</span>
 										{#if autoFor(type)}
 											<span class="shrink-0 text-[10px] uppercase tracking-wide text-positive-fg">Decree</span>
 										{/if}
@@ -434,8 +442,8 @@
 					</legend>
 					<p class="mb-3 text-xs text-fg-muted">
 						This is what a parliament member earns each week. A minister earns
-						{OFFICIALS_CONFIG.MINISTER_MULTIPLIER}× and the president {OFFICIALS_CONFIG.PRESIDENT_MULTIPLIER}×.
-						The treasury pays every office holder at the start of each week.
+						{OFFICIALS_CONFIG.MINISTER_MULTIPLIER}× and the president {OFFICIALS_CONFIG.PRESIDENT_MULTIPLIER}×. The
+						treasury pays every office holder at the start of each week.
 					</p>
 					<div class="flex flex-wrap items-center gap-3">
 						<input
@@ -450,11 +458,25 @@
 					</div>
 					{#if $errors.salaryAmount}<p class="field-error">{$errors.salaryAmount}</p>{/if}
 					<div class="mt-3 grid gap-1 text-xs sm:grid-cols-3">
-						<p class="text-fg-muted">Parliament member <span class="font-mono text-fg">{(Number($formData.salaryAmount) || 0).toLocaleString()}</span></p>
-						<p class="text-fg-muted">Minister <span class="font-mono text-fg">{(Number($formData.salaryAmount) * OFFICIALS_CONFIG.MINISTER_MULTIPLIER || 0).toLocaleString()}</span></p>
-						<p class="text-fg-muted">President <span class="font-mono text-fg">{(Number($formData.salaryAmount) * OFFICIALS_CONFIG.PRESIDENT_MULTIPLIER || 0).toLocaleString()}</span></p>
+						<p class="text-fg-muted">
+							Parliament member <span class="font-mono text-fg">
+								{(Number($formData.salaryAmount) || 0).toLocaleString()}
+							</span>
+						</p>
+						<p class="text-fg-muted">
+							Minister <span class="font-mono text-fg">
+								{(Number($formData.salaryAmount) * OFFICIALS_CONFIG.MINISTER_MULTIPLIER || 0).toLocaleString()}
+							</span>
+						</p>
+						<p class="text-fg-muted">
+							President <span class="font-mono text-fg">
+								{(Number($formData.salaryAmount) * OFFICIALS_CONFIG.PRESIDENT_MULTIPLIER || 0).toLocaleString()}
+							</span>
+						</p>
 					</div>
-					<p class="mt-2 text-xs text-fg-muted">Currently in force: <span class="font-mono">{data.officialSalary.toLocaleString()}</span> per member.</p>
+					<p class="mt-2 text-xs text-fg-muted">
+						Currently in force: <span class="font-mono">{data.officialSalary.toLocaleString()}</span> per member.
+					</p>
 				</fieldset>
 			{/if}
 
@@ -466,9 +488,9 @@
 					<div class="rounded-sm border border-red-500/30 bg-red-500/5 p-4 text-sm text-fg-body">
 						<p class="font-semibold text-red-300">Martial law for one week</p>
 						<p class="mt-1">
-							Parliamentary elections cannot start and no citizen can cast a vote while martial law is in
-							force. It expires automatically after {OFFICIALS_CONFIG.MARTIAL_LAW_DAYS} days. Any election
-							already scheduled begins once the week is over.
+							Parliamentary elections cannot start and no citizen can cast a vote while martial law is in force. It
+							expires automatically after {OFFICIALS_CONFIG.MARTIAL_LAW_DAYS} days. Any election already scheduled begins
+							once the week is over.
 						</p>
 						{#if data.martialLawUntil && new Date(data.martialLawUntil) > new Date()}
 							<p class="mt-2 text-xs text-warning">

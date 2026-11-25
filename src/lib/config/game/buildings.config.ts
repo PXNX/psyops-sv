@@ -14,7 +14,8 @@ export type BuildingType =
 	| "datacenter"
 	| "internet_backbone"
 	| "network_switch"
-	| "radio_mast";
+	| "radio_mast"
+	| "airbase";
 
 /** The `regions` column a building type raises. */
 export type RegionStat =
@@ -26,7 +27,8 @@ export type RegionStat =
 	| "radar"
 	| "grid"
 	| "storage"
-	| "connectivity";
+	| "connectivity"
+	| "airbase";
 
 export interface BuildingCosts {
 	currency: number;
@@ -54,6 +56,8 @@ export interface BuildingTemplate {
 	costs: BuildingCosts;
 	/** A site counted by other systems instead of raising a region stat. */
 	siteOnly?: boolean;
+	/** Only parliament can enact it (no direct order by president or governor). */
+	lawOnly?: boolean;
 	/** In days. */
 	constructionTime: number;
 	/** Infrastructure level the region needs first. */
@@ -63,6 +67,25 @@ export interface BuildingTemplate {
 }
 
 export const BUILDING_TEMPLATES: Record<BuildingType, BuildingTemplate> = {
+	airbase: {
+		type: "airbase",
+		name: "Airbase",
+		icon: "🛫",
+		stat: "airbase",
+		statLabel: "Airbase",
+		maxLevel: 1,
+		lawOnly: true,
+		costs: { currency: 600_000, steel: 1_200, iron: 400, coal: 200 },
+		constructionTime: 10,
+		infrastructureRequired: 3,
+		description:
+			"Runways, hardened shelters and fuel depots. Squadrons can only be based at and fly from an airbase; it has to be enacted by law.",
+		benefits: [
+			"Squadrons can be stationed here",
+			"Air missions reach targets within each type's range of the base",
+			"New squadrons are stationed at the state's nearest airbase"
+		]
+	},
 	infrastructure: {
 		type: "infrastructure",
 		name: "Infrastructure",
@@ -156,7 +179,8 @@ export const BUILDING_TEMPLATES: Record<BuildingType, BuildingTemplate> = {
 		costs: { currency: 120000, steel: 250, copper: 300, coal: 100 },
 		constructionTime: 4,
 		infrastructureRequired: 2,
-		description: "Substations, transformers and transmission lines. Every regional plant needs a network to reach its customers.",
+		description:
+			"Substations, transformers and transmission lines. Every regional plant needs a network to reach its customers.",
 		benefits: [
 			"+120 MW of transmission capacity per level",
 			"Unlocks bigger plants: nuclear needs level 3, fusion level 4",

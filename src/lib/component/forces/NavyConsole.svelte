@@ -12,7 +12,7 @@
 	import EmptyState from "#lib/component/EmptyState.svelte";
 	import Tutorial from "#lib/component/Tutorial.svelte";
 	import CommanderBadge from "#lib/component/CommanderBadge.svelte";
-	
+
 	import { Button, Badge } from "#lib/component/ui/index.js";
 	import ResourceRequirements from "#lib/component/ResourceRequirements.svelte";
 	import { toastResult } from "#lib/ui/toast.svelte.js";
@@ -29,9 +29,11 @@
 		constructionHours,
 		dockUpgradeCost,
 		FACILITY,
+		hexDistance,
 		hexKey,
 		inBounds,
 		portUpgradeCost,
+		shipReachHexes,
 		repairHours,
 		shipRepairCost,
 		type Hex,
@@ -96,14 +98,16 @@
 		}
 	];
 
-	const enhanceForm: SubmitFunction = () => async ({ result, update }) => {
-		await update();
-		toastResult(result);
-		if (result.type === "success") {
-			const tutorial = (result.data as { tutorial?: string } | null)?.tutorial;
-			if (tutorial) window.dispatchEvent(new CustomEvent("psyops:tutorial", { detail: tutorial }));
-		}
-	};
+	const enhanceForm: SubmitFunction =
+		() =>
+		async ({ result, update }) => {
+			await update();
+			toastResult(result);
+			if (result.type === "success") {
+				const tutorial = (result.data as { tutorial?: string } | null)?.tutorial;
+				if (tutorial) window.dispatchEvent(new CustomEvent("psyops:tutorial", { detail: tutorial }));
+			}
+		};
 
 	let selectedHex = $state<Hex | null>(null);
 	let selectedShipId = $state<number | null>(null);
@@ -146,13 +150,24 @@
 		if (!selectedShip) return {};
 		const shipClass = selectedShip.shipClass as ShipClassId;
 		const missing = Math.max(0, (def(shipClass)?.hp ?? 0) - selectedShip.health);
-		return { currency: shipRepairCost(shipClass, missing), hours: repairHours(shipClass, missing, selectedDock?.level ?? 1) };
+		return {
+			currency: shipRepairCost(shipClass, missing),
+			hours: repairHours(shipClass, missing, selectedDock?.level ?? 1)
+		};
 	});
 
 	const myShips = $derived(data.ships.filter((s) => s.stateId === data.myStateId && s.status !== "sunk"));
 	const myPorts = $derived(data.ports.filter((p) => p.stateId === data.myStateId));
 	const myDocks = $derived(data.docks.filter((d) => d.stateId === data.myStateId));
 	const selectedShip = $derived(data.ships.find((s) => s.id === selectedShipId) ?? null);
+	// Ships sail only as far as their fuel carries them; a route is at least
+	// the straight hex distance, so beyond that the order would be refused.
+	const moveOutOfRange = $derived.by(() => {
+		if (!selectedShip || moveQ === "" || moveR === "") return false;
+		const d = def(selectedShip.shipClass);
+		if (!d) return false;
+		return hexDistance(selectedShip, { q: Number(moveQ), r: Number(moveR) }) > shipReachHexes(d, selectedShip.fuel);
+	});
 	const selectedPort = $derived(selectedHex ? portAt(selectedHex) : null);
 	const selectedDock = $derived(selectedHex ? dockAt(selectedHex) : null);
 	const activeMoves = $derived(data.ships.filter((s) => s.status === "moving"));
@@ -229,7 +244,9 @@
 		<EmptyState title="No fleet yet" subtitle="Join a state to command ships, build ports and sail the sea lanes." />
 	{:else}
 		{#if !data.canCommand}
-			<div class="mb-4 flex items-center gap-2 rounded-md border border-warning/40 bg-warning/10 px-3 py-2 text-sm text-warning">
+			<div
+				class="mb-4 flex items-center gap-2 rounded-md border border-warning/40 bg-warning/10 px-3 py-2 text-sm text-warning"
+			>
 				<FluentWarning class="size-4" />
 				Only the president or defence minister can issue fleet orders. You can still watch the sea.
 			</div>
@@ -243,8 +260,8 @@
 					<a href="/map" class="text-xs text-primary-fg hover:underline">Open the hex map →</a>
 				</div>
 				<p class="mt-1 text-xs text-fg-muted">
-					The hex grid is drawn on the real world map in naval mode. Pick a hex there, or jump to one with
-					contacts below.
+					The hex grid is drawn on the real world map in naval mode. Pick a hex there, or jump to one with contacts
+					below.
 				</p>
 				<form
 					class="mt-2 flex flex-wrap items-end gap-2"
@@ -254,7 +271,8 @@
 					}}
 					data-tutorial="navy-hex"
 				>
-					<label class="text-[11px] text-fg-muted">Q
+					<label class="text-[11px] text-fg-muted">
+						Q
 						<input
 							type="number"
 							min={HEX_BOUNDS.minQ}
@@ -263,7 +281,8 @@
 							class="mt-1 w-20 rounded border border-line/30 bg-surface-2 px-2 py-1 text-sm"
 						/>
 					</label>
-					<label class="text-[11px] text-fg-muted">R
+					<label class="text-[11px] text-fg-muted">
+						R
 						<input
 							type="number"
 							min={HEX_BOUNDS.minR}
@@ -278,8 +297,9 @@
 							type="button"
 							class="ml-auto text-xs text-primary-fg hover:underline"
 							onclick={() => hexClicked(selectedHex!)}
-						>Reopen {selectedHex.q},{selectedHex.r}</button
 						>
+							Reopen {selectedHex.q},{selectedHex.r}
+						</button>
 					{/if}
 				</form>
 				{#if activeHexes.length}
@@ -294,8 +314,9 @@
 										? 'border-primary text-primary-fg'
 										: ''}"
 									onclick={() => hexClicked(h)}
-								>{h.q},{h.r}</button
 								>
+									{h.q},{h.r}
+								</button>
 							{/each}
 						</div>
 					</div>
@@ -314,10 +335,17 @@
 						<div class="mt-2 space-y-1 text-xs text-fg-muted">
 							<div class="font-medium text-fg">⚓ {selectedPort.name}</div>
 							<div>Fuel: {selectedPort.fuelStock} · Level {selectedPort.level}</div>
-							<div>Cargo: {Object.entries(selectedPort.stock ?? {}).filter(([, v]) => v > 0).map(([k, v]) => `${k} ${v}`).join(", ") || "empty"}</div>
+							<div>
+								Cargo: {Object.entries(selectedPort.stock ?? {})
+									.filter(([, v]) => v > 0)
+									.map(([k, v]) => `${k} ${v}`)
+									.join(", ") || "empty"}
+							</div>
 						</div>
 						{#if blocked}
-							<div class="mt-2 flex items-center gap-1.5 text-xs text-danger"><FluentWarning class="size-4" />Blockaded by enemy mines</div>
+							<div class="mt-2 flex items-center gap-1.5 text-xs text-danger">
+								<FluentWarning class="size-4" />Blockaded by enemy mines
+							</div>
 						{/if}
 						{#if data.canCommand && selectedPort.stateId === data.myStateId}
 							<div class="mt-3 flex flex-wrap gap-2">
@@ -348,7 +376,13 @@
 							</div>
 						{/if}
 					{:else if data.canCommand && data.portCandidates.length}
-						<form method="POST" action="?/buildPort" use:enhance={enhanceForm} data-tutorial="build-port" class="mt-2 space-y-2">
+						<form
+							method="POST"
+							action="?/buildPort"
+							use:enhance={enhanceForm}
+							data-tutorial="build-port"
+							class="mt-2 space-y-2"
+						>
 							<p class="text-xs text-fg-muted">
 								Establish a port in the EEZ of one of your coastal regions (one per region).
 							</p>
@@ -359,7 +393,11 @@
 								placeholder="Port name"
 								class="w-full rounded border border-line/30 bg-surface-2 px-2 py-1 text-sm"
 							/>
-							<select name="regionId" required class="w-full rounded border border-line/30 bg-surface-2 px-2 py-1 text-xs">
+							<select
+								name="regionId"
+								required
+								class="w-full rounded border border-line/30 bg-surface-2 px-2 py-1 text-xs"
+							>
 								{#each data.portCandidates as region}
 									<option value={region.id}>{region.label}</option>
 								{/each}
@@ -371,11 +409,15 @@
 						<p class="mt-2 text-xs text-fg-muted">Every maritime region you own already has a port.</p>
 					{/if}
 					{#if selectedDock}
-						<div class="mt-2 text-xs text-fg-muted">Dock level {selectedDock.level} · {selectedDock.level} build bay(s)</div>
+						<div class="mt-2 text-xs text-fg-muted">
+							Dock level {selectedDock.level} · {selectedDock.level} build bay(s)
+						</div>
 					{/if}
 					{#if selectedHex && minesAt(selectedHex).length}
 						<div class="mt-2 text-xs text-danger">
-							{minesAt(selectedHex).length} minefield(s) · strength {minesAt(selectedHex).map((m) => m.strength).join(", ")}
+							{minesAt(selectedHex).length} minefield(s) · strength {minesAt(selectedHex)
+								.map((m) => m.strength)
+								.join(", ")}
 						</div>
 					{/if}
 				</section>
@@ -387,17 +429,30 @@
 						<h2 class="text-sm font-semibold text-heading">Sea intel · {selectedHex.q},{selectedHex.r}</h2>
 						{#if reading}
 							<div class="mt-1 text-[11px] text-fg-muted">
-								{reading.sensor} sweep · {Object.entries(reading.contacts).map(([k, v]) => `${k} ×${v}`).join(", ") || "no contacts"} ·
+								{reading.sensor} sweep · {Object.entries(reading.contacts)
+									.map(([k, v]) => `${k} ×${v}`)
+									.join(", ") || "no contacts"} ·
 								{reading.mines} mines · {reading.confidence}% confidence
 							</div>
 						{:else}
 							<div class="mt-1 text-[11px] text-fg-muted">No fresh pass over this hex.</div>
 						{/if}
-						<form method="POST" action="?/launchSeaIntel" use:enhance={enhanceForm} data-tutorial="sea-intel" class="mt-2 flex flex-wrap items-end gap-2">
+						<form
+							method="POST"
+							action="?/launchSeaIntel"
+							use:enhance={enhanceForm}
+							data-tutorial="sea-intel"
+							class="mt-2 flex flex-wrap items-end gap-2"
+						>
 							<input type="hidden" name="q" value={selectedHex.q} />
 							<input type="hidden" name="r" value={selectedHex.r} />
-							<label class="text-xs">Sensor
-								<select name="sensor" bind:value={seaSensor} class="mt-1 rounded border border-line/30 bg-surface-2 px-2 py-1 text-xs">
+							<label class="text-xs">
+								Sensor
+								<select
+									name="sensor"
+									bind:value={seaSensor}
+									class="mt-1 rounded border border-line/30 bg-surface-2 px-2 py-1 text-xs"
+								>
 									{#each data.seaSensors as sensor}
 										<option value={sensor.id} disabled={!!sensor.cooldownEndsAt}>
 											{sensor.label}{sensor.cooldownEndsAt ? " · cooling down" : ""}
@@ -418,6 +473,7 @@
 							airSupport={data.airSupport}
 							airMissions={data.airMissions}
 							regionList={data.regionList}
+							airbases={data.airbases}
 							myStateId={data.myStateId}
 							canCommand={data.canCommand}
 						/>
@@ -435,7 +491,9 @@
 						<div class="mt-1 text-xs text-fg-muted">{shipDef?.role}</div>
 						{#if (data.jamming[selectedShip.id]?.strength ?? 0) > 0}
 							{@const jam = data.jamming[selectedShip.id]}
-							<div class="mt-2 rounded border border-purple-500/40 bg-purple-500/10 px-2 py-1.5 text-[11px] text-purple-300">
+							<div
+								class="mt-2 rounded border border-purple-500/40 bg-purple-500/10 px-2 py-1.5 text-[11px] text-purple-300"
+							>
 								GNSS jamming {jam!.strength} · slower steaming, less accurate weapons
 								<div class="text-purple-300/70">
 									Sources: {jam!.sources.map((s) => `${s.domain} #${s.id}`).join(", ")}
@@ -444,31 +502,77 @@
 						{/if}
 						<div class="mt-2 space-y-2 text-xs">
 							<div>
-								<div class="flex justify-between"><span>Hull</span><span>{selectedShip.health}/{shipDef?.hp}</span></div>
-								<div class="h-1.5 rounded bg-surface-4"><div class="h-full rounded bg-positive" style="width:{pct(selectedShip.health, shipDef?.hp ?? 1)}%"></div></div>
+								<div class="flex justify-between">
+									<span>Hull</span><span>{selectedShip.health}/{shipDef?.hp}</span>
+								</div>
+								<div class="h-1.5 rounded bg-surface-4">
+									<div
+										class="h-full rounded bg-positive"
+										style="width:{pct(selectedShip.health, shipDef?.hp ?? 1)}%"
+									></div>
+								</div>
 							</div>
 							<div>
-								<div class="flex justify-between"><span>Fuel</span><span>{selectedShip.fuel}/{shipDef?.fuelCapacity}</span></div>
-								<div class="h-1.5 rounded bg-surface-4"><div class="h-full rounded bg-sky-400" style="width:{pct(selectedShip.fuel, shipDef?.fuelCapacity ?? 1)}%"></div></div>
+								<div class="flex justify-between">
+									<span>Fuel</span><span>
+										{selectedShip.fuel}/{shipDef?.fuelCapacity} · range {shipDef
+											? shipReachHexes(shipDef, selectedShip.fuel)
+											: 0} hexes
+									</span>
+								</div>
+								<div class="h-1.5 rounded bg-surface-4">
+									<div
+										class="h-full rounded bg-sky-400"
+										style="width:{pct(selectedShip.fuel, shipDef?.fuelCapacity ?? 1)}%"
+									></div>
+								</div>
 							</div>
 							{#if shipDef?.cargo.kind}
-								<div>Cargo: {selectedShip.cargoType ?? "empty"} {selectedShip.cargoAmount}/{shipDef.cargo.capacity}</div>
+								<div>
+									Cargo: {selectedShip.cargoType ?? "empty"}
+									{selectedShip.cargoAmount}/{shipDef.cargo.capacity}
+								</div>
 							{/if}
 							{#if shipDef?.weapons.length}
-								<div class="text-fg-muted">Weapons: {shipDef.weapons.map((w) => FLEET_WEAPONS[w].label).join(", ")}</div>
+								<div class="text-fg-muted">
+									Weapons: {shipDef.weapons.map((w) => FLEET_WEAPONS[w].label).join(", ")}
+								</div>
 							{/if}
 						</div>
 						{#if data.canCommand && selectedShip.status !== "sunk"}
 							<div class="mt-3 flex flex-wrap gap-2">
-								<form method="POST" action="?/moveShip" use:enhance={enhanceForm} class="flex flex-wrap items-end gap-1">
+								<form
+									method="POST"
+									action="?/moveShip"
+									use:enhance={enhanceForm}
+									class="flex flex-wrap items-end gap-1"
+								>
 									<input type="hidden" name="shipId" value={selectedShip.id} />
-									<label class="text-[11px] text-fg-muted">To Q
-										<input type="number" name="q" min={HEX_BOUNDS.minQ} max={HEX_BOUNDS.maxQ} bind:value={moveQ} class="mt-1 w-16 rounded border border-line/30 bg-surface-2 px-1 py-1 text-xs" />
+									<label class="text-[11px] text-fg-muted">
+										To Q
+										<input
+											type="number"
+											name="q"
+											min={HEX_BOUNDS.minQ}
+											max={HEX_BOUNDS.maxQ}
+											bind:value={moveQ}
+											class="mt-1 w-16 rounded border border-line/30 bg-surface-2 px-1 py-1 text-xs"
+										/>
 									</label>
-									<label class="text-[11px] text-fg-muted">R
-										<input type="number" name="r" min={HEX_BOUNDS.minR} max={HEX_BOUNDS.maxR} bind:value={moveR} class="mt-1 w-16 rounded border border-line/30 bg-surface-2 px-1 py-1 text-xs" />
+									<label class="text-[11px] text-fg-muted">
+										R
+										<input
+											type="number"
+											name="r"
+											min={HEX_BOUNDS.minR}
+											max={HEX_BOUNDS.maxR}
+											bind:value={moveR}
+											class="mt-1 w-16 rounded border border-line/30 bg-surface-2 px-1 py-1 text-xs"
+										/>
 									</label>
-									<Button type="submit" size="sm" disabled={selectedShip.status === "repairing"}>Move</Button>
+									<Button type="submit" size="sm" disabled={selectedShip.status === "repairing" || moveOutOfRange}>
+										Move
+									</Button>
 								</form>
 								{#if selectedShip.status === "moving"}
 									<form method="POST" action="?/stopShip" use:enhance={enhanceForm}>
@@ -495,8 +599,19 @@
 									</form>
 								{/if}
 							</div>
+							{#if moveOutOfRange && shipDef}
+								<p class="mt-2 text-[11px] text-error" role="status">
+									Out of range: that hex is {hexDistance(selectedShip, { q: Number(moveQ), r: Number(moveR) })} hexes away,
+									the fuel aboard carries {shipReachHexes(shipDef, selectedShip.fuel)}. Refuel at a port first.
+								</p>
+							{/if}
 							<div class="mt-2 grid gap-2 sm:grid-cols-2">
-								<ResourceRequirements title="Move · per hex" compact costs={{ fuel: shipDef?.fuelPerHex ?? 0 }} available={{}} />
+								<ResourceRequirements
+									title="Move · per hex"
+									compact
+									costs={{ fuel: shipDef?.fuelPerHex ?? 0 }}
+									available={{}}
+								/>
 								{#if selectedDock && selectedDock.stateId === data.myStateId && selectedShip.health < (shipDef?.hp ?? 0)}
 									<ResourceRequirements title="Repair" compact costs={repairCosts} available={{}} />
 								{/if}
@@ -505,17 +620,39 @@
 								{/if}
 							</div>
 							{#if shipDef?.cargo.kind && selectedPort && selectedPort.stateId === data.myStateId}
-								<form method="POST" action="?/cargo" use:enhance={enhanceForm} class="mt-3 flex flex-wrap items-end gap-2 border-t border-line/15 pt-3">
+								<form
+									method="POST"
+									action="?/cargo"
+									use:enhance={enhanceForm}
+									class="mt-3 flex flex-wrap items-end gap-2 border-t border-line/15 pt-3"
+								>
 									<input type="hidden" name="shipId" value={selectedShip.id} />
 									<input type="hidden" name="portId" value={selectedPort.id} />
-									<label class="text-xs">Goods
-										<input name="resource" bind:value={cargoResource} class="mt-1 w-24 rounded border border-line/30 bg-surface-2 px-2 py-1 text-xs" />
+									<label class="text-xs">
+										Goods
+										<input
+											name="resource"
+											bind:value={cargoResource}
+											class="mt-1 w-24 rounded border border-line/30 bg-surface-2 px-2 py-1 text-xs"
+										/>
 									</label>
-									<label class="text-xs">Amount
-										<input name="amount" type="number" min="1" bind:value={cargoAmount} class="mt-1 w-20 rounded border border-line/30 bg-surface-2 px-2 py-1 text-xs" />
+									<label class="text-xs">
+										Amount
+										<input
+											name="amount"
+											type="number"
+											min="1"
+											bind:value={cargoAmount}
+											class="mt-1 w-20 rounded border border-line/30 bg-surface-2 px-2 py-1 text-xs"
+										/>
 									</label>
-									<label class="text-xs">Action
-										<select name="direction" bind:value={cargoDirection} class="mt-1 rounded border border-line/30 bg-surface-2 px-2 py-1 text-xs">
+									<label class="text-xs">
+										Action
+										<select
+											name="direction"
+											bind:value={cargoDirection}
+											class="mt-1 rounded border border-line/30 bg-surface-2 px-2 py-1 text-xs"
+										>
 											<option value="load">Load</option>
 											<option value="unload">Unload</option>
 										</select>
@@ -531,13 +668,27 @@
 				{#if data.canCommand && myDocks.length}
 					<section class="rounded-lg border border-line/20 bg-surface-1 p-3">
 						<h2 class="text-sm font-semibold text-heading">Shipyard</h2>
-						<form method="POST" action="?/orderShip" use:enhance={enhanceForm} data-tutorial="shipyard" class="mt-2 space-y-2">
-							<select name="dockId" bind:value={orderDockId} class="w-full rounded border border-line/30 bg-surface-2 px-2 py-1 text-xs">
+						<form
+							method="POST"
+							action="?/orderShip"
+							use:enhance={enhanceForm}
+							data-tutorial="shipyard"
+							class="mt-2 space-y-2"
+						>
+							<select
+								name="dockId"
+								bind:value={orderDockId}
+								class="w-full rounded border border-line/30 bg-surface-2 px-2 py-1 text-xs"
+							>
 								{#each myDocks as dock}
 									<option value={dock.id}>Dock L{dock.level} · hex {dock.q},{dock.r}</option>
 								{/each}
 							</select>
-							<select name="shipClass" bind:value={orderClass} class="w-full rounded border border-line/30 bg-surface-2 px-2 py-1 text-xs">
+							<select
+								name="shipClass"
+								bind:value={orderClass}
+								class="w-full rounded border border-line/30 bg-surface-2 px-2 py-1 text-xs"
+							>
 								{#each SHIP_CATEGORIES as category}
 									<optgroup label={SHIP_CATEGORY_LABEL[category]}>
 										{#each Object.values(SHIP_CLASSES).filter((c) => c.category === category) as ship}
@@ -557,24 +708,36 @@
 		<!-- ── Below the map: fleet, queues and log ─────────────────────────── -->
 		<div class="mt-4 grid gap-4 lg:grid-cols-3">
 			<section class="rounded-lg border border-line/20 bg-surface-1 p-3">
-				<h2 class="text-sm font-semibold text-heading">Fleets <span class="text-fg-muted">({data.fleets.length})</span></h2>
+				<h2 class="text-sm font-semibold text-heading">
+					Fleets <span class="text-fg-muted">({data.fleets.length})</span>
+				</h2>
 				{#each data.fleets as fleet (fleet.id)}
 					{@const officer = data.officers.find((o) => o.id === fleet.commanderId)}
 					<div class="soft-lift mt-2 rounded-sm border border-line/20 p-2">
 						<div class="flex items-center gap-2">
 							<span class="min-w-0 flex-1 truncate text-xs font-medium">{fleet.name}</span>
-							<span class="text-[10px] text-fg-muted"
-								>{myShips.filter((s) => s.fleetId === fleet.id).length} hulls · {data.fleetHexes.filter((h) => h.fleetId === fleet.id).length} hexes</span
-							>
+							<span class="text-[10px] text-fg-muted">
+								{myShips.filter((s) => s.fleetId === fleet.id).length} hulls · {data.fleetHexes.filter(
+									(h) => h.fleetId === fleet.id
+								).length} hexes
+							</span>
 						</div>
 						{#if officer}
 							<div class="mt-1"><CommanderBadge {officer} size="sm" /></div>
 						{/if}
 						<div class="mt-1 flex items-center gap-1">
-							<form method="POST" action="?/assignCommander" use:enhance={enhanceForm} class="flex min-w-0 flex-1 gap-1">
+							<form
+								method="POST"
+								action="?/assignCommander"
+								use:enhance={enhanceForm}
+								class="flex min-w-0 flex-1 gap-1"
+							>
 								<input type="hidden" name="kind" value="fleet" />
 								<input type="hidden" name="id" value={fleet.id} />
-								<select name="commanderId" class="min-w-0 flex-1 rounded border border-line/30 bg-surface-2 px-1 py-1 text-[11px]">
+								<select
+									name="commanderId"
+									class="min-w-0 flex-1 rounded border border-line/30 bg-surface-2 px-1 py-1 text-[11px]"
+								>
 									<option value="">No commander</option>
 									{#each data.officers.filter((o) => o.alive) as o (o.id)}
 										<option value={o.id} selected={o.id === fleet.commanderId}>{o.name}</option>
@@ -590,25 +753,46 @@
 					</div>
 				{/each}
 				{#if data.canCommand}
-					<form method="POST" action="?/formFleet" use:enhance={enhanceForm} class="mt-2 space-y-1 border-t border-line/20 pt-2">
-						<input name="name" required maxlength="100" placeholder="New fleet name" class="w-full rounded border border-line/30 bg-surface-2 px-2 py-1 text-xs" />
+					<form
+						method="POST"
+						action="?/formFleet"
+						use:enhance={enhanceForm}
+						class="mt-2 space-y-1 border-t border-line/20 pt-2"
+					>
+						<input
+							name="name"
+							required
+							maxlength="100"
+							placeholder="New fleet name"
+							class="w-full rounded border border-line/30 bg-surface-2 px-2 py-1 text-xs"
+						/>
 						<div class="max-h-20 space-y-0.5 overflow-y-auto rounded border border-line/20 p-1">
 							{#each myShips.filter((s) => !s.fleetId) as ship (ship.id)}
-								<label class="flex items-center gap-1 text-[11px]"><input type="checkbox" name="shipIds" value={ship.id} /> {ship.name}</label>
+								<label class="flex items-center gap-1 text-[11px]">
+									<input type="checkbox" name="shipIds" value={ship.id} />
+									{ship.name}
+								</label>
 							{/each}
 						</div>
 						<Button type="submit" size="xs" variant="secondary" block>Form fleet</Button>
 					</form>
 				{/if}
-				<h3 class="mt-3 text-xs font-semibold text-heading">Your ships <span class="text-fg-muted">({myShips.length})</span></h3>
+				<h3 class="mt-3 text-xs font-semibold text-heading">
+					Your ships <span class="text-fg-muted">({myShips.length})</span>
+				</h3>
 				{#if myShips.length === 0}
 					<p class="mt-1 text-xs text-fg-muted">No ships yet. Build a dock and order a hull.</p>
 				{:else}
 					<ul class="mt-1 space-y-1 text-xs">
 						{#each myShips as ship}
 							<li>
-								<button class="flex w-full items-center justify-between rounded px-2 py-1 text-left hover:bg-surface-3" onclick={() => hexClicked({ q: ship.q, r: ship.r })}>
-									<span><span class="font-medium">{ship.name}</span> <span class="text-fg-muted">· {ship.q},{ship.r}</span></span>
+								<button
+									class="flex w-full items-center justify-between rounded px-2 py-1 text-left hover:bg-surface-3"
+									onclick={() => hexClicked({ q: ship.q, r: ship.r })}
+								>
+									<span>
+										<span class="font-medium">{ship.name}</span> <span class="text-fg-muted">· {ship.q},{ship.r}</span>
+									</span>
 									<span class="text-fg-muted">{ship.status} · {ship.health}hp · {ship.fuel}fuel</span>
 								</button>
 							</li>
@@ -618,7 +802,9 @@
 			</section>
 
 			<section class="rounded-lg border border-line/20 bg-surface-1 p-3">
-				<h2 class="flex items-center gap-1.5 text-sm font-semibold text-heading"><FluentClock class="size-4" />Dock queue</h2>
+				<h2 class="flex items-center gap-1.5 text-sm font-semibold text-heading">
+					<FluentClock class="size-4" />Dock queue
+				</h2>
 				{#if data.queue.length === 0}
 					<p class="mt-2 text-xs text-fg-muted">Nothing under construction or repair.</p>
 				{:else}
@@ -633,7 +819,12 @@
 									<span class="text-fg-muted">{item.status} · {timeLeft(item.completesAt)}</span>
 								</div>
 								{#if item.status === "building"}
-									<div class="mt-1 h-1 rounded bg-surface-4"><div class="progress-shine h-full rounded bg-primary transition-all duration-500" style="width:{progress(item)}%"></div></div>
+									<div class="mt-1 h-1 rounded bg-surface-4">
+										<div
+											class="progress-shine h-full rounded bg-primary transition-all duration-500"
+											style="width:{progress(item)}%"
+										></div>
+									</div>
 								{/if}
 								{#if data.canCommand && item.stateId === data.myStateId && item.status === "queued"}
 									<form method="POST" action="?/cancelJob" use:enhance={enhanceForm} class="mt-1">
@@ -666,7 +857,9 @@
 		</div>
 
 		{#if activeMoves.length}
-			<p class="mt-3 text-xs text-fg-muted">{activeMoves.length} ship(s) under way — they advance on the next fleet tick.</p>
+			<p class="mt-3 text-xs text-fg-muted">
+				{activeMoves.length} ship(s) under way — they advance on the next fleet tick.
+			</p>
 		{/if}
 	{/if}
 	<Tutorial id="navy" title="Flotten-Kurzanleitung" steps={navySteps} />

@@ -22,15 +22,19 @@ import {
 	AIR_MISSION_IDS,
 	SHIP_CLASSES,
 	aircraft,
+	airReach,
+	hexDistance,
 	hexKey,
 	hexesInRange,
 	inBounds,
+	regionHex,
 	type AirMissionKind,
 	type Hex
 } from "#lib/config/index.js";
 import { awardCommanderExperience, commanderFactors, commanderIdsFor } from "./commanders.js";
 import { enemiesOf, sideOf } from "./recon";
 import { navalAuthority } from "./naval";
+import { airbasesOf } from "./airbases";
 
 type Tx = Parameters<Parameters<Database["transaction"]>[0]>[0];
 type Db = Database | Tx;
@@ -68,25 +72,37 @@ export async function launchAirMission(db: Database, input: LaunchAirMissionInpu
 		if (unit.ownerId !== input.userId && leader.role !== "president")
 			throw new AirMissionError("Only its commander or the president may task this squadron.");
 		const spec = aircraft(unit.unitType);
-		if (!spec?.roles.includes(def.role)) throw new AirMissionError(`${spec?.label ?? "That unit"} cannot fly ${def.label}.`);
+		if (!spec?.roles.includes(def.role))
+			throw new AirMissionError(`${spec?.label ?? "That unit"} cannot fly ${def.label}.`);
 		const [active] = await tx
 			.select({ id: airMissions.id })
 			.from(airMissions)
 			.where(and(eq(airMissions.unitId, unit.id), eq(airMissions.status, "in_progress")));
 		if (active) throw new AirMissionError("That squadron already has a mission in the air.");
-		if (unit.fuel < def.fuelCost) throw new AirMissionError(`${spec.label} needs ${def.fuelCost} fuel for this mission.`);
+		if (unit.fuel < def.fuelCost)
+			throw new AirMissionError(`${spec.label} needs ${def.fuelCost} fuel for this mission.`);
 
 		const now = input.now ?? new Date();
 		let region: { id: number; stateId: number | null } | null = null;
+		let targetHex: Hex;
 		if (def.target === "hex") {
-			if (!inBounds({ q: input.q ?? -1, r: input.r ?? -1 })) throw new AirMissionError("Choose a sea hex in the theatre.");
+			targetHex = { q: input.q ?? -1, r: input.r ?? -1 };
+			if (!inBounds(targetHex)) throw new AirMissionError("Choose a sea hex in the theatre.");
 		} else {
-			const [row] = await tx.select().from(regions).where(eq(regions.id, input.targetRegionId ?? -1));
+			const [row] = await tx
+				.select()
+				.from(regions)
+				.where(eq(regions.id, input.targetRegionId ?? -1));
 			if (!row) throw new AirMissionError("Choose a target region.");
 			if (def.target === "friendly_region" && row.stateId !== leader.stateId)
 				throw new AirMissionError("That mission can only target one of your own regions.");
 			region = row;
+			targetHex = regionHex(row);
 		}
+		// Squadrons fly from their airbase and only as far as their type reaches.
+		const base = (await airbasesOf(tx, leader.stateId)).find((b) => b.regionId === unit.regionId);
+		const reach = airReach(unit.unitType, base?.hex ?? null, targetHex);
+		if (!reach.ok) throw new AirMissionError(reach.reason ?? "Out of range.");
 
 		await tx
 			.update(militaryUnits)
@@ -99,7 +115,7 @@ export async function launchAirMission(db: Database, input: LaunchAirMissionInpu
 				unitId: unit.id,
 				orderedBy: input.userId,
 				kind: input.kind,
-				sourceRegionId: input.sourceRegionId ?? unit.regionId,
+				sourceRegionId: unit.regionId,
 				targetRegionId: region?.id ?? null,
 				q: def.target === "hex" ? input.q! : null,
 				r: def.target === "hex" ? input.r! : null,
@@ -115,6 +131,42 @@ export async function launchAirMission(db: Database, input: LaunchAirMissionInpu
 			message: `${spec.label} tasked with ${def.label}.`
 		});
 		return mission;
+	});
+}
+
+/** A squadron ferries without a combat load: twice its strike range per hop. */
+export const FERRY_RANGE_FACTOR = 2;
+
+/** Move a squadron to another of the state's airbases. */
+export async function rebaseSquadron(db: Database, userId: string, unitId: number, regionId: number) {
+	const leader = await authority(db, userId);
+	return db.transaction(async (tx) => {
+		const [unit] = await tx.select().from(militaryUnits).where(eq(militaryUnits.id, unitId));
+		if (!unit || unit.stateId !== leader.stateId) throw new AirMissionError("That squadron is not yours.");
+		const spec = aircraft(unit.unitType);
+		if (!spec) throw new AirMissionError("Only aircraft are stationed at airbases.");
+		if (unit.ownerId !== userId && leader.role !== "president")
+			throw new AirMissionError("Only its commander or the president may rebase this squadron.");
+		if (unit.regionId === regionId) throw new AirMissionError("The squadron is already stationed there.");
+		const [active] = await tx
+			.select({ id: airMissions.id })
+			.from(airMissions)
+			.where(and(eq(airMissions.unitId, unit.id), eq(airMissions.status, "in_progress")));
+		if (active) throw new AirMissionError("The squadron is in the air; rebase it once it is back.");
+		const bases = await airbasesOf(tx, leader.stateId);
+		const target = bases.find((b) => b.regionId === regionId);
+		if (!target) throw new AirMissionError("Choose one of your airbases.");
+		// From an airbase the ferry flight is limited; a squadron left without
+		// one (its base was lost or it predates airbases) may move anywhere once.
+		const from = bases.find((b) => b.regionId === unit.regionId);
+		const ferry = spec.rangeHexes * FERRY_RANGE_FACTOR;
+		if (from && hexDistance(from.hex, target.hex) > ferry)
+			throw new AirMissionError(
+				`Out of ferry range: that airbase is ${hexDistance(from.hex, target.hex)} hexes away, a ${spec.label.toLowerCase()} ferries ${ferry}.`
+			);
+		await tx.update(militaryUnits).set({ regionId }).where(eq(militaryUnits.id, unit.id));
+		await log(tx, leader.stateId, "air_rebased", `${unit.name} rebased to its new airbase.`);
+		return { regionId };
 	});
 }
 
@@ -134,12 +186,20 @@ async function damageRegion(db: Db, regionId: number, field: "infrastructure" | 
 	if (!row) return 0;
 	const current = row[field] ?? 0;
 	const value = Math.max(0, current - amount);
-	await db.update(regions).set({ [field]: value }).where(eq(regions.id, regionId));
+	await db
+		.update(regions)
+		.set({ [field]: value })
+		.where(eq(regions.id, regionId));
 	return current - value;
 }
 
 /** Apply one completed sortie. */
-async function applyMission(db: Db, mission: typeof airMissions.$inferSelect, now: Date, rng: () => number): Promise<AirMissionResult> {
+async function applyMission(
+	db: Db,
+	mission: typeof airMissions.$inferSelect,
+	now: Date,
+	rng: () => number
+): Promise<AirMissionResult> {
 	const def = AIR_MISSIONS[mission.kind as AirMissionKind]!;
 	const hex: Hex | null = mission.q != null && mission.r != null ? { q: mission.q, r: mission.r } : null;
 	// An airgroup commander's traits scale the effect of every sortie.
@@ -247,7 +307,10 @@ async function applyMission(db: Db, mission: typeof airMissions.$inferSelect, no
 					const room = (SHIP_CLASSES[ship.shipClass]?.fuelCapacity ?? 100) - ship.fuel;
 					const amount = Math.min(room, magnitude);
 					if (amount <= 0) continue;
-					await db.update(fleetShips).set({ fuel: ship.fuel + amount }).where(eq(fleetShips.id, ship.id));
+					await db
+						.update(fleetShips)
+						.set({ fuel: ship.fuel + amount })
+						.where(eq(fleetShips.id, ship.id));
 					given += amount;
 				}
 			}

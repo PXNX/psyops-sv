@@ -310,6 +310,7 @@
 							airSupport={data.navy.airSupport}
 							airMissions={data.navy.airMissions}
 							regionList={data.navy.regionList}
+							airbases={data.navy.airbases}
 							myStateId={data.navy.myStateId}
 							canCommand={data.navy.canCommand}
 						/>

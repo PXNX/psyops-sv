@@ -57,6 +57,7 @@ import {
 	repairHours,
 	roleStrength,
 	shipClass,
+	shipMoveReach,
 	targetKind,
 	weaponCanTarget,
 	type CargoKind,
@@ -66,12 +67,8 @@ import {
 	type WeaponId
 } from "#lib/config/index.js";
 import { navalAuthority } from "./naval";
-import {
-	commanderFactors,
-	commanderIdsFor,
-	awardCommanderExperience,
-	woundCommander
-} from "./commanders";
+import { airbasesOf } from "./airbases";
+import { commanderFactors, commanderIdsFor, awardCommanderExperience, woundCommander } from "./commanders";
 import { resolveSeaIntelMissions } from "./sea-intel";
 import { resolveAirMissions } from "./air-missions";
 import { enemiesOf, sideOf } from "./recon";
@@ -96,7 +93,14 @@ export async function fleetAuthority(db: Db, userId: string): Promise<FleetAutho
 // ── Paying for things ───────────────────────────────────────────────────────
 
 /** Debit the treasury and (optionally) steel from the state stockpile. */
-async function pay(db: Db, authority: FleetAuthority, userId: string, money: number, steel: number, description: string): Promise<void> {
+async function pay(
+	db: Db,
+	authority: FleetAuthority,
+	userId: string,
+	money: number,
+	steel: number,
+	description: string
+): Promise<void> {
 	const [treasury] = await db
 		.select({ balance: stateTreasury.balance })
 		.from(stateTreasury)
@@ -108,9 +112,12 @@ async function pay(db: Db, authority: FleetAuthority, userId: string, money: num
 		const [stock] = await db
 			.select({ quantity: stateResourceInventory.quantity })
 			.from(stateResourceInventory)
-			.where(and(eq(stateResourceInventory.stateId, authority.stateId), eq(stateResourceInventory.resourceType, "steel")))
+			.where(
+				and(eq(stateResourceInventory.stateId, authority.stateId), eq(stateResourceInventory.resourceType, "steel"))
+			)
 			.for("update");
-		if ((stock?.quantity ?? 0) < steel) throw new FleetError(`${description} needs ${steel} steel in the state stockpile.`);
+		if ((stock?.quantity ?? 0) < steel)
+			throw new FleetError(`${description} needs ${steel} steel in the state stockpile.`);
 	}
 
 	await db
@@ -125,7 +132,9 @@ async function pay(db: Db, authority: FleetAuthority, userId: string, money: num
 		await db
 			.update(stateResourceInventory)
 			.set({ quantity: sql`${stateResourceInventory.quantity} - ${steel}`, updatedAt: new Date() })
-			.where(and(eq(stateResourceInventory.stateId, authority.stateId), eq(stateResourceInventory.resourceType, "steel")));
+			.where(
+				and(eq(stateResourceInventory.stateId, authority.stateId), eq(stateResourceInventory.resourceType, "steel"))
+			);
 	}
 	await db.insert(governmentBudgetTransactions).values({
 		stateId: authority.stateId,
@@ -137,7 +146,14 @@ async function pay(db: Db, authority: FleetAuthority, userId: string, money: num
 	});
 }
 
-async function log(db: Db, stateId: number | null, kind: string, hex: Hex | null, message: string, data?: Record<string, unknown>): Promise<void> {
+async function log(
+	db: Db,
+	stateId: number | null,
+	kind: string,
+	hex: Hex | null,
+	message: string,
+	data?: Record<string, unknown>
+): Promise<void> {
 	await db.insert(fleetEvents).values({
 		stateId,
 		kind,
@@ -167,14 +183,19 @@ export async function buildPort(db: Database, userId: string, input: BuildPortIn
 	const [region] = await db.select().from(regions).where(eq(regions.id, input.regionId));
 	if (!region || region.stateId !== authority.stateId) throw new FleetError("The home region must be one of yours.");
 	if (!isCoastal(region)) throw new FleetError("Only a region with maritime access can hold a port.");
-	const allRegions = await db.select({ id: regions.id, latitude: regions.latitude, longitude: regions.longitude }).from(regions);
+	const allRegions = await db
+		.select({ id: regions.id, latitude: regions.latitude, longitude: regions.longitude })
+		.from(regions);
 	const occupied = await db.select({ q: seaPorts.q, r: seaPorts.r }).from(seaPorts);
 	const hex = portHexForRegion(region, allRegions, new Set(occupied.map((p) => hexKey(p))));
 	if (!hex) throw new FleetError("That region's EEZ has no free sea hex for a port.");
 	return db.transaction(async (tx) => {
 		const [byRegion] = await tx.select({ id: seaPorts.id }).from(seaPorts).where(eq(seaPorts.regionId, region.id));
 		if (byRegion) throw new FleetError("That region already has a port.");
-		const [existing] = await tx.select({ id: seaPorts.id }).from(seaPorts).where(and(eq(seaPorts.q, hex.q), eq(seaPorts.r, hex.r)));
+		const [existing] = await tx
+			.select({ id: seaPorts.id })
+			.from(seaPorts)
+			.where(and(eq(seaPorts.q, hex.q), eq(seaPorts.r, hex.r)));
 		if (existing) throw new FleetError("There is already a port on that hex.");
 		await pay(tx, authority, userId, FACILITY.port.money, FACILITY.port.steel, `Port ${name}`);
 		const [port] = await tx
@@ -205,7 +226,11 @@ export async function portCandidates(db: Db, stateId: number) {
 	const taken = new Set(ports.map((p) => p.regionId));
 	return rows
 		.filter((r) => isCoastal(r) && !taken.has(r.id))
-		.map((r) => ({ id: r.id, label: `Region #${r.id} (${r.latitude}, ${r.longitude})`, hex: hexToLatLon(hexFromLatLon(Number(r.latitude), Number(r.longitude))) }));
+		.map((r) => ({
+			id: r.id,
+			label: `Region #${r.id} (${r.latitude}, ${r.longitude})`,
+			hex: hexToLatLon(hexFromLatLon(Number(r.latitude), Number(r.longitude)))
+		}));
 }
 
 /** Expand a port by one level: larger fuel tanks and a bigger cargo yard. */
@@ -214,7 +239,8 @@ export async function upgradePort(db: Database, userId: string, portId: number) 
 	return db.transaction(async (tx) => {
 		const [port] = await tx.select().from(seaPorts).where(eq(seaPorts.id, portId));
 		if (!port || port.stateId !== authority.stateId) throw new FleetError("You can only expand one of your own ports.");
-		if (port.level >= FACILITY.maxPortLevel) throw new FleetError(`That port is already at level ${FACILITY.maxPortLevel}.`);
+		if (port.level >= FACILITY.maxPortLevel)
+			throw new FleetError(`That port is already at level ${FACILITY.maxPortLevel}.`);
 		const next = port.level + 1;
 		const cost = portUpgradeCost(port.level);
 		await pay(tx, authority, userId, cost.money, cost.steel, `Expanding port ${port.name} to level ${next}`);
@@ -236,7 +262,8 @@ export async function buildDock(db: Database, userId: string, portId: number) {
 	const authority = await fleetAuthority(db, userId);
 	return db.transaction(async (tx) => {
 		const [port] = await tx.select().from(seaPorts).where(eq(seaPorts.id, portId));
-		if (!port || port.stateId !== authority.stateId) throw new FleetError("You can only build at one of your own ports.");
+		if (!port || port.stateId !== authority.stateId)
+			throw new FleetError("You can only build at one of your own ports.");
 		const [dock] = await tx.select().from(seaDocks).where(eq(seaDocks.portId, portId));
 		if (dock && dock.level >= FACILITY.maxDockLevel) throw new FleetError("That dock is already at the maximum level.");
 		const level = dock ? dock.level + 1 : 1;
@@ -248,7 +275,13 @@ export async function buildDock(db: Database, userId: string, portId: number) {
 					.insert(seaDocks)
 					.values({ portId, stateId: authority.stateId, q: port.q, r: port.r, level, builtBy: userId })
 					.returning();
-		await log(tx, authority.stateId, "dock_built", { q: port.q, r: port.r }, `Dock at ${port.name} is now level ${level}.`);
+		await log(
+			tx,
+			authority.stateId,
+			"dock_built",
+			{ q: port.q, r: port.r },
+			`Dock at ${port.name} is now level ${level}.`
+		);
 		return result;
 	});
 }
@@ -262,7 +295,8 @@ export async function orderShip(db: Database, userId: string, dockId: number, cl
 	if (!def) throw new FleetError("Unknown ship class.");
 	return db.transaction(async (tx) => {
 		const [dock] = await tx.select().from(seaDocks).where(eq(seaDocks.id, dockId));
-		if (!dock || dock.stateId !== authority.stateId) throw new FleetError("You can only order ships at your own docks.");
+		if (!dock || dock.stateId !== authority.stateId)
+			throw new FleetError("You can only order ships at your own docks.");
 		const cost = buildCost(classId);
 		await pay(tx, authority, userId, cost.money, cost.steel, `Building ${def.label}`);
 		const [item] = await tx
@@ -276,7 +310,9 @@ export async function orderShip(db: Database, userId: string, dockId: number, cl
 				cost: cost.money
 			})
 			.returning();
-		await log(tx, authority.stateId, "ship_ordered", { q: dock.q, r: dock.r }, `Ordered a ${def.label}.`, { shipClass: classId });
+		await log(tx, authority.stateId, "ship_ordered", { q: dock.q, r: dock.r }, `Ordered a ${def.label}.`, {
+			shipClass: classId
+		});
 		return item;
 	});
 }
@@ -299,7 +335,13 @@ export async function repairShip(db: Database, userId: string, shipId: number) {
 		const [pending] = await tx
 			.select({ id: fleetDockQueue.id })
 			.from(fleetDockQueue)
-			.where(and(eq(fleetDockQueue.shipId, shipId), eq(fleetDockQueue.kind, "repair"), inArray(fleetDockQueue.status, ["queued", "building"])));
+			.where(
+				and(
+					eq(fleetDockQueue.shipId, shipId),
+					eq(fleetDockQueue.kind, "repair"),
+					inArray(fleetDockQueue.status, ["queued", "building"])
+				)
+			);
 		if (pending) throw new FleetError("That ship already has a repair queued.");
 		const cost = shipRepairCost(ship.shipClass, def.hp - ship.health);
 		await pay(tx, authority, userId, cost, 0, `Repairing ${ship.name}`);
@@ -332,7 +374,8 @@ export async function cancelDockJob(db: Database, userId: string, itemId: number
 			.update(stateTreasury)
 			.set({ balance: sql`${stateTreasury.balance} + ${item.cost}`, updatedAt: new Date() })
 			.where(eq(stateTreasury.stateId, authority.stateId));
-		if (item.shipId) await tx.update(fleetShips).set({ status: "idle", updatedAt: new Date() }).where(eq(fleetShips.id, item.shipId));
+		if (item.shipId)
+			await tx.update(fleetShips).set({ status: "idle", updatedAt: new Date() }).where(eq(fleetShips.id, item.shipId));
 		await log(tx, authority.stateId, "queue_cancelled", null, "Cancelled a dock order and refunded it.");
 		return item;
 	});
@@ -361,18 +404,29 @@ export interface JamSource {
  * with a jammer array, an air-defence battalion ashore and fighter squadrons
  * with EW pods all degrade the same satellite-navigation fix.
  */
-export async function gnssJammingAt(db: Db, hex: Hex, victimStateId: number): Promise<{ strength: number; sources: JamSource[] }> {
+export async function gnssJammingAt(
+	db: Db,
+	hex: Hex,
+	victimStateId: number
+): Promise<{ strength: number; sources: JamSource[] }> {
 	const side = await sideOf(db, victimStateId);
 	const sources: JamSource[] = [];
 
 	const ships = await db
-		.select({ id: fleetShips.id, stateId: fleetShips.stateId, shipClass: fleetShips.shipClass, q: fleetShips.q, r: fleetShips.r })
+		.select({
+			id: fleetShips.id,
+			stateId: fleetShips.stateId,
+			shipClass: fleetShips.shipClass,
+			q: fleetShips.q,
+			r: fleetShips.r
+		})
 		.from(fleetShips)
 		.where(ne(fleetShips.status, "sunk"));
 	for (const ship of ships) {
 		if (side.stateIds.includes(ship.stateId)) continue;
 		if (!shipClass(ship.shipClass)?.weapons.includes("gnss_jam")) continue;
-		if (hexDistance(ship, hex) <= GNSS.shipRange) sources.push({ domain: "sea", id: ship.id, stateId: ship.stateId, strength: GNSS.shipStrength });
+		if (hexDistance(ship, hex) <= GNSS.shipRange)
+			sources.push({ domain: "sea", id: ship.id, stateId: ship.stateId, strength: GNSS.shipStrength });
 	}
 
 	const units = await db
@@ -385,7 +439,9 @@ export async function gnssJammingAt(db: Db, hex: Hex, victimStateId: number): Pr
 			isTraining: militaryUnits.isTraining
 		})
 		.from(militaryUnits);
-	const regionCoords = await db.select({ id: regions.id, latitude: regions.latitude, longitude: regions.longitude }).from(regions);
+	const regionCoords = await db
+		.select({ id: regions.id, latitude: regions.latitude, longitude: regions.longitude })
+		.from(regions);
 	const coords = new Map(regionCoords.map((r) => [r.id, r]));
 	for (const unit of units) {
 		if (side.stateIds.includes(unit.stateId) || unit.isTraining || unit.health < 40) continue;
@@ -404,7 +460,13 @@ export async function gnssJammingAt(db: Db, hex: Hex, victimStateId: number): Pr
 		});
 	}
 
-	return { strength: Math.min(GNSS.maxStrength, sources.reduce((sum, s) => sum + s.strength, 0)), sources };
+	return {
+		strength: Math.min(
+			GNSS.maxStrength,
+			sources.reduce((sum, s) => sum + s.strength, 0)
+		),
+		sources
+	};
 }
 
 /** Plot and start a move. Civilian ships route around foreign minefields. */
@@ -425,6 +487,9 @@ export async function moveShip(db: Database, userId: string, shipId: number, tar
 	let path = findPath({ q: ship.q, r: ship.r }, target, blocked);
 	if (!path && !civilian) path = findPath({ q: ship.q, r: ship.r }, target);
 	if (!path) throw new FleetError("No safe route: foreign minefields blockade the way.");
+	// Ships sail only as far as the fuel aboard carries them (range.config.ts).
+	const reach = shipMoveReach(def, ship.fuel, path.length - 1);
+	if (!reach.ok) throw new FleetError(reach.reason ?? "Out of range.");
 
 	const now = new Date();
 	const jam = await gnssJammingAt(db, { q: ship.q, r: ship.r }, ship.stateId);
@@ -440,9 +505,21 @@ export async function moveShip(db: Database, userId: string, shipId: number, tar
 			updatedAt: now
 		})
 		.where(eq(fleetShips.id, shipId));
-	await log(db, authority.stateId, "ship_sailing", target, `${ship.name} set course for ${target.q},${target.r} (${path.length - 1} hexes).`);
+	await log(
+		db,
+		authority.stateId,
+		"ship_sailing",
+		target,
+		`${ship.name} set course for ${target.q},${target.r} (${path.length - 1} hexes).`
+	);
 	if (jam.strength > 0)
-		await log(db, authority.stateId, "gnss_jam", { q: ship.q, r: ship.r }, `${ship.name} is navigating without GNSS (jamming ${jam.strength}).`);
+		await log(
+			db,
+			authority.stateId,
+			"gnss_jam",
+			{ q: ship.q, r: ship.r },
+			`${ship.name} is navigating without GNSS (jamming ${jam.strength}).`
+		);
 	return { path, hours: (path.length - 1) * legHours, jamming: jam.strength };
 }
 
@@ -472,9 +549,21 @@ export async function refuelShip(db: Database, userId: string, shipId: number) {
 		if (!port) throw new FleetError("The ship must be at one of your ports to refuel.");
 		const needed = Math.min(def.fuelCapacity - ship.fuel, port.fuelStock);
 		if (needed <= 0) throw new FleetError("Nothing to take on: the ship is full or the port's tanks are empty.");
-		await tx.update(fleetShips).set({ fuel: ship.fuel + needed, updatedAt: new Date() }).where(eq(fleetShips.id, shipId));
-		await tx.update(seaPorts).set({ fuelStock: port.fuelStock - needed }).where(eq(seaPorts.id, port.id));
-		await log(tx, authority.stateId, "refuel", { q: ship.q, r: ship.r }, `${ship.name} took on ${needed} fuel at ${port.name}.`);
+		await tx
+			.update(fleetShips)
+			.set({ fuel: ship.fuel + needed, updatedAt: new Date() })
+			.where(eq(fleetShips.id, shipId));
+		await tx
+			.update(seaPorts)
+			.set({ fuelStock: port.fuelStock - needed })
+			.where(eq(seaPorts.id, port.id));
+		await log(
+			tx,
+			authority.stateId,
+			"refuel",
+			{ q: ship.q, r: ship.r },
+			`${ship.name} took on ${needed} fuel at ${port.name}.`
+		);
 		return { amount: needed, portId: port.id };
 	});
 }
@@ -513,7 +602,8 @@ export async function transportCargo(db: Database, userId: string, input: CargoI
 		if (!ship || ship.stateId !== authority.stateId) throw new FleetError("That is not one of your ships.");
 		const def = shipClass(ship.shipClass);
 		if (!def || !def.cargo.kind) throw new FleetError("Only ships with a hold can carry cargo.");
-		if (!cargoAccepts(def.cargo.kind, input.resource)) throw new FleetError(`A ${def.label} cannot carry ${input.resource}.`);
+		if (!cargoAccepts(def.cargo.kind, input.resource))
+			throw new FleetError(`A ${def.label} cannot carry ${input.resource}.`);
 		const [port] = await tx.select().from(seaPorts).where(eq(seaPorts.id, input.portId));
 		if (!port || port.stateId !== authority.stateId) throw new FleetError("Use one of your own ports for cargo.");
 		if (port.q !== ship.q || port.r !== ship.r) throw new FleetError("The ship must be in the port's hex.");
@@ -524,8 +614,10 @@ export async function transportCargo(db: Database, userId: string, input: CargoI
 		if (input.direction === "load") {
 			if (ship.cargoType && ship.cargoType !== input.resource && ship.cargoAmount > 0)
 				throw new FleetError(`The hold already carries ${ship.cargoType}; unload it first.`);
-			if (amount > def.cargo.capacity - carried) throw new FleetError(`The hold can only take ${def.cargo.capacity - carried} more.`);
-			if (amount > (stock[input.resource] ?? 0)) throw new FleetError(`The port only holds ${stock[input.resource] ?? 0} ${input.resource}.`);
+			if (amount > def.cargo.capacity - carried)
+				throw new FleetError(`The hold can only take ${def.cargo.capacity - carried} more.`);
+			if (amount > (stock[input.resource] ?? 0))
+				throw new FleetError(`The port only holds ${stock[input.resource] ?? 0} ${input.resource}.`);
 			newCarried = carried + amount;
 			stock[input.resource] = (stock[input.resource] ?? 0) - amount;
 		} else {
@@ -568,9 +660,21 @@ export async function transferFuel(db: Database, userId: string, sourceId: numbe
 		if (!targetDef) throw new FleetError("Unknown ship class.");
 		const amount = Math.min(targetDef.fuelCapacity - target.fuel, source.cargoAmount);
 		if (amount <= 0) throw new FleetError("No fuel to transfer, or the target's tanks are full.");
-		await tx.update(fleetShips).set({ cargoAmount: source.cargoAmount - amount, updatedAt: new Date() }).where(eq(fleetShips.id, sourceId));
-		await tx.update(fleetShips).set({ fuel: target.fuel + amount, updatedAt: new Date() }).where(eq(fleetShips.id, targetId));
-		await log(tx, authority.stateId, "fuel_transfer", { q: source.q, r: source.r }, `${source.name} passed ${amount} fuel to ${target.name}.`);
+		await tx
+			.update(fleetShips)
+			.set({ cargoAmount: source.cargoAmount - amount, updatedAt: new Date() })
+			.where(eq(fleetShips.id, sourceId));
+		await tx
+			.update(fleetShips)
+			.set({ fuel: target.fuel + amount, updatedAt: new Date() })
+			.where(eq(fleetShips.id, targetId));
+		await log(
+			tx,
+			authority.stateId,
+			"fuel_transfer",
+			{ q: source.q, r: source.r },
+			`${source.name} passed ${amount} fuel to ${target.name}.`
+		);
 		return { amount };
 	});
 }
@@ -617,7 +721,13 @@ export async function layMines(db: Database, userId: string, shipId: number) {
 				})
 				.returning();
 		}
-		await log(tx, authority.stateId, "mines_laid", { q: ship.q, r: ship.r }, `${ship.name} laid mines at ${ship.q},${ship.r}.`);
+		await log(
+			tx,
+			authority.stateId,
+			"mines_laid",
+			{ q: ship.q, r: ship.r },
+			`${ship.name} laid mines at ${ship.q},${ship.r}.`
+		);
 		return mine;
 	});
 }
@@ -747,13 +857,23 @@ export async function processDockQueues(db: Database, now: Date) {
 		const finished = await db
 			.select()
 			.from(fleetDockQueue)
-			.where(and(eq(fleetDockQueue.dockId, dock.id), eq(fleetDockQueue.status, "building"), lte(fleetDockQueue.completesAt, now)));
+			.where(
+				and(
+					eq(fleetDockQueue.dockId, dock.id),
+					eq(fleetDockQueue.status, "building"),
+					lte(fleetDockQueue.completesAt, now)
+				)
+			);
 		for (const job of finished) {
 			if (job.kind === "construct" && job.shipClass) {
 				const def = SHIP_CLASSES[job.shipClass];
 				const [port] = await db.select().from(seaPorts).where(eq(seaPorts.id, dock.portId));
 				const fuel = Math.min(def.fuelCapacity, port?.fuelStock ?? 0);
-				if (port && fuel > 0) await db.update(seaPorts).set({ fuelStock: port.fuelStock - fuel }).where(eq(seaPorts.id, port.id));
+				if (port && fuel > 0)
+					await db
+						.update(seaPorts)
+						.set({ fuelStock: port.fuelStock - fuel })
+						.where(eq(seaPorts.id, port.id));
 				const ownerId = job.orderedBy ?? (await defaultOwner(db, dock.stateId));
 				await db.insert(fleetShips).values({
 					stateId: dock.stateId,
@@ -767,9 +887,16 @@ export async function processDockQueues(db: Database, now: Date) {
 					fuel,
 					status: "idle"
 				});
-				await log(db, dock.stateId, "ship_completed", { q: dock.q, r: dock.r }, `New ${def.label} commissioned at the dock.`, {
-					shipClass: job.shipClass
-				});
+				await log(
+					db,
+					dock.stateId,
+					"ship_completed",
+					{ q: dock.q, r: dock.r },
+					`New ${def.label} commissioned at the dock.`,
+					{
+						shipClass: job.shipClass
+					}
+				);
 				constructed++;
 			} else if (job.kind === "repair" && job.shipId) {
 				const [ship] = await db.select().from(fleetShips).where(eq(fleetShips.id, job.shipId));
@@ -813,7 +940,10 @@ export async function resolveCombats(db: Database, now: Date, rng: () => number 
 	let engagements = 0;
 	let hits = 0;
 	let sunk = 0;
-	const ships = await db.select().from(fleetShips).where(and(ne(fleetShips.status, "sunk"), sql`${fleetShips.health} > 0`));
+	const ships = await db
+		.select()
+		.from(fleetShips)
+		.where(and(ne(fleetShips.status, "sunk"), sql`${fleetShips.health} > 0`));
 	if (ships.length < 2) return { engagements, hits, sunk };
 
 	// A fleet commander's traits change how hard its ships hit and how well
@@ -877,12 +1007,20 @@ export async function resolveCombats(db: Database, now: Date, rng: () => number 
 				if (!weapon || distance > weapon.range) continue;
 				if (!weaponCanTarget(weaponId, targetKind(target.shipClass), detected)) continue;
 				const offense = factorFor(attacker)?.attack ?? 1;
-				const expected = weapon.damage * offense * hitChance(weaponId, distance, {
-					shipClass: target.shipClass,
-					aa: targetDef.aa,
-					stealth: targetDef.stealth,
-					detected
-				}, jam);
+				const expected =
+					weapon.damage *
+					offense *
+					hitChance(
+						weaponId,
+						distance,
+						{
+							shipClass: target.shipClass,
+							aa: targetDef.aa,
+							stealth: targetDef.stealth,
+							detected
+						},
+						jam
+					);
 				if (!best || expected > best.damage) best = { target, damage: expected, weapon: weaponId };
 			}
 		}
@@ -891,23 +1029,38 @@ export async function resolveCombats(db: Database, now: Date, rng: () => number 
 		const targetDef = shipClass(best.target.shipClass)!;
 		const distance = hexDistance(attacker, best.target);
 		const detected = subDetected(attackerDef, targetDef, distance);
-		const chance = hitChance(best.weapon, distance, {
-			shipClass: best.target.shipClass,
-			aa: targetDef.aa,
-			stealth: targetDef.stealth,
-			detected
-		}, jam);
+		const chance = hitChance(
+			best.weapon,
+			distance,
+			{
+				shipClass: best.target.shipClass,
+				aa: targetDef.aa,
+				stealth: targetDef.stealth,
+				detected
+			},
+			jam
+		);
 		if (rng() < chance) {
 			const defense = factorFor(best.target)?.defense ?? 1;
-			const dealt = Math.max(1, Math.round((FLEET_WEAPONS[best.weapon].damage * (factorFor(attacker)?.attack ?? 1)) / defense));
+			const dealt = Math.max(
+				1,
+				Math.round((FLEET_WEAPONS[best.weapon].damage * (factorFor(attacker)?.attack ?? 1)) / defense)
+			);
 			damage.set(best.target.id, (damage.get(best.target.id) ?? 0) + dealt);
 			await awardCommanderExperience(db, commanderFor(attacker), 4);
 			hits++;
-			await log(db, attacker.stateId, "fleet_fire", { q: best.target.q, r: best.target.r }, `${attacker.name} hit ${best.target.name} with ${best.weapon} for ${dealt}.`, {
-				attackerId: attacker.id,
-				targetId: best.target.id,
-				damage: dealt
-			});
+			await log(
+				db,
+				attacker.stateId,
+				"fleet_fire",
+				{ q: best.target.q, r: best.target.r },
+				`${attacker.name} hit ${best.target.name} with ${best.weapon} for ${dealt}.`,
+				{
+					attackerId: attacker.id,
+					targetId: best.target.id,
+					damage: dealt
+				}
+			);
 		}
 	}
 
@@ -962,10 +1115,9 @@ export async function airSupportOf(db: Db, stateId: number) {
 	for (const unit of units) byType[unit.unitType] = (byType[unit.unitType] ?? 0) + 1;
 	const types = units.map((u) => u.unitType);
 	const roles = Object.fromEntries(
-		(["transport", "bombing", "refuel", "air_superiority", "close_support", "naval_strike", "utility"] as const).map((role) => [
-			role,
-			roleStrength(types, role)
-		])
+		(["transport", "bombing", "refuel", "air_superiority", "close_support", "naval_strike", "utility"] as const).map(
+			(role) => [role, roleStrength(types, role)]
+		)
 	);
 	return { units, byType, roles };
 }
@@ -974,9 +1126,14 @@ export async function airSupportOf(db: Db, stateId: number) {
 export async function resolveAirAtSea(db: Database, now: Date, rng: () => number = Math.random) {
 	let strikes = 0;
 	let hits = 0;
-	const regionsAll = await db.select({ id: regions.id, stateId: regions.stateId, latitude: regions.latitude, longitude: regions.longitude }).from(regions);
+	const regionsAll = await db
+		.select({ id: regions.id, stateId: regions.stateId, latitude: regions.latitude, longitude: regions.longitude })
+		.from(regions);
 	const regionHex = new Map(regionsAll.map((r) => [r.id, hexFromLatLon(Number(r.latitude), Number(r.longitude))]));
-	const ships = await db.select().from(fleetShips).where(and(ne(fleetShips.status, "sunk"), sql`${fleetShips.health} > 0`));
+	const ships = await db
+		.select()
+		.from(fleetShips)
+		.where(and(ne(fleetShips.status, "sunk"), sql`${fleetShips.health} > 0`));
 	if (!ships.length) return { strikes, hits };
 
 	const stateIds = [...new Set(regionsAll.map((r) => r.stateId).filter((id): id is number => id != null))];
@@ -989,13 +1146,13 @@ export async function resolveAirAtSea(db: Database, now: Date, rng: () => number
 		const strikePower = picture.roles.naval_strike;
 		if (strikePower <= 0) continue;
 		const enemies = enemySets.get(stateId) ?? new Set<number>();
+		// Only squadrons stationed at one of the state's airbases fly.
+		const airbases = new Set((await airbasesOf(db, stateId)).map((b) => b.regionId));
 		const bases = picture.units
-			.filter((u) => aircraft(u.unitType)?.roles.includes("naval_strike"))
+			.filter((u) => aircraft(u.unitType)?.roles.includes("naval_strike") && airbases.has(u.regionId))
 			.map((u) => ({ hex: regionHex.get(u.regionId), range: aircraft(u.unitType)!.rangeHexes }))
 			.filter((b): b is { hex: Hex; range: number } => !!b.hex);
-		const targets = ships.filter(
-			(s) => enemies.has(s.stateId) && bases.some((b) => hexDistance(b.hex, s) <= b.range)
-		);
+		const targets = ships.filter((s) => enemies.has(s.stateId) && bases.some((b) => hexDistance(b.hex, s) <= b.range));
 		if (!targets.length) continue;
 		const target = targets.sort((a, b) => a.health - b.health)[0]!;
 		const targetDef = shipClass(target.shipClass);
@@ -1045,7 +1202,10 @@ export async function resolveAirAtSea(db: Database, now: Date, rng: () => number
 /** Restore unit fuel from the state's military reserve, a little per tick. */
 export async function tickUnitFuel(db: Database) {
 	let refilled = 0;
-	const units = await db.select().from(militaryUnits).where(sql`${militaryUnits.fuel} < 100`);
+	const units = await db
+		.select()
+		.from(militaryUnits)
+		.where(sql`${militaryUnits.fuel} < 100`);
 	const reserves = new Map<number, number>();
 	for (const unit of units) {
 		let available = reserves.get(unit.stateId);
@@ -1058,7 +1218,10 @@ export async function tickUnitFuel(db: Database) {
 			reserves.set(unit.stateId, available);
 			continue;
 		}
-		await db.update(militaryUnits).set({ fuel: unit.fuel + amount }).where(eq(militaryUnits.id, unit.id));
+		await db
+			.update(militaryUnits)
+			.set({ fuel: unit.fuel + amount })
+			.where(eq(militaryUnits.id, unit.id));
 		available -= amount;
 		reserves.set(unit.stateId, available);
 		refilled += amount;
@@ -1080,8 +1243,14 @@ export async function tickPorts(db: Database, now: Date) {
 		const available = Math.max(0, Math.floor(Number(energy?.militaryFuel ?? 0)));
 		const amount = Math.min(cap - port.fuelStock, FACILITY.portFuelRegenPerHour, available);
 		if (amount <= 0) continue;
-		await db.update(seaPorts).set({ fuelStock: port.fuelStock + amount }).where(eq(seaPorts.id, port.id));
-		await db.update(stateEnergy).set({ militaryFuel: available - amount }).where(eq(stateEnergy.stateId, port.stateId));
+		await db
+			.update(seaPorts)
+			.set({ fuelStock: port.fuelStock + amount })
+			.where(eq(seaPorts.id, port.id));
+		await db
+			.update(stateEnergy)
+			.set({ militaryFuel: available - amount })
+			.where(eq(stateEnergy.stateId, port.stateId));
 		refilled += amount;
 	}
 	return { refilled };
@@ -1107,8 +1276,14 @@ export interface FleetTickSummary {
 }
 
 /** One cron tick: expire mines, move ships, work the docks, fight, refuel. */
-export async function processFleetTick(db: Database, now: Date = new Date(), rng: () => number = Math.random): Promise<FleetTickSummary> {
-	const minesExpired = (await db.delete(navalMines).where(lte(navalMines.expiresAt, now)).returning({ id: navalMines.id })).length;
+export async function processFleetTick(
+	db: Database,
+	now: Date = new Date(),
+	rng: () => number = Math.random
+): Promise<FleetTickSummary> {
+	const minesExpired = (
+		await db.delete(navalMines).where(lte(navalMines.expiresAt, now)).returning({ id: navalMines.id })
+	).length;
 	const movement = await advanceMovements(db, now, rng);
 	const docks = await processDockQueues(db, now);
 	const combat = await resolveCombats(db, now, rng);
@@ -1153,7 +1328,8 @@ export async function formFleet(db: Database, userId: string, input: { name: str
 		for (const id of ids) {
 			const ship = byId.get(id);
 			if (!ship || ship.stateId !== authority.stateId) throw new FleetError("One of those ships is not yours.");
-			if (ship.status === "sunk" || ship.status === "repairing") throw new FleetError("Only ready ships can join a fleet.");
+			if (ship.status === "sunk" || ship.status === "repairing")
+				throw new FleetError("Only ready ships can join a fleet.");
 		}
 		const [fleet] = await tx
 			.insert(fleets)
@@ -1222,12 +1398,24 @@ export async function loadFleetWorld(db: Database, viewerStateId?: number) {
 		db.select().from(seaDocks),
 		db.select().from(fleetShips),
 		db.select().from(navalMines),
-		db.select().from(fleetDockQueue).where(inArray(fleetDockQueue.status, ["queued", "building"])).orderBy(fleetDockQueue.id),
+		db
+			.select()
+			.from(fleetDockQueue)
+			.where(inArray(fleetDockQueue.status, ["queued", "building"]))
+			.orderBy(fleetDockQueue.id),
 		db.select().from(fleetEvents).orderBy(desc(fleetEvents.createdAt)).limit(40),
 		viewerStateId ? db.select().from(fleets).where(eq(fleets.stateId, viewerStateId)) : Promise.resolve([])
 	]);
 	const heldHexes = stateFleets.length
-		? await db.select().from(fleetHexes).where(inArray(fleetHexes.fleetId, stateFleets.map((f) => f.id)))
+		? await db
+				.select()
+				.from(fleetHexes)
+				.where(
+					inArray(
+						fleetHexes.fleetId,
+						stateFleets.map((f) => f.id)
+					)
+				)
 		: [];
 	const side = viewerStateId ? await sideOf(db, viewerStateId) : null;
 	const enemies = side ? await enemiesOf(db, side) : new Set<number>();
@@ -1258,6 +1446,11 @@ export async function loadFleetWorld(db: Database, viewerStateId?: number) {
 /** Recent fleet log for a state (or everyone, for admins). */
 export async function fleetLedger(db: Db, stateId?: number, limit = 30) {
 	return stateId
-		? db.select().from(fleetEvents).where(eq(fleetEvents.stateId, stateId)).orderBy(desc(fleetEvents.createdAt)).limit(limit)
+		? db
+				.select()
+				.from(fleetEvents)
+				.where(eq(fleetEvents.stateId, stateId))
+				.orderBy(desc(fleetEvents.createdAt))
+				.limit(limit)
 		: db.select().from(fleetEvents).orderBy(desc(fleetEvents.createdAt)).limit(limit);
 }

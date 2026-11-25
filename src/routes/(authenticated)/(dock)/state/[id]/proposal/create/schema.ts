@@ -11,6 +11,7 @@ export const createProposalSchema = v.object({
 			"infrastructure",
 			"fortifications",
 			"radar",
+			"airbase",
 			"grid",
 			"energy_storage",
 			"border_control",

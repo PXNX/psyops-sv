@@ -235,6 +235,8 @@ describe("a tactical strike", () => {
 				notify: false
 			})
 		).rejects.toThrow(/aircraft/);
+		// Squadrons fly only from an airbase, and the target must be in range of it.
+		await handle.db.update(regions).set({ airbase: 1 }).where(eq(regions.id, region4));
 		await handle.db.insert(militaryUnits).values({
 			name: "1st Fighter Wing",
 			ownerId: "user-3",

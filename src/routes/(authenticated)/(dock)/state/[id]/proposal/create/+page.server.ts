@@ -24,14 +24,10 @@ import {
 } from "#lib/server/schema.js";
 import { warBlockedReason } from "#lib/server/services/military/declare-war.js";
 import { superValidate } from "sveltekit-superforms";
-import { valibot } from "sveltekit-superforms/adapters";
+import { valibot } from "sveltekit-superforms/adapters/valibot";
 import { createProposalSchema } from "./schema";
 import { BUILDING_TEMPLATES, BORDER_MAINTENANCE, OFFICIALS_CONFIG, isBuildingType } from "#lib/config/index.js";
-import {
-	proposalExploitationDetails,
-	proposalSalaryDetails,
-	proposalMartialLawDetails
-} from "#lib/server/schema.js";
+import { proposalExploitationDetails, proposalSalaryDetails, proposalMartialLawDetails } from "#lib/server/schema.js";
 import { executeProposal } from "#lib/server/services/politics/execute-proposal.js";
 import {
 	checkConstruction,
@@ -167,6 +163,8 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 
 // Helper function to check if user can auto-execute
 function canAutoExecute(proposalType: string, userMinistry: string | null, isPresident: boolean): boolean {
+	// Law-only buildings (the airbase) always need a parliament vote.
+	if (isBuildingType(proposalType) && BUILDING_TEMPLATES[proposalType].lawOnly) return false;
 	if (isPresident) {
 		// Presidents can auto-execute any proposal type
 		return true;

@@ -26,6 +26,7 @@ export * from "./game/ihl.config";
 export * from "./game/domains.config";
 export * from "./game/naval.config";
 export * from "./game/fleet.config";
+export * from "./game/range.config";
 export * from "./game/space.config";
 export * from "./game/ai.config";
 export * from "./game/smuggling.config";

@@ -64,7 +64,10 @@ beforeAll(async () => {
 		await handle.db
 			.insert(stateResourceInventory)
 			.values({ stateId: id, resourceType: "steel", quantity: 100_000 })
-			.onConflictDoUpdate({ target: [stateResourceInventory.stateId, stateResourceInventory.resourceType], set: { quantity: 100_000 } });
+			.onConflictDoUpdate({
+				target: [stateResourceInventory.stateId, stateResourceInventory.resourceType],
+				set: { quantity: 100_000 }
+			});
 		await handle.db
 			.insert(stateEnergy)
 			.values({ stateId: id, totalProduction: 1000, usedProduction: 0, militaryFuel: 100_000 })
@@ -106,7 +109,13 @@ async function dock(portId: number, stateId: number, q: number, r: number, level
 	const [row] = await handle.db.insert(seaDocks).values({ portId, stateId, q, r, level }).returning();
 	return row!;
 }
-async function ship(stateId: number, shipClass: (typeof fleetShips.$inferInsert)["shipClass"], q: number, r: number, extra: Partial<(typeof fleetShips.$inferInsert)> = {}) {
+async function ship(
+	stateId: number,
+	shipClass: (typeof fleetShips.$inferInsert)["shipClass"],
+	q: number,
+	r: number,
+	extra: Partial<typeof fleetShips.$inferInsert> = {}
+) {
 	const [row] = await handle.db
 		.insert(fleetShips)
 		.values({
@@ -170,7 +179,9 @@ describe("fleet service", () => {
 		await expect(buildPort(handle.db, alice, { name: "Inland", regionId: inland.id })).rejects.toThrow("maritime");
 		const coast = await coastalRegion(freedonia);
 		await buildPort(handle.db, alice, { name: "Only port", regionId: coast.id });
-		await expect(buildPort(handle.db, alice, { name: "Second", regionId: coast.id })).rejects.toThrow("already has a port");
+		await expect(buildPort(handle.db, alice, { name: "Second", regionId: coast.id })).rejects.toThrow(
+			"already has a port"
+		);
 		const candidates = await portCandidates(handle.db, freedonia);
 		expect(candidates.some((c) => c.id === coast.id)).toBe(false);
 		expect(candidates.some((c) => c.id === inland.id)).toBe(false);
@@ -202,7 +213,10 @@ describe("fleet service", () => {
 		await handle.db.update(fleetShips).set({ health: 30 });
 		await repairShip(handle.db, alice, ships[0]!.id);
 		await processFleetTick(handle.db, NOW); // activates the repair job
-		await handle.db.update(fleetDockQueue).set({ completesAt: new Date(NOW.getTime() - 1) }).where(eq(fleetDockQueue.kind, "repair"));
+		await handle.db
+			.update(fleetDockQueue)
+			.set({ completesAt: new Date(NOW.getTime() - 1) })
+			.where(eq(fleetDockQueue.kind, "repair"));
 		summary = await processFleetTick(handle.db, NOW);
 		expect(summary.repaired).toBe(1);
 		expect((await handle.db.select().from(fleetShips))[0]!.health).toBe(90);
@@ -227,17 +241,30 @@ describe("fleet service", () => {
 		expect(fresh.status).toBe("moving");
 		expect(fresh.orderPath).toHaveLength(2);
 
-		await handle.db.update(fleetShips).set({ legArrivesAt: new Date(NOW.getTime() - 1) }).where(eq(fleetShips.id, s.id));
+		await handle.db
+			.update(fleetShips)
+			.set({ legArrivesAt: new Date(NOW.getTime() - 1) })
+			.where(eq(fleetShips.id, s.id));
 		await processFleetTick(handle.db, NOW);
 		fresh = (await handle.db.select().from(fleetShips).where(eq(fleetShips.id, s.id)))[0]!;
 		expect({ q: fresh.q, r: fresh.r }).toEqual({ q: 1, r: 0 });
 		expect(fresh.fuel).toBe(47); // 50 - one corvette leg (3)
 
-		await handle.db.update(fleetShips).set({ legArrivesAt: new Date(NOW.getTime() - 1) }).where(eq(fleetShips.id, s.id));
+		await handle.db
+			.update(fleetShips)
+			.set({ legArrivesAt: new Date(NOW.getTime() - 1) })
+			.where(eq(fleetShips.id, s.id));
 		await processFleetTick(handle.db, NOW);
 		fresh = (await handle.db.select().from(fleetShips).where(eq(fleetShips.id, s.id)))[0]!;
 		expect({ q: fresh.q, r: fresh.r }).toEqual({ q: 2, r: 0 });
 		expect(fresh.status).toBe("idle");
+	});
+
+	it("refuses a route longer than the fuel aboard carries", async () => {
+		// A corvette burns 3 fuel a hex: 7 fuel is two hexes of range.
+		const s = await ship(freedonia, "corvette", 0, 3, { fuel: 7 });
+		await expect(moveShip(handle.db, alice, s.id, { q: 3, r: 3 })).rejects.toThrow(/Out of range/);
+		await moveShip(handle.db, alice, s.id, { q: 2, r: 3 });
 	});
 
 	it("lays mines that turn merchant ships back and damage warships", async () => {
@@ -250,7 +277,10 @@ describe("fleet service", () => {
 		// The mine belongs to Freedonia, so Sylvania's tanker is blocked by it.
 		const enemyTanker = await ship(sylvania, "tanker", 0, 1, { fuel: 50 });
 		await moveShip(handle.db, sylvanCommander, enemyTanker.id, { q: 0, r: 0 });
-		await handle.db.update(fleetShips).set({ legArrivesAt: new Date(NOW.getTime() - 1) }).where(eq(fleetShips.id, enemyTanker.id));
+		await handle.db
+			.update(fleetShips)
+			.set({ legArrivesAt: new Date(NOW.getTime() - 1) })
+			.where(eq(fleetShips.id, enemyTanker.id));
 		const summary = await processFleetTick(handle.db, NOW);
 		expect(summary.blocked).toBe(1);
 		const still = (await handle.db.select().from(fleetShips).where(eq(fleetShips.id, enemyTanker.id)))[0]!;

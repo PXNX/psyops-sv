@@ -130,7 +130,8 @@ export async function seedMockDatabase(db: PgDatabase<any>) {
 			economy: 1,
 			education: 1,
 			fortifications: 1,
-			radar: 1
+			radar: 1,
+			airbase: 1
 		})
 		.returning();
 	const [region3] = await db
@@ -146,7 +147,8 @@ export async function seedMockDatabase(db: PgDatabase<any>) {
 			education: 3,
 			hospitals: 2,
 			fortifications: 2,
-			radar: 2
+			radar: 2,
+			airbase: 1
 		})
 		.returning();
 	const [region4] = await db

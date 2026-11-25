@@ -323,6 +323,9 @@ export async function airSupportFactors(
 			health: militaryUnits.health,
 			fuel: militaryUnits.fuel,
 			isTraining: militaryUnits.isTraining,
+			stateId: militaryUnits.stateId,
+			regionStateId: regions.stateId,
+			airbase: regions.airbase,
 			latitude: regions.latitude,
 			longitude: regions.longitude
 		})
@@ -346,7 +349,11 @@ export async function airSupportFactors(
 			health: a.health,
 			fuel: a.fuel,
 			isTraining: a.isTraining,
-			distanceHexes: hexDistance(hexFromLatLon(Number(a.latitude), Number(a.longitude)), target)
+			// Only squadrons stationed at one of their state's airbases fly.
+			distanceHexes:
+				(a.airbase ?? 0) > 0 && a.regionStateId === a.stateId
+					? hexDistance(hexFromLatLon(Number(a.latitude), Number(a.longitude)), target)
+					: Infinity
 		});
 		byDivision.set(division, list);
 	}

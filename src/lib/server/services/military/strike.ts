@@ -33,7 +33,11 @@ import {
 import { creditTreasury } from "../../money";
 import { commsInterceptAgainst, defenceBlindness } from "./state-effects";
 import { zoneStrengthOn } from "../economy/trade";
+import { airbasesOf } from "./airbases";
 import {
+	airReach,
+	regionHex,
+	type Hex,
 	SORTIE_COOLDOWN_HOURS,
 	INTERCEPTED_AIRCRAFT_DAMAGE,
 	TARGETS,
@@ -343,15 +347,20 @@ async function tierCooldowns(db: Db, stateId: number, now: Date): Promise<Record
 	return out;
 }
 
-/** An aircraft of the state able to fly this weapon's sortie now, else null. */
-async function availableAircraft(db: Db, stateId: number, weapon: StrikeWeapon, now: Date) {
+/**
+ * An aircraft of the state able to fly this weapon's sortie now: off its
+ * cooldown, stationed at an airbase and with the target in range of it. Null
+ * (with the reason) when none qualifies.
+ */
+async function availableAircraft(db: Db, stateId: number, weapon: StrikeWeapon, now: Date, target: Hex) {
 	const types = WEAPONS[weapon].requires;
-	if (!types) return null;
+	if (!types) return { aircraft: null, reason: null };
 	const candidates = await db
 		.select({
 			id: militaryUnits.id,
 			name: militaryUnits.name,
 			unitType: militaryUnits.unitType,
+			regionId: militaryUnits.regionId,
 			health: militaryUnits.health
 		})
 		.from(militaryUnits)
@@ -364,7 +373,7 @@ async function availableAircraft(db: Db, stateId: number, weapon: StrikeWeapon, 
 			)
 		)
 		.orderBy(desc(militaryUnits.health));
-	if (!candidates.length) return null;
+	if (!candidates.length) return { aircraft: null, reason: null };
 	const busy = await db
 		.select({ unitId: strikes.unitId })
 		.from(strikes)
@@ -378,7 +387,16 @@ async function availableAircraft(db: Db, stateId: number, weapon: StrikeWeapon, 
 			)
 		);
 	const busyIds = new Set(busy.map((b) => b.unitId));
-	return candidates.find((c) => !busyIds.has(c.id)) ?? null;
+	const ready = candidates.filter((c) => !busyIds.has(c.id));
+	if (!ready.length) return { aircraft: null, reason: null };
+	const bases = new Map((await airbasesOf(db, stateId)).map((b) => [b.regionId, b.hex]));
+	let reason: string | null = null;
+	for (const c of ready) {
+		const reach = airReach(c.unitType, bases.get(c.regionId) ?? null, target);
+		if (reach.ok) return { aircraft: c, reason: null };
+		reason ??= reach.reason;
+	}
+	return { aircraft: null, reason };
 }
 
 const AIRCRAFT_LABEL: Record<string, string> = { bomber_squadron: "bomber", fighter_squadron: "fighter" };
@@ -430,9 +448,16 @@ export async function strikeOptions(
 	const weapons: WeaponOption[] = [];
 	for (const id of WEAPON_IDS) {
 		const w = WEAPONS[id];
-		const aircraft = await availableAircraft(db, authority.stateId, id, now);
+		const { aircraft, reason: reachReason } = await availableAircraft(
+			db,
+			authority.stateId,
+			id,
+			now,
+			regionHex(region)
+		);
 		let reason: string | null = null;
-		if (w.requires && !aircraft)
+		if (w.requires && !aircraft && reachReason) reason = reachReason;
+		else if (w.requires && !aircraft)
 			reason = `Needs a ready ${w.requires.map((t) => AIRCRAFT_LABEL[t]).join(" or ")} squadron (one sortie per ${SORTIE_COOLDOWN_HOURS} h).`;
 		else if (w.maxHops !== null && (hops === null || hops > w.maxHops))
 			reason = `Out of range: reaches ${w.maxHops} border${w.maxHops === 1 ? "" : "s"} beyond your lines.`;
@@ -539,8 +564,15 @@ export async function launchStrike(db: Database, input: LaunchInput): Promise<La
 			const hops = await hopsFromSide(tx, side, region.id);
 			if (hops === null || hops > w.maxHops) throw new StrikeError(`${w.label}: target out of range.`);
 		}
-		const aircraft = await availableAircraft(tx, authority.stateId, input.weapon, now);
-		if (w.requires && !aircraft) throw new StrikeError(`${w.label} needs a ready aircraft squadron.`);
+		const { aircraft, reason: reachReason } = await availableAircraft(
+			tx,
+			authority.stateId,
+			input.weapon,
+			now,
+			regionHex(region)
+		);
+		if (w.requires && !aircraft)
+			throw new StrikeError(reachReason ? `${w.label}: ${reachReason}` : `${w.label} needs a ready aircraft squadron.`);
 
 		const contexts = await strikeContexts(tx, side, region, now, input.conditions);
 
