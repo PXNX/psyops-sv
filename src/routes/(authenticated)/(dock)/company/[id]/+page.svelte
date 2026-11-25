@@ -88,9 +88,9 @@
 			<div class="text-sm text-fg-body space-y-1">
 				<p class="font-serif font-bold text-fg">Your first company — a field note</p>
 				<p>
-					A company is a separate purse from your wallet: deposit funds here to pay workers, who produce resources
-					on your shifts. Build factories in regions, sell on the market, and issue shares once you are ready to
-					go public. Dividends and civic works are other ways to make your name. This note appears only once.
+					A company is a separate purse from your wallet: deposit funds here to pay workers, who produce resources on
+					your shifts. Build factories in regions, sell on the market, and issue shares once you are ready to go public.
+					Dividends and civic works are other ways to make your name. This note appears only once.
 				</p>
 			</div>
 		</aside>
@@ -223,7 +223,7 @@
 				<div>
 					<dt
 						class="text-[10px] uppercase tracking-wide text-fg-muted"
-						title="Civilians available for work in the regions where this company operates"
+						title="Civilians still available in the regions where this company operates, after employed workers are counted"
 					>
 						Civilians available
 					</dt>
@@ -404,15 +404,16 @@
 						{data.ipoConfig.totalShares.toLocaleString()} shares, unissued
 					</p>
 					<p class="mt-1 text-xs text-fg-muted">
-						You keep a locked {data.ipoConfig.founderLockedPercent}% block; the rest lists after {data.ipoQuote?.listingHours}h.
+						You keep a locked {data.ipoConfig.founderLockedPercent}% block; the rest lists after {data.ipoQuote
+							?.listingHours}h.
 					</p>
 					{#if data.ipoQuote}
 						<div class="mt-3 inline-block text-left text-xs text-fg-muted">
 							<span class="font-mono text-base font-bold text-primary-fg">
 								${data.ipoQuote.price.toLocaleString()}/share
 							</span>
-							· ${data.ipoQuote.cash.toLocaleString()} cash + {data.ipoQuote.factories} × ${data.ipoQuote.factoryValue.toLocaleString()} factories
-							÷ {data.ipoConfig.totalShares.toLocaleString()} shares
+							· ${data.ipoQuote.cash.toLocaleString()} cash + {data.ipoQuote.factories} × ${data.ipoQuote.factoryValue.toLocaleString()}
+							factories ÷ {data.ipoConfig.totalShares.toLocaleString()} shares
 						</div>
 					{/if}
 					<form
@@ -516,160 +517,165 @@
 			{/if}
 
 			{#if data.shares.isListed}
-			<!-- Shareholder register -->
-			{#if data.topHolders.length > 0}
-				<div>
-					<h3 class="text-[10px] uppercase tracking-wide text-fg-muted mb-2">Register of shareholders</h3>
-					<ol class="divide-y divide-line/10 border-y border-line/15">
-						{#each data.topHolders as holder, i (holder.userId)}
-							<li class="py-2 flex items-center gap-3">
-								<span class="w-5 text-right font-mono text-xs text-fg-muted shrink-0">{i + 1}</span>
-								<div class="min-w-0 flex-1">
-									<UserLink id={holder.userId} name={holder.name} avatar={holder.avatar} size="sm" />
-									<div class="mt-1 h-1 rounded-full bg-surface-4 overflow-hidden">
-										<div class="h-full rounded-full bg-primary/70" style="width: {holder.percent}%"></div>
+				<!-- Shareholder register -->
+				{#if data.topHolders.length > 0}
+					<div>
+						<h3 class="text-[10px] uppercase tracking-wide text-fg-muted mb-2">Register of shareholders</h3>
+						<ol class="divide-y divide-line/10 border-y border-line/15">
+							{#each data.topHolders as holder, i (holder.userId)}
+								<li class="py-2 flex items-center gap-3">
+									<span class="w-5 text-right font-mono text-xs text-fg-muted shrink-0">{i + 1}</span>
+									<div class="min-w-0 flex-1">
+										<UserLink id={holder.userId} name={holder.name} avatar={holder.avatar} size="sm" />
+										<div class="mt-1 h-1 rounded-full bg-surface-4 overflow-hidden">
+											<div class="h-full rounded-full bg-primary/70" style="width: {holder.percent}%"></div>
+										</div>
 									</div>
-								</div>
-								<div class="text-right shrink-0">
-									<p class="font-mono text-sm text-fg-body">{holder.quantity.toLocaleString()}</p>
-									<p class="font-mono text-xs text-primary-fg">{holder.percent}%</p>
-								</div>
-							</li>
-						{/each}
-					</ol>
-				</div>
-			{/if}
+									<div class="text-right shrink-0">
+										<p class="font-mono text-sm text-fg-body">{holder.quantity.toLocaleString()}</p>
+										<p class="font-mono text-xs text-primary-fg">{holder.percent}%</p>
+									</div>
+								</li>
+							{/each}
+						</ol>
+					</div>
+				{/if}
 
-			<!-- Order book -->
-			<div>
-				<div class="flex items-baseline justify-between mb-2">
-					<h3 class="text-[10px] uppercase tracking-wide text-fg-muted">Best offer</h3>
-					{#if data.embargoReason}
-						<span class="text-xs text-red-300">Buying blocked by embargo</span>
+				<!-- Order book -->
+				<div>
+					<div class="flex items-baseline justify-between mb-2">
+						<h3 class="text-[10px] uppercase tracking-wide text-fg-muted">Best offer</h3>
+						{#if data.embargoReason}
+							<span class="text-xs text-red-300">Buying blocked by embargo</span>
+						{/if}
+					</div>
+
+					{#if data.listings.length > 0}
+						<ul class="space-y-1.5">
+							{#each data.listings as listing (listing.id)}
+								<li out:vanish class="panel-muted rounded-sm px-3 py-2.5 flex flex-wrap items-center gap-x-3 gap-y-2">
+									<div class="min-w-0 flex-1">
+										<p class="font-mono text-base font-bold text-primary-fg">
+											${listing.pricePerUnit.toLocaleString()}
+											<span class="font-sans text-xs font-normal text-fg-muted">
+												× {listing.quantity.toLocaleString()}
+											</span>
+										</p>
+										{#if listing.isMine}
+											<Badge tone="amber" size="xs">Your offer</Badge>
+										{:else}
+											<UserLink
+												id={listing.sellerId}
+												name={listing.sellerName}
+												avatar={listing.sellerAvatar}
+												size="xs"
+											/>
+										{/if}
+									</div>
+
+									{#if listing.isMine}
+										<form
+											method="POST"
+											action="?/removeShareListing"
+											use:enhance={() =>
+												async ({ update, result }) => {
+													await update();
+													toastResult(result);
+												}}
+										>
+											<input type="hidden" name="listingId" value={listing.id} />
+											<Button type="submit" variant="subtle" size="sm">Withdraw</Button>
+										</form>
+									{:else}
+										<form
+											method="POST"
+											action="?/buyShareListing"
+											class="flex items-center gap-2 shrink-0"
+											use:enhance={() => {
+												isBuying[listing.id] = true;
+												const handle = settle(() => certificateEl ?? capitalEl);
+												return async (args) => {
+													await handle(args);
+													isBuying[listing.id] = false;
+												};
+											}}
+										>
+											<input type="hidden" name="listingId" value={listing.id} />
+											<input
+												type="number"
+												name="quantity"
+												bind:value={buyQuantities[listing.id]}
+												min="1"
+												max={listing.quantity}
+												placeholder="Qty"
+												aria-label="Quantity"
+												class="field-control rounded-sm px-2 py-1.5 w-20 text-sm font-mono"
+												required
+												disabled={!!data.embargoReason}
+											/>
+											<Button
+												type="submit"
+												variant="primary"
+												size="sm"
+												loading={isBuying[listing.id]}
+												disabled={!!data.embargoReason}
+											>
+												Buy
+											</Button>
+										</form>
+									{/if}
+								</li>
+							{/each}
+						</ul>
+					{:else}
+						<p class="text-sm text-fg-muted">No shares on offer.</p>
 					{/if}
 				</div>
 
-				{#if data.listings.length > 0}
-					<ul class="space-y-1.5">
-						{#each data.listings as listing (listing.id)}
-							<li out:vanish class="panel-muted rounded-sm px-3 py-2.5 flex flex-wrap items-center gap-x-3 gap-y-2">
-								<div class="min-w-0 flex-1">
-									<p class="font-mono text-base font-bold text-primary-fg">
-										${listing.pricePerUnit.toLocaleString()}
-										<span class="font-sans text-xs font-normal text-fg-muted">
-											× {listing.quantity.toLocaleString()}
-										</span>
-									</p>
-									{#if listing.isMine}
-										<Badge tone="amber" size="xs">Your offer</Badge>
-									{:else}
-										<UserLink id={listing.sellerId} name={listing.sellerName} avatar={listing.sellerAvatar} size="xs" />
-									{/if}
-								</div>
-
-								{#if listing.isMine}
-									<form
-										method="POST"
-										action="?/removeShareListing"
-										use:enhance={() =>
-											async ({ update, result }) => {
-												await update();
-												toastResult(result);
-											}}
-									>
-										<input type="hidden" name="listingId" value={listing.id} />
-										<Button type="submit" variant="subtle" size="sm">Withdraw</Button>
-									</form>
-								{:else}
-									<form
-										method="POST"
-										action="?/buyShareListing"
-										class="flex items-center gap-2 shrink-0"
-										use:enhance={() => {
-											isBuying[listing.id] = true;
-											const handle = settle(() => certificateEl ?? capitalEl);
-											return async (args) => {
-												await handle(args);
-												isBuying[listing.id] = false;
-											};
-										}}
-									>
-										<input type="hidden" name="listingId" value={listing.id} />
-										<input
-											type="number"
-											name="quantity"
-											bind:value={buyQuantities[listing.id]}
-											min="1"
-											max={listing.quantity}
-											placeholder="Qty"
-											aria-label="Quantity"
-											class="field-control rounded-sm px-2 py-1.5 w-20 text-sm font-mono"
-											required
-											disabled={!!data.embargoReason}
-										/>
-										<Button
-											type="submit"
-											variant="primary"
-											size="sm"
-											loading={isBuying[listing.id]}
-											disabled={!!data.embargoReason}
-										>
-											Buy
-										</Button>
-									</form>
-								{/if}
-							</li>
-						{/each}
-					</ul>
-				{:else}
-					<p class="text-sm text-fg-muted">No shares on offer.</p>
+				{#if data.myHolding > 0}
+					<form
+						method="POST"
+						action="?/createShareListing"
+						class="panel-muted rounded-sm p-3 grid grid-cols-2 sm:grid-cols-[8rem_8rem_auto] gap-2 items-end"
+						use:enhance={() => {
+							isListing = true;
+							return async ({ update, result }) => {
+								await update();
+								isListing = false;
+								toastResult(result);
+							};
+						}}
+					>
+						<div>
+							<label class="field-label" for="listQuantity">Shares</label>
+							<input
+								id="listQuantity"
+								type="number"
+								name="quantity"
+								bind:value={listQuantity}
+								min="1"
+								max={data.myHolding}
+								class="field-control rounded-sm px-3 py-2 w-full font-mono"
+								required
+							/>
+						</div>
+						<div>
+							<label class="field-label" for="listPrice">Price each</label>
+							<input
+								id="listPrice"
+								type="number"
+								name="pricePerUnit"
+								bind:value={listPrice}
+								min={data.ipoConfig.minPrice}
+								class="field-control rounded-sm px-3 py-2 w-full font-mono"
+								required
+							/>
+						</div>
+						<Button type="submit" variant="secondary" loading={isListing} class="col-span-2 sm:col-span-1">
+							Offer for sale
+						</Button>
+					</form>
 				{/if}
-			</div>
-
-			{#if data.myHolding > 0}
-				<form
-					method="POST"
-					action="?/createShareListing"
-					class="panel-muted rounded-sm p-3 grid grid-cols-2 sm:grid-cols-[8rem_8rem_auto] gap-2 items-end"
-					use:enhance={() => {
-						isListing = true;
-						return async ({ update, result }) => {
-							await update();
-							isListing = false;
-							toastResult(result);
-						};
-					}}
-				>
-					<div>
-						<label class="field-label" for="listQuantity">Shares</label>
-						<input
-							id="listQuantity"
-							type="number"
-							name="quantity"
-							bind:value={listQuantity}
-							min="1"
-							max={data.myHolding}
-							class="field-control rounded-sm px-3 py-2 w-full font-mono"
-							required
-						/>
-					</div>
-					<div>
-						<label class="field-label" for="listPrice">Price each</label>
-						<input
-							id="listPrice"
-							type="number"
-							name="pricePerUnit"
-							bind:value={listPrice}
-							min={data.ipoConfig.minPrice}
-							class="field-control rounded-sm px-3 py-2 w-full font-mono"
-							required
-						/>
-					</div>
-					<Button type="submit" variant="secondary" loading={isListing} class="col-span-2 sm:col-span-1">
-						Offer for sale
-					</Button>
-				</form>
-			{/if}
 			{/if}
 		{/if}
 	</section>

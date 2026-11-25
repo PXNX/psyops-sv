@@ -6,17 +6,11 @@ import { eq, desc, asc, sql, count } from "drizzle-orm";
 import { error } from "@sveltejs/kit";
 import type { PageServerLoad } from "./$types";
 import { getRegionName } from "#lib/utils/formatting.js";
-import {
-	CIVILIAN_NEEDS,
-	NEED_META,
-	civilianLabour,
-	labourShare,
-	regionDensity,
-	regionPopulation
-} from "#lib/config/index.js";
+import { CIVILIAN_NEEDS, NEED_META, labourShare, regionDensity, regionPopulation } from "#lib/config/index.js";
 import { regionCivilianNeeds } from "#lib/server/services/civilians/supply.js";
 import { regionPopulationReport } from "#lib/server/services/population-report.js";
 import { populationHistory } from "#lib/server/services/snapshot-history.js";
+import { regionCivilianEmployment } from "#lib/server/services/economy/civilian-work.js";
 
 const PAGE_SIZE = 20;
 
@@ -70,10 +64,11 @@ export const load: PageServerLoad = async ({ params, url, locals }) => {
 
 	const totalResidents = totalCountResult[0]?.count || 0;
 
-	const [civilianNeeds, report, trend] = await Promise.all([
+	const [civilianNeeds, report, trend, employment] = await Promise.all([
 		regionCivilianNeeds(db, regionId),
 		regionPopulationReport(db, regionId),
-		populationHistory(regionId)
+		populationHistory(regionId),
+		regionCivilianEmployment(db, regionId)
 	]);
 
 	return {
@@ -104,7 +99,9 @@ export const load: PageServerLoad = async ({ params, url, locals }) => {
 			report,
 			trend: trend.map((p) => p.value),
 			workforce: {
-				available: civilianLabour(regionPopulation(region), region.education ?? 0),
+				labour: employment.labour,
+				employed: employment.employed,
+				available: employment.available,
 				share: labourShare(region.education ?? 0),
 				education: region.education ?? 0
 			}

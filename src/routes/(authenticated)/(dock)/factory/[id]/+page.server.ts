@@ -22,18 +22,17 @@ import { and, desc, eq, sql } from "drizzle-orm";
 import {
 	FACTORY_FINANCE,
 	canStrike,
-	civilianLabour,
 	expansionCost,
 	expansionDueAt,
 	factoryEbitda,
 	fairWage,
 	goodValue,
 	productivityFactor,
-	regionPopulation,
 	strikeOutputFactor,
 	strikeSeverity
 } from "#lib/config/index.js";
 import { regionsCivilianNeeds } from "#lib/server/services/civilians/supply.js";
+import { regionCivilianEmployment } from "#lib/server/services/economy/civilian-work.js";
 import type { Actions, PageServerLoad } from "./$types";
 import { superValidate, message } from "sveltekit-superforms";
 import { valibot } from "sveltekit-superforms/adapters/valibot";
@@ -178,7 +177,8 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 		factoryEditData,
 		owner,
 		hardship,
-		peerWages
+		peerWages,
+		employment
 	] = await Promise.all([
 		// Check whether an embargo between the company's headquarters state and the
 		// viewer's state blocks starting a new shift here.
@@ -248,21 +248,13 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 		db
 			.select({ wage: factories.workerWage })
 			.from(factories)
-			.where(and(eq(factories.regionId, factory.regionId), sql`${factories.id} != ${factoryId}`))
+			.where(and(eq(factories.regionId, factory.regionId), sql`${factories.id} != ${factoryId}`)),
+		regionCivilianEmployment(db, factory.regionId)
 	]);
 
 	const canAffordWage = companyBudget ? companyBudget.balance >= factory.workerWage : false;
 
-	const homeRegion = {
-		id: factory.regionId,
-		population: factory.population,
-		terrain: factory.terrain,
-		infrastructure: factory.infrastructure,
-		economy: factory.economy,
-		education: factory.education,
-		hospitals: factory.hospitals
-	};
-	const civilianAvailable = civilianLabour(regionPopulation(homeRegion), factory.education ?? 0);
+	const civilianAvailable = employment.available;
 	const peerWage = peerWages.length
 		? Math.round(peerWages.reduce((sum, row) => sum + Number(row.wage), 0) / peerWages.length)
 		: null;
@@ -346,7 +338,8 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 		maxWorkers: factory.maxWorkers,
 		workforce: {
 			available: civilianAvailable,
-			employed: workerCount.count,
+			employed: employment.employed,
+			labour: employment.labour,
 			education: factory.education ?? 0
 		},
 		strikeRisk: {

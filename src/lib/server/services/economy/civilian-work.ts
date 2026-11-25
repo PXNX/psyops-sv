@@ -10,7 +10,7 @@ import { and, count, eq, gte, sql } from "drizzle-orm";
 import type { Database } from "../../db";
 import { companyBudgets, companies, factories, factoryWorkers, regions } from "../../schema";
 import { calculateAndCollectTax } from "../../taxes";
-import { statesPressure } from "../civilians/pressure";
+import { statesPressure, statePressure } from "../civilians/pressure";
 import {
 	CIVILIAN_WORK,
 	conscriptionWorkforce,
@@ -23,6 +23,87 @@ import {
 	regionPopulation,
 	strikeOutputFactor
 } from "#lib/config/index.js";
+
+export interface RegionEmployment {
+	/** Everyone in the region who could work a civilian shift. */
+	labour: number;
+	/** Civilians already filling factory shifts. */
+	employed: number;
+	/** Labour left for more shifts. */
+	available: number;
+	factories: number;
+}
+
+/**
+ * Read-only view of the civilian labour market in one region, using the same
+ * rules as the weekly civilian-work tick. The spare pool is the labour the
+ * region can actually offer after its factories have taken their share.
+ */
+export async function regionCivilianEmployment(
+	db: Database,
+	regionId: number,
+	now: Date = new Date(),
+	days: number = CIVILIAN_WORK.TICK_DAYS
+): Promise<RegionEmployment> {
+	const [region] = await db
+		.select({
+			id: regions.id,
+			stateId: regions.stateId,
+			population: regions.population,
+			terrain: regions.terrain,
+			infrastructure: regions.infrastructure,
+			economy: regions.economy,
+			education: regions.education,
+			hospitals: regions.hospitals
+		})
+		.from(regions)
+		.where(eq(regions.id, regionId))
+		.limit(1);
+	if (!region) return { labour: 0, employed: 0, available: 0, factories: 0 };
+
+	const [factoryRows, workerCounts, budgetRows] = await Promise.all([
+		db
+			.select({
+				id: factories.id,
+				companyId: factories.companyId,
+				maxWorkers: factories.maxWorkers,
+				workerWage: factories.workerWage
+			})
+			.from(factories)
+			.where(eq(factories.regionId, regionId)),
+		db
+			.select({ factoryId: factoryWorkers.factoryId, n: count() })
+			.from(factoryWorkers)
+			.groupBy(factoryWorkers.factoryId),
+		db.select({ companyId: companyBudgets.companyId, balance: companyBudgets.balance }).from(companyBudgets)
+	]);
+	const strain = region.stateId != null ? await statePressure(db, region.stateId, now) : null;
+	const participation = (strain ? conscriptionWorkforce(strain.pressure) : 1) * healthyWorkforce(strain?.hospital ?? 1);
+	const labour = Math.floor(civilianLabour(regionPopulation(region), region.education ?? 0) * participation);
+	const playerWorkers = new Map(workerCounts.map((r) => [r.factoryId, Number(r.n)]));
+	const budgets = new Map(budgetRows.map((r) => [r.companyId, Number(r.balance)]));
+
+	let available = labour;
+	let employed = 0;
+	let staffed = 0;
+	for (const factory of factoryRows) {
+		if (available <= 0) break;
+		const freeSlots = Math.max(0, factory.maxWorkers - (playerWorkers.get(factory.id) ?? 0));
+		if (freeSlots <= 0) continue;
+		const workers = employableCivilians(
+			available,
+			freeSlots,
+			budgets.get(factory.companyId) ?? 0,
+			civilianWage(factory.workerWage),
+			days
+		);
+		if (workers <= 0) continue;
+		available -= workers;
+		employed += workers;
+		staffed++;
+	}
+	return { labour, employed, available, factories: staffed };
+}
 
 export interface CivilianWorkResult {
 	factoriesStaffed: number;

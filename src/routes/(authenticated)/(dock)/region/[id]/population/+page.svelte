@@ -90,10 +90,10 @@
 					title="Share set by the region's education level: {(data.civilians.workforce.share * 100).toFixed(0)}%"
 				>
 					Civilian workforce · {(data.civilians.workforce.share * 100).toFixed(0)}% at education level {data.civilians
-						.workforce.education}
+						.workforce.education} · {data.civilians.workforce.employed.toLocaleString()} employed
 				</span>
-				<span class="font-mono text-fg-body" title="Civilians available to take a company shift">
-					{data.civilians.workforce.available.toLocaleString()} workers
+				<span class="font-mono text-fg-body" title="Civilians still available for a company shift">
+					{data.civilians.workforce.available.toLocaleString()} / {data.civilians.workforce.labour.toLocaleString()} free
 				</span>
 			</div>
 			{#if data.civilians.report?.contributions.length}

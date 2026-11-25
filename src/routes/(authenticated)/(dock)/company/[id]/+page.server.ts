@@ -27,14 +27,13 @@ import { error, fail } from "@sveltejs/kit";
 import {
 	ECONOMY_CONFIG,
 	STOCKS,
-	civilianLabour,
 	factoryEbitda,
 	ipoSharePrice,
 	listingDueAt,
 	productivityFactor,
-	regionPopulation,
 	strikeOutputFactor
 } from "#lib/config/index.js";
+import { regionCivilianEmployment } from "#lib/server/services/economy/civilian-work.js";
 import { getRegionName } from "#lib/utils/formatting.js";
 import { getEmbargoReason } from "#lib/server/embargo.js";
 import { getLogoUrl, getSignedDownloadUrl, uploadFileFromForm } from "#lib/server/backblaze.js";
@@ -310,24 +309,8 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 
 	// Civilians available for work in every region the company operates in.
 	const companyRegionIds = uniqueRegions.map((r) => r.id);
-	const workforceRegions = companyRegionIds.length
-		? await db
-				.select({
-					id: regions.id,
-					population: regions.population,
-					education: regions.education,
-					terrain: regions.terrain,
-					infrastructure: regions.infrastructure,
-					economy: regions.economy,
-					hospitals: regions.hospitals
-				})
-				.from(regions)
-				.where(inArray(regions.id, companyRegionIds))
-		: [];
-	const civilianWorkforce = workforceRegions.reduce(
-		(sum, region) => sum + civilianLabour(regionPopulation(region), region.education ?? 0),
-		0
-	);
+	const employment = await Promise.all(companyRegionIds.map((id) => regionCivilianEmployment(db, id)));
+	const civilianWorkforce = employment.reduce((sum, e) => sum + e.available, 0);
 
 	// Calculate how many shifts can be funded with current budget
 	const shiftsAffordable = totalWageCost > 0 ? Math.floor(Number(budget.balance) / totalWageCost) : 0;
@@ -779,7 +762,10 @@ export const actions: Actions = {
 		}
 
 		const [[budget], factoryRows] = await Promise.all([
-			db.select({ balance: companyBudgets.balance }).from(companyBudgets).where(eq(companyBudgets.companyId, companyId)),
+			db
+				.select({ balance: companyBudgets.balance })
+				.from(companyBudgets)
+				.where(eq(companyBudgets.companyId, companyId)),
 			db.select({ id: factories.id }).from(factories).where(eq(factories.companyId, companyId))
 		]);
 

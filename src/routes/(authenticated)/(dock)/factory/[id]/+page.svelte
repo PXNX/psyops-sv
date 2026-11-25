@@ -250,9 +250,15 @@
 			<p class="text-[10px] text-fg-muted uppercase tracking-wide">Crew on the books</p>
 
 			<div class="mt-4 w-full grid grid-cols-2 gap-2">
-				<div class="panel-muted rounded-sm p-3" title="Civilians in this region available for factory work">
+				<div
+					class="panel-muted rounded-sm p-3"
+					title="Civilians in this region available for factory work after the employed are counted"
+				>
 					<p class="text-[10px] text-fg-muted uppercase tracking-wide">Civilians available</p>
 					<p class="mt-0.5 text-sm font-bold text-fg font-mono">{data.workforce.available.toLocaleString()}</p>
+					<p class="mt-0.5 text-[10px] text-fg-muted font-mono">
+						{data.workforce.employed.toLocaleString()} employed · {data.workforce.labour.toLocaleString()} labour
+					</p>
 				</div>
 				<div class="panel-muted rounded-sm p-3" title="Wage workers would accept here, based on local pay and hardship">
 					<p class="text-[10px] text-fg-muted uppercase tracking-wide">Fair wage</p>
