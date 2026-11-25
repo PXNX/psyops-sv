@@ -14,7 +14,7 @@
 	import CameraFeed from "#lib/component/infiltration/CameraFeed.svelte";
 	import IntrusionConsole from "#lib/component/infiltration/IntrusionConsole.svelte";
 	import FileSystemExplorer from "#lib/component/infiltration/FileSystemExplorer.svelte";
-	import CommanderPortrait from "#lib/component/CommanderPortrait.svelte";
+	import SpyPortrait from "#lib/component/infiltration/SpyPortrait.svelte";
 	import {
 		ASSET_KINDS,
 		COVERT_OPS,
@@ -59,6 +59,7 @@
 	import IconWallet from "~icons/fluent/wallet-20-regular";
 	import IconFire from "~icons/fluent/fire-20-regular";
 	import IconClose from "~icons/fluent/dismiss-20-regular";
+	import IconStar from "~icons/fluent/star-20-filled";
 	import OddsRing from "../OddsRing.svelte";
 
 	type Outcome = {
@@ -404,7 +405,7 @@
 										class="flex w-full items-center gap-3 p-3 text-left"
 									>
 										<OddsRing value={asset.heat / 100} color={heatColor(asset.heat)} size={52} label="Heat">
-											<CommanderPortrait seed={asset.portrait} alive={asset.status === "active"} size={38} />
+											<SpyPortrait seed={asset.portrait} alive={asset.status === "active"} size={38} />
 										</OddsRing>
 										<span class="min-w-0 flex-1">
 											<span class="block truncate text-sm font-medium text-fg">“{asset.codename}”</span>
@@ -434,7 +435,18 @@
 										<span class="flex flex-wrap gap-1 px-3 pb-2">
 											{#each asset.traitIds as traitId (traitId)}
 												{@const trait = SPY_TRAITS[traitId as keyof typeof SPY_TRAITS]}
-												{#if trait}
+												{#if trait?.rare}
+													<span title={trait.description} class="cursor-help">
+														<Badge
+															size="xs"
+															tone="amber"
+															icon={IconStar}
+															class="shadow-[0_0_6px_rgb(216_178_76/0.45)] ring-1 ring-[#d8b24c]/70"
+														>
+															{trait.label}
+														</Badge>
+													</span>
+												{:else if trait}
 													<Badge size="xs" tone="cyan" class="cursor-help">
 														<span title={trait.description}>{trait.label}</span>
 													</Badge>
@@ -896,7 +908,7 @@
 							{#each data.enemyAssets as enemy (enemy.id)}
 								<li class="flex items-center gap-3 rounded-sm bg-surface-3 p-2">
 									<OddsRing value={enemy.heat / 100} color={heatColor(enemy.heat)} size={42} label="Heat">
-										<CommanderPortrait seed={enemy.portrait} alive={!enemy.doubleAgent} size={30} />
+										<SpyPortrait seed={enemy.portrait} alive={!enemy.doubleAgent} size={30} />
 									</OddsRing>
 									<div class="min-w-0 flex-1">
 										<p class="truncate text-sm font-medium text-fg">“{enemy.codename}”</p>

@@ -12,19 +12,12 @@
 
 import { NETWORK_ASSET_BONUS } from "./cyber.config";
 import { hash32, seededRandom } from "./recon.config";
+import { spyTraitModifiers } from "./spy-traits.config";
 
 export type AssetKind = "agent" | "implant" | "relay" | "insider" | "botnet";
 export type InfiltrationActionKind = "probe" | "camera" | "files" | "cover";
 export type SiteKind =
-	| "powerplant"
-	| "airbase"
-	| "datacenter"
-	| "telecom"
-	| "lab"
-	| "command"
-	| "company"
-	| "factory"
-	| "party";
+	"powerplant" | "airbase" | "datacenter" | "telecom" | "lab" | "command" | "company" | "factory" | "party";
 
 export interface AssetSpec {
 	label: string;
@@ -144,14 +137,7 @@ export const networkFootholdCap = NETWORK_ASSET_BONUS.CAP;
 // ── What a spy network reveals about another state ──────────────────────────
 
 export type IntelVisibleField =
-	| "unitCounts"
-	| "unitTypes"
-	| "installations"
-	| "battleDetail"
-	| "economy"
-	| "resources"
-	| "stances"
-	| "treasury";
+	"unitCounts" | "unitTypes" | "installations" | "battleDetail" | "economy" | "resources" | "stances" | "treasury";
 
 /** Each additional live foothold inside a state opens another layer of its file. */
 export function visibleFields(depth: number): ReadonlySet<IntelVisibleField> {
@@ -189,7 +175,37 @@ const CODENAME_FIRST = [
 	"Distant",
 	"Bitter",
 	"Open",
-	"Dark"
+	"Dark",
+	"Pale",
+	"Northern",
+	"Glass",
+	"Ashen",
+	"Crooked",
+	"Gilded",
+	"Hidden",
+	"Last",
+	"Lone",
+	"Midnight",
+	"Narrow",
+	"Rusty",
+	"Salt",
+	"Scarlet",
+	"Slow",
+	"Sunken",
+	"Tin",
+	"Twin",
+	"Umber",
+	"Wandering",
+	"Grey",
+	"Hushed",
+	"Patient",
+	"Lucky",
+	"Frozen",
+	"Golden",
+	"Black",
+	"Crimson",
+	"Faded",
+	"Weathered"
 ];
 const CODENAME_LAST = [
 	"Lantern",
@@ -211,7 +227,37 @@ const CODENAME_LAST = [
 	"Marigold",
 	"Notary",
 	"Anchor",
-	"Bell"
+	"Bell",
+	"Heron",
+	"Kestrel",
+	"Locksmith",
+	"Magpie",
+	"Meridian",
+	"Monolith",
+	"Nightjar",
+	"Obelisk",
+	"Pilgrim",
+	"Quarry",
+	"Raven",
+	"Sextant",
+	"Shepherd",
+	"Spindle",
+	"Tinker",
+	"Trellis",
+	"Vesper",
+	"Warden",
+	"Weaver",
+	"Zephyr",
+	"Almanac",
+	"Bishop",
+	"Cartographer",
+	"Dovetail",
+	"Ember",
+	"Ferryman",
+	"Gambit",
+	"Hourglass",
+	"Juniper",
+	"Lighthouse"
 ];
 
 /** Stable, evocative codename for the n-th asset a state plants in a target. */
@@ -220,11 +266,18 @@ export function assetCodename(stateId: number, targetId: number, index: number):
 	return `${pick(rng, CODENAME_FIRST)} ${pick(rng, CODENAME_LAST)}`;
 }
 
-/** Heat after idle decay. Stored heat never changes; the clock does the work. */
-export function effectiveHeat(asset: { heat: number; lastActionAt: string | Date }, now = new Date()): number {
+/**
+ * Heat after idle decay. Stored heat never changes; the clock does the work.
+ * Some traits (the rare Sleeper) shed heat faster.
+ */
+export function effectiveHeat(
+	asset: { heat: number; lastActionAt: string | Date; traitIds?: string[] | null },
+	now = new Date()
+): number {
 	const last = new Date(asset.lastActionAt).getTime();
 	const hours = Number.isFinite(last) ? Math.max(0, (now.getTime() - last) / 3600_000) : 0;
-	return Math.round(clamp(asset.heat - hours * INFILTRATION.HEAT_DECAY_PER_HOUR, 0, INFILTRATION.HEAT_MAX));
+	const rate = INFILTRATION.HEAT_DECAY_PER_HOUR * spyTraitModifiers(asset.traitIds ?? []).decay;
+	return Math.round(clamp(asset.heat - hours * rate, 0, INFILTRATION.HEAT_MAX));
 }
 
 /** Chance a given action works: access versus security, minus accumulated heat. */

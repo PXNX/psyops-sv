@@ -41,7 +41,9 @@ import {
 	ASSET_KINDS,
 	INFILTRATION,
 	INFILTRATION_ACTION_KINDS,
+	SPY_TRAITS,
 	type AssetKind,
+	type SpyTraitId,
 	type InfiltrationActionKind
 } from "#lib/config/index.js";
 
@@ -118,7 +120,11 @@ export const actions: Actions = {
 				targetStateId: int(form.get("targetStateId")),
 				kind
 			});
-			return { planted: result };
+			const rare = result.traitIds.map((id) => SPY_TRAITS[id as SpyTraitId]).find((t) => t?.rare);
+			const message = rare
+				? `${result.name} (“${result.codename}”) recruited — a rare find: ${rare.label}.`
+				: `${result.name} (“${result.codename}”) recruited.`;
+			return { planted: result, message };
 		} catch (err) {
 			if (err instanceof InfiltrationError) return fail(400, { error: err.message });
 			throw err;

@@ -309,16 +309,14 @@ export async function flipAsset(
 			throw new InfiltrationError("That asset is not an enemy operating in our state.");
 		}
 		if (asset.doubleAgentForStateId === stateId) throw new InfiltrationError("That asset is already ours.");
+		if (asset.status !== "active") throw new InfiltrationError("That asset is already burned.");
 
 		await charge(tx, stateId, INFILTRATION.FLIP_COST, `Turn ${asset.codename}`, userId, now);
-		const chance = INFILTRATION.FLIP_CHANCE;
+		// A rare True Believer cannot be turned at all.
+		const chance = INFILTRATION.FLIP_CHANCE * spyTraitModifiers(asset.traitIds ?? []).flip;
 		const success = rng() < chance;
 		const heat = effectiveHeat(asset, now);
-		const nextHeat = clamp(
-			heat + (success ? 4 : INFILTRATION.FLIP_HEAT_ON_FAILURE),
-			0,
-			INFILTRATION.HEAT_MAX
-		);
+		const nextHeat = clamp(heat + (success ? 4 : INFILTRATION.FLIP_HEAT_ON_FAILURE), 0, INFILTRATION.HEAT_MAX);
 		let secrets = 0;
 		let detail: string;
 		if (success) {
@@ -623,12 +621,7 @@ export async function intelDepth(db: Db, userId: string, targetStateId: number):
 	const assets = await db
 		.select({ status: infiltrationAssets.status, heat: infiltrationAssets.heat })
 		.from(infiltrationAssets)
-		.where(
-			and(
-				eq(infiltrationAssets.stateId, ownStateId),
-				eq(infiltrationAssets.targetStateId, targetStateId)
-			)
-		);
+		.where(and(eq(infiltrationAssets.stateId, ownStateId), eq(infiltrationAssets.targetStateId, targetStateId)));
 	return Math.min(INFILTRATION.MAX_ASSETS_PER_TARGET, liveFootholds(assets));
 }
 
@@ -644,7 +637,12 @@ async function sitesIn(
 ): Promise<Site[]> {
 	const [plants, companyRows, factoryRows, partyRows] = await Promise.all([
 		db
-			.select({ id: powerPlants.id, name: powerPlants.name, plantType: powerPlants.plantType, regionId: powerPlants.regionId })
+			.select({
+				id: powerPlants.id,
+				name: powerPlants.name,
+				plantType: powerPlants.plantType,
+				regionId: powerPlants.regionId
+			})
 			.from(powerPlants)
 			.where(eq(powerPlants.stateId, targetStateId)),
 		db
