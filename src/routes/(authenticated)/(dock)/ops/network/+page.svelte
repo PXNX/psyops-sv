@@ -31,7 +31,7 @@
 		type InfiltrationActionKind,
 		type SiteKind
 	} from "#lib/config/index.js";
-	import { dtg } from "#lib/utils/military.js";
+	import { countdown, dtg } from "#lib/utils/military.js";
 	import { celebrate } from "#lib/utils/celebrate.js";
 	import { toastResult } from "#lib/ui/toast.svelte.js";
 	import { vanish } from "#lib/utils/motion.js";
@@ -128,6 +128,14 @@
 		chosenSite ? data.files.filter((f: any) => f.siteId === chosenSite.id).map((f: any) => f.recordId) : []
 	);
 	const atCapacity = $derived(activeAssets.length >= INFILTRATION.MAX_ASSETS_PER_TARGET);
+
+	// A ticking clock for the recruitment cooldown.
+	let clock = $state(new Date());
+	$effect(() => {
+		const timer = setInterval(() => (clock = new Date()), 30_000);
+		return () => clearInterval(timer);
+	});
+	const plantWait = $derived(data.plantReadyAt ? countdown(data.plantReadyAt, clock) : null);
 
 	const SITE_ICON: Record<SiteKind, typeof IconFactory> = {
 		powerplant: IconPower,
@@ -886,12 +894,20 @@
 							block
 							loading={planting}
 							loadingText="Planting…"
-							disabled={atCapacity || treasury < INFILTRATION_ASSETS[plantKind].cost}
+							disabled={atCapacity || !!plantWait || treasury < INFILTRATION_ASSETS[plantKind].cost}
+							title={plantWait
+								? `Recruiting in one state has a ${INFILTRATION.PLANT_COOLDOWN_HOURS}h cooldown.`
+								: undefined}
 						>
 							{atCapacity
 								? `Network full (${INFILTRATION.MAX_ASSETS_PER_TARGET} assets)`
-								: `Plant ${INFILTRATION_ASSETS[plantKind].label.toLowerCase()}`}
+								: plantWait
+									? `Recruiters lying low · ${plantWait}`
+									: `Plant ${INFILTRATION_ASSETS[plantKind].label.toLowerCase()}`}
 						</Button>
+						<p class="text-[11px] text-fg-faint">
+							One recruitment per {INFILTRATION.PLANT_COOLDOWN_HOURS}h in each state.
+						</p>
 					</div>
 				</form>
 

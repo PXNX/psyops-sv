@@ -18,7 +18,7 @@ import {
 	sessionFor
 } from "../services/military/infiltration";
 import { launchOperation } from "../services/military/covert-ops";
-import { INTRUSION, actionChance, sitesForTarget } from "#lib/config/index.js";
+import { INFILTRATION, INTRUSION, actionChance, sitesForTarget } from "#lib/config/index.js";
 
 let handle: MockDbHandle;
 let freedonia: number;
@@ -28,6 +28,9 @@ let siteId: string;
 const always = () => 0;
 let clock = new Date("2026-11-21T12:00:00Z");
 const now = () => new Date((clock = new Date(clock.getTime() + 3600_000)));
+/** Skip past the recruitment cooldown so the next plant is allowed. */
+const afterCooldown = () =>
+	new Date((clock = new Date(clock.getTime() + INFILTRATION.PLANT_COOLDOWN_HOURS * 3600_000)));
 
 beforeAll(async () => {
 	handle = await createMockDb();
@@ -110,8 +113,9 @@ describe("life inside the host", () => {
 	let operator: number;
 
 	beforeAll(async () => {
-		operator = (await plantAsset(handle.db, "user-1", { targetStateId: sylvania, kind: "insider", now: now() }))
-			.assetId;
+		operator = (
+			await plantAsset(handle.db, "user-1", { targetStateId: sylvania, kind: "insider", now: afterCooldown() })
+		).assetId;
 		for (const step of ["scan", "access", "escalate", "pivot"] as const) {
 			await runIntrusion(handle.db, "user-1", {
 				assetId: operator,

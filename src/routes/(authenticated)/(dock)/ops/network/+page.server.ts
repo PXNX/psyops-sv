@@ -29,6 +29,7 @@ import {
 	filesFor,
 	grepSystem,
 	isPivoted,
+	lastPlantedAt,
 	networkTargets,
 	plantAsset,
 	readSystemRecord,
@@ -40,6 +41,7 @@ import {
 import {
 	ASSET_KINDS,
 	INFILTRATION,
+	plantReadyAt,
 	INFILTRATION_ACTION_KINDS,
 	SPY_TRAITS,
 	type AssetKind,
@@ -79,7 +81,7 @@ export const load: PageServerLoad = async ({ locals, url }) => {
 	const requested = url.searchParams.get("target");
 	const selectedTargetId = targets.find((t) => String(t.id) === requested)?.id ?? targets[0]?.id ?? null;
 
-	const [treasury, targetNames, assets, sites, files, actions, sessions, enemyAssets] = await Promise.all([
+	const [treasury, targetNames, assets, sites, files, actions, sessions, enemyAssets, lastPlant] = await Promise.all([
 		db.query.stateTreasury.findFirst({ where: (t, { eq }) => eq(t.stateId, stateId) }),
 		Promise.all(targets.map(async (t) => ({ ...t, logo: await getLogoUrl(t.logo) }))),
 		selectedTargetId ? assetsFor(db, stateId, selectedTargetId) : Promise.resolve([]),
@@ -87,8 +89,10 @@ export const load: PageServerLoad = async ({ locals, url }) => {
 		selectedTargetId ? filesFor(db, stateId, selectedTargetId) : Promise.resolve([]),
 		selectedTargetId ? actionsFor(db, stateId, selectedTargetId) : Promise.resolve([]),
 		selectedTargetId ? loadSessions(stateId, selectedTargetId) : Promise.resolve([]),
-		enemyAssetsIn(db, stateId, now)
+		enemyAssetsIn(db, stateId, now),
+		selectedTargetId ? lastPlantedAt(db, stateId, selectedTargetId) : Promise.resolve(null)
 	]);
+	const readyAt = plantReadyAt(lastPlant);
 	const [state] = await db.select({ id: states.id, name: states.name }).from(states).where(eq(states.id, stateId));
 
 	return {
@@ -103,7 +107,9 @@ export const load: PageServerLoad = async ({ locals, url }) => {
 		actions,
 		sessions,
 		treasury: authority ? (treasury?.balance ?? 0) : null,
-		maxAssets: INFILTRATION.MAX_ASSETS_PER_TARGET
+		maxAssets: INFILTRATION.MAX_ASSETS_PER_TARGET,
+		/** Set while recruiting in the selected target is on cooldown. */
+		plantReadyAt: readyAt && readyAt > now ? readyAt.toISOString() : null
 	};
 };
 

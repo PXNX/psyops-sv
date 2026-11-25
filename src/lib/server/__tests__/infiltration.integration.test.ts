@@ -22,6 +22,9 @@ let sylvania: number;
 let siteId: string;
 let clock = new Date("2026-11-21T12:00:00Z");
 const now = () => new Date((clock = new Date(clock.getTime() + 3600_000)));
+/** Skip past the recruitment cooldown so the next plant is allowed. */
+const afterCooldown = () =>
+	new Date((clock = new Date(clock.getTime() + INFILTRATION.PLANT_COOLDOWN_HOURS * 3600_000)));
 const always = () => 0;
 
 const balance = async (stateId: number) =>
@@ -60,13 +63,21 @@ describe("authority and planting", () => {
 		expect(asset!.heat).toBe(12);
 		expect(asset!.status).toBe("active");
 	});
+
+	it("makes recruiters lie low before the next plant in the same state", async () => {
+		const before = await balance(freedonia);
+		await expect(
+			plantAsset(handle.db, "user-1", { targetStateId: sylvania, kind: "agent", now: now() })
+		).rejects.toThrow(/lying low/);
+		expect(await balance(freedonia)).toBe(before);
+	});
 });
 
 describe("using the network", () => {
 	let assetId: number;
 
 	beforeAll(async () => {
-		const r = await plantAsset(handle.db, "user-1", { targetStateId: sylvania, kind: "implant", now: now() });
+		const r = await plantAsset(handle.db, "user-1", { targetStateId: sylvania, kind: "implant", now: afterCooldown() });
 		assetId = r.assetId;
 	});
 

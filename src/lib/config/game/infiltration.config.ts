@@ -115,6 +115,8 @@ export const INFILTRATION_ACTION_KINDS = Object.keys(INFILTRATION_ACTIONS) as In
 export const INFILTRATION = {
 	/** How many footholds one state may keep inside a single target. */
 	MAX_ASSETS_PER_TARGET: 4,
+	/** Hours between two recruitments in the same target state. */
+	PLANT_COOLDOWN_HOURS: 4,
 	/** Heat at which an asset is burned and can no longer be used. */
 	HEAT_MAX: 100,
 	/** Heat an idle asset sheds per hour. */
@@ -264,6 +266,14 @@ const CODENAME_LAST = [
 export function assetCodename(stateId: number, targetId: number, index: number): string {
 	const rng = seededRandom(hash32(stateId, targetId, index, 0x1f11a));
 	return `${pick(rng, CODENAME_FIRST)} ${pick(rng, CODENAME_LAST)}`;
+}
+
+/** When a state may next plant an asset in a target, given its last recruitment. */
+export function plantReadyAt(lastPlantedAt: string | Date | null | undefined): Date | null {
+	if (!lastPlantedAt) return null;
+	const last = new Date(lastPlantedAt).getTime();
+	if (!Number.isFinite(last)) return null;
+	return new Date(last + INFILTRATION.PLANT_COOLDOWN_HOURS * 3600_000);
 }
 
 /**

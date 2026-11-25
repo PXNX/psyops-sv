@@ -34,6 +34,7 @@ import {
 	assetCodename,
 	effectiveHeat,
 	fileFor,
+	plantReadyAt,
 	sitesForTarget,
 	INTRUSION,
 	ATTACK_VECTORS,
@@ -364,6 +365,17 @@ export async function flipAsset(
 	});
 }
 
+/** When this state last recruited an asset in the target, burned ones included. */
+export async function lastPlantedAt(db: Db, stateId: number, targetStateId: number): Promise<Date | null> {
+	const [row] = await db
+		.select({ at: infiltrationAssets.plantedAt })
+		.from(infiltrationAssets)
+		.where(and(eq(infiltrationAssets.stateId, stateId), eq(infiltrationAssets.targetStateId, targetStateId)))
+		.orderBy(desc(infiltrationAssets.plantedAt))
+		.limit(1);
+	return row?.at ?? null;
+}
+
 export interface PlantResult {
 	assetId: number;
 	codename: string;
@@ -407,6 +419,12 @@ export async function plantAsset(
 			throw new InfiltrationError(
 				`You can keep at most ${INFILTRATION.MAX_ASSETS_PER_TARGET} active assets in one state.`
 			);
+		}
+		const readyAt = plantReadyAt(await lastPlantedAt(tx, stateId, input.targetStateId));
+		if (readyAt && readyAt > now) {
+			const mins = Math.ceil((readyAt.getTime() - now.getTime()) / 60_000);
+			const wait = mins >= 60 ? `${Math.floor(mins / 60)}h ${mins % 60}m` : `${mins}m`;
+			throw new InfiltrationError(`Your recruiters in ${targetName} are lying low. Try again in ${wait}.`);
 		}
 		await charge(tx, stateId, spec.cost, `${spec.label} planted in ${targetName}`, userId, now);
 		const [all] = await tx
