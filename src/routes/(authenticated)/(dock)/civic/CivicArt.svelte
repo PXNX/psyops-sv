@@ -6,21 +6,29 @@
 		kind: "skyline" | "gauge" | "building" | "seal";
 		variant?: string;
 		value?: number;
+		/** For `building`: 1 founded, 2 adds a wing, 3 crowns it as a landmark. */
+		tier?: number;
 		class?: string;
 		label?: string;
 	}
-	let { kind, variant = "", value = 0, class: className = "", label }: Props = $props();
+	let { kind, variant = "", value = 0, tier = 1, class: className = "", label }: Props = $props();
 
 	const uid = $props.id();
 	const idSuffix = uid.replace(/[^a-zA-Z0-9_-]/g, "");
 	const glowId = `civic-glow-${idSuffix}`;
 	const gaugeId = `civic-gauge-${idSuffix}`;
 	const circumference = 2 * Math.PI * 26;
-	const dash = $derived(Math.max(0, Math.min(100, value)) / 100 * circumference);
+	const dash = $derived((Math.max(0, Math.min(100, value)) / 100) * circumference);
 </script>
 
 {#if kind === "skyline"}
-	<svg class={className} viewBox="0 0 480 150" preserveAspectRatio="xMidYMid slice" role="img" aria-label={label ?? "A town lit by private patronage"}>
+	<svg
+		class={className}
+		viewBox="0 0 480 150"
+		preserveAspectRatio="xMidYMid slice"
+		role="img"
+		aria-label={label ?? "A town lit by private patronage"}
+	>
 		<defs>
 			<radialGradient id={glowId}>
 				<stop offset="0" stop-color="var(--color-warning)" stop-opacity="0.28" />
@@ -42,18 +50,24 @@
 			<rect x="414" y="76" width="44" height="74" rx="2" />
 		</g>
 		<!-- the buildings you fund -->
-		<g fill="var(--color-positive)" fill-opacity="0.14" stroke="var(--color-positive)" stroke-opacity="0.7" stroke-width="1.2">
+		<g
+			fill="var(--color-positive)"
+			fill-opacity="0.14"
+			stroke="var(--color-positive)"
+			stroke-opacity="0.7"
+			stroke-width="1.2"
+		>
 			<path d="M182 150V96h58v54" />
 			<path d="M250 150V76l30-16 30 16v74" />
 		</g>
 		<g fill="var(--color-warning)" class="windows">
 			{#each [194, 214, 234] as x (x)}
-				<rect class="win-a" x={x} y="108" width="7" height="9" rx="1" />
-				<rect class="win-b" x={x} y="126" width="7" height="9" rx="1" />
+				<rect class="win-a" {x} y="108" width="7" height="9" rx="1" />
+				<rect class="win-b" {x} y="126" width="7" height="9" rx="1" />
 			{/each}
 			{#each [268, 290] as x (x)}
-				<rect class="win-b" x={x} y="92" width="8" height="10" rx="1" />
-				<rect class="win-a" x={x} y="116" width="8" height="10" rx="1" />
+				<rect class="win-b" {x} y="92" width="8" height="10" rx="1" />
+				<rect class="win-a" {x} y="116" width="8" height="10" rx="1" />
 			{/each}
 		</g>
 		<!-- a crane slowly working on the next one -->
@@ -73,16 +87,30 @@
 		</defs>
 		<circle cx="32" cy="32" r="26" fill="none" stroke="var(--color-surface-6)" stroke-width="6" />
 		<circle
-			cx="32" cy="32" r="26" fill="none" stroke={`url(#${gaugeId})`} stroke-width="6"
-			stroke-linecap="round" stroke-dasharray={circumference} stroke-dashoffset={circumference - dash}
-			transform="rotate(-90 32 32)" class="arc"
+			cx="32"
+			cy="32"
+			r="26"
+			fill="none"
+			stroke={`url(#${gaugeId})`}
+			stroke-width="6"
+			stroke-linecap="round"
+			stroke-dasharray={circumference}
+			stroke-dashoffset={circumference - dash}
+			transform="rotate(-90 32 32)"
+			class="arc"
 		/>
 		<circle cx="32" cy="32" r="18" fill="var(--color-surface-2)" opacity="0.5" />
 		<circle cx="32" cy="32" r="3" fill="var(--color-positive)" class="pulse" />
 	</svg>
 {:else if kind === "building"}
 	<svg class={className} viewBox="0 0 64 64" role="img" aria-label={label ?? variant}>
-		<g fill="var(--color-positive)" fill-opacity="0.12" stroke="var(--color-positive)" stroke-opacity="0.6" stroke-width="1.5">
+		<g
+			fill="var(--color-positive)"
+			fill-opacity="0.12"
+			stroke="var(--color-positive)"
+			stroke-opacity="0.6"
+			stroke-width="1.5"
+		>
 			{#if variant === "water_works"}
 				<path d="M8 54h48M14 54V30h36v24M20 30V20h24v10" />
 				<path d="M32 20V8M24 14q8 8 16 0" />
@@ -98,35 +126,157 @@
 				<path d="M16 54V30h32v24M32 30V14M22 22h20M26 40h12" />
 			{/if}
 		</g>
+		{#if tier >= 2}
+			<g
+				fill="var(--color-primary)"
+				fill-opacity="0.14"
+				stroke="var(--color-primary)"
+				stroke-opacity="0.7"
+				stroke-width="1.5"
+			>
+				<path d="M52 54V38h8v16M2 54V42h8v12" />
+			</g>
+		{/if}
+		{#if tier >= 3}
+			<path
+				d="M32 1.5l1.8 3.7 4 .6-2.9 2.8.7 4-3.6-1.9-3.6 1.9.7-4-2.9-2.8 4-.6z"
+				fill="var(--color-warning)"
+				class="star"
+			/>
+		{/if}
 		<circle class="spark" cx="50" cy="14" r="2.5" fill="var(--color-warning)" />
 	</svg>
 {:else}
 	<svg class={className} viewBox="0 0 64 64" role="img" aria-label={label ?? "Patronage seal"}>
-		<circle cx="32" cy="32" r="27" fill="var(--color-warning)" fill-opacity="0.1" stroke="var(--color-warning)" stroke-opacity="0.6" stroke-width="1.5" />
-		<circle cx="32" cy="32" r="21" fill="none" stroke="var(--color-warning)" stroke-opacity="0.35" stroke-dasharray="3 4" class="ring" />
-		<path d="M32 20l3.4 7 7.6 1-5.5 5.4 1.3 7.6L32 37.6 25.2 41l1.3-7.6L21 28l7.6-1z" fill="var(--color-warning)" fill-opacity="0.65" class="star" />
+		<circle
+			cx="32"
+			cy="32"
+			r="27"
+			fill="var(--color-warning)"
+			fill-opacity="0.1"
+			stroke="var(--color-warning)"
+			stroke-opacity="0.6"
+			stroke-width="1.5"
+		/>
+		<circle
+			cx="32"
+			cy="32"
+			r="21"
+			fill="none"
+			stroke="var(--color-warning)"
+			stroke-opacity="0.35"
+			stroke-dasharray="3 4"
+			class="ring"
+		/>
+		<path
+			d="M32 20l3.4 7 7.6 1-5.5 5.4 1.3 7.6L32 37.6 25.2 41l1.3-7.6L21 28l7.6-1z"
+			fill="var(--color-warning)"
+			fill-opacity="0.65"
+			class="star"
+		/>
 	</svg>
 {/if}
 
 <style>
-	svg { display: block; }
-	.sun { transform-box: fill-box; transform-origin: center; animation: breathe 6s ease-in-out infinite; }
-	.windows rect { animation: flicker 4s ease-in-out infinite; }
-	.win-b { animation-delay: 1.7s; }
-	.crane { transform-box: fill-box; transform-origin: bottom right; animation: sway 7s ease-in-out infinite; }
-	.arc { transition: stroke-dashoffset 0.8s ease; }
-	.pulse { transform-box: fill-box; transform-origin: center; animation: pulse 2.6s ease-in-out infinite; }
-	.spark { animation: pulse 3.4s ease-in-out infinite; }
-	.ring { transform-box: fill-box; transform-origin: center; animation: spin 24s linear infinite; }
-	.star { transform-box: fill-box; transform-origin: center; animation: breathe 5s ease-in-out infinite; }
+	svg {
+		display: block;
+	}
+	.sun {
+		transform-box: fill-box;
+		transform-origin: center;
+		animation: breathe 6s ease-in-out infinite;
+	}
+	.windows rect {
+		animation: flicker 4s ease-in-out infinite;
+	}
+	.win-b {
+		animation-delay: 1.7s;
+	}
+	.crane {
+		transform-box: fill-box;
+		transform-origin: bottom right;
+		animation: sway 7s ease-in-out infinite;
+	}
+	.arc {
+		transition: stroke-dashoffset 0.8s ease;
+	}
+	.pulse {
+		transform-box: fill-box;
+		transform-origin: center;
+		animation: pulse 2.6s ease-in-out infinite;
+	}
+	.spark {
+		animation: pulse 3.4s ease-in-out infinite;
+	}
+	.ring {
+		transform-box: fill-box;
+		transform-origin: center;
+		animation: spin 24s linear infinite;
+	}
+	.star {
+		transform-box: fill-box;
+		transform-origin: center;
+		animation: breathe 5s ease-in-out infinite;
+	}
 
-	@keyframes breathe { 0%,100% { opacity: 0.65; transform: scale(0.96); } 50% { opacity: 1; transform: scale(1.06); } }
-	@keyframes flicker { 0%,100% { opacity: 0.35; } 45% { opacity: 1; } 60% { opacity: 0.6; } }
-	@keyframes sway { 0%,100% { transform: rotate(-3deg); } 50% { transform: rotate(3deg); } }
-	@keyframes pulse { 0%,100% { opacity: 0.4; transform: scale(0.85); } 50% { opacity: 1; transform: scale(1.2); } }
-	@keyframes spin { to { transform: rotate(360deg); } }
+	@keyframes breathe {
+		0%,
+		100% {
+			opacity: 0.65;
+			transform: scale(0.96);
+		}
+		50% {
+			opacity: 1;
+			transform: scale(1.06);
+		}
+	}
+	@keyframes flicker {
+		0%,
+		100% {
+			opacity: 0.35;
+		}
+		45% {
+			opacity: 1;
+		}
+		60% {
+			opacity: 0.6;
+		}
+	}
+	@keyframes sway {
+		0%,
+		100% {
+			transform: rotate(-3deg);
+		}
+		50% {
+			transform: rotate(3deg);
+		}
+	}
+	@keyframes pulse {
+		0%,
+		100% {
+			opacity: 0.4;
+			transform: scale(0.85);
+		}
+		50% {
+			opacity: 1;
+			transform: scale(1.2);
+		}
+	}
+	@keyframes spin {
+		to {
+			transform: rotate(360deg);
+		}
+	}
 
 	@media (prefers-reduced-motion: reduce) {
-		.sun, .windows rect, .crane, .pulse, .spark, .ring, .star { animation: none; }
+		.sun,
+		.windows rect,
+		.crane,
+		.pulse,
+		.spark,
+		.ring,
+		.star {
+			animation: none;
+		}
 	}
 </style>
