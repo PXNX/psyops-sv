@@ -409,6 +409,26 @@
 		</section>
 	{/if}
 
+	{#if data.payroll.length}
+		<section class="panel rounded-sm p-4 sm:p-5 mt-4">
+			<h2 class="section-title mb-3">Payroll · {data.payroll.length} worker{data.payroll.length === 1 ? "" : "s"}</h2>
+			<ul class="divide-y divide-line/15">
+				{#each data.payroll as worker (worker.userId)}
+					<li class="flex flex-wrap items-center gap-2 py-2 text-sm">
+						<UserLink id={worker.userId} name={worker.name} size="sm" />
+						<span class="text-xs text-fg-muted truncate">{worker.factoryName}</span>
+						{#if data.isOwner}
+							<form method="POST" action="?/fireWorker" use:enhance class="ml-auto">
+								<input type="hidden" name="userId" value={worker.userId} />
+								<Button type="submit" size="xs" variant="soft-red">Dismiss</Button>
+							</form>
+						{/if}
+					</li>
+				{/each}
+			</ul>
+		</section>
+	{/if}
+
 	<!-- Share capital -->
 	<section class="panel rounded-sm p-5 sm:p-6 space-y-5" bind:this={capitalEl}>
 		<h2 class="section-title">Share Capital</h2>

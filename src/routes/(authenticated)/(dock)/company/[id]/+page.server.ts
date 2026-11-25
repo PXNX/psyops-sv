@@ -18,6 +18,7 @@ import {
 	resourceInventory,
 	productInventory,
 	userWallets,
+	userProfiles,
 	transactionHistory,
 	partyMembers,
 	politicalParties
@@ -273,6 +274,21 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 	});
 
 	// Calculate aggregate statistics (all in memory)
+	const payrollUserIds = [...new Set(allWorkers.map((w) => w.userId))];
+	const payrollProfiles = payrollUserIds.length
+		? await db
+				.select({ id: userProfiles.accountId, name: userProfiles.name })
+				.from(userProfiles)
+				.where(inArray(userProfiles.accountId, payrollUserIds))
+		: [];
+	const payrollNames = new Map(payrollProfiles.map((p) => [p.id, p.name]));
+	const payroll = allWorkers.map((w) => ({
+		userId: w.userId,
+		name: payrollNames.get(w.userId) ?? null,
+		factoryId: w.factoryId,
+		factoryName: companyFactories.find((f) => f.id === w.factoryId)?.name ?? "—"
+	}));
+
 	const totalWorkers = factoriesWithDetails.reduce((sum, f) => sum + f.workerCount, 0);
 	const totalWageCost = factoriesWithDetails.reduce((sum, f) => sum + Number(f.workerWage) * f.workerCount, 0);
 	// Operating earnings across all works, before financing, tax and depreciation.
@@ -458,6 +474,7 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 		residenceRegion,
 		embargoReason,
 		factories: factoriesWithDetails,
+		payroll,
 		totalWorkers,
 		totalWageCost,
 		ebitda,
@@ -532,6 +549,34 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 };
 
 export const actions: Actions = {
+	// The owner can let a player worker go; that frees a shift for a civilian.
+	fireWorker: async ({ request, locals, params }) => {
+		const account = locals.account!;
+		const companyId = parseInt(params.id);
+		const form = await request.formData();
+		const workerId = String(form.get("userId") ?? "");
+		if (!workerId) return fail(400, { error: "Choose a worker." });
+
+		const [company] = await db
+			.select({ id: companies.id, ownerId: companies.ownerId })
+			.from(companies)
+			.where(eq(companies.id, companyId))
+			.limit(1);
+		if (!company) return fail(404, { error: "Company not found" });
+		if (company.ownerId !== account.id) return fail(403, { error: "Only the owner can dismiss workers." });
+
+		const [worker] = await db
+			.select({ userId: factoryWorkers.userId, factoryId: factoryWorkers.factoryId })
+			.from(factoryWorkers)
+			.innerJoin(factories, eq(factoryWorkers.factoryId, factories.id))
+			.where(and(eq(factoryWorkers.userId, workerId), eq(factories.companyId, companyId)))
+			.limit(1);
+		if (!worker) return fail(404, { error: "That worker is not on your payroll." });
+
+		await db.delete(factoryWorkers).where(eq(factoryWorkers.userId, workerId));
+		return { success: true, message: "Worker dismissed." };
+	},
+
 	// Headquarter the company in the owner's current residence region, tying it
 	// to that region's state (embargo checks; cosmetic otherwise).
 	setHeadquarters: async ({ params, locals }) => {
