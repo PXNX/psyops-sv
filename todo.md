@@ -1,4 +1,4 @@
 # TODO
 
 - [x] Make the state and bloc pages feel more powerful
-- [ ] Make population growth/shrinking work properly
+- [x] Make population growth/shrinking work properly
