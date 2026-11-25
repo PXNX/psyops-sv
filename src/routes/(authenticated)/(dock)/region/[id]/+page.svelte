@@ -2,15 +2,12 @@
 <!-- A region at a glance: a live view of its ground (terrain, coast,
      settlements, today's weather and daylight) under its name and coat of
      arms, stat tiles, then the situation and intel tasking, governor and
-     industry. Visas are a passport page, travel a ticket. -->
+     industry. Travel & entry pairs the visa passport page with the ticket. -->
 <script lang="ts">
 	import { goodLabel } from "#lib/config/index.js";
-	import { toastResult } from "#lib/ui/toast.svelte.js";
 	import { enhance } from "$app/forms";
-	import { tick } from "svelte";
 	import FluentPeople20Filled from "~icons/fluent/people-20-filled";
 	import FluentBriefcase20Filled from "~icons/fluent/briefcase-20-filled";
-	import FluentBookCompass24Filled from "~icons/fluent/book-compass-24-filled";
 	import FluentCheckmark20Filled from "~icons/fluent/checkmark-20-filled";
 	import FluentClock20Filled from "~icons/fluent/clock-20-filled";
 	import FluentWarning20Filled from "~icons/fluent/warning-20-filled";
@@ -38,16 +35,14 @@
 	import ResourceIcon from "#lib/component/ResourceIcon.svelte";
 	import PageContainer from "#lib/component/PageContainer.svelte";
 	import SectionCard from "#lib/component/SectionCard.svelte";
-	import Modal from "#lib/component/Modal.svelte";
 	import UserLink from "#lib/component/UserLink.svelte";
 
 	import { Button, Badge, SearchSelect } from "#lib/component/ui/index.js";
-	import { celebrate } from "#lib/utils/celebrate.js";
-	import { formatDate, getDaysRemaining, regionCoatUrl } from "#lib/utils/formatting.js";
+	import { formatDate, regionCoatUrl } from "#lib/utils/formatting.js";
 	import { BUILDING_TEMPLATES, VALID_BUILDING_TYPES as BUILDING_ORDER } from "#lib/config/index.js";
 	import BorderingRegions from "./BorderingRegions.svelte";
 	import BattleHistory from "#lib/component/BattleHistory.svelte";
-	import ResidenceActions from "./ResidenceActions.svelte";
+	import TravelEntry from "./TravelEntry.svelte";
 	import TravelBanner from "./TravelBanner.svelte";
 	import RegionSituation from "./RegionSituation.svelte";
 	import GatherIntel from "./GatherIntel.svelte";
@@ -59,13 +54,9 @@
 	import { StrikeLog, StrikePlanner } from "#lib/component/strike/index.js";
 	import { formatPopulation } from "#lib/config/index.js";
 	import { countdown } from "#lib/utils/military.js";
-	import PassportPage from "../../visas/PassportPage.svelte";
-	import VisaStamp from "../../visas/VisaStamp.svelte";
 
 	const { data, form } = $props();
 
-	let showVisaSheet = $state(false);
-	let visaSubmitting = $state(false);
 	let isAttacking = $state(false);
 	const warItems = $derived(
 		(data.attackableWars as { id: number; attacker: { name: string }; defender: { name: string } }[]).map((w) => ({
@@ -112,9 +103,6 @@
 			data.attackableWars.length > 0 &&
 			data.borderingRegionsForAttack.length > 0
 	);
-
-	const visaFee = $derived(data.visa.settings ? Number(data.visa.settings.visaCost) : 0);
-	const visaTax = $derived(data.visa.settings ? Math.floor((visaFee * data.visa.settings.visaTaxRate) / 100) : 0);
 
 	const resourceEntries = $derived(
 		[
@@ -405,202 +393,23 @@
 		<StrikePlanner options={data.strike.options} regionName={data.region.name} />
 	{/if}
 
-	<!-- Residence / travel -->
-	{#if (isIndependent || !data.hasResidence) && !data.activeTravel}
-		<ResidenceActions
-			regionId={data.region.id}
-			regionName={data.region.name}
-			{isIndependent}
-			allowsFreeMovement={data.allowsFreeMovement}
-			hasInauguralElection={data.hasInauguralElection}
-			hasPendingResidenceApp={data.hasPendingResidenceApp}
-			hasResidence={data.hasResidence}
-			isInParty={data.isInParty}
-			travelInfo={data.travelInfo}
-			walletBalance={data.walletBalance}
-			entryBlockedReason={data.entry.allowed ? null : data.entry.reason}
-		/>
-	{/if}
-
-	<!-- Visa: a page of the viewer's passport -->
-	{#if data.visa.blocVisaFree || data.visa.blockedReason || data.visa.needsVisa}
-		<div id="region-visa">
-			<PassportPage heading="Visa · {data.region.stateName ?? data.region.name}">
-				<div class="relative min-h-28 flex flex-col sm:flex-row sm:items-center gap-4">
-					<div class="flex-1 min-w-0">
-						{#if data.visa.blocVisaFree}
-							<p class="font-serif text-lg font-bold">Visa-free</p>
-							<p class="text-sm text-[#7a5427]">Bloc members travel freely.</p>
-						{:else if data.visa.blockedReason}
-							<p class="font-serif text-lg font-bold text-[#a3241b]">Entry refused</p>
-							<p class="text-sm text-[#7a5427] break-words">{data.visa.blockedReason}</p>
-						{:else if data.visa.hasActiveVisa && data.visa.activeVisa}
-							{@const daysLeft = getDaysRemaining(data.visa.activeVisa.expiresAt)}
-							<dl class="grid grid-cols-2 gap-x-4 gap-y-2 max-w-xs">
-								<div>
-									<dt class="text-[9px] font-bold tracking-[0.2em] uppercase text-[#7a5427]/55">Valid until</dt>
-									<dd class="text-sm font-semibold font-mono">{formatDate(data.visa.activeVisa.expiresAt)}</dd>
-								</div>
-								<div>
-									<dt class="text-[9px] font-bold tracking-[0.2em] uppercase text-[#7a5427]/55">Remaining</dt>
-									<dd class="text-sm font-semibold {daysLeft > 3 ? '' : 'text-[#a3241b]'}">
-										{daysLeft} day{daysLeft === 1 ? "" : "s"}
-									</dd>
-								</div>
-								{#if data.visa.activeVisa.cost > 0}
-									<div class="col-span-2">
-										<dt class="text-[9px] font-bold tracking-[0.2em] uppercase text-[#7a5427]/55">Fee paid</dt>
-										<dd class="text-sm font-mono">
-											${Number(data.visa.activeVisa.cost).toLocaleString()}
-											<span class="text-[#7a5427]/70">
-												incl. ${Number(data.visa.activeVisa.taxPaid).toLocaleString()} tax
-											</span>
-										</dd>
-									</div>
-								{/if}
-							</dl>
-						{:else if data.visa.hasPendingApplication}
-							<p class="font-serif text-lg font-bold">Application lodged</p>
-							<p class="text-sm text-[#7a5427]">Awaiting the Foreign Minister.</p>
-						{:else}
-							<p class="font-serif text-lg font-bold">Visa required</p>
-							{#if data.visa.settings}
-								<Button
-									type="button"
-									size="sm"
-									variant="secondary"
-									class="mt-2"
-									icon={FluentBookCompass24Filled}
-									onclick={() => (showVisaSheet = true)}
-								>
-									Apply for Visa
-								</Button>
-							{/if}
-						{/if}
-					</div>
-
-					<div class="shrink-0 self-center sm:self-auto">
-						{#if data.visa.blocVisaFree}
-							<VisaStamp label="Free entry" title="Bloc" tone="blue" tilt={-9} />
-						{:else if data.visa.blockedReason}
-							<VisaStamp label="Entry" title="Refused" tone="red" shape="rect" tilt={-7} />
-						{:else if data.visa.hasActiveVisa && data.visa.activeVisa}
-							<VisaStamp
-								label="Approved"
-								title={data.region.stateName}
-								date={formatDate(data.visa.activeVisa.expiresAt)}
-								tone="green"
-								tilt={-13}
-							/>
-						{:else if data.visa.hasPendingApplication}
-							<VisaStamp label="Received" title="Pending" tone="gold" shape="rect" tilt={6} />
-						{:else}
-							<div
-								class="size-24 rounded-full border-2 border-dashed border-[#7a5427]/25 flex items-center justify-center text-[9px] uppercase tracking-[0.2em] text-[#7a5427]/40"
-							>
-								Stamp
-							</div>
-						{/if}
-					</div>
-				</div>
-			</PassportPage>
-		</div>
-	{/if}
-
-	<!-- Visa application -->
-	{#if data.visa.settings && !data.visa.blocVisaFree}
-		<Modal bind:open={showVisaSheet} title="Visa Application" size="default">
-			<div class="space-y-4">
-				<PassportPage heading="Application · {data.region.stateName}">
-					{#if data.visa.settings.visaRequired}
-						<dl class="space-y-1.5 font-mono text-sm">
-							<div class="flex justify-between gap-3">
-								<dt class="text-[#7a5427]">Visa fee</dt>
-								<dd class="font-bold">${visaFee.toLocaleString()}</dd>
-							</div>
-							<div class="flex justify-between gap-3">
-								<dt class="text-[#7a5427]">of which tax ({data.visa.settings.visaTaxRate}%)</dt>
-								<dd>${visaTax.toLocaleString()}</dd>
-							</div>
-							<div class="flex justify-between gap-3 border-t border-dashed border-[#5b3d1a]/25 pt-1.5">
-								<dt class="text-[#7a5427]">Valid for</dt>
-								<dd>14 days</dd>
-							</div>
-						</dl>
-					{:else}
-						<p class="font-serif font-bold">Open borders</p>
-						<p class="text-sm text-[#7a5427]">Free entry · valid for 14 days</p>
-					{/if}
-				</PassportPage>
-
-				{#if data.visa.settings.visaRequired}
-					{#if !data.visa.settings.autoApprove}
-						<p class="field-hint flex items-center gap-1.5">
-							<FluentClock20Filled class="size-4" />
-							Reviewed by the Foreign Minister
-						</p>
-					{/if}
-
-					<form
-						method="POST"
-						action="?/purchaseVisa"
-						use:enhance={() => {
-							visaSubmitting = true;
-							return async ({ result, update }) => {
-								await update();
-								visaSubmitting = false;
-								toastResult(result);
-								if (result.type === "success") {
-									showVisaSheet = false;
-									await tick();
-									celebrate(document.getElementById("region-visa"));
-								}
-							};
-						}}
-					>
-						<Button
-							type="submit"
-							block
-							icon={FluentBookCompass24Filled}
-							loading={visaSubmitting}
-							disabled={data.walletBalance < visaFee}
-						>
-							{#if data.visa.settings.autoApprove}
-								Purchase Visa — ${visaFee.toLocaleString()}
-							{:else}
-								Apply for Visa
-							{/if}
-						</Button>
-						{#if data.walletBalance < visaFee}
-							<p class="field-error text-center">
-								Insufficient funds — you have ${data.walletBalance.toLocaleString()}
-							</p>
-						{/if}
-					</form>
-				{:else}
-					<form
-						method="POST"
-						action="?/purchaseVisa"
-						use:enhance={() => {
-							visaSubmitting = true;
-							return async ({ result, update }) => {
-								await update();
-								visaSubmitting = false;
-								toastResult(result);
-								if (result.type === "success") {
-									showVisaSheet = false;
-									await tick();
-									celebrate(document.getElementById("region-visa"));
-								}
-							};
-						}}
-					>
-						<Button type="submit" block icon={FluentCheckmark20Filled} loading={visaSubmitting}>Get Free Visa</Button>
-					</form>
-				{/if}
-			</div>
-		</Modal>
-	{/if}
+	<!-- Travel & entry: entry rule, visa and ticket in one place -->
+	<TravelEntry
+		regionId={data.region.id}
+		regionName={data.region.name}
+		stateName={data.region.stateName ?? null}
+		{isIndependent}
+		allowsFreeMovement={data.allowsFreeMovement}
+		hasInauguralElection={data.hasInauguralElection}
+		hasPendingResidenceApp={data.hasPendingResidenceApp}
+		hasResidence={data.hasResidence}
+		isInParty={data.isInParty}
+		travelling={!!data.activeTravel}
+		travelInfo={data.travelInfo}
+		walletBalance={data.walletBalance}
+		visa={data.visa}
+		entryBlockedReason={data.entry.allowed ? null : data.entry.reason}
+	/>
 
 	<div class="grid grid-cols-1 md:grid-cols-2 gap-4 items-start">
 		<!-- Administration -->
