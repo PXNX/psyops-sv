@@ -100,18 +100,30 @@
 		{#if budget.stockpile.length}
 			<ul class="flex flex-wrap gap-1.5">
 				{#each budget.stockpile as s (s.resource)}
-					<li
-						class="rounded-sm bg-surface-2/60 px-2 py-1 text-xs flex items-center gap-1.5"
-						title={goodLabel(s.resource)}
-					>
-						<ResourceIcon name={s.resource} class="size-4" />
-						<span class="sr-only">{goodLabel(s.resource)}</span>
-						<span class="font-mono">{s.quantity.toLocaleString()}</span>
+					<li>
+						<svelte:element
+							this={budget.isGovernor ? "a" : "span"}
+							href={budget.isGovernor ? `/market/${s.resource}?for=${regionId}` : undefined}
+							class="rounded-sm bg-surface-2/60 px-2 py-1 text-xs flex items-center gap-1.5 {budget.isGovernor
+								? 'hover:bg-surface-2 transition-colors'
+								: ''}"
+							title={budget.isGovernor ? `Trade ${goodLabel(s.resource)} for the region` : goodLabel(s.resource)}
+						>
+							<ResourceIcon name={s.resource} class="size-4" />
+							<span class="sr-only">{goodLabel(s.resource)}</span>
+							<span class="font-mono">{s.quantity.toLocaleString()}</span>
+						</svelte:element>
 					</li>
 				{/each}
 			</ul>
 		{:else}
 			<p class="text-sm text-fg-muted">No materials stored. Regional public works draw from here.</p>
+		{/if}
+		{#if budget.isGovernor}
+			<p class="text-xs text-fg-muted">
+				Buy and sell for the region on the <a href="/market" class="text-primary-fg hover:underline">market</a>: pick a
+				raw material and switch "Trade for" to this region.
+			</p>
 		{/if}
 	</div>
 

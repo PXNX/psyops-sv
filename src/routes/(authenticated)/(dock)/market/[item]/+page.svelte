@@ -17,6 +17,7 @@
 	import FluentBuildingGovernment20Filled from "~icons/fluent/building-government-20-filled";
 	import FluentClock20Filled from "~icons/fluent/clock-20-filled";
 	import PriceChart from "../PriceChart.svelte";
+	import RegionTradeDesk from "./RegionTradeDesk.svelte";
 	import { buildSeries, changePct, DAY, HOUR, money, type SeriesPoint } from "../series";
 	import { dtgShortDate, dtgTime } from "#lib/utils/dtg.js";
 	import { bestAsk, offeredQuantity } from "#lib/utils/market-price.js";
@@ -171,8 +172,9 @@
 			<div class="join w-full">
 				<span
 					class="join-item h-9 px-2.5 flex items-center border border-line/20 bg-base-200 text-fg-muted text-sm font-mono rounded-sm"
-					>$</span
 				>
+					$
+				</span>
 				<input
 					type="number"
 					id={priceId}
@@ -189,6 +191,10 @@
 
 <PageContainer maxWidth="5xl">
 	<BackLink href="/market" label="Market" class="-ml-3 self-start" />
+
+	{#if data.governedRegions.length}
+		<RegionTradeDesk itemName={data.itemName} regions={data.governedRegions} desk={data.regionDesk} />
+	{/if}
 
 	<section class="panel rounded-sm overflow-hidden">
 		<div class="px-4 pt-4 sm:px-5 sm:pt-5 flex flex-wrap items-center justify-between gap-3">
@@ -217,8 +223,10 @@
 						onclick={() => {
 							range = r;
 							hover = null;
-						}}>{r}</button
+						}}
 					>
+						{r}
+					</button>
 				{/each}
 			</div>
 		</div>
@@ -463,8 +471,10 @@
 								size="sm"
 								grow
 								icon={FluentDismiss20Filled}
-								onclick={() => (isEditing = false)}>Cancel</Button
+								onclick={() => (isEditing = false)}
 							>
+								Cancel
+							</Button>
 							<Button type="submit" size="sm" grow icon={FluentCheckmark20Filled}>Save</Button>
 						</div>
 					</form>

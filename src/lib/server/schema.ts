@@ -502,7 +502,7 @@ export const regionBudgetLedger = pgTable(
 		regionId: integer("region_id")
 			.notNull()
 			.references(() => regions.id, { onDelete: "cascade" }),
-		/** tax_share | construction | programme */
+		/** tax_share | construction | programme | market_buy | market_sale */
 		kind: varchar("kind", { length: 20 }).notNull(),
 		amount: bigint("amount", { mode: "number" }).notNull(),
 		balanceAfter: bigint("balance_after", { mode: "number" }).notNull(),
@@ -1102,6 +1102,12 @@ export const marketListings = pgTable("market_listings", {
 	sellerId: text("seller_id")
 		.notNull()
 		.references(() => accounts.id, { onDelete: "cascade" }),
+	/**
+	 * Set when a governor lists the region's stock: the units came from the
+	 * regional stockpile, sales pay into the regional budget, and only the
+	 * region's governor can withdraw it. Null for a player's own listing.
+	 */
+	sellerRegionId: integer("seller_region_id").references(() => regions.id, { onDelete: "cascade" }),
 	itemType: varchar("item_type", { length: 20 }).notNull(),
 	itemName: varchar("item_name", { length: 50 }).notNull(),
 	quantity: integer("quantity").notNull(),

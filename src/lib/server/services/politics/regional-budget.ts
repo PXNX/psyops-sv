@@ -59,7 +59,7 @@ export async function regionalShareFor(
 }
 
 /** Add `amount` to a region's budget (creating it) and write the ledger line. */
-async function credit(
+export async function creditRegionBudget(
 	tx: Db,
 	regionId: number,
 	amount: number,
@@ -135,7 +135,7 @@ export async function creditRegionalShare(
 	if (stateId !== input.stateId) return { regional: 0, state: Math.max(0, Math.floor(input.taxAmount)) };
 	const split = splitTax(input.taxAmount, share);
 	if (split.regional > 0) {
-		await credit(tx, input.regionId, split.regional, {
+		await creditRegionBudget(tx, input.regionId, split.regional, {
 			kind: "tax_share",
 			description: `${share}% of ${input.label.toLowerCase()}`,
 			actorId: input.payerId ?? null

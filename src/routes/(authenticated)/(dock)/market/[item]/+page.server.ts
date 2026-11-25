@@ -24,7 +24,7 @@ import {
 	transactionHistory,
 	userProfiles
 } from "#lib/server/schema.js";
-import { eq, and, gte, inArray, sql } from "drizzle-orm";
+import { eq, and, gte, inArray, isNull, sql } from "drizzle-orm";
 import { getLogoUrl } from "#lib/server/backblaze.js";
 import { error, fail } from "@sveltejs/kit";
 import { calculateAndCollectTax } from "#lib/server/taxes.js";
@@ -32,16 +32,28 @@ import type { Actions, PageServerLoad } from "./$types";
 import { sendNotificationIfEnabled } from "#lib/server/services/push-notification.service.js";
 import { addStateItem, addUserItem, takeUserItem } from "#lib/server/services/economy/inventory.js";
 import { loadCandles, loadLastPricesBefore } from "../price-history.server";
-
-/** A purchase that can't go through for a reason the buyer should see. */
-class PurchaseError extends Error {}
+import {
+	closeTrade,
+	MarketTradeError as PurchaseError,
+	paySeller,
+	takeListingStock
+} from "#lib/server/services/economy/market-trade.js";
+import { isGovernorOf } from "#lib/server/services/politics/regional-budget.js";
+import {
+	RegionalMarketError,
+	buyListingForRegion,
+	governedRegions,
+	listForRegion,
+	regionTradeDesk,
+	withdrawRegionListing
+} from "#lib/server/services/politics/regional-market.js";
 
 const isCount = (n: number) => Number.isInteger(n) && n >= 1 && n <= 1_000_000_000;
 
 const RESOURCES: readonly string[] = resourceTypeEnum.enumValues;
 const PRODUCTS: readonly string[] = productTypeEnum.enumValues;
 
-export const load: PageServerLoad = async ({ locals, params }) => {
+export const load: PageServerLoad = async ({ locals, params, url }) => {
 	const account = locals.account!;
 	const itemName = params.item;
 
@@ -64,7 +76,8 @@ export const load: PageServerLoad = async ({ locals, params }) => {
 		openingPrice,
 		allListings,
 		[cooldown],
-		governmentState
+		governmentState,
+		myRegions
 	] = await Promise.all([
 		db
 			.select({ regionId: residences.regionId, stateId: regions.stateId })
@@ -154,13 +167,23 @@ export const load: PageServerLoad = async ({ locals, params }) => {
 				}
 			}
 			return governmentState;
-		})
+		}),
+		// Regions this player governs: they can trade raw materials for them.
+		itemType === "resource" ? governedRegions(db, account.id) : Promise.resolve([])
 	]);
 
-	const myListing = allListings.find((l) => l.sellerId === account.id) ?? null;
+	// "Trade for: Me / Region X" (?for=<regionId>), only for a region the player governs.
+	const forParam = Number(url.searchParams.get("for"));
+	const tradeRegion = myRegions.find((r) => r.id === forParam) ?? null;
+	const regionDesk = tradeRegion ? await regionTradeDesk(db, tradeRegion, itemName, account.id) : null;
+
+	const myRegionIds = myRegions.map((r) => r.id);
+	const isMine = (l: (typeof allListings)[number]) =>
+		(l.sellerId === account.id && !l.sellerRegionId) || (!!l.sellerRegionId && myRegionIds.includes(l.sellerRegionId));
+	const myListing = allListings.find((l) => l.sellerId === account.id && !l.sellerRegionId) ?? null;
 
 	// Seller name + avatar for the order book.
-	const sellerIds = [...new Set(allListings.filter((l) => l.sellerId !== account.id).map((l) => l.sellerId))];
+	const sellerIds = [...new Set(allListings.filter((l) => !isMine(l)).map((l) => l.sellerId))];
 	const sellerProfiles = sellerIds.length
 		? await db
 				.select({ userId: userProfiles.accountId, name: userProfiles.name, logo: userProfiles.logo })
@@ -173,7 +196,7 @@ export const load: PageServerLoad = async ({ locals, params }) => {
 		)
 	);
 	const otherListings = allListings
-		.filter((l) => l.sellerId !== account.id)
+		.filter((l) => !isMine(l))
 		.map((l) => ({
 			...l,
 			sellerName: sellers.get(l.sellerId)?.name ?? null,
@@ -200,7 +223,9 @@ export const load: PageServerLoad = async ({ locals, params }) => {
 		taxRate,
 		userItemQuantity,
 		cooldownRemaining,
-		governmentState
+		governmentState,
+		governedRegions: myRegions,
+		regionDesk
 	};
 };
 
@@ -221,6 +246,7 @@ export const actions: Actions = {
 			.where(
 				and(
 					eq(marketListings.sellerId, account.id),
+					isNull(marketListings.sellerRegionId),
 					eq(marketListings.itemType, itemType),
 					eq(marketListings.itemName, itemName)
 				)
@@ -286,7 +312,8 @@ export const actions: Actions = {
 		// listing, so the total never changes and a sale can't slip in between.
 		const problem = await db.transaction(async (tx) => {
 			const [listing] = await tx.select().from(marketListings).where(eq(marketListings.id, listingId)).for("update");
-			if (!listing || listing.sellerId !== account.id) return "Not your listing";
+			// A region's listing is withdrawn and relisted by its governor, never amended into their own stock.
+			if (!listing || listing.sellerId !== account.id || listing.sellerRegionId) return "Not your listing";
 			const diff = newQuantity - listing.quantity;
 			if (diff > 0 && !(await takeUserItem(tx, account.id, itemType, itemName, diff))) {
 				return "Insufficient items in inventory";
@@ -314,7 +341,11 @@ export const actions: Actions = {
 		const [listing] = await db.select().from(marketListings).where(eq(marketListings.id, listingId));
 		if (!listing) return fail(404, { message: "Listing not found" });
 		if (listing.sellerId === account.id) return fail(400, { message: "Cannot buy your own listing" });
-		if (quantity < 1 || quantity > listing.quantity) return fail(400, { message: "Invalid quantity" });
+		if (!isCount(quantity) || quantity > listing.quantity) return fail(400, { message: "Invalid quantity" });
+		// A governor can't sell their region's stock to themselves.
+		if (listing.sellerRegionId && (await isGovernorOf(db, account.id, listing.sellerRegionId))) {
+			return fail(400, { message: "You can't buy from the region you govern." });
+		}
 
 		const [buyerResidence] = await db
 			.select({ stateId: regions.stateId, regionId: regions.id })
@@ -328,14 +359,8 @@ export const actions: Actions = {
 		let result: { taxAmount: number };
 		try {
 			result = await db.transaction(async (tx) => {
-				// Take the stock first with a conditional decrement: if another buyer
-				// got there first, this matches no row and nothing else happens.
-				const [taken] = await tx
-					.update(marketListings)
-					.set({ quantity: sql`${marketListings.quantity} - ${quantity}` })
-					.where(and(eq(marketListings.id, listingId), gte(marketListings.quantity, quantity)))
-					.returning({ remaining: marketListings.quantity });
-				if (!taken) throw new PurchaseError("Someone else just bought these. Refresh and try again.");
+				// Take the stock first: if another buyer got there first, nothing else happens.
+				const { remaining } = await takeListingStock(tx, listingId, quantity);
 
 				let taxCalculation = { grossAmount, taxAmount: 0, netAmount: grossAmount, applicableTaxes: [] as any[] };
 
@@ -360,22 +385,9 @@ export const actions: Actions = {
 					.returning({ balance: userWallets.balance });
 				if (!buyerWallet) throw new PurchaseError("Insufficient funds");
 
-				const [sellerWallet] = await tx
-					.update(userWallets)
-					.set({ balance: sql`${userWallets.balance} + ${taxCalculation.netAmount}`, updatedAt: new Date() })
-					.where(eq(userWallets.userId, listing.sellerId))
-					.returning({ balance: userWallets.balance });
-				if (!sellerWallet) throw new PurchaseError("Seller wallet not found");
-
+				// A player's wallet, or the regional budget for a region's listing.
+				await paySeller(tx, listing, quantity, taxCalculation.netAmount, { userId: account.id });
 				await addUserItem(tx, account.id, listing.itemType, listing.itemName, quantity);
-
-				await tx.insert(marketPriceHistory).values({
-					itemType: listing.itemType,
-					itemName: listing.itemName,
-					pricePerUnit: listing.pricePerUnit,
-					quantity,
-					transactionType: "sale"
-				});
 
 				// Record transaction history for buyer
 				await tx.insert(transactionHistory).values({
@@ -389,21 +401,7 @@ export const actions: Actions = {
 					relatedEntityId: listing.id
 				});
 
-				// Record transaction history for seller
-				await tx.insert(transactionHistory).values({
-					userId: listing.sellerId,
-					transactionType: "market_sale",
-					amount: taxCalculation.netAmount,
-					balanceAfter: sellerWallet.balance,
-					description: `Sold ${quantity}x ${listing.itemName} at $${listing.pricePerUnit}/ea`,
-					relatedUserId: account.id,
-					relatedEntityType: "listing",
-					relatedEntityId: listing.id
-				});
-
-				if (taken.remaining === 0) {
-					await tx.delete(marketListings).where(eq(marketListings.id, listingId));
-				}
+				await closeTrade(tx, listing, quantity, remaining);
 
 				return { taxAmount: taxCalculation.taxAmount };
 			});
@@ -463,12 +461,7 @@ export const actions: Actions = {
 
 		try {
 			await db.transaction(async (tx) => {
-				const [taken] = await tx
-					.update(marketListings)
-					.set({ quantity: sql`${marketListings.quantity} - ${quantity}` })
-					.where(and(eq(marketListings.id, listingId), gte(marketListings.quantity, quantity)))
-					.returning({ remaining: marketListings.quantity });
-				if (!taken) throw new PurchaseError("Someone else just bought these. Refresh and try again.");
+				const { remaining } = await takeListingStock(tx, listingId, quantity);
 
 				const [treasury] = await tx
 					.update(stateTreasury)
@@ -481,22 +474,7 @@ export const actions: Actions = {
 					.returning({ balance: stateTreasury.balance });
 				if (!treasury) throw new PurchaseError("Insufficient treasury funds");
 
-				const [sellerWallet] = await tx
-					.update(userWallets)
-					.set({ balance: sql`${userWallets.balance} + ${totalCost}`, updatedAt: new Date() })
-					.where(eq(userWallets.userId, listing.sellerId))
-					.returning({ balance: userWallets.balance });
-				if (!sellerWallet) throw new PurchaseError("Seller wallet not found");
-
-				await tx.insert(transactionHistory).values({
-					userId: listing.sellerId,
-					transactionType: "market_sale",
-					amount: totalCost,
-					balanceAfter: sellerWallet.balance,
-					description: `Sold ${quantity}x ${listing.itemName} to state`,
-					relatedEntityType: "listing",
-					relatedEntityId: listing.id
-				});
+				await paySeller(tx, listing, quantity, totalCost, { userId: account.id, label: "the state" });
 
 				await addStateItem(tx, stateId, listing.itemType, listing.itemName, quantity);
 
@@ -513,15 +491,7 @@ export const actions: Actions = {
 					pricePerUnit: listing.pricePerUnit
 				});
 
-				await tx.insert(marketPriceHistory).values({
-					itemType: listing.itemType,
-					itemName: listing.itemName,
-					pricePerUnit: listing.pricePerUnit,
-					quantity,
-					transactionType: "sale"
-				});
-
-				if (taken.remaining === 0) await tx.delete(marketListings).where(eq(marketListings.id, listingId));
+				await closeTrade(tx, listing, quantity, remaining);
 			});
 		} catch (err) {
 			if (err instanceof PurchaseError) return fail(409, { message: err.message });
@@ -535,6 +505,59 @@ export const actions: Actions = {
 		};
 	},
 
+	// The governor buys for the region: regional budget pays, regional stockpile receives.
+	buyListingAsRegion: async ({ request, locals }) => {
+		const form = await request.formData();
+		try {
+			const { total, itemName } = await buyListingForRegion(db, {
+				regionId: Number(form.get("regionId")),
+				userId: locals.account!.id,
+				listingId: Number(form.get("listingId")),
+				quantity: Number(form.get("quantity"))
+			});
+			await updateMarketStatistics("resource", itemName);
+			return { success: true, message: `Bought for the region for $${total.toLocaleString()}.` };
+		} catch (err) {
+			if (err instanceof RegionalMarketError) return fail(400, { message: err.message });
+			throw err;
+		}
+	},
+
+	// The governor lists units from the regional stockpile; sales pay into the regional budget.
+	createRegionListing: async ({ request, locals, params }) => {
+		const form = await request.formData();
+		try {
+			await listForRegion(db, {
+				regionId: Number(form.get("regionId")),
+				userId: locals.account!.id,
+				resource: params.item,
+				quantity: Number(form.get("quantity")),
+				pricePerUnit: Number(form.get("pricePerUnit"))
+			});
+			await updateMarketStatistics("resource", params.item);
+			return { success: true, message: "Region listing posted." };
+		} catch (err) {
+			if (err instanceof RegionalMarketError) return fail(400, { message: err.message });
+			throw err;
+		}
+	},
+
+	withdrawRegionListing: async ({ request, locals }) => {
+		const form = await request.formData();
+		try {
+			const { itemName, quantity } = await withdrawRegionListing(db, {
+				regionId: Number(form.get("regionId")),
+				userId: locals.account!.id,
+				listingId: Number(form.get("listingId"))
+			});
+			await updateMarketStatistics("resource", itemName);
+			return { success: true, message: `${quantity} ${itemName} back in the regional stockpile.` };
+		} catch (err) {
+			if (err instanceof RegionalMarketError) return fail(400, { message: err.message });
+			throw err;
+		}
+	},
+
 	removeListing: async ({ request, locals }) => {
 		const account = locals.account!;
 		const formData = await request.formData();
@@ -545,7 +568,13 @@ export const actions: Actions = {
 		const listing = await db.transaction(async (tx) => {
 			const [removed] = await tx
 				.delete(marketListings)
-				.where(and(eq(marketListings.id, listingId), eq(marketListings.sellerId, account.id)))
+				.where(
+					and(
+						eq(marketListings.id, listingId),
+						eq(marketListings.sellerId, account.id),
+						isNull(marketListings.sellerRegionId)
+					)
+				)
 				.returning();
 			if (removed) await addUserItem(tx, account.id, removed.itemType, removed.itemName, removed.quantity);
 			return removed;
