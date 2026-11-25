@@ -43,16 +43,14 @@
 	import BorderingRegions from "./BorderingRegions.svelte";
 	import BattleHistory from "#lib/component/BattleHistory.svelte";
 	import TravelEntry from "./TravelEntry.svelte";
-	import RegionBudget from "./RegionBudget.svelte";
+	import FluentWallet20Filled from "~icons/fluent/wallet-20-filled";
 	import TravelBanner from "./TravelBanner.svelte";
 	import RegionSituation from "./RegionSituation.svelte";
 	import GatherIntel from "./GatherIntel.svelte";
 	import { SensorImage } from "#lib/component/recon/index.js";
 	import { WEATHER_LABEL, localHour } from "#lib/config/index.js";
 	import type { ImageryInput } from "#lib/utils/sensor-image.js";
-	import CivilianNeeds from "./CivilianNeeds.svelte";
 	import Revolution from "./Revolution.svelte";
-	import Sparkline from "#lib/component/charts/Sparkline.svelte";
 	import { StrikeLog, StrikePlanner } from "#lib/component/strike/index.js";
 	import { formatPopulation } from "#lib/config/index.js";
 	import { countdown } from "#lib/utils/military.js";
@@ -413,11 +411,6 @@
 		entryBlockedReason={data.entry.allowed ? null : data.entry.reason}
 	/>
 
-	<!-- The region's own budget: the governor spends it, everyone can read it -->
-	{#if data.regionBudget}
-		<RegionBudget regionId={data.region.id} budget={data.regionBudget} />
-	{/if}
-
 	<div class="grid grid-cols-1 md:grid-cols-2 gap-4 items-start">
 		<!-- Administration -->
 		{#if !isIndependent}
@@ -452,6 +445,16 @@
 							<Badge tone="amber">{underConstruction.length} building</Badge>
 						{/if}
 					</a>
+					<a
+						href="/region/{data.region.id}/economy"
+						class="panel-interactive rounded-sm p-3 flex items-center gap-3 group"
+					>
+						<FluentWallet20Filled class="size-5 text-warning shrink-0" />
+						<div class="min-w-0 flex-1">
+							<p class="text-sm font-bold text-fg group-hover:text-primary-hover">Regional budget</p>
+							<p class="text-xs text-fg-muted truncate">Budget, civilian population and local supplies on one page</p>
+						</div>
+					</a>
 				</div>
 			</SectionCard>
 		{/if}
@@ -473,51 +476,17 @@
 			{/if}
 		</a>
 
-		<!-- What the civilians here live on -->
-		<CivilianNeeds needs={data.civilianNeeds} />
+		{#if isIndependent}
+			<a href="/region/{data.region.id}/economy" class="panel-interactive rounded-sm p-3 flex items-center gap-3 group">
+				<FluentWallet20Filled class="size-5 text-warning shrink-0" />
+				<div class="min-w-0 flex-1">
+					<p class="text-sm font-bold text-fg group-hover:text-primary-hover">Civilians & budget</p>
+					<p class="text-xs text-fg-muted truncate">Population, local supplies and public funds</p>
+				</div>
+			</a>
+		{/if}
 
 		<Revolution regionId={data.region.id} revolution={data.revolution} pastRevolutions={data.pastRevolutions} />
-
-		<section class="panel rounded-sm p-4">
-			<div class="flex flex-wrap items-center justify-between gap-3">
-				<h2 class="section-title text-base">Population</h2>
-				{#if data.civilians.report}
-					<span class="font-mono text-xs {data.civilians.report.annualRate < 0 ? 'text-error' : 'text-positive-fg'}">
-						{data.civilians.report.annualRate >= 0 ? "+" : ""}{(data.civilians.report.annualRate * 100).toFixed(1)}% /
-						year
-					</span>
-				{/if}
-			</div>
-			<Sparkline
-				values={data.civilians.trend ?? []}
-				label="Civilian population over the last 90 days"
-				color="var(--color-positive)"
-			/>
-			<div class="mt-3 flex flex-wrap items-center justify-between gap-2 border-t border-line/10 pt-2 text-xs">
-				<span
-					class="text-fg-muted"
-					title="Share set by the region's education level: {(data.civilians.workforce.share * 100).toFixed(0)}%"
-				>
-					Civilian workforce · {(data.civilians.workforce.share * 100).toFixed(0)}% at education level {data.civilians
-						.workforce.education}
-				</span>
-				<span class="font-mono text-fg-body" title="Civilians available to take a company shift">
-					{data.civilians.workforce.available.toLocaleString()} workers
-				</span>
-			</div>
-			{#if data.civilians.report?.contributions.length}
-				<div class="mt-2 grid gap-1 text-xs sm:grid-cols-2">
-					{#each data.civilians.report.contributions as c}
-						<div class="flex justify-between gap-2 border-b border-line/10 py-1">
-							<span class="text-fg-muted">{c.label}</span>
-							<span class="font-mono {c.value < 0 ? 'text-error' : 'text-positive-fg'}">
-								{c.value >= 0 ? "+" : ""}{c.value.toLocaleString()}
-							</span>
-						</div>
-					{/each}
-				</div>
-			{/if}
-		</section>
 
 		<!-- Natural resources -->
 		{#if resourceEntries.length > 0}
