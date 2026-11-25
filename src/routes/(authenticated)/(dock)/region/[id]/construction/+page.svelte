@@ -7,6 +7,7 @@
 	import PageHeader from "#lib/component/PageHeader.svelte";
 	import SectionCard from "#lib/component/SectionCard.svelte";
 	import ConstructionProgress from "#lib/component/ConstructionProgress.svelte";
+	import ResourceRequirements from "#lib/component/ResourceRequirements.svelte";
 	import ResourceIcon from "#lib/component/ResourceIcon.svelte";
 	import { Badge, Button } from "#lib/component/ui/index.js";
 	import { toastResult } from "#lib/ui/toast.svelte.js";
@@ -26,6 +27,23 @@
 	};
 
 	let busy = $state<string | null>(null);
+	let query = $state("");
+	let onlyAvailable = $state(false);
+
+	const isBuildable = (b: (typeof data.buildings)[number]) =>
+		b.canOrder && b.problems.length === 0 && !b.underway && b.level < b.maxLevel;
+	const visibleBuildings = $derived(
+		data.buildings.filter((b) => {
+			const text = `${b.name} ${b.description} ${b.statLabel}`.toLowerCase();
+			return text.includes(query.trim().toLowerCase()) && (!onlyAvailable || isBuildable(b));
+		})
+	);
+	const costsOf = (b: (typeof data.buildings)[number]) => ({
+		...Object.fromEntries(b.costs.map((c) => [c.resource, c.needed])),
+		days: b.days
+	});
+	const stockOf = (b: (typeof data.buildings)[number]) =>
+		Object.fromEntries(b.costs.map((c) => [c.resource, c.available]));
 </script>
 
 <PageContainer maxWidth="5xl">
@@ -106,8 +124,34 @@
 			{/if}
 		</div>
 
+		<!-- Building menu -->
+		<div class="flex flex-wrap items-center gap-2 mt-4 mb-3">
+			<label class="min-w-0 flex-1 sm:max-w-xs">
+				<span class="sr-only">Find a building</span>
+				<input
+					type="search"
+					bind:value={query}
+					placeholder="Find a building…"
+					class="field-control rounded-sm h-9 w-full px-3 text-sm"
+				/>
+			</label>
+			<button
+				type="button"
+				class="rounded-sm border px-3 py-1.5 text-xs transition-colors {onlyAvailable
+					? 'border-positive/50 bg-positive/12 text-positive-fg'
+					: 'border-line/25 text-fg-muted hover:text-fg'}"
+				aria-pressed={onlyAvailable}
+				onclick={() => (onlyAvailable = !onlyAvailable)}
+			>
+				Buildable only
+			</button>
+			<span class="font-mono text-xs text-fg-muted ml-auto">
+				{visibleBuildings.length}/{data.buildings.length} works
+			</span>
+		</div>
+
 		<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-			{#each data.buildings as b (b.type)}
+			{#each visibleBuildings as b (b.type)}
 				{@const full = b.level >= b.maxLevel}
 				<div
 					id="building-{b.type}"
@@ -164,20 +208,13 @@
 					</ul>
 
 					{#if !b.underway && !full}
-						<div class="flex flex-wrap gap-1.5">
-							{#each b.costs as c}
-								{@const short = c.available < c.needed}
-								<span
-									class="rounded-sm border px-2 py-0.5 text-xs flex items-center gap-1 {short
-										? 'bg-red-600/10 border-red-500/30 text-red-300'
-										: 'panel-muted text-[#dbe2f4]'}"
-									title="{c.available.toLocaleString()} available"
-								>
-									{#if c.resource === "currency"}💰{:else}<ResourceIcon name={c.resource} class="size-3.5" />{/if}
-									<span class="font-mono">{c.needed.toLocaleString()}</span>
-								</span>
-							{/each}
-							<Badge tone="neutral">{b.days} days</Badge>
+						<div class="space-y-2">
+							<ResourceRequirements
+								inline
+								title="Cost of level {b.level + 1}"
+								costs={costsOf(b)}
+								available={stockOf(b)}
+							/>
 							{#if b.infrastructureRequired}
 								<Badge tone={data.region.infrastructure >= b.infrastructureRequired ? "neutral" : "red"}>
 									needs infrastructure {b.infrastructureRequired}
@@ -236,6 +273,11 @@
 				</div>
 			{/each}
 		</div>
+		{#if visibleBuildings.length === 0}
+			<p class="panel-muted rounded-sm px-4 py-6 text-center text-sm text-fg-muted">
+				No works match this filter. Clear the search or switch back to all buildings.
+			</p>
+		{/if}
 
 		{#if data.finished.length}
 			<SectionCard>
