@@ -145,6 +145,56 @@
 		[24, 20, 2.5, 1],
 		[12.5, 15.5, 1.5, 0]
 	];
+	/** Grid ticks along the frame edges every 32 units, labelled every 128 with grid digits. */
+	const TICK = 32;
+	const ticks = (() => {
+		let d = "";
+		for (let x = TICK; x < FRAME_W; x += TICK) {
+			const l = x % (TICK * 4) ? 3 : 6;
+			d += `M${x} 0v${l}M${x} ${FRAME_H}v${-l}`;
+		}
+		for (let y = TICK; y < FRAME_H; y += TICK) {
+			const l = y % (TICK * 4) ? 3 : 6;
+			d += `M0 ${y}h${l}M${FRAME_W} ${y}h${-l}`;
+		}
+		return d;
+	})();
+	/** Grid digits: metres from the frame corner, offset by the position so frames of different places differ. */
+	const grid = $derived.by(() => {
+		const mpp = scene.scale.meters / scene.scale.px;
+		const frac = (v: number | null) => (((v ?? 0) % 1) + 1) % 1;
+		const e0 = Math.round(frac(input.lon) * 100_000);
+		const n0 = Math.round(frac(input.lat) * 100_000);
+		const fmt = (m: number) => String(Math.floor(m / 10) % 1000).padStart(3, "0");
+		return {
+			x: [1, 2, 3].map((k) => ({
+				at: 64 + k * TICK * 4 - TICK * 2,
+				text: fmt(e0 + (64 + k * TICK * 4 - TICK * 2) * mpp)
+			})),
+			y: [1, 2].map((k) => ({ at: k * TICK * 4, text: fmt(n0 + (FRAME_H - k * TICK * 4) * mpp) }))
+		};
+	});
+	/** One line of sensor parameters, different per mode. */
+	const sensorLine = $derived(
+		scene.mode === "eo"
+			? scene.sun
+				? `PAN · SUN AZ ${String(scene.sun.az).padStart(3, "0")}° EL ${scene.sun.el}°`
+				: "PAN · LOW LIGHT"
+			: scene.mode === "ir"
+				? `LWIR 8-12µm · ${irPalette === "black" ? "BLACK HOT" : irPalette === "iron" ? "IRONBOW" : "WHITE HOT"}`
+				: `STRIPMAP · LOOK E · RES ${scene.platform === "drone" ? "0.3" : "0.5"} M`
+	);
+	const irStops = $derived(
+		irPalette === "white"
+			? ["#000", "#fff"]
+			: irPalette === "black"
+				? ["#fff", "#000"]
+				: IRON.r.split(" ").map((r, i) => {
+						const c = (v: string) => Math.round(Number(v) * 255);
+						return `rgb(${c(r)},${c(IRON.g.split(" ")[i]!)},${c(IRON.b.split(" ")[i]!)})`;
+					})
+	);
+
 	/** Label width estimate (monospace ~0.6em). */
 	const tw = (s: string, size: number) => s.length * size * 0.6;
 	/** Label tabs above (or below) their boxes, nudged so they don't overlap. */
@@ -317,6 +367,14 @@
 				<path d="M0 0.5H4" stroke={scene.furrow} stroke-width="0.7" opacity="0.28" />
 			</pattern>
 		{/each}
+		<linearGradient id={id("irscale")} x1="0" y1="1" x2="0" y2="0">
+			{#each irStops as c, i (i)}
+				<stop offset={i / Math.max(1, irStops.length - 1)} stop-color={c} />
+			{/each}
+		</linearGradient>
+		<pattern id={id("scan")} width="4" height="3" patternUnits="userSpaceOnUse">
+			<rect width="4" height="1" fill="#000" />
+		</pattern>
 		<radialGradient id={id("vignette")} cx="50%" cy="50%" r="72%">
 			<stop offset="55%" stop-color="#000" stop-opacity="0" />
 			<stop offset="100%" stop-color="#000" stop-opacity="1" />
@@ -375,6 +433,10 @@
 				{/if}
 			</g>
 		</g>
+		{#if scene.platform === "drone" && variant !== "bare"}
+			<!-- Video feed: faint raster lines. -->
+			<rect width={FRAME_W} height={FRAME_H} fill={url("scan")} opacity="0.08" />
+		{/if}
 		{#if scene.tone.vignette}
 			<rect width={FRAME_W} height={FRAME_H} fill={url("vignette")} opacity={scene.tone.vignette} />
 		{/if}
@@ -469,6 +531,31 @@
 						GSD {scene.platform === "drone" ? "0.1" : "0.5"} M · {input.findings.conditions.cover.toUpperCase()}
 					</text>
 				</g>
+				<!-- Grid ticks, grid digits and the sensor's parameters -->
+				<path d={ticks} stroke={hud} stroke-width="0.8" opacity="0.6" fill="none" />
+				<g font-size="6" fill={hud} opacity="0.65">
+					{#each grid.x as t (t.at)}
+						<text x={t.at} y={FRAME_H - 8} text-anchor="middle">{t.text}</text>
+					{/each}
+					{#each grid.y as t (t.at)}
+						<text x="8" y={t.at + 2}>{t.text}</text>
+					{/each}
+				</g>
+				<text x={FRAME_W / 2} y={FRAME_H - 17} font-size="7" fill={hud} opacity="0.7" text-anchor="middle">
+					{sensorLine}
+				</text>
+				{#if scene.mode === "ir"}
+					<!-- Temperature scale for the palette in use -->
+					<rect x={FRAME_W - 22} y="84" width="6" height="60" fill={url("irscale")} stroke={hud} stroke-width="0.5" />
+					<text x={FRAME_W - 25} y="89" font-size="6" fill={hud} text-anchor="end">HOT</text>
+					<text x={FRAME_W - 25} y="144" font-size="6" fill={hud} text-anchor="end">COLD</text>
+				{:else if scene.mode === "sar"}
+					<!-- Look direction: the radar illuminates from the west -->
+					<g transform="translate({FRAME_W - 38} 92)" stroke={hud} fill="none" stroke-width="1" opacity="0.8">
+						<path d="M-10 0h18M4 -3l4 3l-4 3" />
+					</g>
+					<text x={FRAME_W - 38} y="104" font-size="6" fill={hud} text-anchor="middle" opacity="0.8">LOOK</text>
+				{/if}
 				<!-- Scale bar and north arrow -->
 				{@const sx = FRAME_W - 26 - scene.scale.px}
 				<g stroke={hud} stroke-width="1.2" fill="none">

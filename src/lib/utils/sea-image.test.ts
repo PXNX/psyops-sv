@@ -1,5 +1,5 @@
 import { describe, expect, it } from "@rstest/core";
-import { buildSeaScene, type SeaImageryInput } from "./sea-image";
+import { buildSeaScene, seaLandAt, type SeaImageryInput } from "./sea-image";
 
 const frame = (over: Partial<SeaImageryInput> = {}): SeaImageryInput => ({
 	seed: 1234,
@@ -45,5 +45,35 @@ describe("sea imagery", () => {
 		expect(sar.mode).toBe("sar");
 		expect(eo.base).not.toBe(sar.base);
 		expect(sar.tone.speckle).toBeGreaterThan(eo.tone.speckle);
+	});
+
+	it("keeps every hull and mine off the land, synthetic shore or real outline", () => {
+		// A blobby island outline, as the world map would give it.
+		const outline = Array.from({ length: 30 }, (_, k) => {
+			const a = (k / 30) * Math.PI * 2;
+			const r = 40 + Math.sin(a * 3) * 8;
+			return { x: 100 + Math.cos(a) * r * 1.4, y: 80 + Math.sin(a) * r };
+		});
+		const wrong: string[] = [];
+		let hulls = 0;
+		for (let seed = 1; seed <= 80; seed++) {
+			for (const coastline of [undefined, outline]) {
+				const f = frame({
+					seed,
+					coastal: true,
+					port: seed % 2 === 0,
+					coastline,
+					contacts: { surface: 5, sub: 2, mine: 6 }
+				});
+				const land = seaLandAt(f);
+				for (const p of buildSeaScene(f).placements ?? []) {
+					hulls++;
+					const bad = p.foot.find((q) => land(q));
+					if (bad) wrong.push(`#${seed} ${p.what} at ${bad.map(Math.round).join(",")}`);
+				}
+			}
+		}
+		expect(wrong).toEqual([]);
+		expect(hulls).toBeGreaterThan(1000);
 	});
 });

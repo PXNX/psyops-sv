@@ -2,7 +2,7 @@
 // sensor, bounded output for big forces, and that the frame shows what the
 // report says (planted decoys included), not the ground truth.
 import { describe, expect, it } from "@rstest/core";
-import { buildScene, type ImageryFindings, type ImageryInput } from "./sensor-image";
+import { buildScene, waterAt, type ImageryFindings, type ImageryInput } from "./sensor-image";
 import { scanRegion } from "../server/services/military/intel";
 
 function findings(over: Partial<ImageryFindings> = {}): ImageryFindings {
@@ -88,7 +88,9 @@ describe("sensor imagery", () => {
 		expect(shore.features.some((p) => p.k === "path" && p.dash)).toBe(true);
 		// The same coast on every pass over the region, whatever the sensor.
 		const sea = (s: typeof shore) =>
-			s.features.filter((p) => p.k === "path" && p.fill?.startsWith("rgb")).map((p) => (p.k === "path" ? p.d : ""));
+			s.features
+				.filter((p) => p.k === "path" && p.fill?.startsWith("rgb") && p.d.endsWith("Z"))
+				.map((p) => (p.k === "path" ? p.d : ""));
 		const sar = buildScene(input("sat_sar", findings(), { terrain: "shore", infrastructure: 3, reportId: 77 }));
 		expect(sea(sar)).toEqual(sea(shore));
 		// Different regions put the sea on different sides.
@@ -239,5 +241,93 @@ describe("sensor imagery", () => {
 		const b = buildScene(input("sat_eo", fooled));
 		expect(countOf(b, "ARMOR")).toBe(armour(fooled));
 		expect(b.sprites).toBeGreaterThan(a.sprites);
+	});
+
+	describe("land and water", () => {
+		const force = (battle: boolean) =>
+			findings({
+				categories: [
+					{ category: "vehicle", count: 14, estimated: false, confidence: 0.85 },
+					{ category: "artillery", count: 6, estimated: false, confidence: 0.8 },
+					{ category: "infantry", count: 20, estimated: true, confidence: 0.6 },
+					{ category: "air", count: 6, estimated: false, confidence: 0.9 },
+					{ category: "naval", count: 3, estimated: false, confidence: 0.9 }
+				],
+				unitTypes: [
+					{ unitType: "armor", count: 6, estimated: false },
+					{ unitType: "mechanized", count: 5, estimated: false },
+					{ unitType: "air_defence", count: 3, estimated: false },
+					{ unitType: "artillery", count: 6, estimated: false },
+					{ unitType: "fighter_squadron", count: 3, estimated: false },
+					{ unitType: "bomber_squadron", count: 3, estimated: false }
+				],
+				buildings: { infrastructure: 3, economy: 3, hospitals: 1, fortifications: 10, underConstruction: 2, radar: 2 },
+				battle: battle ? { id: 1, phase: "active" } : null
+			});
+		const TERRAINS = ["shore", "lake", "plains", "fields", "town", "hills", "forest", "city"];
+		const SENSORS = ["sat_eo", "drone_eo", "drone_ir", "sat_sar"];
+
+		it("puts every vehicle, aircraft and building on land and every ship on water, across many seeds", () => {
+			const wrong: string[] = [];
+			let ships = 0;
+			let ground = 0;
+			for (const terrain of TERRAINS) {
+				for (let regionId = 1; regionId <= 24; regionId++) {
+					const wet = waterAt(regionId, terrain, 3);
+					for (const sensor of SENSORS) {
+						const s = buildScene(
+							input(sensor, force(regionId % 2 === 0), {
+								terrain,
+								regionId,
+								reportId: regionId * 31,
+								infrastructure: 3
+							})
+						);
+						for (const pl of s.placements ?? []) {
+							if (pl.on === "water") ships++;
+							else ground++;
+							const bad = pl.foot.filter((q) => wet(q) !== (pl.on === "water"));
+							if (bad.length) wrong.push(`${terrain} #${regionId} ${sensor}: ${pl.what} at ${JSON.stringify(bad[0])}`);
+						}
+					}
+				}
+			}
+			expect(wrong).toEqual([]);
+			expect(ground).toBeGreaterThan(5000);
+			expect(ships).toBeGreaterThan(200);
+		});
+
+		it("draws ships only where there is water, warships only at sea, and says so when a landlocked frame has naval units", () => {
+			for (let regionId = 1; regionId <= 12; regionId++) {
+				const dry = buildScene(input("sat_eo", force(false), { terrain: "fields", regionId, infrastructure: 3 }));
+				expect(dry.placements!.filter((p) => p.on === "water")).toHaveLength(0);
+				expect(dry.detections.some((d) => d.icon === "ship")).toBe(false);
+				expect(dry.notes).toContain("Naval units reported; no open sea in frame");
+				// A lake gets boats, never warships.
+				const lake = buildScene(input("sat_eo", force(false), { terrain: "lake", regionId, infrastructure: 3 }));
+				expect(lake.placements!.some((p) => p.what === "warship")).toBe(false);
+				expect(lake.notes).toContain("Naval units reported; no open sea in frame");
+				const coast = buildScene(input("sat_eo", force(false), { terrain: "shore", regionId, infrastructure: 3 }));
+				expect(coast.placements!.some((p) => p.what === "warship")).toBe(true);
+				expect(coast.detections.some((d) => d.icon === "ship")).toBe(true);
+			}
+		});
+
+		it("keeps the layout deterministic per report", () => {
+			for (const terrain of ["shore", "lake"]) {
+				const a = buildScene(input("drone_eo", force(true), { terrain, regionId: 5, infrastructure: 3 }));
+				const b = buildScene(input("drone_eo", force(true), { terrain, regionId: 5, infrastructure: 3 }));
+				expect(JSON.stringify(a)).toBe(JSON.stringify(b));
+				expect(a.placements!.length).toBeGreaterThan(20);
+			}
+		});
+
+		it("adds terrain detail without blowing up the node count", () => {
+			for (const terrain of TERRAINS) {
+				const s = buildScene(input("sat_eo", force(true), { terrain, regionId: 3, infrastructure: 3 }));
+				const nodes = s.ground.length + s.features.length + s.objects.length + s.effects.length + s.atmosphere.length;
+				expect(nodes).toBeLessThan(1500);
+			}
+		});
 	});
 });

@@ -138,6 +138,23 @@ export interface Detection {
 	icon: DetectionIcon;
 }
 
+/** Where a sprite was put (world coordinates): its footprint and whether it belongs on land or water. */
+export interface Placement {
+	what: string;
+	on: "land" | "water";
+	foot: [number, number][];
+}
+
+/** Ship size classes: hull length and beam in frame units. */
+export type ShipClass = "dinghy" | "fishing" | "patrol" | "frigate" | "freighter";
+export const SHIP: Record<ShipClass, { len: number; beam: number }> = {
+	dinghy: { len: 6, beam: 2.2 },
+	fishing: { len: 11, beam: 3.4 },
+	patrol: { len: 16, beam: 3.6 },
+	frigate: { len: 28, beam: 4.8 },
+	freighter: { len: 36, beam: 6.6 }
+};
+
 export interface Scene {
 	mode: ImageMode;
 	status: ImageStatus;
@@ -187,6 +204,10 @@ export interface Scene {
 	scale: { meters: number; px: number };
 	/** Sprites drawn for units (bounded). */
 	sprites: number;
+	/** Every sprite's footprint, for checking land and water placement. */
+	placements?: Placement[];
+	/** Sun azimuth and elevation (degrees) for the HUD; absent on night or radar frames. */
+	sun?: { az: number; el: number } | null;
 	/** Short analyst notes for the side panel. */
 	notes: string[];
 }
@@ -294,6 +315,65 @@ function polylineLength(pts: Pt[]) {
 }
 
 const deg = (rad: number) => (rad * 180) / Math.PI;
+
+/** Points on the Catmull-Rom curve through pts: what smoothPath draws, as a polyline. */
+function densify(pts: Pt[], per = 6): Pt[] {
+	if (pts.length < 3) return pts;
+	const out: Pt[] = [];
+	for (let i = 0; i < pts.length - 1; i++) {
+		const p0 = pts[Math.max(0, i - 1)]!;
+		const p1 = pts[i]!;
+		const p2 = pts[i + 1]!;
+		const p3 = pts[Math.min(pts.length - 1, i + 2)]!;
+		for (let k = 0; k < per; k++) {
+			const t = k / per;
+			const t2 = t * t;
+			const t3 = t2 * t;
+			const f = (a: number, b: number, c: number, d: number) =>
+				0.5 * (2 * b + (-a + c) * t + (2 * a - 5 * b + 4 * c - d) * t2 + (-a + 3 * b - 3 * c + d) * t3);
+			out.push([f(p0[0], p1[0], p2[0], p3[0]), f(p0[1], p1[1], p2[1], p3[1])]);
+		}
+	}
+	out.push(pts[pts.length - 1]!);
+	return out;
+}
+
+/** Circle sub-paths: many round blobs in one path node. */
+const blobs = (cs: [number, number, number][]) =>
+	cs
+		.map(
+			([x, y, r]) =>
+				`M${r1(x - r)} ${r1(y)}a${r1(r)} ${r1(r)} 0 1 0 ${r1(2 * r)} 0a${r1(r)} ${r1(r)} 0 1 0 ${r1(-2 * r)} 0`
+		)
+		.join("");
+
+const pathOfClosed = (pts: Pt[]) => pathOf(pts, true);
+
+/** The outline scaled towards its centroid by f. */
+function shrink(pts: Pt[], f: number): Pt[] {
+	const [cx, cy] = centroid(pts);
+	return pts.map(([x, y]) => [cx + (x - cx) * f, cy + (y - cy) * f]);
+}
+
+/** Eight points on a circle of radius r around p (footprint checks). */
+const ring = (p: Pt, r: number, n = 8): Pt[] =>
+	Array.from({ length: n }, (_, k) => [
+		p[0] + Math.cos((k / n) * Math.PI * 2) * r,
+		p[1] + Math.sin((k / n) * Math.PI * 2) * r
+	]);
+
+/** A closed outline as the dense polygon of the smooth curve through pts. */
+function densifyClosed(pts: Pt[], per = 4): Pt[] {
+	const n = pts.length;
+	const loop = [pts[n - 1]!, ...pts, pts[0]!, pts[1]!];
+	// Catmull-Rom over the wrapped list, keeping only the segments of the loop proper.
+	return densify(loop, per).slice(per, per * (n + 1));
+}
+
+const centroid = (pts: Pt[]): Pt => [
+	pts.reduce((n, p) => n + p[0], 0) / pts.length,
+	pts.reduce((n, p) => n + p[1], 0) / pts.length
+];
 
 // ── Materials per sensor ────────────────────────────────────────────────────
 
@@ -504,6 +584,18 @@ interface Terrain {
 	coast: { pts: Pt[]; side: Side } | null;
 	/** Contour lines on ridges and surf lines along a shore. */
 	contours: Pt[][];
+	/** Ponds in the patchwork, as closed outlines. */
+	ponds: Pt[][];
+	/** Where a road crosses the river: centre, heading (radians), span and deck width. */
+	bridges: { p: Pt; a: number; len: number; w: number }[];
+	/** Where two roads meet. */
+	junctions: { p: Pt; r: number }[];
+	/** Hedgerow trees and copses: [x, y, r]. */
+	trees: [number, number, number][];
+	/** Piers: root on the shore, tip over the water. */
+	piers: { a: Pt; b: Pt; w: number }[];
+	/** True where the ground is water (sea, lake, pond, river). */
+	water: (p: Pt) => boolean;
 }
 
 type Side = "left" | "right" | "top" | "bottom";
@@ -575,6 +667,7 @@ function makeTerrain(regionId: number, terrainName: string, infrastructure: numb
 	const rng = seededRandom(hash32(regionId, 0x7e11a1));
 	const kind = TERRAIN_KIND[terrainName] ?? "plains";
 	const built = infrastructure == null ? 1 : clamp(0.35 + infrastructure * 0.25, 0.35, 1.6);
+	const harbour = (infrastructure ?? 1) >= 2;
 
 	// A jittered lattice whose quads share corners: a field patchwork.
 	const cw = (FRAME_W + 2 * MARGIN) / COLS;
@@ -622,11 +715,12 @@ function makeTerrain(regionId: number, terrainName: string, infrastructure: numb
 			["forest", 0.4],
 			["field", 0.15]
 		],
+		// The lake itself is a basin over the patchwork; "water" cells are ponds.
 		lake: [
-			["water", 0.64],
-			["forest", 0.14],
-			["field", 0.14],
-			["bare", 0.08]
+			["field", 0.46],
+			["forest", 0.26],
+			["water", 0.14],
+			["bare", 0.14]
 		],
 		// The sea itself is drawn over the patchwork (see the coast below).
 		shore: [
@@ -702,15 +796,41 @@ function makeTerrain(regionId: number, terrainName: string, infrastructure: numb
 		coast = { pts, side };
 		sea = [...pts, ...seaCorners(side)];
 	}
-	const inSea = (p: Pt) => !!sea && inPolygon(p, sea);
-	/** Drop the stretch of a road that runs out to sea (one point is kept under the water). */
-	const toLand = (pts: Pt[]): Pt[] => {
-		if (!sea) return pts;
-		const land = pts.map((p) => !inSea(p));
-		const first = land.indexOf(true);
-		const last = land.lastIndexOf(true);
-		if (first < 0) return [];
-		return pts.slice(Math.max(0, first - 1), Math.min(pts.length, last + 2));
+
+	// A lake is a closed basin in the middle of the frame.
+	let lake: Pt[] | null = null;
+	if (kind === "lake") {
+		const cx = range(rng, FRAME_W * 0.35, FRAME_W * 0.65);
+		const cy = range(rng, FRAME_H * 0.35, FRAME_H * 0.65);
+		const rx = range(rng, 130, 190);
+		const ry = range(rng, 80, 125);
+		lake = [];
+		for (let k = 0; k < 24; k++) {
+			const a = (k / 24) * Math.PI * 2;
+			const wobble = range(rng, 0.88, 1.12);
+			lake.push([cx + Math.cos(a) * rx * wobble, cy + Math.sin(a) * ry * wobble]);
+		}
+		lake = densifyClosed(lake);
+	}
+	const basin = sea ?? lake;
+	const inBasin = (p: Pt) => !!basin && inPolygon(p, basin);
+	/** A road's stretches on land; each keeps one point under the water so it reaches the shore. */
+	const landRuns = (pts: Pt[]): Pt[][] => {
+		if (!basin) return [pts];
+		const runs: Pt[][] = [];
+		let cur: Pt[] = [];
+		for (let i = 0; i < pts.length; i++) {
+			if (!inBasin(pts[i]!)) {
+				if (!cur.length && i > 0) cur.push(pts[i - 1]!);
+				cur.push(pts[i]!);
+			} else if (cur.length) {
+				cur.push(pts[i]!);
+				runs.push(cur);
+				cur = [];
+			}
+		}
+		if (cur.length) runs.push(cur);
+		return runs.filter((r) => r.length >= 2);
 	};
 
 	// Roads: a main road edge to edge, maybe a crossing road and dirt tracks.
@@ -736,7 +856,7 @@ function makeTerrain(regionId: number, terrainName: string, infrastructure: numb
 	};
 	const dense = kind === "urban" || kind === "city" || kind === "town";
 	const firstHorizontal = rng() < 0.6;
-	const roads: Road[] = [
+	const raw: Road[] = [
 		road(
 			coast ? coast.side === "top" || coast.side === "bottom" : firstHorizontal,
 			dense ? 6 : 4,
@@ -744,49 +864,97 @@ function makeTerrain(regionId: number, terrainName: string, infrastructure: numb
 			coast ? 25 : 40
 		)
 	];
-	if (rng() < (dense || coast ? 0.95 : 0.55)) roads.push(road(!(roads[0]!.pts[0]![0] < 0), 3.5, true, 50));
-	if ((dense && rng() < 0.7) || (coast && built > 1.1)) roads.push(road(rng() < 0.5, 3, true, 60));
+	if (rng() < (dense || coast ? 0.95 : 0.55)) raw.push(road(!(raw[0]!.pts[0]![0] < 0), 3.5, true, 50));
+	if ((dense && rng() < 0.7) || (coast && built > 1.1)) raw.push(road(rng() < 0.5, 3, true, 60));
 	const tracks = dense ? 0 : 1 + Math.floor(rng() * 2);
-	for (let k = 0; k < tracks; k++) roads.push(road(rng() < 0.5, 2, false, 80));
-	if (sea) {
-		for (const r of roads) r.pts = toLand(r.pts);
-		for (let k = roads.length - 1; k > 0; k--) if (roads[k]!.pts.length < 2) roads.splice(k, 1);
+	for (let k = 0; k < tracks; k++) raw.push(road(rng() < 0.5, 2, false, 80));
+	// Roads are kept as the dense polyline of the curve that is drawn, so a
+	// convoy placed along one sits on the drawn road. The main road stays first.
+	const roads: Road[] = [];
+	for (const r of raw) {
+		const runs = landRuns(densify(r.pts, 5)).sort((a, b) => polylineLength(b) - polylineLength(a));
+		for (const run of runs) if (polylineLength(run) > 25) roads.push({ ...r, pts: run });
 	}
+	if (!roads.length) roads.push({ ...raw[0]!, pts: densify(raw[0]!.pts, 5) });
 
 	// A river in about a third of the regions (never in the mountains' rock,
 	// and lakes and shores already have a waterbody).
 	let river: Terrain["river"] = null;
-	let bridge: Pt | null = null;
 	if (kind !== "mountain" && kind !== "lake" && kind !== "shore" && rng() < 0.4) {
 		const pts: Pt[] = [];
 		const x0 = range(rng, 140, 500);
 		for (let k = 0; k <= 9; k++) {
 			pts.push([x0 + Math.sin(k * 0.9 + rng()) * 60 + range(rng, -20, 20), -60 + (k / 9) * (FRAME_H + 120)]);
 		}
-		river = { pts, width: range(rng, 9, 15) };
-		let best = Infinity;
-		for (let k = 0; k <= 40; k++) {
-			const { p } = along(roads[0]!.pts, k / 40);
-			const d = distToPolyline(p, pts);
-			if (d < best) {
-				best = d;
-				bridge = p;
+		river = { pts: densify(pts, 6), width: range(rng, 9, 15) };
+	}
+	const inRiver = (p: Pt, pad = 0) => !!river && distToPolyline(p, river.pts) < river.width / 2 + pad;
+
+	// Ponds: a "water" cell holds a rounded pond in wet meadow. Roads and the
+	// river never run through one.
+	const ponds: Pt[][] = [];
+	for (const c of cells) {
+		if (c.use !== "water") continue;
+		const [cx, cy] = centroid(c.pts);
+		const r = Math.min(cw, ch) * range(rng, 0.26, 0.38);
+		const ph = rng() * 6;
+		if (roads.some((rd) => distToPolyline([cx, cy], rd.pts) < r * 1.35 + rd.width) || inRiver([cx, cy], r * 1.4))
+			continue;
+		const blob: Pt[] = [];
+		for (let k = 0; k < 16; k++) {
+			const a = (k / 16) * Math.PI * 2;
+			const w = 1 + Math.sin(a * 3 + ph) * 0.14;
+			blob.push([cx + Math.cos(a) * r * w * 1.25, cy + Math.sin(a) * r * w]);
+		}
+		ponds.push(densifyClosed(blob, 3));
+	}
+
+	/** True where the ground is water. The drawn shapes and every placement use it. */
+	const water = (p: Pt) => inBasin(p) || inRiver(p) || ponds.some((q) => inPolygon(p, q));
+
+	// Bridges wherever a road crosses the river.
+	const bridges: Terrain["bridges"] = [];
+	if (river) {
+		for (const r of roads) {
+			let wet: number | null = null;
+			for (let i = 0; i < r.pts.length; i++) {
+				const hit = inRiver(r.pts[i]!, 3);
+				if (hit && wet == null) wet = Math.max(0, i - 1);
+				if (!hit && wet != null) {
+					const a = r.pts[wet]!;
+					const b = r.pts[i]!;
+					bridges.push({
+						p: [(a[0] + b[0]) / 2, (a[1] + b[1]) / 2],
+						a: Math.atan2(b[1] - a[1], b[0] - a[0]),
+						len: dist(a, b) + 4,
+						w: r.width + 3
+					});
+					wet = null;
+				}
 			}
 		}
 	}
+	const bridge = bridges[0]?.p ?? null;
 
-	// A lake is a closed basin; a shore puts the sea along one edge of view.
-	let waterbody: Pt[] | null = sea;
-	if (kind === "lake") {
-		const cx = range(rng, FRAME_W * 0.35, FRAME_W * 0.65);
-		const cy = range(rng, FRAME_H * 0.35, FRAME_H * 0.65);
-		const rx = range(rng, 130, 190);
-		const ry = range(rng, 80, 125);
-		waterbody = [];
-		for (let k = 0; k < 24; k++) {
-			const a = (k / 24) * Math.PI * 2;
-			const wobble = range(rng, 0.88, 1.12);
-			waterbody.push([cx + Math.cos(a) * rx * wobble, cy + Math.sin(a) * ry * wobble]);
+	// Junctions: where two roads meet, a widened pad.
+	const junctions: Terrain["junctions"] = [];
+	for (let i = 0; i < roads.length; i++) {
+		for (let j = i + 1; j < roads.length; j++) {
+			const A = roads[i]!.pts;
+			const B = roads[j]!.pts;
+			for (let s = 0; s < A.length - 1; s++) {
+				for (let t = 0; t < B.length - 1; t++) {
+					const [p, q] = [A[s]!, A[s + 1]!];
+					const [u, v] = [B[t]!, B[t + 1]!];
+					const den = (q[0] - p[0]) * (v[1] - u[1]) - (q[1] - p[1]) * (v[0] - u[0]);
+					if (!den) continue;
+					const ta = ((u[0] - p[0]) * (v[1] - u[1]) - (u[1] - p[1]) * (v[0] - u[0])) / den;
+					const tb = ((u[0] - p[0]) * (q[1] - p[1]) - (u[1] - p[1]) * (q[0] - p[0])) / den;
+					if (ta < 0 || ta > 1 || tb < 0 || tb > 1) continue;
+					const x: Pt = [lerp(p[0], q[0], ta), lerp(p[1], q[1], ta)];
+					if (!water(x)) junctions.push({ p: x, r: Math.max(roads[i]!.width, roads[j]!.width) * 0.9 + 1.5 });
+				}
+			}
 		}
 	}
 
@@ -801,9 +969,11 @@ function makeTerrain(regionId: number, terrainName: string, infrastructure: numb
 		}
 	}
 
+	const nearWater = (p: Pt, r: number) => water(p) || ring(p, r).some(water);
+
 	// City blocks: buildings in a rotated grid, inside urban cells.
 	const buildings: Terrain["buildings"] = [];
-	if (dense || kind === "plains" || kind === "hills" || kind === "fields" || kind === "shore") {
+	if (dense || kind === "plains" || kind === "hills" || kind === "fields" || kind === "shore" || kind === "lake") {
 		const rot = range(rng, -12, 12);
 		const step = kind === "city" ? 17 : kind === "town" ? 22 : dense ? 20 : kind === "shore" ? 20 : 30;
 		const cap = Math.round(
@@ -817,20 +987,16 @@ function makeTerrain(regionId: number, terrainName: string, infrastructure: numb
 				// Villages along the main road outside cities.
 				const village = kind !== "urban" && distToPolyline(p, roads[0]!.pts) < 22 && rng() < 0.35 * built;
 				if (!urbanCell && !village) continue;
-				if (waterbody && inPolygon(p, waterbody)) continue;
-				// Keep the beach clear.
-				if (coast && distToPolyline(p, coast.pts) < 14) continue;
-				if (river && distToPolyline(p, river.pts) < river.width) continue;
-				if (roads.some((r) => distToPolyline(p, r.pts) < r.width + 5)) continue;
 				const big = rng() < 0.2;
-				buildings.push({
-					x: p[0],
-					y: p[1],
-					w: big ? range(rng, 12, 17) : range(rng, 6, 11),
-					h: big ? range(rng, 8, 12) : range(rng, 5, 9),
-					rot,
-					tone: rng()
-				});
+				const w = big ? range(rng, 12, 17) : range(rng, 6, 11);
+				const h = big ? range(rng, 8, 12) : range(rng, 5, 9);
+				const tone = rng();
+				const mid: Pt = [p[0] + w / 2, p[1] + h / 2];
+				if (nearWater(mid, Math.max(w, h) * 0.7 + 3)) continue;
+				// Keep the beach clear.
+				if (coast && distToPolyline(mid, coast.pts) < 14 + w / 2) continue;
+				if (roads.some((r) => distToPolyline(p, r.pts) < r.width + 5)) continue;
+				buildings.push({ x: p[0], y: p[1], w, h, rot, tone });
 			}
 		}
 	}
@@ -847,7 +1013,79 @@ function makeTerrain(regionId: number, terrainName: string, infrastructure: numb
 		}
 	}
 
-	return { kind, cells, roads, river, bridge, buildings, dunes, waterbody, coast, contours };
+	// Trees: hedgerows strung along field edges and copses in field corners,
+	// one SVG path for all of them.
+	const trees: Terrain["trees"] = [];
+	const treeCap = kind === "desert" || kind === "mountain" ? 15 : dense ? 60 : 170;
+	for (const c of cells) {
+		if (trees.length >= treeCap) break;
+		if (c.use !== "field" && c.use !== "park") continue;
+		if (rng() > (c.use === "park" ? 0.95 : 0.5)) continue;
+		const e = Math.floor(rng() * 4);
+		const a = c.pts[e]!;
+		const b = c.pts[(e + 1) % 4]!;
+		const n = 4 + Math.floor(rng() * 7);
+		for (let k = 0; k < n; k++) {
+			const t = (k + rng() * 0.7) / n;
+			trees.push([
+				lerp(a[0], b[0], t) + range(rng, -1.5, 1.5),
+				lerp(a[1], b[1], t) + range(rng, -1.5, 1.5),
+				range(rng, 1.6, 3)
+			]);
+		}
+		if (rng() < (c.use === "park" ? 0.8 : 0.3)) {
+			const [mx, my] = centroid(c.pts);
+			const corner = c.pts[Math.floor(rng() * 4)]!;
+			const q: Pt = [lerp(mx, corner[0], 0.55), lerp(my, corner[1], 0.55)];
+			for (let k = 0; k < 5 + Math.floor(rng() * 5); k++)
+				trees.push([q[0] + range(rng, -7, 7), q[1] + range(rng, -6, 6), range(rng, 1.8, 3.4)]);
+		}
+	}
+	const keptTrees = trees.filter(
+		([x, y, r]) =>
+			!nearWater([x, y], r + 1) &&
+			!(coast && distToPolyline([x, y], coast.pts) < 12) &&
+			!roads.some((rd) => distToPolyline([x, y], rd.pts) < rd.width / 2 + r) &&
+			!buildings.some((b) => Math.abs(b.x + b.w / 2 - x) < b.w / 2 + r && Math.abs(b.y + b.h / 2 - y) < b.h / 2 + r)
+	);
+
+	// Piers off a built-up coast or lake shore, reaching out over the water.
+	const piers: Terrain["piers"] = [];
+	if (harbour && coast) {
+		const n = 1 + Math.floor(rng() * 3);
+		const t0 = range(rng, 0.3, 0.55);
+		for (let k = 0; k < n; k++) {
+			const base = along(coast.pts, t0 + k * 0.07).p;
+			piers.push({ a: seaward(base, coast.side, -5), b: seaward(base, coast.side, range(rng, 38, 58)), w: 4.5 });
+		}
+	} else if (harbour && lake) {
+		const base = lake[Math.floor(rng() * lake.length)]!;
+		const c = centroid(lake);
+		const len = range(rng, 22, 30);
+		const d = dist(base, c) || 1;
+		const ux = (c[0] - base[0]) / d;
+		const uy = (c[1] - base[1]) / d;
+		piers.push({ a: [base[0] - ux * 4, base[1] - uy * 4], b: [base[0] + ux * len, base[1] + uy * len], w: 3.5 });
+	}
+
+	return {
+		kind,
+		cells,
+		roads,
+		river,
+		bridge,
+		bridges,
+		junctions,
+		buildings,
+		dunes,
+		waterbody: basin,
+		coast,
+		contours,
+		ponds,
+		trees: keptTrees,
+		piers,
+		water
+	};
 }
 
 // ── Building the frame ──────────────────────────────────────────────────────
@@ -859,7 +1097,55 @@ interface View {
 	heading: number;
 }
 
-const CATEGORY_CAP: Record<string, number> = { vehicle: 24, artillery: 10, infantry: 16, air: 8 };
+const CATEGORY_CAP: Record<string, number> = { vehicle: 24, artillery: 10, infantry: 16, air: 8, naval: 6 };
+
+type VehicleKind = "tank" | "apc" | "truck" | "sam" | "spg";
+/** Vehicle outlines in local units, front towards +x: hull, then turret/cab/launcher on top. */
+const VEHICLES: Record<
+	VehicleKind,
+	{ len: number; beam: number; hull: string; top: string; paint: string; topPaint: string }
+> = {
+	tank: {
+		len: 5.6,
+		beam: 3,
+		hull: "M-2.8 -1.5h5.2l0.4 0.4v2.2l-0.4 0.4h-5.2z",
+		top: "M-1.4 0a1.15 1.15 0 1 0 2.3 0a1.15 1.15 0 1 0 -2.3 0zM0.8 -0.22h3.9v0.44h-3.9z",
+		paint: "#66704a",
+		topPaint: "#4f573a"
+	},
+	apc: {
+		len: 5.4,
+		beam: 2.7,
+		hull: "M-2.7 -1.35h4.2l1.2 0.75v1.2l-1.2 0.75h-4.2z",
+		top: "M-0.9 -0.65h1.3v1.3h-1.3zM0.4 -0.12h1.7v0.24h-1.7z",
+		paint: "#6b7350",
+		topPaint: "#50583c"
+	},
+	truck: {
+		len: 5.8,
+		beam: 2.3,
+		hull: "M-2.9 -1.15h3.9v2.3h-3.9zM1.4 -1h1.5v2h-1.5z",
+		top: "M-2.7 -0.95h3.5v1.9h-3.5z",
+		paint: "#5d6444",
+		topPaint: "#7d7a5a"
+	},
+	sam: {
+		len: 6,
+		beam: 2.6,
+		hull: "M-3 -1.3h4.2v2.6h-4.2zM1.5 -1.1h1.5v2.2h-1.5z",
+		top: "M-2.6 -0.9h3.4v0.7h-3.4zM-2.6 0.2h3.4v0.7h-3.4z",
+		paint: "#626a48",
+		topPaint: "#8a8c78"
+	},
+	spg: {
+		len: 6,
+		beam: 3,
+		hull: "M-3 -1.5h5.4l0.6 0.5v2l-0.6 0.5h-5.4z",
+		top: "M-2.6 -1.1h2.8v2.2h-2.8zM0.2 -0.2h5.2v0.4h-5.2z",
+		paint: "#6a6f4a",
+		topPaint: "#535939"
+	}
+};
 const MAX_DETECTIONS = 12;
 
 const TYPE_LABEL: Record<string, string> = {
@@ -909,15 +1195,16 @@ function buildImage(input: ImageryInput, mode: ImageMode): Scene {
 
 	// Camera: satellites look straight down, north up; drones zoom in on a
 	// part of the region with a heading.
-	const view: View =
-		platform === "drone"
-			? {
-					cx: range(rng, 190, 450),
-					cy: range(rng, 155, 245),
-					zoom: 2.4,
-					heading: Math.round(range(rng, -25, 25))
-				}
-			: { cx: FRAME_W / 2, cy: FRAME_H / 2, zoom: 1, heading: 0 };
+	// A drone is flown over land: the first aim point with dry ground around it.
+	let view: View = { cx: FRAME_W / 2, cy: FRAME_H / 2, zoom: 1, heading: 0 };
+	if (platform === "drone") {
+		const heading = Math.round(range(rng, -25, 25));
+		for (let k = 0; k < 16; k++) {
+			const c: Pt = [range(rng, 190, 450), range(rng, 155, 245)];
+			view = { cx: c[0], cy: c[1], zoom: 2.4, heading };
+			if (!terrain.water(c) && ring(c, 40).filter(terrain.water).length <= 2) break;
+		}
+	}
 	const halfW = FRAME_W / 2 / view.zoom;
 	const halfH = FRAME_H / 2 / view.zoom;
 	const cosH = Math.cos((-view.heading * Math.PI) / 180);
@@ -980,7 +1267,8 @@ function buildImage(input: ImageryInput, mode: ImageMode): Scene {
 				break;
 			}
 			case "water":
-				ground.push({ k: "path", d, fill: P.c("water", v * 0.3), stroke: P.c("dirt", 0.1), sw: 0.8 });
+				// Wet meadow round a pond (the pond itself is drawn with the water).
+				ground.push({ k: "path", d, fill: P.c("grass", 0.12 + v * 0.2, "#5f7048") });
 				break;
 			case "sand":
 				ground.push({ k: "path", d, fill: P.c("sand", v, EO_DESERT[Math.floor(cell.tone * EO_DESERT.length)]!) });
@@ -1030,13 +1318,25 @@ function buildImage(input: ImageryInput, mode: ImageMode): Scene {
 	}
 
 	// ── Water, roads, buildings ──
+	const water = terrain.water;
+	const waterSurf = mode === "sar" ? grey(0.22) : mode === "ir" ? P.c("water", 0.8) : "#e9eeec";
+	for (const pond of terrain.ponds) {
+		const d = pathOfClosed(pond);
+		features.push({ k: "path", d, fill: P.c("water", 0.5, "#41605e"), stroke: P.c("dirt", 0.15), sw: 1.6 });
+		features.push({ k: "path", d: pathOfClosed(shrink(pond, 0.62)), fill: P.c("water", -0.1, "#2f4a4f"), op: 0.85 });
+	}
 	if (terrain.river) {
-		const d = smoothPath(terrain.river.pts);
-		features.push({ k: "path", d, stroke: P.c("grass", -0.4), sw: terrain.river.width + 5, fill: "none", op: 0.6 });
-		features.push({ k: "path", d, stroke: P.c("water"), sw: terrain.river.width, fill: "none", cap: "round" });
+		const d = pathOf(terrain.river.pts);
+		const w = terrain.river.width;
+		// Muddy banks, shallows along both edges, the deep channel down the middle.
+		features.push({ k: "path", d, stroke: P.c("dirt", -0.1, "#6f6648"), sw: w + 6, fill: "none", op: 0.7 });
+		features.push({ k: "path", d, stroke: P.c("water", 0.7, "#4a6a66"), sw: w, fill: "none" });
+		features.push({ k: "path", d, stroke: P.c("water", -0.2, "#283d43"), sw: w * 0.5, fill: "none" });
 	}
 	for (const road of terrain.roads) {
-		const d = smoothPath(road.pts);
+		const d = pathOf(road.pts);
+		if (road.paved && road.width >= 3.5)
+			features.push({ k: "path", d, stroke: P.c("dirt", 0.35), sw: road.width + 2, fill: "none", op: 0.55 });
 		features.push({
 			k: "path",
 			d,
@@ -1048,19 +1348,42 @@ function buildImage(input: ImageryInput, mode: ImageMode): Scene {
 		if (road.paved && mode === "eo" && road.width >= 4)
 			features.push({ k: "path", d, stroke: "#c9c4b4", sw: 0.4, dash: "4 6", fill: "none", op: 0.5 });
 	}
-	if (terrain.bridge && terrain.river) {
-		const b = terrain.bridge;
+	if (terrain.junctions.length)
+		features.push({
+			k: "path",
+			d: blobs(terrain.junctions.map((j) => [j.p[0], j.p[1], j.r])),
+			fill: P.c("asphalt", 0.08)
+		});
+	for (const b of terrain.bridges) {
+		const tf = `rotate(${r1(deg(b.a))} ${r1(b.p[0])} ${r1(b.p[1])})`;
+		const x = r1(b.p[0] - b.len / 2);
+		const y = r1(b.p[1] - b.w / 2);
+		if (shadowLen)
+			features.push({
+				k: "rect",
+				x: r1(x + sdx * 2),
+				y: r1(y + sdy * 2),
+				w: r1(b.len),
+				h: r1(b.w),
+				fill: EO.shadow,
+				op: 0.5,
+				tf
+			});
 		features.push({
 			k: "rect",
-			x: b[0] - 4,
-			y: b[1] - terrain.river.width / 2 - 4,
-			w: 8,
-			h: terrain.river.width + 8,
+			x,
+			y,
+			w: r1(b.len),
+			h: r1(b.w),
 			fill: P.c("concrete"),
-			tf: `rotate(${r1(deg(along(terrain.roads[0]!.pts, 0.5).a) + 90)} ${r1(b[0])} ${r1(b[1])})`
+			stroke: P.c("concrete", -0.35),
+			sw: 0.6,
+			tf
 		});
+		if (mode === "sar") features.push({ k: "rect", x, y, w: r1(b.len), h: 1.2, fill: grey(1), tf });
 	}
-	// ── Lake or sea: drawn over the roads so they end at the water ──
+
+	// ── Lake or sea ──
 	if (terrain.coast) {
 		const { pts, side } = terrain.coast;
 		const poly = (n: number) => pathOf([...pts.map((p) => seaward(p, side, n)), ...seaCorners(side)], true);
@@ -1073,86 +1396,86 @@ function buildImage(input: ImageryInput, mode: ImageMode): Scene {
 		features.push({ k: "path", d: poly(70), fill: P.c("water", 0, "#25393f") });
 		features.push({ k: "path", d: poly(150), fill: P.c("water", -0.4, "#1d2e35") });
 		// Surf: broken white lines along the beach (rougher in rain).
-		const surf = mode === "sar" ? grey(0.22) : mode === "ir" ? P.c("water", 0.8) : "#e9eeec";
 		for (const [n, op] of [
-			[5, 0.7],
-			[13, 0.45],
-			[25, 0.25]
+			[3, 0.8],
+			[9, 0.5],
+			[17, 0.3],
+			[28, 0.18]
 		] as const) {
 			features.push({
 				k: "path",
 				d: smoothPath(pts.map((p) => seaward(p, side, n))),
-				stroke: surf,
-				sw: weather === "rain" ? 1.6 : 1.1,
+				stroke: waterSurf,
+				sw: weather === "rain" ? 1.6 : n < 5 ? 1.6 : 1.1,
 				dash: `${9 + n} ${6 + n / 2}`,
 				fill: "none",
 				op
 			});
 		}
-		// A jetty and boats off a built-up coast.
-		const harbour = (input.infrastructure ?? f.buildings?.infrastructure ?? 1) >= 2;
-		const hr = seededRandom(hash32(input.regionId, 0x4a7b));
-		const quay = along(pts, range(hr, 0.35, 0.65));
-		const out = seaward([0, 0], side, 1);
-		if (harbour) {
-			const a = Math.atan2(out[1], out[0]);
-			features.push({
-				k: "rect",
-				x: r1(quay.p[0]),
-				y: r1(quay.p[1] - 2.5),
-				w: 46,
-				h: 5,
-				fill: P.c("concrete", 0.2),
-				tf: `rotate(${r1(deg(a))} ${r1(quay.p[0])} ${r1(quay.p[1])})`
-			});
-		}
-		const boats = harbour ? 3 + Math.floor(hr() * 3) : Math.floor(hr() * 2);
-		for (let k = 0; k < boats; k++) {
-			const base = along(pts, range(hr, 0.15, 0.85)).p;
-			const p = seaward(base, side, range(hr, 40, 150));
-			const a = range(hr, 0, Math.PI * 2);
-			const tf = `rotate(${r1(deg(a))} ${r1(p[0])} ${r1(p[1])})`;
-			if (mode === "eo" && !night)
-				features.push({
-					k: "path",
-					d: `M${r1(p[0] - 5)} ${r1(p[1])}l-22 -4m22 4l-22 4`,
-					stroke: "#dfe6e4",
-					sw: 0.8,
-					fill: "none",
-					op: 0.5,
-					tf
-				});
-			features.push({
-				k: "ellipse",
-				x: r1(p[0]),
-				y: r1(p[1]),
-				rx: 5,
-				ry: 1.8,
-				fill: mode === "sar" ? grey(0.95) : mode === "ir" ? grey(night ? 0.7 : 0.62) : "#e6e3da",
-				tf
-			});
-			if (mode === "eo" && night)
-				lights.push({ k: "circle", x: r1(p[0]), y: r1(p[1]), r: 0.9, fill: "#fff1c2", fx: "glow" });
-		}
 		if (snow > 0.3 && mode === "eo") notes.push("Snow cover inland; the coast is clear");
 	} else if (terrain.waterbody) {
-		const d = pathOf(terrain.waterbody, true);
-		features.push({ k: "path", d, fill: P.c("water", 0) });
+		const lake = terrain.waterbody;
+		// Shallows round the edge, deeper water towards the middle.
+		features.push({ k: "path", d: pathOfClosed(lake), fill: P.c("water", 0.75, "#3d6262") });
+		features.push({ k: "path", d: pathOfClosed(shrink(lake, 0.86)), fill: P.c("water", 0.25, "#304c52") });
+		features.push({ k: "path", d: pathOfClosed(shrink(lake, 0.6)), fill: P.c("water", -0.25, "#22363d") });
 		// A bright shoreline and a few reeds make the edge readable in every band.
-		features.push({ k: "path", d, stroke: P.c("dirt", 0.35), sw: 2.4, fill: "none", op: 0.75 });
-		features.push({ k: "path", d, stroke: P.c("sand", 0.5), sw: 1, fill: "none", op: 0.6 });
-		for (let k = 0; k < terrain.waterbody.length; k += 2) {
-			const [x, y] = terrain.waterbody[k]!;
-			features.push({
-				k: "path",
-				d: `M${r1(x - 2)} ${r1(y)}l1 -4M${r1(x + 1)} ${r1(y)}l1 -5`,
-				stroke: P.c("grass", -0.4),
-				sw: 0.8,
-				fill: "none",
-				op: 0.5
-			});
+		features.push({ k: "path", d: pathOfClosed(lake), stroke: P.c("dirt", 0.35), sw: 2.4, fill: "none", op: 0.75 });
+		features.push({
+			k: "path",
+			d: pathOfClosed(shrink(lake, 0.975)),
+			stroke: waterSurf,
+			sw: 0.8,
+			fill: "none",
+			op: 0.35,
+			dash: "7 5"
+		});
+		const reeds: string[] = [];
+		for (let k = 0; k < lake.length; k += 2) {
+			const [x, y] = lake[k]!;
+			reeds.push(`M${r1(x - 2)} ${r1(y)}l1 -4M${r1(x + 1)} ${r1(y)}l1 -5`);
 		}
+		features.push({ k: "path", d: reeds.join(""), stroke: P.c("grass", -0.4), sw: 0.8, fill: "none", op: 0.5 });
 	}
+	// Piers: concrete fingers out over the water, with bollards.
+	for (const pier of terrain.piers) {
+		const a = Math.atan2(pier.b[1] - pier.a[1], pier.b[0] - pier.a[0]);
+		const len = dist(pier.a, pier.b);
+		const tf = `rotate(${r1(deg(a))} ${r1(pier.a[0])} ${r1(pier.a[1])})`;
+		if (shadowLen)
+			features.push({
+				k: "rect",
+				x: r1(pier.a[0] + sdx * 1.5),
+				y: r1(pier.a[1] - pier.w / 2 + sdy * 1.5),
+				w: r1(len),
+				h: pier.w,
+				fill: EO.shadow,
+				op: 0.45,
+				tf
+			});
+		features.push({
+			k: "rect",
+			x: r1(pier.a[0]),
+			y: r1(pier.a[1] - pier.w / 2),
+			w: r1(len),
+			h: pier.w,
+			fill: P.c("concrete", 0.2),
+			stroke: P.c("concrete", -0.3),
+			sw: 0.5,
+			tf
+		});
+		if (mode === "sar")
+			features.push({
+				k: "rect",
+				x: r1(pier.a[0]),
+				y: r1(pier.a[1] - pier.w / 2 - 1),
+				w: r1(len),
+				h: 1.2,
+				fill: grey(1),
+				tf
+			});
+	}
+
 	// Settlements: lit windows at night (EO), warm roofs (IR).
 	const lit = mode === "eo" && night;
 	const powered = clamp((f.buildings?.economy ?? input.infrastructure ?? 2) / 3, 0.2, 1);
@@ -1197,32 +1520,75 @@ function buildImage(input: ImageryInput, mode: ImageMode): Scene {
 			features.push({ k: "rect", x: r1(b.x + b.w), y: r1(b.y), w: 3, h: r1(b.h), fill: grey(0.02), tf, op: 0.9 });
 		}
 	}
+	// Trees: shadows, crowns and a sunlit side, three paths for the lot.
+	if (terrain.trees.length) {
+		const t = terrain.trees;
+		if (shadowLen)
+			features.push({
+				k: "path",
+				d: blobs(t.map(([x, y, r]) => [x + sdx * r * 0.9, y + sdy * r * 0.9, r])),
+				fill: EO.shadow,
+				op: 0.45
+			});
+		features.push({
+			k: "path",
+			d: blobs(t),
+			fill: P.c("forest", 0.05),
+			stroke: mode === "eo" ? P.c("forest", -0.5) : undefined,
+			sw: 0.4
+		});
+		if (mode !== "sar")
+			features.push({
+				k: "path",
+				d: blobs(t.map(([x, y, r]) => [x - sdx * r * 0.25 - 0.3, y - sdy * r * 0.25 - 0.3, r * 0.5])),
+				fill: P.c("forest", 0.6),
+				op: 0.5
+			});
+	}
 
 	// ── Placement ──
+	// Everything on the ground keeps to land, every hull to water; the
+	// placements are recorded so tests can check them against the terrain.
 	const placed: { p: Pt; r: number }[] = [];
-	const onWater = (p: Pt) =>
-		(!!terrain.river && distToPolyline(p, terrain.river.pts) < terrain.river.width / 2 + 6) ||
-		(!!terrain.waterbody && inPolygon(p, terrain.waterbody)) ||
-		terrain.cells.some((c) => c.use === "water" && inPolygon(p, c.pts));
+	const placements: Placement[] = [];
+	const record = (what: string, on: "land" | "water", foot: Pt[]) =>
+		placements.push({ what, on, foot: foot.map((q) => [r1(q[0]), r1(q[1])] as [number, number]) });
+	const coastDist = (p: Pt) => (terrain.coast ? distToPolyline(p, terrain.coast.pts) : Infinity);
+	/** Dry ground with a margin: no water within r, and off the beach. */
+	// Rings sampled every ~5 units: narrower than the narrowest river, so no water slips between samples.
+	const dry = (p: Pt, r: number) => {
+		if (water(p) || coastDist(p) <= Math.min(r, 10) + 6) return false;
+		for (const f of [1, 0.6, 0.3]) {
+			const rr = r * f;
+			if (rr > 1 && ring(p, rr, Math.max(6, Math.ceil((2 * Math.PI * rr) / 5))).some(water)) return false;
+		}
+		return true;
+	};
 	const onBuilding = (p: Pt) =>
 		terrain.buildings.some((b) => Math.abs(b.x + b.w / 2 - p[0]) < b.w && Math.abs(b.y + b.h / 2 - p[1]) < b.h);
-	function spot(r: number, prefer?: (p: Pt) => boolean): Pt {
+	/** A clear spot of radius r on land, in view; null when the frame shows no such ground. */
+	function spot(r: number, prefer?: (p: Pt) => boolean): Pt | null {
 		let fallback: Pt | null = null;
-		for (let k = 0; k < 40; k++) {
+		for (let k = 0; k < 60; k++) {
 			const s: Pt = [range(placeRng, 60, FRAME_W - 60), range(placeRng, 60, FRAME_H - 60)];
 			const p = toWorld(s);
-			if (onWater(p) || placed.some((q) => dist(q.p, p) < q.r + r)) continue;
+			if (!dry(p, r) || placed.some((q) => dist(q.p, p) < q.r + r)) continue;
 			if (!fallback) fallback = p;
-			if (onBuilding(p) && k < 30) continue;
-			if (prefer && !prefer(p) && k < 25) continue;
+			if (onBuilding(p) && k < 40) continue;
+			if (prefer && !prefer(p) && k < 35) continue;
 			placed.push({ p, r });
 			return p;
 		}
-		const p = fallback ?? toWorld([range(placeRng, 80, FRAME_W - 80), range(placeRng, 80, FRAME_H - 80)]);
-		placed.push({ p, r });
-		return p;
+		// Crowded: allow overlap with other placements, never water.
+		if (!fallback)
+			for (let k = 0; k < 60 && !fallback; k++) {
+				const p = toWorld([range(placeRng, 40, FRAME_W - 40), range(placeRng, 40, FRAME_H - 40)]);
+				if (dry(p, r)) fallback = p;
+			}
+		if (fallback) placed.push({ p: fallback, r });
+		return fallback;
 	}
-	/** A stretch of road in view, for convoys and checkpoints. */
+	/** A stretch of dry road in view, for convoys and checkpoints. */
 	function roadStretch(len: number): { pts: Pt[]; t0: number; t1: number } | null {
 		for (const road of terrain.roads) {
 			const total = polylineLength(road.pts);
@@ -1232,13 +1598,87 @@ function buildImage(input: ImageryInput, mode: ImageMode): Scene {
 				if (t1 > 1) continue;
 				const a = along(road.pts, t0).p;
 				const b = along(road.pts, t1).p;
-				if (inView(a, 30) && inView(b, 30) && !placed.some((q) => dist(q.p, a) < q.r + 10)) {
-					placed.push({ p: a, r: len / 2 }, { p: b, r: 10 });
-					return { pts: road.pts, t0, t1 };
-				}
+				if (!inView(a, 30) || !inView(b, 30) || placed.some((q) => dist(q.p, a) < q.r + 10)) continue;
+				let wet = false;
+				for (let s = 0; s <= 8 && !wet; s++) wet = !dry(along(road.pts, lerp(t0, t1, s / 8)).p, 5);
+				if (wet) continue;
+				placed.push({ p: a, r: len / 2 }, { p: b, r: 10 });
+				return { pts: road.pts, t0, t1 };
 			}
 		}
 		return null;
+	}
+	/** Split a line into its stretches over dry ground. */
+	const dryRuns = (pts: Pt[]): Pt[][] => {
+		const runs: Pt[][] = [[]];
+		for (const p of pts) {
+			if (!dry(p, 3)) {
+				if (runs[runs.length - 1]!.length) runs.push([]);
+			} else runs[runs.length - 1]!.push(p);
+		}
+		return runs.filter((r) => r.length >= 2);
+	};
+
+	/** Points round a hull (or vehicle) of length len and beam at p heading a, grown by margin. */
+	const hull = (p: Pt, a: number, len: number, beam: number, margin = 0): Pt[] => {
+		const c = Math.cos(a);
+		const s = Math.sin(a);
+		const h = len / 2 + margin;
+		const b = beam / 2 + margin;
+		const local: Pt[] = [
+			[h, 0],
+			[-h, 0],
+			[-h, b],
+			[-h, -b],
+			[h * 0.55, b],
+			[h * 0.55, -b],
+			[0, b],
+			[0, -b],
+			[-h * 0.5, b],
+			[-h * 0.5, -b]
+		];
+		return local.map(([x, y]) => [p[0] + x * c - y * s, p[1] + x * s + y * c]);
+	};
+	const nearPier = (q: Pt, pad: number) => terrain.piers.some((pr) => distToPolyline(q, [pr.a, pr.b]) < pr.w / 2 + pad);
+	const fleet: { p: Pt; r: number }[] = [];
+	/** Open water for a hull: every point round it wet, clear of piers, the shore and other ships. */
+	const openWater = (p: Pt, a: number, cls: ShipClass, margin: number) => {
+		const { len, beam } = SHIP[cls];
+		const pts = hull(p, a, len, beam, margin);
+		return (
+			water(p) &&
+			pts.every(water) &&
+			!pts.some((q) => nearPier(q, 2)) &&
+			!fleet.some((o) => dist(o.p, p) < o.r + len / 2 + 4)
+		);
+	};
+	/** A spot on open water in view for a ship of this class, or null (no water big enough). */
+	function seaSpot(cls: ShipClass, rngFn: Rng, near?: Pt): { p: Pt; a: number } | null {
+		for (let k = 0; k < 80; k++) {
+			const p: Pt = near
+				? [near[0] + range(rngFn, -40, 40), near[1] + range(rngFn, -30, 30)]
+				: toWorld([range(rngFn, 30, FRAME_W - 30), range(rngFn, 40, FRAME_H - 40)]);
+			const a = range(rngFn, 0, Math.PI * 2);
+			if (!inView(p, 16)) continue;
+			if (openWater(p, a, cls, 4)) return { p, a };
+		}
+		return null;
+	}
+	/** Moored alongside a pier: the hull parallel to it, on the water side. */
+	function berth(cls: ShipClass, pier: Terrain["piers"][number], side: 1 | -1): { p: Pt; a: number } | null {
+		const { len, beam } = SHIP[cls];
+		const pl = dist(pier.a, pier.b);
+		if (len > pl - 6) return null;
+		const a = Math.atan2(pier.b[1] - pier.a[1], pier.b[0] - pier.a[0]);
+		const off = pier.w / 2 + beam / 2 + 0.8;
+		const t = (pl - len / 2 - 2) / pl;
+		const p: Pt = [
+			lerp(pier.a[0], pier.b[0], t) - Math.sin(a) * off * side,
+			lerp(pier.a[1], pier.b[1], t) + Math.cos(a) * off * side
+		];
+		const pts = hull(p, a, len, beam, 1);
+		if (!pts.every(water) || fleet.some((o) => dist(o.p, p) < o.r + len / 2 + 2)) return null;
+		return { p, a };
 	}
 
 	const box = (pts: Pt[], pad: number) => {
@@ -1260,49 +1700,65 @@ function buildImage(input: ImageryInput, mode: ImageMode): Scene {
 		if (shadowLen) objects.push({ k: "rect", x: r1(x + sdx), y: r1(y + sdy), w, h, fill: EO.shadow, op: 0.55, tf });
 	};
 
-	/** A vehicle sprite at p heading a (radians). */
-	function vehicle(p: Pt, a: number, opts: { moving: boolean; hidden: boolean; type: string }) {
-		const w = 4.6 * (opts.type === "armor" ? 1 : 1.1);
-		const h = 2.3;
-		const tf = `rotate(${r1(deg(a))} ${r1(p[0])} ${r1(p[1])})`;
-		const x = r1(p[0] - w / 2);
-		const y = r1(p[1] - h / 2);
+	/**
+	 * A vehicle sprite at p heading a (radians): a tank, APC, truck, SAM
+	 * launcher or self-propelled gun, each with its own outline and a cast
+	 * shadow. Not drawn (false) if any part of it would sit on water.
+	 */
+	function vehicle(p: Pt, a: number, opts: { moving: boolean; hidden: boolean; type: string }): boolean {
+		const kind: VehicleKind =
+			opts.type === "armor"
+				? "tank"
+				: opts.type === "mechanized"
+					? "apc"
+					: opts.type === "air_defence"
+						? "sam"
+						: opts.type === "artillery"
+							? "spg"
+							: rng() < 0.45
+								? "truck"
+								: "apc";
+		const v = VEHICLES[kind];
+		const foot = hull(p, a, v.len, v.beam);
+		if (foot.some(water) || water(p)) return false;
+		record(kind, "land", foot);
+		const tf = `translate(${r1(p[0])} ${r1(p[1])}) rotate(${r1(deg(a))})`;
 		const atten = opts.hidden ? (mode === "ir" ? 0.65 : mode === "sar" ? 0.75 : 1) : 1;
 		if (mode === "eo") {
-			shadow(x, y, r1(w), h, tf);
-			objects.push({
-				k: "rect",
-				x,
-				y,
-				w: r1(w),
-				h,
-				rx: 0.4,
-				fill: shade("#66704a", rng() * 0.3 - 0.15),
-				stroke: "#1d2014",
-				sw: 0.35,
-				tf
-			});
-			if (opts.type === "armor")
-				objects.push({ k: "circle", x: r1(p[0]), y: r1(p[1]), r: 0.85, fill: shade(EO.metal, -0.25) });
-			if (opts.type === "air_defence")
-				objects.push({ k: "rect", x: r1(p[0] - 1.6), y: r1(p[1] - 0.7), w: 3.4, h: 1.4, fill: "#6d705c", tf });
+			if (shadowLen)
+				objects.push({
+					k: "path",
+					d: v.hull + v.top,
+					fill: EO.shadow,
+					op: 0.55,
+					tf: `translate(${r1(p[0] + sdx)} ${r1(p[1] + sdy)}) rotate(${r1(deg(a))})`
+				});
+			objects.push({ k: "path", d: v.hull, fill: shade(v.paint, rng() * 0.3 - 0.15), stroke: "#1d2014", sw: 0.3, tf });
+			objects.push({ k: "path", d: v.top, fill: v.topPaint, stroke: "#1d2014", sw: 0.2, tf });
 		} else if (mode === "ir") {
 			const t = (opts.moving ? 0.82 : night ? 0.58 : 0.66) * atten + (1 - atten) * 0.35;
-			objects.push({ k: "rect", x, y, w: r1(w), h, rx: 0.6, fill: grey(t), tf, fx: "soft" });
+			objects.push({ k: "path", d: v.hull, fill: grey(t), tf, fx: "soft" });
 			// Engine deck at the rear: the hottest part of a running vehicle.
 			if (opts.moving || rng() < 0.3)
 				objects.push({
 					k: "circle",
-					x: r1(p[0] - Math.cos(a) * w * 0.32),
-					y: r1(p[1] - Math.sin(a) * w * 0.32),
+					x: r1(p[0] - Math.cos(a) * v.len * 0.32),
+					y: r1(p[1] - Math.sin(a) * v.len * 0.32),
 					r: 1.1,
 					fill: grey(opts.moving ? 1 : 0.85 * atten),
 					fx: "glow"
 				});
 		} else {
+			const w = v.len;
+			const h = v.beam;
 			const o: Pt = opts.moving ? [p[0], p[1] + range(rng, 6, 12)] : p; // moving targets shift in azimuth
 			const bright = grey(atten);
-			objects.push({ k: "rect", x: r1(o[0] - w / 2), y: r1(o[1] - h / 2), w: r1(w), h, fill: bright, tf });
+			objects.push({
+				k: "path",
+				d: v.hull,
+				fill: bright,
+				tf: `translate(${r1(o[0])} ${r1(o[1])}) rotate(${r1(deg(a))})`
+			});
 			objects.push({ k: "rect", x: r1(o[0] + w / 2), y: r1(o[1] - h / 2), w: 3, h, fill: grey(0.02), op: 0.8 });
 			objects.push({
 				k: "path",
@@ -1323,6 +1779,179 @@ function buildImage(input: ImageryInput, mode: ImageMode): Scene {
 					fx: "soft"
 				});
 		}
+		return true;
+	}
+
+	/** A ship at p heading a: hull with bow and transom, deck detail by class, wake when under way. */
+	function ship(p: Pt, a: number, cls: ShipClass, moving: boolean, what: string) {
+		const { len, beam } = SHIP[cls];
+		fleet.push({ p, r: len / 2 });
+		record(what, "water", hull(p, a, len, beam));
+		const h = len / 2;
+		const b = beam / 2;
+		const bow = h - beam * 1.3;
+		const rot = `rotate(${r1(deg(a))})`;
+		const tf = `translate(${r1(p[0])} ${r1(p[1])}) ${rot}`;
+		const hullD = `M${r1(h)} 0Q${r1(h - beam * 0.35)} ${r1(-b)} ${r1(bow)} ${r1(-b)}L${r1(-h + 0.6)} ${r1(-b)}Q${r1(-h)} ${r1(-b)} ${r1(-h)} ${r1(-b + 0.6)}V${r1(b - 0.6)}Q${r1(-h)} ${r1(b)} ${r1(-h + 0.6)} ${r1(b)}L${r1(bow)} ${r1(b)}Q${r1(h - beam * 0.35)} ${r1(b)} ${r1(h)} 0Z`;
+		if (moving) {
+			// Kelvin wake arms and churned water astern, cut short before any shore.
+			let W = len * 2.2;
+			const back = (k: number, side: number): Pt => {
+				const x = -h - W * k;
+				const y = side * W * k * 0.36;
+				return [p[0] + x * Math.cos(a) - y * Math.sin(a), p[1] + x * Math.sin(a) + y * Math.cos(a)];
+			};
+			while (W > 4 && ![back(1, 1), back(1, -1), back(1, 0), back(0.5, 1), back(0.5, -1)].every(water)) W *= 0.6;
+			if (W > 4) {
+				const arms = `M${r1(-h)} 0l${r1(-W)} ${r1(W * 0.36)}M${r1(-h)} 0l${r1(-W)} ${r1(-W * 0.36)}`;
+				if (mode === "sar") {
+					features.push({
+						k: "path",
+						d: `M${r1(-h)} 0h${r1(-W)}`,
+						stroke: grey(0),
+						sw: r1(beam * 0.8),
+						op: 0.75,
+						fill: "none",
+						tf
+					});
+					features.push({ k: "path", d: arms, stroke: grey(0.55), sw: 0.6, op: 0.45, fill: "none", tf });
+				} else {
+					const foam = mode === "ir" ? grey(0.48) : "#e3ebe9";
+					features.push({
+						k: "path",
+						d: arms,
+						stroke: foam,
+						sw: 0.8,
+						op: mode === "ir" ? 0.35 : 0.55,
+						fill: "none",
+						tf
+					});
+					features.push({
+						k: "ellipse",
+						x: r1(-h - W * 0.33),
+						y: 0,
+						rx: r1(W * 0.36),
+						ry: r1(beam * 0.55),
+						fill: foam,
+						op: mode === "ir" ? 0.45 : 0.6,
+						fx: "soft",
+						tf
+					});
+					features.push({
+						k: "path",
+						d: `M${r1(h - 0.5)} ${r1(-b - 0.3)}q${r1(-beam)} ${r1(-beam * 0.5)} ${r1(-beam * 2)} ${r1(-beam * 0.5)}M${r1(h - 0.5)} ${r1(b + 0.3)}q${r1(-beam)} ${r1(beam * 0.5)} ${r1(-beam * 2)} ${r1(beam * 0.5)}`,
+						stroke: foam,
+						sw: 0.6,
+						op: 0.6,
+						fill: "none",
+						tf
+					});
+				}
+			}
+		}
+		if (shadowLen)
+			objects.push({
+				k: "path",
+				d: hullD,
+				fill: EO.shadow,
+				op: 0.4,
+				tf: `translate(${r1(p[0] + sdx * 1.3)} ${r1(p[1] + sdy * 1.3)}) ${rot}`
+			});
+		const paint = {
+			dinghy: "#e6e3da",
+			fishing: "#d6d1c4",
+			patrol: "#7f8789",
+			frigate: "#8a9193",
+			freighter: "#5b4038"
+		}[cls];
+		objects.push({
+			k: "path",
+			d: hullD,
+			fill: mode === "eo" ? paint : mode === "ir" ? grey(moving ? 0.66 : 0.58) : grey(0.95),
+			stroke: mode === "eo" ? "#1c2224" : undefined,
+			sw: 0.35,
+			tf
+		});
+		// Deck detail: [path, EO colour, IR temperature].
+		const deck: [string, string, number][] = [];
+		const box = (x: number, y: number, w: number, hh: number) => `M${r1(x)} ${r1(y)}h${r1(w)}v${r1(hh)}h${r1(-w)}z`;
+		if (cls === "freighter") {
+			let even = "";
+			let odd = "";
+			for (let i = 0; i < 6; i++) {
+				const d = box(-h + len * 0.2 + i * len * 0.11, -b + 0.9, len * 0.095, beam - 1.8);
+				if (i % 2) odd += d;
+				else even += d;
+			}
+			deck.push(
+				[even, "#8b4a3a", 0.55],
+				[odd, "#41607a", 0.55],
+				[box(-h + 1, -b + 0.6, len * 0.12, beam - 1.2), "#e8e6df", 0.7]
+			);
+		} else if (cls === "frigate") {
+			deck.push(
+				[box(-h * 0.4, -b * 0.6, len * 0.4, beam * 0.6), "#b9bfc0", 0.7],
+				[
+					`${box(-h + 0.8, -b + 0.7, len * 0.2, beam - 1.4)}M${r1(h * 0.5 + 0.9)} 0a0.9 0.9 0 1 0 -1.8 0a0.9 0.9 0 1 0 1.8 0`,
+					"#a2a8a9",
+					0.6
+				],
+				[`M${r1(h * 0.5)} -0.15h${r1(h * 0.32)}v0.3h${r1(-h * 0.32)}z`, "#4a4f50", 0.6]
+			);
+		} else if (cls === "patrol") {
+			deck.push(
+				[box(-h * 0.45, -b * 0.6, len * 0.35, beam * 0.6), "#c7cccc", 0.7],
+				[box(h * 0.35, -0.5, 1, 1), "#3e4344", 0.6]
+			);
+		} else if (cls === "fishing") {
+			deck.push(
+				[box(h * 0.05, -b * 0.65, len * 0.22, beam * 0.65), "#f0ede6", 0.68],
+				[
+					`M${r1(-h * 0.2)} 0l${r1(-h * 0.7)} ${r1(-b * 0.9)}M${r1(-h * 0.2)} 0l${r1(-h * 0.7)} ${r1(b * 0.9)}`,
+					"#3a3a34",
+					0.5
+				]
+			);
+		} else {
+			deck.push([`M0 ${r1(-b + 0.4)}v${r1(beam - 0.8)}`, "#7a6a50", 0.5]);
+		}
+		for (const [d, eo, ir] of deck) {
+			const line = !d.includes("z");
+			const c = mode === "eo" ? eo : mode === "ir" ? grey(ir) : grey(0.75);
+			objects.push(line ? { k: "path", d, stroke: c, sw: 0.4, fill: "none", tf } : { k: "path", d, fill: c, tf });
+		}
+		if (mode === "ir" && cls !== "dinghy") {
+			// The funnel: the hottest point on a ship.
+			const sx = cls === "freighter" ? -h + 2 : cls === "fishing" ? h * 0.15 : -h * 0.15;
+			objects.push({
+				k: "circle",
+				x: r1(p[0] + Math.cos(a) * sx),
+				y: r1(p[1] + Math.sin(a) * sx),
+				r: r1(Math.max(0.8, beam * 0.22)),
+				fill: grey(moving ? 1 : 0.85),
+				fx: "glow"
+			});
+		}
+		if (mode === "sar" && len >= 16) {
+			// Strong corner reflectors smear into a cross (sidelobes).
+			objects.push({
+				k: "path",
+				d: `M${r1(p[0] - len * 0.55)} ${r1(p[1])}h${r1(len * 1.1)}M${r1(p[0])} ${r1(p[1] - len * 0.4)}v${r1(len * 0.8)}`,
+				stroke: grey(0.9),
+				sw: 0.5,
+				op: 0.45
+			});
+		}
+		if (mode === "eo" && night)
+			lights.push({
+				k: "circle",
+				x: r1(p[0] + Math.cos(a) * h * 0.6),
+				y: r1(p[1] + Math.sin(a) * h * 0.6),
+				r: 0.9,
+				fill: "#fff1c2",
+				fx: "glow"
+			});
+		sprites++;
 	}
 
 	let sprites = 0;
@@ -1402,6 +2031,7 @@ function buildImage(input: ImageryInput, mode: ImageMode): Scene {
 	// ── SAM sites: hexagonal revetments with launchers and a radar ──
 	for (let s = 0; s < samSites; s++) {
 		const c = spot(26, (p) => !forestIn(p));
+		if (!c) continue;
 		anchors.sam!.push(c);
 		const R = 9 * S * 0.8;
 		const hex: Pt[] = [];
@@ -1414,8 +2044,7 @@ function buildImage(input: ImageryInput, mode: ImageMode): Scene {
 			const a = (k / launchers) * Math.PI * 2 + 0.3;
 			const p: Pt = [c[0] + Math.cos(a) * R * 0.62, c[1] + Math.sin(a) * R * 0.62];
 			pts.push(p);
-			vehicle(p, a, { moving: false, hidden: false, type: "air_defence" });
-			sprites++;
+			if (vehicle(p, a, { moving: false, hidden: false, type: "air_defence" })) sprites++;
 		}
 		objects.push({
 			k: "circle",
@@ -1460,6 +2089,31 @@ function buildImage(input: ImageryInput, mode: ImageMode): Scene {
 			Math.round((CATEGORY_CAP[g.cat] ?? 8) / (groups.filter((x) => x.cat === g.cat).length || 1))
 		);
 		const shown = Math.min(g.count, cap);
+		if (g.cat === "naval") {
+			// Warships keep to the open sea; a landlocked frame (lakes included) has nowhere to show them.
+			const pts: Pt[] = [];
+			const nr = seededRandom(hash32(input.regionId, window, 0x5a11));
+			for (let v = 0; v < (terrain.coast ? shown : 0); v++) {
+				const cls: ShipClass = v % 3 === 2 ? "patrol" : "frigate";
+				const at = seaSpot(cls, nr, pts[0]) ?? (pts.length ? seaSpot(cls, nr) : null);
+				if (!at) break;
+				ship(at.p, at.a, cls, moving || nr() < 0.5, "warship");
+				pts.push(at.p);
+			}
+			if (!pts.length) {
+				notes.push("Naval units reported; no open sea in frame");
+				continue;
+			}
+			detections.push({
+				...box(pts, 18),
+				label: mode === "sar" ? "SHIP RTN" : "WARSHIPS",
+				detail: `${countText(g.count, g.estimated)} · ${pct(g.conf)}`,
+				kind: "unit",
+				icon: "ship",
+				prio: 0
+			});
+			continue;
+		}
 		const clusterSize = g.cat === "artillery" ? 4 : g.cat === "air" ? 4 : g.cat === "infantry" ? 6 : 5;
 		const k = Math.min(4, Math.max(1, Math.ceil(shown / clusterSize)));
 		const shownPer = split(shown, k);
@@ -1473,11 +2127,13 @@ function buildImage(input: ImageryInput, mode: ImageMode): Scene {
 				// A convoy on the road, dust and exhaust trailing behind.
 				for (let v = 0; v < n; v++) {
 					const { p, a } = along(stretch.pts, lerp(stretch.t0, stretch.t1, n === 1 ? 0.5 : v / (n - 1)));
-					pts.push(p);
 					if (g.cat === "infantry") {
-						objects.push({ k: "circle", x: r1(p[0] + 3), y: r1(p[1]), r: 0.7, fill: P.hot("metal", 0.8) });
+						const q: Pt = [p[0] + 3, p[1]];
+						if (water(q)) continue;
+						record("soldier", "land", [q]);
+						objects.push({ k: "circle", x: r1(q[0]), y: r1(q[1]), r: 0.7, fill: P.hot("metal", 0.8) });
 					} else {
-						vehicle(p, a, { moving: true, hidden: false, type: g.type });
+						if (!vehicle(p, a, { moving: true, hidden: false, type: g.type })) continue;
 						if (mode === "eo" && weather !== "rain" && !night)
 							effects.push({
 								k: "ellipse",
@@ -1509,32 +2165,57 @@ function buildImage(input: ImageryInput, mode: ImageMode): Scene {
 								fx: "glow"
 							});
 					}
+					pts.push(p);
 					sprites++;
 				}
 			} else {
-				const c = spot(g.cat === "air" ? 34 : 18, g.cat === "air" ? (p) => !forestIn(p) : undefined);
+				const c = spot(
+					g.cat === "air" ? 44 : g.cat === "artillery" ? 28 : g.cat === "infantry" ? 18 : 24,
+					g.cat === "air" ? (p) => !forestIn(p) : undefined
+				);
+				if (!c) {
+					notes.push(`${label(g.type)}: reported, but no clear ground in frame`);
+					continue;
+				}
 				anchors.units!.push(c);
 				const hidden = forestIn(c);
-				const a = range(placeRng, 0, Math.PI * 2);
+				let a = range(placeRng, 0, Math.PI * 2);
 				if (g.cat === "air") {
-					// A dispersal strip with aircraft parked along it.
-					const len = 70;
+					// A dispersal strip with a taxiway and hardstands, aircraft parked on them.
+					let len = 70;
+					const ends = (ang: number, l: number): Pt[] => [
+						[c[0] - (Math.cos(ang) * l) / 2, c[1] - (Math.sin(ang) * l) / 2],
+						[c[0] + (Math.cos(ang) * l) / 2, c[1] + (Math.sin(ang) * l) / 2]
+					];
+					for (let t = 0; t < 8 && !ends(a, len).every((q) => dry(q, 10)); t++) {
+						a += Math.PI / 8;
+						if (t === 7) len = 44;
+					}
 					const ux = Math.cos(a);
 					const uy = Math.sin(a);
+					const [e0] = ends(a, len);
 					features.push({
 						k: "path",
-						d: `M${r1(c[0] - (ux * len) / 2)} ${r1(c[1] - (uy * len) / 2)}l${r1(ux * len)} ${r1(uy * len)}`,
+						d: `M${r1(e0![0])} ${r1(e0![1])}l${r1(ux * len)} ${r1(uy * len)}`,
 						stroke: P.c("concrete", -0.1),
 						sw: 6,
 						fill: "none"
 					});
+					const stands: [number, number, number][] = [];
+					const fighter =
+						"M0 -5.5L0.8 -2L4.8 2.2L4.8 3L0.8 2L0.6 3.8L2 4.8L2 5.4L0 5L-2 5.4L-2 4.8L-0.6 3.8L-0.8 2L-4.8 3L-4.8 2.2L-0.8 -2Z";
+					const bomber =
+						"M0 -7L0.9 -4.6L0.9 -1.2L7.5 1.6L7.5 2.6L0.9 1.4L0.7 5.2L2.6 6.4L2.6 7L0 6.6L-2.6 7L-2.6 6.4L-0.7 5.2L-0.9 1.4L-7.5 2.6L-7.5 1.6L-0.9 -1.2L-0.9 -4.6ZM3.4 0.9h0.9v2h-0.9zM5.4 1.6h0.9v1.6h-0.9zM-4.3 0.9h0.9v2h-0.9zM-6.3 1.6h0.9v1.6h-0.9z";
 					for (let v = 0; v < n; v++) {
 						const t = (v + 0.5) / n - 0.5;
-						const p: Pt = [c[0] + ux * len * t * 0.9 - uy * 7, c[1] + uy * len * t * 0.9 + ux * 7];
+						const p: Pt = [c[0] + ux * len * t * 0.9 - uy * 9, c[1] + uy * len * t * 0.9 + ux * 9];
+						const big = g.type === "bomber_squadron";
+						if (!dry(p, big ? 8 : 6)) continue;
 						pts.push(p);
-						const tf = `translate(${r1(p[0])} ${r1(p[1])}) rotate(${r1(deg(a) - 90)}) scale(${g.type === "bomber_squadron" ? 1.4 : 1})`;
-						const plane =
-							"M0 -5L0.9 -1.5L5 1L5 2L0.9 1.2L0.7 3.6L2 4.6L2 5.2L0 4.6L-2 5.2L-2 4.6L-0.7 3.6L-0.9 1.2L-5 2L-5 1L-0.9 -1.5Z";
+						record(big ? "bomber" : "fighter", "land", ring(p, big ? 7 : 5.5));
+						stands.push([p[0], p[1], big ? 8.5 : 6.5]);
+						const tf = `translate(${r1(p[0])} ${r1(p[1])}) rotate(${r1(deg(a) + 90)})`;
+						const plane = big ? bomber : fighter;
 						if (shadowLen)
 							objects.push({
 								k: "path",
@@ -1546,19 +2227,33 @@ function buildImage(input: ImageryInput, mode: ImageMode): Scene {
 						objects.push({
 							k: "path",
 							d: plane,
-							fill: mode === "ir" ? grey(moving ? 0.8 : 0.5) : P.c("aircraft"),
+							fill: mode === "ir" ? grey(moving ? 0.8 : 0.5) : mode === "sar" ? grey(0.92) : P.c("aircraft"),
+							stroke: mode === "eo" ? shade(EO.aircraft, -0.45) : undefined,
+							sw: 0.3,
 							tf,
 							fx: mode === "ir" ? "soft" : undefined
 						});
+						if (mode === "ir" && (moving || v % 2 === 0))
+							objects.push({
+								k: "circle",
+								x: r1(p[0] - Math.cos(a + Math.PI / 2) * 4),
+								y: r1(p[1] - Math.sin(a + Math.PI / 2) * 4),
+								r: 1.2,
+								fill: grey(0.95),
+								fx: "glow"
+							});
 						sprites++;
 					}
+					if (stands.length) features.push({ k: "path", d: blobs(stands), fill: P.c("concrete", 0.1), op: 0.8 });
 				} else if (g.cat === "artillery") {
 					const firing = (f.firingPositions?.count ?? 0) > 0 || moving;
 					for (let v = 0; v < n; v++) {
 						const off = (v - (n - 1) / 2) * 11;
 						const p: Pt = [c[0] - Math.sin(a) * off, c[1] + Math.cos(a) * off + (v % 2) * 3];
+						if (!dry(p, 6)) continue;
 						pts.push(p);
-						const tf = `rotate(${r1(deg(a))} ${r1(p[0])} ${r1(p[1])})`;
+						record("gun", "land", ring(p, 4.2));
+						const tf = `translate(${r1(p[0])} ${r1(p[1])}) rotate(${r1(deg(a))})`;
 						features.push({
 							k: "circle",
 							x: r1(p[0]),
@@ -1569,23 +2264,19 @@ function buildImage(input: ImageryInput, mode: ImageMode): Scene {
 							sw: 1.4,
 							op: 0.85
 						});
-						if (mode === "eo") shadow(r1(p[0] - 2), r1(p[1] - 1.3), 4, 2.6, tf);
-						objects.push({
-							k: "rect",
-							x: r1(p[0] - 2),
-							y: r1(p[1] - 1.3),
-							w: 4,
-							h: 2.6,
-							fill: P.hot("metal", hidden ? 0.6 : 0.68),
-							tf
-						});
-						objects.push({
-							k: "path",
-							d: `M${r1(p[0] + 1.5)} ${r1(p[1])}h6`,
-							stroke: P.hot("metal", firing ? 0.98 : 0.7),
-							sw: 0.7,
-							tf
-						});
+						// A towed howitzer: split trails behind, shield and a long barrel.
+						const gun = "M-3.6 -1.8L-0.6 -0.5L-0.6 0.5L-3.6 1.8L-3.2 2.1L0 0.8L0 -0.8L-3.2 -2.1Z";
+						const top = "M-0.4 -1.4h1.4v2.8h-1.4zM0.6 -0.22h6v0.44h-6z";
+						if (mode === "eo" && shadowLen)
+							objects.push({
+								k: "path",
+								d: gun + top,
+								fill: EO.shadow,
+								op: 0.5,
+								tf: `translate(${r1(p[0] + sdx)} ${r1(p[1] + sdy)}) rotate(${r1(deg(a))})`
+							});
+						objects.push({ k: "path", d: gun, fill: P.hot("metal", hidden ? 0.55 : 0.62), tf });
+						objects.push({ k: "path", d: top, fill: P.hot("metal", firing ? 0.98 : 0.7, 0.2), tf });
 						if (firing) {
 							// Muzzle blast: scorched fan in front of the gun, hot in IR.
 							const m: Pt = [p[0] + Math.cos(a) * 9, p[1] + Math.sin(a) * 9];
@@ -1614,11 +2305,15 @@ function buildImage(input: ImageryInput, mode: ImageMode): Scene {
 							c[1] + Math.sin(a) * len * t - (v % 2 ? 2 : -2) * Math.cos(a)
 						]);
 					}
-					if (!moving) features.push({ k: "path", d: pathOf(line), stroke: P.c("trench"), sw: 1.2, fill: "none" });
+					if (!moving)
+						for (const run of dryRuns(line))
+							features.push({ k: "path", d: pathOf(run), stroke: P.c("trench"), sw: 1.2, fill: "none" });
 					for (let v = 0; v < n; v++) {
 						const { p } = along(line, (v + 0.5) / n);
 						const q: Pt = [p[0] + range(rng, -1.5, 1.5), p[1] + range(rng, -1.5, 1.5)];
+						if (!dry(q, 2)) continue;
 						pts.push(q);
+						record("soldier", "land", [q]);
 						objects.push({
 							k: "circle",
 							x: r1(q[0]),
@@ -1638,21 +2333,22 @@ function buildImage(input: ImageryInput, mode: ImageMode): Scene {
 						const ox = (col - (cols - 1) / 2) * 9;
 						const oy = row * 8;
 						const p: Pt = [c[0] + Math.cos(a) * oy - Math.sin(a) * ox, c[1] + Math.sin(a) * oy + Math.cos(a) * ox];
-						pts.push(p);
+						if (!dry(p, 4)) continue;
 						if (!moving) {
 							const tf = `rotate(${r1(deg(a))} ${r1(p[0])} ${r1(p[1])})`;
 							features.push({
 								k: "path",
-								d: `M${r1(p[0] - 3)} ${r1(p[1] - 3)}h5.5a1 1 0 0 1 0 6h-5.5`,
+								d: `M${r1(p[0] - 3.5)} ${r1(p[1] - 3)}h6a1 1 0 0 1 0 6h-6`,
 								stroke: P.c("berm", 0.15),
 								sw: 1.3,
 								fill: "none",
 								tf
 							});
 						}
-						vehicle(p, a, { moving: false, hidden, type: g.type });
+						if (!vehicle(p, a, { moving: false, hidden, type: g.type })) continue;
+						pts.push(p);
 						if (mode === "eo" && !moving && v % 3 === 1)
-							objects.push({ k: "circle", x: r1(p[0]), y: r1(p[1]), r: 3.2, fill: "#4c5536", op: 0.75 });
+							objects.push({ k: "circle", x: r1(p[0]), y: r1(p[1]), r: 3.4, fill: "#4c5536", op: 0.75 });
 						sprites++;
 					}
 					if (moving) {
@@ -1661,15 +2357,17 @@ function buildImage(input: ImageryInput, mode: ImageMode): Scene {
 							c[0] - Math.cos(a) * 60 + range(rng, -20, 20),
 							c[1] - Math.sin(a) * 60 + range(rng, -20, 20)
 						];
-						features.push({
-							k: "path",
-							d: `M${r1(c[0])} ${r1(c[1])}Q${r1((c[0] + tail[0]) / 2 + 15)} ${r1((c[1] + tail[1]) / 2 - 10)} ${r1(tail[0])} ${r1(tail[1])}`,
-							stroke: P.c("track"),
-							sw: 2.2,
-							fill: "none",
-							op: mode === "sar" ? 0.4 : 0.45,
-							dash: mode === "eo" ? "1 1.4" : undefined
-						});
+						const mid: Pt = [(c[0] + tail[0]) / 2 + 15, (c[1] + tail[1]) / 2 - 10];
+						if (!water(tail) && !water(mid))
+							features.push({
+								k: "path",
+								d: `M${r1(c[0])} ${r1(c[1])}Q${r1(mid[0])} ${r1(mid[1])} ${r1(tail[0])} ${r1(tail[1])}`,
+								stroke: P.c("track"),
+								sw: 2.2,
+								fill: "none",
+								op: mode === "sar" ? 0.4 : 0.45,
+								dash: mode === "eo" ? "1 1.4" : undefined
+							});
 					}
 				}
 				// Forest canopy hides part of what's underneath (EO only).
@@ -1701,6 +2399,27 @@ function buildImage(input: ImageryInput, mode: ImageMode): Scene {
 		}
 	}
 
+	// ── Shipping: boats at the piers and under way, only where there is water ──
+	if (terrain.waterbody) {
+		const sr = seededRandom(hash32(input.regionId, window, 0xb0a7));
+		const sea = !!terrain.coast;
+		for (const pier of terrain.piers) {
+			for (const side of [1, -1] as const) {
+				if (sr() > 0.65) continue;
+				let cls: ShipClass = sea ? (sr() < 0.45 ? "freighter" : "fishing") : "dinghy";
+				let at = berth(cls, pier, side);
+				if (!at && cls === "freighter") at = berth((cls = "fishing"), pier, side);
+				if (at) ship(at.p, at.a, cls, false, "moored");
+			}
+		}
+		const under = sea ? 1 + Math.floor(sr() * 3) : Math.floor(sr() * 3);
+		for (let k = 0; k < under; k++) {
+			const cls: ShipClass = sea ? (k === 0 && sr() < 0.5 ? "freighter" : sr() < 0.6 ? "fishing" : "dinghy") : "dinghy";
+			const at = seaSpot(cls, sr);
+			if (at) ship(at.p, at.a, cls, sr() < 0.7, "boat");
+		}
+	}
+
 	// ── Installations (passes that see buildings) ──
 	const bld = f.outcome === "ok" ? f.buildings : null;
 	const mainRoad = terrain.roads[0]!;
@@ -1711,7 +2430,7 @@ function buildImage(input: ImageryInput, mode: ImageMode): Scene {
 		let ang = 0;
 		for (let k = 0; k < 20; k++) {
 			const s = along(mainRoad.pts, range(placeRng, 0.2, 0.8));
-			if (inView(s.p, 60)) {
+			if (inView(s.p, 60) && dry(s.p, 8)) {
 				centre = s.p;
 				ang = s.a;
 				break;
@@ -1736,10 +2455,20 @@ function buildImage(input: ImageryInput, mode: ImageMode): Scene {
 					centre[1] + ny * len * t + Math.sin(ang) * (back + zig)
 				]);
 			}
-			const d = pathOf(pts);
-			features.push({ k: "path", d, stroke: P.c("berm", 0.25), sw: 3.2, fill: "none", op: mode === "sar" ? 0.9 : 0.7 });
-			features.push({ k: "path", d, stroke: P.c("trench"), sw: 1.6, fill: "none" });
-			allPts.push(...pts);
+			// Trenches stop at the water's edge.
+			for (const run of dryRuns(pts)) {
+				const d = pathOf(run);
+				features.push({
+					k: "path",
+					d,
+					stroke: P.c("berm", 0.25),
+					sw: 3.2,
+					fill: "none",
+					op: mode === "sar" ? 0.9 : 0.7
+				});
+				features.push({ k: "path", d, stroke: P.c("trench"), sw: 1.6, fill: "none" });
+				allPts.push(...run);
+			}
 		}
 		detections.push({
 			...box(allPts, 3),
@@ -1755,7 +2484,9 @@ function buildImage(input: ImageryInput, mode: ImageMode): Scene {
 		for (let b = 0; b < bunkers; b++) {
 			const t = (b + 0.5) / bunkers - 0.5;
 			const p: Pt = [centre[0] + nx * 120 * t - Math.cos(ang) * 22, centre[1] + ny * 120 * t - Math.sin(ang) * 22];
+			if (!dry(p, 4)) continue;
 			bpts.push(p);
+			record("bunker", "land", ring(p, 3));
 			features.push({
 				k: "rect",
 				x: r1(p[0] - 2.2),
@@ -1767,11 +2498,11 @@ function buildImage(input: ImageryInput, mode: ImageMode): Scene {
 				sw: 1
 			});
 		}
-		if (bunkers >= 4)
+		if (bpts.length >= 4)
 			detections.push({
 				...box(bpts, 4),
 				label: "BUNKERS",
-				detail: `×${bunkers}`,
+				detail: `×${bpts.length}`,
 				kind: "structure",
 				icon: "fort",
 				prio: 4
@@ -1786,7 +2517,7 @@ function buildImage(input: ImageryInput, mode: ImageMode): Scene {
 						centre[0] + nx * 130 * u + Math.cos(ang) * (30 + r * 3) + (r % 2) * nx * 3,
 						centre[1] + ny * 130 * u + Math.sin(ang) * (30 + r * 3) + (r % 2) * ny * 3
 					];
-					tpts.push(p);
+					if (dry(p, 2)) tpts.push(p);
 				}
 			}
 			features.push({
@@ -1804,15 +2535,25 @@ function buildImage(input: ImageryInput, mode: ImageMode): Scene {
 			});
 		}
 		if (L >= 10) {
-			const d = `M${r1(centre[0] - nx * 160 + Math.cos(ang) * 44)} ${r1(centre[1] - ny * 160 + Math.sin(ang) * 44)}l${r1(nx * 320)} ${r1(ny * 320)}`;
-			features.push({ k: "path", d, stroke: P.c("berm", 0.3), sw: 5, fill: "none", op: 0.7 });
-			features.push({ k: "path", d, stroke: P.c("trench", -0.2), sw: 2.6, fill: "none" });
+			// Anti-tank ditch, cut where it would run into water.
+			const ditch: Pt[] = [];
+			for (let k = 0; k <= 32; k++) {
+				const u = k / 32 - 0.5;
+				ditch.push([centre[0] + nx * 320 * u + Math.cos(ang) * 44, centre[1] + ny * 320 * u + Math.sin(ang) * 44]);
+			}
+			for (const run of dryRuns(ditch)) {
+				const d = pathOf(run);
+				features.push({ k: "path", d, stroke: P.c("berm", 0.3), sw: 5, fill: "none", op: 0.7 });
+				features.push({ k: "path", d, stroke: P.c("trench", -0.2), sw: 2.6, fill: "none" });
+			}
 		}
 	}
-	if (bld && bld.economy > 0) {
+	const industrySite = bld && bld.economy > 0 ? spot(40, (p) => !forestIn(p)) : null;
+	if (bld && industrySite) {
 		// Industry and a power plant: big roofs, cooling towers (hot in IR).
-		const c = spot(40, (p) => !forestIn(p));
+		const c = industrySite;
 		anchors.industry!.push(c);
+		record("industry", "land", ring(c, 30));
 		const pts: Pt[] = [];
 		const halls = Math.min(6, 1 + Math.ceil(bld.economy / 2));
 		for (let k = 0; k < halls; k++) {
@@ -1882,9 +2623,11 @@ function buildImage(input: ImageryInput, mode: ImageMode): Scene {
 			prio: 6
 		});
 	}
-	if (bld && bld.hospitals > 0) {
-		const c = spot(16, (p) => !forestIn(p));
+	const hospitalSite = bld && bld.hospitals > 0 ? spot(16, (p) => !forestIn(p)) : null;
+	if (bld && hospitalSite) {
+		const c = hospitalSite;
 		anchors.hospital!.push(c);
+		record("hospital", "land", ring(c, 10));
 		features.push({ k: "rect", x: r1(c[0] - 8), y: r1(c[1] - 6), w: 16, h: 12, fill: P.c("roof", 0.5) });
 		if (mode === "eo")
 			features.push({
@@ -1914,7 +2657,9 @@ function buildImage(input: ImageryInput, mode: ImageMode): Scene {
 		const pts: Pt[] = [];
 		for (let k = 0; k < stations; k++) {
 			const c = spot(34, (p) => !forestIn(p));
+			if (!c) continue;
 			anchors.radar!.push(c);
+			record("radar", "land", ring(c, 17));
 			pts.push(c);
 			features.push({ k: "circle", x: r1(c[0]), y: r1(c[1]), r: 10, fill: P.c("dirt", 0.3) });
 			features.push({ k: "rect", x: r1(c[0] + 8), y: r1(c[1] - 4), w: 9, h: 8, fill: P.c("roof", 0.55) });
@@ -1936,17 +2681,20 @@ function buildImage(input: ImageryInput, mode: ImageMode): Scene {
 			});
 			features.push({ k: "circle", x: r1(c[0]), y: r1(c[1] + 2), r: 1.4, fill: P.c("metal", 0.4) });
 		}
-		detections.push({
-			...box(pts, 12),
-			label: stations > 1 ? `AIR DEFENCE RADAR ×${stations}` : "AIR DEFENCE RADAR",
-			detail: `RADAR L${bld.radar}`,
-			kind: "structure",
-			icon: "radar",
-			prio: 1
-		});
+		if (pts.length)
+			detections.push({
+				...box(pts, 12),
+				label: stations > 1 ? `AIR DEFENCE RADAR ×${stations}` : "AIR DEFENCE RADAR",
+				detail: `RADAR L${bld.radar}`,
+				kind: "structure",
+				icon: "radar",
+				prio: 1
+			});
 	}
-	if (bld && bld.underConstruction > 0) {
-		const c = spot(16);
+	const buildSite = bld && bld.underConstruction > 0 ? spot(26) : null;
+	if (bld && buildSite) {
+		const c = buildSite;
+		record("construction", "land", ring([c[0], c[1] + 4], 18));
 		const pts: Pt[] = [];
 		for (let k = 0; k < Math.min(3, bld.underConstruction); k++) {
 			const p: Pt = [c[0] + k * 13 - 13, c[1] + (k % 2) * 6];
@@ -1980,8 +2728,10 @@ function buildImage(input: ImageryInput, mode: ImageMode): Scene {
 		const pts: Pt[] = [];
 		for (let k = 0; k < n; k++) {
 			const p: Pt = [c[0] + range(rng, -spread, spread), c[1] + range(rng, -spread, spread)];
-			pts.push(p);
 			const r = big ? range(rng, 3.5, 5.5) : range(rng, 1.4, 2.8);
+			// A shell into water leaves no crater.
+			if (water(p)) continue;
+			pts.push(p);
 			const fresh = clamp(1 - ageH / 48);
 			if (mode === "eo") {
 				objects.push({
@@ -2009,7 +2759,8 @@ function buildImage(input: ImageryInput, mode: ImageMode): Scene {
 		}
 		return pts;
 	}
-	function fire(c: Pt, size: number) {
+	function fire(c: Pt | undefined, size: number) {
+		if (!c || water(c)) return;
 		const r = size;
 		if (mode === "ir") {
 			lights.push({ k: "circle", x: r1(c[0]), y: r1(c[1]), r: r1(r * 1.6), fill: grey(1), fx: "glow" });
@@ -2077,7 +2828,7 @@ function buildImage(input: ImageryInput, mode: ImageMode): Scene {
 				for (let k = 0; k < (s.outcome === "hit" ? 2 : 1); k++)
 					fire([c[0] + range(rng, -6, 6), c[1] + range(rng, -6, 6)], range(rng, 1.8, 3));
 			detections.push({
-				...box(pts, 6),
+				...box(pts.length ? pts : [c], 6),
 				label: burning ? "STRIKE · FIRES" : "IMPACT CRATERS",
 				detail: `${n} crater${n === 1 ? "" : "s"} · ${Math.round(s.hoursBefore)}h ago`,
 				kind: "damage",
@@ -2087,17 +2838,18 @@ function buildImage(input: ImageryInput, mode: ImageMode): Scene {
 		}
 		if (moving && f.outcome === "ok") {
 			// The contact area: shell holes and a burning wreck or two.
-			const c = spot(30);
-			const pts = craterField(c, 10, 28, 3, false);
-			if (f.battle?.phase === "active") for (let k = 0; k < 2; k++) fire(pts[k * 3]!, 1.6);
-			detections.push({
-				...box(pts, 4),
-				label: "CONTACT AREA",
-				detail: "SHELLING",
-				kind: "damage",
-				icon: "crater",
-				prio: 3
-			});
+			const c = spot(36);
+			const pts = c ? craterField(c, 10, 28, 3, false) : [];
+			if (f.battle?.phase === "active") for (let k = 0; k < 2; k++) fire(pts[k * 3], 1.6);
+			if (pts.length)
+				detections.push({
+					...box(pts, 4),
+					label: "CONTACT AREA",
+					detail: "SHELLING",
+					kind: "damage",
+					icon: "crater",
+					prio: 3
+				});
 		}
 	}
 
@@ -2303,6 +3055,17 @@ function buildImage(input: ImageryInput, mode: ImageMode): Scene {
 		brightness: Math.round(brightness * 1000) / 1000,
 		scale: { meters, px: meters / metersPerPx },
 		sprites,
+		placements,
+		sun: mode === "eo" && !night ? { az: Math.round(sunAz) % 360, el: Math.round(deg(Math.asin(clamp(elev)))) } : null,
 		notes
 	};
+}
+
+/**
+ * The region's water mask, as its frames draw it: true over sea, lake,
+ * pond or river. Placement uses the same function, so tests can check
+ * every sprite against it.
+ */
+export function waterAt(regionId: number, terrain: string, infrastructure: number | null = null): (p: Pt) => boolean {
+	return makeTerrain(regionId, terrain, infrastructure).water;
 }
