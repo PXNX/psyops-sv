@@ -13,7 +13,7 @@
 
 	let { data } = $props();
 
-	const counted = $derived(data.articleVotes + data.votesOnComments);
+	const counted = $derived(data.articleVotes + data.votesOnComments + data.medalPoints);
 </script>
 
 <svelte:head>
@@ -35,33 +35,45 @@
 	<section class="panel rounded-sm p-4 sm:p-5 space-y-3">
 		<h2 class="section-title">How it adds up</h2>
 		<p class="text-sm text-fg-body">
-			Karma is earned when other players upvote your articles or vote on your comments — one point each,
-			removed again if the vote is withdrawn. Your own votes never count. Reputation is a separate
-			figure: it comes from civilian opinion where you live, not from other players.
+			Karma is earned when other players upvote your articles or vote on your comments — one point each, removed again
+			if the vote is withdrawn. Your own votes never count. Medals awarded by a president add karma too: {data.medalCount}
+			medal{data.medalCount === 1 ? "" : "s"} currently worth +{data.medalPoints}. Reputation is a separate figure: it
+			comes from civilian opinion where you live, not from other players.
 		</p>
 		<div class="rounded-sm border border-line/20">
-			<div class="grid grid-cols-[1fr_auto_auto] gap-x-3 border-b border-line/20 bg-surface-2/50 px-3 py-2 text-[10px] uppercase tracking-wide text-fg-muted">
+			<div
+				class="grid grid-cols-[1fr_auto_auto] gap-x-3 border-b border-line/20 bg-surface-2/50 px-3 py-2 text-[10px] uppercase tracking-wide text-fg-muted"
+			>
 				<span>Source</span><span class="text-right">Votes</span><span class="text-right">Karma</span>
 			</div>
 			<div class="grid grid-cols-[1fr_auto_auto] gap-x-3 border-b border-line/10 px-3 py-2 text-sm">
-				<span class="flex items-center gap-2"><FluentDocument20Filled class="size-4 text-fg-muted" /> Upvotes on articles</span>
+				<span class="flex items-center gap-2">
+					<FluentDocument20Filled class="size-4 text-fg-muted" /> Upvotes on articles
+				</span>
 				<span class="text-right font-mono text-fg-soft">{data.articleVotes.toLocaleString()}</span>
 				<span class="text-right font-mono text-fg">+{data.articleVotes.toLocaleString()}</span>
 			</div>
 			<div class="grid grid-cols-[1fr_auto_auto] gap-x-3 border-b border-line/10 px-3 py-2 text-sm">
-				<span class="flex items-center gap-2"><FluentComment20Filled class="size-4 text-fg-muted" /> Votes on comments</span>
+				<span class="flex items-center gap-2">
+					<FluentComment20Filled class="size-4 text-fg-muted" /> Votes on comments
+				</span>
 				<span class="text-right font-mono text-fg-soft">{data.votesOnComments.toLocaleString()}</span>
 				<span class="text-right font-mono text-fg">+{data.votesOnComments.toLocaleString()}</span>
 			</div>
+			<div class="grid grid-cols-[1fr_auto_auto] gap-x-3 border-b border-line/10 px-3 py-2 text-sm">
+				<span class="flex items-center gap-2"><FluentStar20Filled class="size-4 text-warning" /> Medals</span>
+				<span class="text-right font-mono text-fg-soft">{data.medalCount.toLocaleString()}</span>
+				<span class="text-right font-mono text-fg">+{data.medalPoints.toLocaleString()}</span>
+			</div>
 			<div class="flex justify-between bg-primary/10 px-3 py-2 text-sm font-semibold text-fg">
-				<span class="flex items-center gap-2"><FluentStar20Filled class="size-4" /> Recorded karma</span>
+				<span class="flex items-center gap-2"><FluentStar20Filled class="size-4" /> Total karma</span>
 				<span class="font-mono">{data.karma.toLocaleString()}</span>
 			</div>
 		</div>
 		{#if counted !== data.karma}
 			<p class="text-xs text-fg-muted">
-				The vote rows currently add up to {counted.toLocaleString()}. The recorded total may include
-				past votes on deleted items.
+				The vote rows currently add up to {counted.toLocaleString()}. The recorded total may include past votes on
+				deleted items.
 			</p>
 		{/if}
 	</section>

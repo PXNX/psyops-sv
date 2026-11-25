@@ -4,6 +4,7 @@ import { netWorth as netWorthFor } from "#lib/server/services/economy/net-worth.
 import { dividendYieldPercent, dividendYields } from "#lib/server/services/economy/dividends.js";
 import { regionOpinion } from "#lib/server/services/politics/civic.service.js";
 import { portfolioReturns } from "#lib/server/services/economy/returns.js";
+import { karmaWithMedals } from "#lib/server/services/content/karma.js";
 import {
 	accounts,
 	partyMembers,
@@ -494,6 +495,7 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 		.from(userProfiles)
 		.where(eq(userProfiles.accountId, params.id));
 	const reputation = residence?.regionId ? Math.round(await regionOpinion(db, residence.regionId)) : null;
+	const karmaScore = await karmaWithMedals(db, params.id, karmaRow?.karma ?? 0);
 
 	// The profile shows the headline; the subpage breaks it down.
 	const netWorth = await netWorthFor(db, params.id);
@@ -543,7 +545,7 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 			: null,
 		articleCount: articleCountResult?.count || 0,
 		upvoteCount: upvoteCountResult?.count || 0,
-		karma: karmaRow?.karma ?? 0,
+		karma: karmaScore.total,
 		reputation,
 		netWorth,
 		isOwnProfile,

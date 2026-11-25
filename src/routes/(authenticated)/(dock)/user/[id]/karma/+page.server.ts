@@ -5,15 +5,9 @@ import { error } from "@sveltejs/kit";
 import { and, desc, eq, sql } from "drizzle-orm";
 import type { PageServerLoad } from "./$types";
 import { db } from "#lib/server/db.js";
+import { karmaWithMedals } from "#lib/server/services/content/karma.js";
 import { getLogoUrl } from "#lib/server/backblaze.js";
-import {
-	accounts,
-	articles,
-	commentVotes,
-	comments,
-	upvotes,
-	userProfiles
-} from "#lib/server/schema.js";
+import { accounts, articles, commentVotes, comments, upvotes, userProfiles } from "#lib/server/schema.js";
 
 export const load: PageServerLoad = async ({ params }) => {
 	const userId = params.id;
@@ -76,6 +70,7 @@ export const load: PageServerLoad = async ({ params }) => {
 
 	const articleVotes = Number(articleTotals[0]?.total ?? 0);
 	const votesOnComments = Number(commentTotals[0]?.total ?? 0);
+	const karmaScore = await karmaWithMedals(db, userId, profile.karma ?? 0);
 
 	return {
 		user: {
@@ -83,7 +78,10 @@ export const load: PageServerLoad = async ({ params }) => {
 			name: profile.name,
 			logo: await getLogoUrl(profile.logo)
 		},
-		karma: profile.karma ?? 0,
+		karma: karmaScore.total,
+		baseKarma: karmaScore.base,
+		medalPoints: karmaScore.medalPoints,
+		medalCount: karmaScore.medalCount,
 		articleVotes,
 		votesOnComments,
 		articles: topArticles.map((a) => ({
