@@ -1322,7 +1322,13 @@
 				hue: s.hue,
 				picked: s.id === selectedSectorId,
 				land: s.regions.map((r) => regionPathD.get(r) ?? "").join(" "),
-				sea: hexUnionPath([...s.eezHexes, ...s.openHexes].map(parseHexKey))
+				// The sector's EEZ bands keep their coast-hugging shape; only the
+				// open sea beyond is drawn as hex cells.
+				eez: eezPieces
+					.filter((p) => s.regions.includes(p.regionId))
+					.map((p) => p.d)
+					.join(" "),
+				sea: hexUnionPath(s.openHexes.map(parseHexKey))
 			}));
 	});
 
@@ -1430,6 +1436,15 @@
 					     sea cells), a tab label per sector -->
 					<g pointer-events="none">
 						{#each sectorOutlines as o (o.id)}
+							<path
+								d={o.eez}
+								style:fill={o.hue}
+								style:stroke={o.hue}
+								style:stroke-width="{(o.picked ? 1.2 : 0.8) * k}px"
+								fill-opacity={o.picked ? 0.16 : 0.08}
+								stroke-opacity={o.picked ? 0.8 : 0.5}
+								stroke-linejoin="round"
+							/>
 							<path
 								d={o.sea}
 								style:fill={o.hue}

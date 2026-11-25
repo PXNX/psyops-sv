@@ -780,7 +780,7 @@ export function portHexForRegion(region: GeoRegion, allRegions: GeoRegion[], tak
 // Aerial mode thinks in sectors, not single hexes: several sea hexes and the
 // regions above them are grouped into one airspace block for planning.
 
-export const AIRSPACE = { cols: 10, rows: 5 } as const;
+export const AIRSPACE = { cols: 16, rows: 8 } as const;
 
 export function airspaceSectorOf(h: Hex): string {
 	const qSpan = HEX_BOUNDS.maxQ - HEX_BOUNDS.minQ + 1;
