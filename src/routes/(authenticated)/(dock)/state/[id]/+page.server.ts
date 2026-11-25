@@ -66,6 +66,7 @@ import { effectiveEnergy } from "#lib/server/services/military/state-effects.js"
 import { stancesHeldBy, stancesToward } from "#lib/server/services/politics/civilian-stance.js";
 import { stateDebt, bailoutState, BailoutError } from "#lib/server/services/economy/bailout.js";
 import { stateDebtCreditors, stateGdp, statePowerReport } from "#lib/server/services/economy/state-metrics.js";
+import { stateStabilities } from "#lib/server/services/stability.js";
 import { takeFirstTimeDetail } from "#lib/server/services/politics/first-time.js";
 import { ECONOMY_CONFIG } from "#lib/config/index.js";
 import { dossierFiles, intelViewer, stateIntel } from "#lib/server/services/military/state-intel.js";
@@ -570,40 +571,42 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 	// its debt and the last few rescues it received. The viewer's own treasury
 	// decides whether a bailout button belongs on the dossier at all.
 	const debtPromise = stateDebt(db, stateId);
-	const [stancesAbout, stancesHeld, debt, bailoutHistory, donor, powerReport, creditors] = await Promise.all([
-		stancesToward(db, stateId),
-		stancesHeldBy(db, stateId),
-		debtPromise,
-		db
-			.select({
-				amount: stateBailouts.amount,
-				donorStateId: stateBailouts.donorStateId,
-				createdAt: stateBailouts.createdAt
-			})
-			.from(stateBailouts)
-			.where(eq(stateBailouts.recipientStateId, stateId))
-			.orderBy(sql`${stateBailouts.createdAt} desc`)
-			.limit(5)
-			.then(async (rows) =>
-				Promise.all(
-					rows.map(async (row) => {
-						const [donorState] = await db
-							.select({ name: states.name })
-							.from(states)
-							.where(eq(states.id, row.donorStateId))
-							.limit(1);
-						return {
-							amount: Number(row.amount),
-							from: donorState?.name ?? "another state",
-							date: row.createdAt.toISOString()
-						};
-					})
-				)
-			),
-		accountId ? bailoutAuthority(accountId, stateId) : null,
-		statePowerReport(db, stateId),
-		stateDebtCreditors(db, stateId)
-	]);
+	const [stancesAbout, stancesHeld, debt, bailoutHistory, donor, powerReport, creditors, stabilities] =
+		await Promise.all([
+			stancesToward(db, stateId),
+			stancesHeldBy(db, stateId),
+			debtPromise,
+			db
+				.select({
+					amount: stateBailouts.amount,
+					donorStateId: stateBailouts.donorStateId,
+					createdAt: stateBailouts.createdAt
+				})
+				.from(stateBailouts)
+				.where(eq(stateBailouts.recipientStateId, stateId))
+				.orderBy(sql`${stateBailouts.createdAt} desc`)
+				.limit(5)
+				.then(async (rows) =>
+					Promise.all(
+						rows.map(async (row) => {
+							const [donorState] = await db
+								.select({ name: states.name })
+								.from(states)
+								.where(eq(states.id, row.donorStateId))
+								.limit(1);
+							return {
+								amount: Number(row.amount),
+								from: donorState?.name ?? "another state",
+								date: row.createdAt.toISOString()
+							};
+						})
+					)
+				),
+			accountId ? bailoutAuthority(accountId, stateId) : null,
+			statePowerReport(db, stateId),
+			stateDebtCreditors(db, stateId),
+			stateStabilities(db, [stateId])
+		]);
 
 	// GDP depends on the outstanding debt figure computed above.
 	const gdpReport = await stateGdp(db, stateId, debt);
@@ -764,6 +767,7 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 		debt: exact ? debt : null,
 		power: exact ? powerReport.focus : null,
 		powerRanking: exact ? powerReport.ranking : null,
+		stability: exact ? (stabilities.get(stateId)?.score ?? null) : null,
 		gdp: exact ? gdpReport : null,
 		creditors: exact ? creditors : null,
 		/** Every figure above as the viewer may see it (estimates for foreign states). */

@@ -41,6 +41,8 @@ import { superValidate, message } from "sveltekit-superforms";
 import { valibot } from "sveltekit-superforms/adapters/valibot";
 import { editBlocSchema } from "./schema.js";
 import { warsOfBloc } from "#lib/server/services/military/history.js";
+import { statePowerReport } from "#lib/server/services/economy/state-metrics.js";
+import { stateStabilities } from "#lib/server/services/stability.js";
 
 export const load: PageServerLoad = async ({ params, locals }) => {
 	const blocId = parseInt(params.id);
@@ -150,7 +152,13 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 
 	// Defence-spending guideline compliance over the last 30 days. The ledger
 	// sign convention is inconsistent, so expenses use the absolute amount.
-	const INCOME_TYPES = new Set(["tax_collection", "trade_revenue", "tax_payment", "visa_purchase", "gift_code_redemption"]);
+	const INCOME_TYPES = new Set([
+		"tax_collection",
+		"trade_revenue",
+		"tax_payment",
+		"visa_purchase",
+		"gift_code_redemption"
+	]);
 	const DEFENCE_TYPES = new Set([
 		"military",
 		"naval_operation",
@@ -171,14 +179,20 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 				amount: governmentBudgetTransactions.amount
 			})
 			.from(governmentBudgetTransactions)
-			.where(and(inArray(governmentBudgetTransactions.stateId, memberStateIds), gte(governmentBudgetTransactions.createdAt, since)));
+			.where(
+				and(
+					inArray(governmentBudgetTransactions.stateId, memberStateIds),
+					gte(governmentBudgetTransactions.createdAt, since)
+				)
+			);
 		for (const row of ledger) {
 			const entry = compliance.get(row.stateId) ?? { income: 0, defence: 0, percent: 0 };
 			if (INCOME_TYPES.has(row.transactionType) && row.amount > 0) entry.income += row.amount;
 			if (DEFENCE_TYPES.has(row.transactionType)) entry.defence += Math.abs(row.amount);
 			compliance.set(row.stateId, entry);
 		}
-		for (const entry of compliance.values()) entry.percent = entry.income > 0 ? Math.round((entry.defence / entry.income) * 100) : 0;
+		for (const entry of compliance.values())
+			entry.percent = entry.income > 0 ? Math.round((entry.defence / entry.income) * 100) : 0;
 	}
 
 	const [embargoRows, availableStates] = await Promise.all([
@@ -195,7 +209,11 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 			.where(eq(blocEmbargoes.blocId, blocId))
 			.orderBy(states.name),
 		memberStateIds.length
-			? db.select({ id: states.id, name: states.name }).from(states).where(notInArray(states.id, memberStateIds)).orderBy(states.name)
+			? db
+					.select({ id: states.id, name: states.name })
+					.from(states)
+					.where(notInArray(states.id, memberStateIds))
+					.orderBy(states.name)
 			: db.select({ id: states.id, name: states.name }).from(states).orderBy(states.name)
 	]);
 
@@ -485,6 +503,36 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 		warsOfBloc(db, blocId)
 	]);
 
+	// A bloc's combined weight: the same power model the state pages use,
+	// aggregated over its members, plus their average regime stability.
+	const [powerReport, stabilities] = await Promise.all([
+		statePowerReport(db, memberStateIds[0] ?? 0),
+		stateStabilities(db, memberStateIds)
+	]);
+	const powerById = new Map(powerReport.ranking.map((row) => [row.id, row]));
+	const memberPower = memberStatesWithLogos
+		.map((state) => {
+			const row = powerById.get(state.id);
+			return {
+				id: state.id,
+				name: state.name,
+				logo: state.logo,
+				score: row?.score ?? 0,
+				population: row?.population ?? state.population,
+				stability: Math.round(stabilities.get(state.id)?.score ?? 0)
+			};
+		})
+		.sort((a, b) => b.score - a.score);
+	const strength = {
+		power: memberPower.reduce((sum, s) => sum + s.score, 0),
+		population: memberPower.reduce((sum, s) => sum + s.population, 0),
+		stability: memberPower.length
+			? Math.round(memberPower.reduce((sum, s) => sum + s.stability, 0) / memberPower.length)
+			: 0,
+		topMember: memberPower[0] ?? null,
+		members: memberPower
+	};
+
 	return {
 		bloc: {
 			id: bloc.id,
@@ -535,6 +583,7 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 				? memberStates.map((m) => m.id).filter((id) => id !== myStateInBloc && !pendingExpulsionStateIds.has(id))
 				: [],
 		memberCount: memberStates.length,
+		strength,
 		activeWars: activeWarsWithLogos,
 		warHistory
 	};
@@ -899,7 +948,8 @@ export const actions: Actions = {
 		const form = await request.formData();
 		const targetStateId = Number(form.get("targetStateId"));
 		const reason = String(form.get("reason") ?? "").trim();
-		if (!Number.isInteger(targetStateId) || targetStateId <= 0) return fail(400, { error: "Choose a state to embargo" });
+		if (!Number.isInteger(targetStateId) || targetStateId <= 0)
+			return fail(400, { error: "Choose a state to embargo" });
 		if (!reason) return fail(400, { error: "Give a reason for the embargo" });
 
 		const [bloc] = await db.select().from(blocs).where(eq(blocs.id, blocId));
@@ -911,8 +961,12 @@ export const actions: Actions = {
 			.innerJoin(states, eq(presidents.stateId, states.id))
 			.where(and(eq(states.blocId, blocId), eq(presidents.userId, account.id)))
 			.limit(1);
-		if (leader?.userId !== account.id && !memberPresident) return fail(403, { error: "Only bloc leaders can declare embargoes" });
-		const [target] = await db.select({ id: states.id, blocId: states.blocId }).from(states).where(eq(states.id, targetStateId));
+		if (leader?.userId !== account.id && !memberPresident)
+			return fail(403, { error: "Only bloc leaders can declare embargoes" });
+		const [target] = await db
+			.select({ id: states.id, blocId: states.blocId })
+			.from(states)
+			.where(eq(states.id, targetStateId));
 		if (!target || target.blocId === blocId) return fail(400, { error: "You cannot embargo a member state" });
 
 		await db

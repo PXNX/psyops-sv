@@ -137,8 +137,8 @@
 			{/if}
 			{#if data.bloc.defenceSpendingGuideline != null}
 				<p class="mt-3 text-xs text-fg-muted">
-					Defence guideline: <span class="font-semibold text-fg">{data.bloc.defenceSpendingGuideline}%</span> of state
-					income (last 30 days)
+					Defence guideline: <span class="font-semibold text-fg">{data.bloc.defenceSpendingGuideline}%</span> of state income
+					(last 30 days)
 				</p>
 			{/if}
 
@@ -164,6 +164,64 @@
 			{/if}
 		</div>
 	</article>
+
+	<!-- Combined weight of the signatories, in the same power units as the state pages. -->
+	<section class="panel rounded-sm p-4 sm:p-5 mt-4 space-y-4">
+		<div class="flex flex-wrap items-baseline justify-between gap-2">
+			<h2 class="section-title">Bloc strength</h2>
+			<p class="font-mono text-sm text-fg-muted">
+				{data.memberCount}
+				{data.memberCount === 1 ? "member" : "members"} ·
+				<a href="/state/{data.strength.topMember?.id}" class="hover:text-primary-fg">
+					strongest: {data.strength.topMember?.name ?? "—"}
+				</a>
+			</p>
+		</div>
+		<div class="grid grid-cols-2 gap-2 sm:grid-cols-4">
+			<div class="panel-muted rounded-sm p-3">
+				<p class="text-[10px] uppercase tracking-wide text-fg-muted">Combined power</p>
+				<p class="font-mono text-lg font-bold text-positive-fg">{data.strength.power.toLocaleString()}</p>
+			</div>
+			<div class="panel-muted rounded-sm p-3">
+				<p class="text-[10px] uppercase tracking-wide text-fg-muted">Avg. stability</p>
+				<p class="font-mono text-lg font-bold text-fg">{data.strength.stability}</p>
+			</div>
+			<div class="panel-muted rounded-sm p-3">
+				<p class="text-[10px] uppercase tracking-wide text-fg-muted">Population</p>
+				<p class="font-mono text-lg font-bold text-fg">{data.strength.population.toLocaleString()}</p>
+			</div>
+			<div class="panel-muted rounded-sm p-3">
+				<p class="text-[10px] uppercase tracking-wide text-fg-muted">Top member power</p>
+				<p class="font-mono text-lg font-bold text-fg">{data.strength.topMember?.score ?? 0}</p>
+			</div>
+		</div>
+		{#if data.strength.members.length}
+			<ul class="space-y-1.5">
+				{#each data.strength.members as member (member.id)}
+					<li class="rounded-sm panel-muted px-3 py-2">
+						<a href="/state/{member.id}" class="flex items-center gap-2 text-sm group">
+							<Logo
+								src={member.logo}
+								alt={member.name}
+								class="size-6! rounded-[2px]! shrink-0"
+								placeholderIcon={FluentBuildingGovernment20Filled}
+							/>
+							<span class="truncate group-hover:text-primary-fg">{member.name}</span>
+							<span class="ml-auto font-mono text-xs text-fg-muted">{member.population.toLocaleString()} people</span>
+							<span class="font-mono text-xs text-fg-muted">stability {member.stability}</span>
+							<span class="w-28 shrink-0 font-mono text-xs text-positive-fg text-right">{member.score} pts</span>
+						</a>
+						<div class="mt-1 h-1 rounded-full bg-white/10 overflow-hidden">
+							<div
+								class="h-full bg-primary/70"
+								style="width: {Math.min(100, (member.score / Math.max(1, data.strength.topMember?.score ?? 1)) * 100)}%"
+							></div>
+						</div>
+					</li>
+				{/each}
+			</ul>
+		{/if}
+	</section>
 
 	<!-- Feedback from plain form posts -->
 	{#if form?.error}
@@ -555,7 +613,9 @@
 			<ul class="space-y-2">
 				{#each data.embargoes as embargo (embargo.id)}
 					<li class="panel-muted flex flex-wrap items-center gap-2 rounded-sm p-3 text-sm">
-						<a href="/state/{embargo.targetStateId}" class="font-medium text-fg hover:text-primary-hover">{embargo.targetName}</a>
+						<a href="/state/{embargo.targetStateId}" class="font-medium text-fg hover:text-primary-hover">
+							{embargo.targetName}
+						</a>
 						<Badge tone="red" size="xs">embargo</Badge>
 						<span class="text-xs text-fg-muted">{embargo.reason}</span>
 						{#if data.isLeader}
@@ -571,15 +631,27 @@
 			<p class="text-xs text-fg-muted">No embargoes in force.</p>
 		{/if}
 		{#if data.isLeader}
-			<form method="POST" action="?/declareEmbargo" use:enhance={withToast} class="flex flex-wrap items-end gap-2 border-t border-line/20 pt-3">
-				<label class="min-w-40 flex-1"><span class="field-label">Target state</span>
+			<form
+				method="POST"
+				action="?/declareEmbargo"
+				use:enhance={withToast}
+				class="flex flex-wrap items-end gap-2 border-t border-line/20 pt-3"
+			>
+				<label class="min-w-40 flex-1">
+					<span class="field-label">Target state</span>
 					<select name="targetStateId" required class="field-control mt-1 w-full rounded-sm px-2 py-1.5 text-sm">
 						<option value="">State…</option>
 						{#each data.embargoTargets as target (target.id)}<option value={target.id}>{target.name}</option>{/each}
 					</select>
 				</label>
-				<label class="min-w-40 flex-1"><span class="field-label">Reason</span>
-					<input name="reason" required maxlength="500" class="field-control mt-1 w-full rounded-sm px-2 py-1.5 text-sm" />
+				<label class="min-w-40 flex-1">
+					<span class="field-label">Reason</span>
+					<input
+						name="reason"
+						required
+						maxlength="500"
+						class="field-control mt-1 w-full rounded-sm px-2 py-1.5 text-sm"
+					/>
 				</label>
 				<Button type="submit" size="sm" variant="secondary">Declare embargo</Button>
 			</form>
