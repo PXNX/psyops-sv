@@ -211,9 +211,9 @@
 				Personnel file
 			</div>
 			<article id="profile-card" class="paper relative overflow-hidden rounded-[3px] pl-5 sm:pl-7">
-				{#if data.residence?.region.state.logoUrl}
+				{#if data.citizenship?.logo}
 					<img
-						src={data.residence.region.state.logoUrl}
+						src={data.citizenship.logo}
 						alt=""
 						aria-hidden="true"
 						class="pointer-events-none absolute -right-10 top-10 size-56 -rotate-12 opacity-[0.045] select-none sm:size-72"
