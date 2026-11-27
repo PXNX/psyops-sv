@@ -5,6 +5,7 @@ import {
 	ideologyLean,
 	partyAppeal,
 	tallyElectionVotes,
+	wholeVotesByParty,
 	type PartyAppealFactors
 } from "../election.config.js";
 
@@ -38,9 +39,13 @@ describe("election appeal", () => {
 		expect(partyAppeal(factors({ goodwill: 90 }))).toBeGreaterThan(base);
 		expect(partyAppeal(factors({ propagandaFor: 10 }))).toBeGreaterThan(base);
 		expect(partyAppeal(factors({ propagandaAgainst: 10 }))).toBeLessThan(base);
-		expect(
-			partyAppeal(factors({ ideology: "liberal", orientation: "left" }))
-		).toBeGreaterThan(partyAppeal(factors({ ideology: "liberal", orientation: "right" })));
+		expect(partyAppeal(factors({ ideology: "liberal", orientation: "left" }))).toBeGreaterThan(
+			partyAppeal(factors({ ideology: "liberal", orientation: "right" }))
+		);
+	});
+
+	it("rounds weighted floats into whole votes before storage", () => {
+		expect(wholeVotesByParty({ 1: 3.999999999999999, 2: 6.000000000000001 })).toEqual({ 1: 4, 2: 6 });
 	});
 
 	it("splits the effective vote 50/50 between citizens and oligarchs", () => {
@@ -50,12 +55,15 @@ describe("election appeal", () => {
 				{ userId: "a", partyId: 1, weight: 4 },
 				{ userId: "b", partyId: 2, weight: 1 }
 			],
-			appealByParty: new Map([[1, 80], [2, 40]]),
+			appealByParty: new Map([
+				[1, 80],
+				[2, 40]
+			]),
 			partyIds: [1, 2]
 		});
 		const citizenTotal = 100;
 		const oligarchTotal = Object.values(result).reduce((a, b) => a + b, 0) - citizenTotal;
-		expect(oligarchTotal).toBeCloseTo(citizenTotal * ELECTION.OLIGARCH_SHARE / (1 - ELECTION.OLIGARCH_SHARE), 5);
+		expect(oligarchTotal).toBeCloseTo((citizenTotal * ELECTION.OLIGARCH_SHARE) / (1 - ELECTION.OLIGARCH_SHARE), 5);
 		expect(result[1]).toBeGreaterThan(result[2]);
 	});
 });

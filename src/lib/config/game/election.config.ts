@@ -74,11 +74,7 @@ const centered = (value: number) => clamp(value, 0, 100) - 50;
 
 /** A party's appeal to the electorate, 0-100. */
 export function partyAppeal(f: PartyAppealFactors): number {
-	const propagandaFor = clamp(
-		f.propagandaFor * ELECTION.PROPAGANDA_FOR_PER_POINT,
-		0,
-		ELECTION.PROPAGANDA_FOR_CAP
-	);
+	const propagandaFor = clamp(f.propagandaFor * ELECTION.PROPAGANDA_FOR_PER_POINT, 0, ELECTION.PROPAGANDA_FOR_CAP);
 	const propagandaAgainst = clamp(
 		f.propagandaAgainst * ELECTION.PROPAGANDA_AGAINST_PER_POINT,
 		ELECTION.PROPAGANDA_AGAINST_CAP,
@@ -110,6 +106,17 @@ export interface OligarchVote {
 	weight: number;
 }
 
+/**
+ * The weighted tally is fractional, but stored votes are integers. Round once
+ * before allocating seats and inserting results so no float ever reaches the
+ * database (e.g. 3.999999999999999 into an integer column).
+ */
+export function wholeVotesByParty(votes: Record<number, number>): Record<number, number> {
+	return Object.fromEntries(
+		Object.entries(votes).map(([partyId, count]) => [Number(partyId), Math.max(0, Math.round(count))])
+	);
+}
+
 export function tallyElectionVotes(input: {
 	citizenVotesByParty: Record<number, number>;
 	oligarchs: OligarchVote[];
@@ -119,7 +126,10 @@ export function tallyElectionVotes(input: {
 	const result: Record<number, number> = {};
 	for (const partyId of input.partyIds) result[partyId] = input.citizenVotesByParty[partyId] ?? 0;
 	const citizenTotal = Object.values(input.citizenVotesByParty).reduce((a, b) => a + b, 0);
-	const oligarchTotal = citizenTotal > 0 ? citizenTotal / (1 - ELECTION.OLIGARCH_SHARE) * ELECTION.OLIGARCH_SHARE : input.oligarchs.length;
+	const oligarchTotal =
+		citizenTotal > 0
+			? (citizenTotal / (1 - ELECTION.OLIGARCH_SHARE)) * ELECTION.OLIGARCH_SHARE
+			: input.oligarchs.length;
 
 	if (!input.oligarchs.length || !input.partyIds.length) return result;
 

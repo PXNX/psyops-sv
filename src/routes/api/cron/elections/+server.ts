@@ -21,6 +21,7 @@ import { runAutomaticDividends } from "#lib/server/services/economy/dividends.js
 import { reachFirstTime } from "#lib/server/services/politics/first-time.js";
 import { effectiveVotesByParty } from "#lib/server/services/politics/election-scoring.js";
 import { isMartialLaw } from "#lib/server/services/politics/martial-law.js";
+import { wholeVotesByParty } from "#lib/config/index.js";
 import { dtg } from "#lib/utils/dtg.js";
 import { REAL_DAY_MS } from "#lib/utils/game-time.js";
 
@@ -42,9 +43,7 @@ export const GET: RequestHandler = async ({ request }) => {
 
 		// A declaration is self-expiring: the timestamp alone says whether
 		// elections are paused, so no cron has to switch a flag back off.
-		const stateRows = await db
-			.select({ id: states.id, martialLawUntil: states.martialLawUntil })
-			.from(states);
+		const stateRows = await db.select({ id: states.id, martialLawUntil: states.martialLawUntil }).from(states);
 		const martialUntil = new Map(stateRows.map((s) => [s.id, s.martialLawUntil]));
 
 		// 1. Update scheduled elections to active
@@ -160,12 +159,13 @@ async function processElectionResults(election: any) {
 	// Half the vote is cast by citizens, half is weighted by the oligarchs who
 	// fund parties. Reputation, the president, ideology, the economy and
 	// propaganda all move the oligarch half.
-	const votesByParty = await effectiveVotesByParty(db, {
-		electionId: election.id,
-		stateId: election.stateId
-	});
+	const votesByParty = wholeVotesByParty(
+		await effectiveVotesByParty(db, {
+			electionId: election.id,
+			stateId: election.stateId
+		})
+	);
 	const totalVotes = Object.values(votesByParty).reduce((a, b) => a + b, 0);
-
 
 	if (parties.length === 0) {
 		console.warn(`No parties found for state ${election.stateId}`);
