@@ -178,7 +178,7 @@
 										<Logo
 											src={m.logo}
 											alt={m.name}
-											class="size-7 rounded-sm ring-2 ring-surface-4"
+											class="size-7 rounded-sm"
 											placeholderIcon={FluentBuildingGovernment20Filled}
 										/>
 									{/each}
@@ -190,15 +190,15 @@
 						{/if}
 
 						<p class="flex flex-wrap gap-x-3 gap-y-1 text-xs text-fg-muted">
-							<span class="flex items-center gap-1"
-								><FluentBuildingGovernment20Filled class="size-3.5 text-friendly" />
+							<span class="flex items-center gap-1">
+								<FluentBuildingGovernment20Filled class="size-3.5 text-friendly" />
 								<span class="font-bold text-fg">{bloc.memberCount}</span>
-								{bloc.memberCount === 1 ? "state" : "states"}</span
-							>
-							<span class="flex items-center gap-1"
-								><FluentPeople20Filled class="size-3.5 text-primary-fg" />
-								<span class="font-bold text-fg">{formatPopulation(bloc.totalPopulation)}</span> citizens</span
-							>
+								{bloc.memberCount === 1 ? "state" : "states"}
+							</span>
+							<span class="flex items-center gap-1">
+								<FluentPeople20Filled class="size-3.5 text-primary-fg" />
+								<span class="font-bold text-fg">{formatPopulation(bloc.totalPopulation)}</span> citizens
+							</span>
 						</p>
 					</a>
 

@@ -234,7 +234,7 @@
 						{#if data.bloc}
 							<a
 								href="/bloc/{data.bloc.id}"
-								class="animate-stamp absolute -bottom-2 -right-2 size-9 rounded-full overflow-hidden flex items-center justify-center ring-2 ring-surface-6"
+								class="animate-stamp absolute -bottom-2 -right-2 size-9 rounded-full overflow-hidden flex items-center justify-center"
 								style="background-color: {data.bloc.color}; --stamp-tilt: 8deg"
 								title={data.bloc.name}
 							>
@@ -500,7 +500,7 @@
 									<Logo
 										src={member.logo}
 										alt=""
-										class="size-7 rounded-full ring-2 ring-surface-6"
+										class="size-7 rounded-full"
 										placeholderGradient="from-surface-13 to-surface-6"
 									/>
 								{/each}

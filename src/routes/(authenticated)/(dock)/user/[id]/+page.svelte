@@ -175,7 +175,7 @@
 					<Logo
 						src={logo}
 						alt=""
-						class="size-7! rounded-[3px]! shrink-0 ring-1 ring-black/15 transition-transform group-hover:scale-110 group-hover:-rotate-3"
+						class="size-7! rounded-[3px]! shrink-0 transition-transform group-hover:scale-110 group-hover:-rotate-3"
 						placeholderIcon={placeholder}
 					/>
 				{/if}
@@ -338,7 +338,7 @@
 									</span>
 									<a href="/party/{data.party.id}" class="group flex min-w-0 items-center gap-1.5">
 										<span
-											class="shrink-0 rounded-[3px] p-0.5 ring-1 ring-black/15"
+											class="shrink-0 rounded-[3px] p-0.5"
 											style="background: {data.party.color}"
 											title={data.party.color}
 										>
@@ -421,7 +421,7 @@
 								<Logo
 									src={diplomacy.blocLogo}
 									alt=""
-									class="size-7! rounded-[3px]! shrink-0 ring-1 ring-black/15"
+									class="size-7! rounded-[3px]! shrink-0"
 									placeholderIcon={FluentGlobeShield20Filled}
 								/>
 								<a href="/bloc/{diplomacy.blocId}" class="group min-w-0 flex-1 text-[15px]">
@@ -464,7 +464,7 @@
 									<Logo
 										src={data.citizenship.logo}
 										alt=""
-										class="size-5! rounded-[2px]! shrink-0 ring-1 ring-black/15"
+										class="size-5! rounded-[2px]! shrink-0"
 										placeholderIcon={FluentFlag20Filled}
 									/>
 									<span class="truncate text-fg-body group-hover:text-fg group-hover:underline">
