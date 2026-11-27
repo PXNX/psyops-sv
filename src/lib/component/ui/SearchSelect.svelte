@@ -195,6 +195,12 @@
 							: 'text-fg'}"
 						onpointermove={() => (active = i)}
 						onclick={() => pick(item)}
+						onkeydown={(e) => {
+							if (e.key === "Enter" || e.key === " ") {
+								e.preventDefault();
+								pick(item);
+							}
+						}}
 					>
 						{#if item.logo !== undefined}
 							<Logo src={item.logo} alt="" class="size-7 shrink-0 rounded-sm" />
