@@ -98,8 +98,10 @@
 					<span
 						class="dividend-coin absolute bottom-0 flex items-center justify-center rounded-full bg-warning text-warning-content font-mono font-bold"
 						style="left: {coin.left}%; width: {coin.size}px; height: {coin.size}px; font-size: {coin.size *
-							0.6}px; --coin-delay: {coin.delay}ms; --coin-drift: {coin.drift}px">$</span
+							0.6}px; --coin-delay: {coin.delay}ms; --coin-drift: {coin.drift}px"
 					>
+						$
+					</span>
 				{/each}
 			</div>
 			<div
@@ -140,6 +142,18 @@
 		</div>
 	</dl>
 
+	{#if dividends.cooldownEndsAt}
+		<div class="panel-muted rounded-sm p-3 mt-3">
+			<dt class="text-[10px] text-fg-muted uppercase tracking-wide">Next automatic payout</dt>
+			<dd class="data text-base font-bold text-fg">{formatDate(dividends.cooldownEndsAt)}</dd>
+		</div>
+	{:else}
+		<div class="panel-muted rounded-sm p-3 mt-3">
+			<dt class="text-[10px] text-fg-muted uppercase tracking-wide">Next automatic payout</dt>
+			<dd class="data text-base font-bold text-fg">Allowed now</dd>
+		</div>
+	{/if}
+
 	<!-- Payout record -->
 	{#if bars.length > 0}
 		<div>
@@ -164,10 +178,10 @@
 							{formatDate(row.paidAt)}
 							{#if row.automatic}<Badge tone="green" size="xs" class="ml-1">auto</Badge>{/if}
 						</span>
-						<span class="data text-fg-body"
-							>{money(row.perShare)}/sh · {money(row.total)}
-							<span class="text-fg-muted">to {row.recipients}</span></span
-						>
+						<span class="data text-fg-body">
+							{money(row.perShare)}/sh · {money(row.total)}
+							<span class="text-fg-muted">to {row.recipients}</span>
+						</span>
 					</li>
 				{/each}
 			</ol>
