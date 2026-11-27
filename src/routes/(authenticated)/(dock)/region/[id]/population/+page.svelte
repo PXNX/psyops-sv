@@ -123,6 +123,29 @@
 		<CivilianNeeds needs={data.civilianNeeds} />
 	</div>
 
+	<section class="panel rounded-sm p-4 mt-4">
+		<h2 class="section-title text-base">Recent migration</h2>
+		{#if data.movement.length === 0}
+			<p class="text-sm text-[#8e9abb]">No recent movement recorded for this region.</p>
+		{:else}
+			<ul class="mt-2 divide-y divide-[#8ea6e0]/10">
+				{#each data.movement as flow (flow.id)}
+					<li class="flex items-center gap-3 px-3 py-2 text-sm">
+						<span class="font-mono text-xs text-[#8e9abb]">{formatDate(flow.at)}</span>
+						<span class="flex-1">
+							{flow.arrived ? "Arrived" : "Departed"} · {flow.civilians.toLocaleString()} civilians
+							{flow.arrived ? "from" : "to"}
+							{flow.otherRegion}
+						</span>
+						{#if flow.neededVisa}
+							<span class="text-hostile-fg text-xs">visa needed</span>
+						{/if}
+					</li>
+				{/each}
+			</ul>
+		{/if}
+	</section>
+
 	<h2 class="section-title mt-5 mb-2">Registered residents</h2>
 
 	{#if data.residents.length === 0}

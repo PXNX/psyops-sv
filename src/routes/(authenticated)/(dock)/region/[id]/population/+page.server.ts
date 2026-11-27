@@ -1,8 +1,8 @@
 // src/routes/(authenticated)/(dock)/region/[id]/population/+page.server.ts
 import { db } from "#lib/server/db.js";
-import { regions, residences, accounts, userProfiles, files } from "#lib/server/schema.js";
+import { regions, residences, accounts, userProfiles, files, migrationFlows } from "#lib/server/schema.js";
 import { getSignedDownloadUrl } from "#lib/server/backblaze.js";
-import { eq, desc, asc, sql, count } from "drizzle-orm";
+import { eq, desc, asc, or, sql, count } from "drizzle-orm";
 import { error } from "@sveltejs/kit";
 import type { PageServerLoad } from "./$types";
 import { getRegionName } from "#lib/utils/formatting.js";
@@ -34,6 +34,21 @@ export const load: PageServerLoad = async ({ params, url, locals }) => {
 
 	// Calculate offset
 	const offset = (currentPage - 1) * PAGE_SIZE;
+
+	const movementRows = await db
+		.select()
+		.from(migrationFlows)
+		.where(or(eq(migrationFlows.fromRegionId, regionId), eq(migrationFlows.toRegionId, regionId)))
+		.orderBy(desc(migrationFlows.createdAt))
+		.limit(12);
+	const movement = movementRows.map((flow) => ({
+		id: flow.id,
+		at: flow.createdAt.toISOString(),
+		civilians: flow.civilians,
+		arrived: flow.toRegionId === regionId,
+		neededVisa: flow.neededVisa,
+		otherRegion: getRegionName(flow.toRegionId === regionId ? flow.fromRegionId : flow.toRegionId)
+	}));
 
 	// Region, resident count and the residents page are independent reads
 	const [region, totalCountResult, residentsData] = await Promise.all([
@@ -79,6 +94,7 @@ export const load: PageServerLoad = async ({ params, url, locals }) => {
 	]);
 
 	return {
+		movement,
 		region: {
 			id: region.id,
 			name: getRegionName(region.id),
