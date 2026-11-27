@@ -46,7 +46,7 @@
 		<Logo
 			src={avatar}
 			alt=""
-			class="{avatarSize} shrink-0 rounded-full transition-transform duration-200 group-hover:scale-105"
+			class="{avatarSize} shrink-0 rounded-full transition-transform duration-200 group-hover:scale-105 group-focus-visible:ring-2 group-focus-visible:ring-primary group-focus-visible:ring-offset-2 group-focus-visible:ring-offset-surface-0"
 			placeholderIcon={FluentPerson20Filled}
 			placeholderGradient="from-surface-13 to-surface-6"
 		/>
