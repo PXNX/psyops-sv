@@ -96,6 +96,16 @@
 					{data.civilians.workforce.available.toLocaleString()} / {data.civilians.workforce.labour.toLocaleString()} free
 				</span>
 			</div>
+			<div class="mt-1 flex flex-wrap items-center justify-between gap-2 text-xs">
+				<span class="text-fg-muted" title="Unemployment drags down civilian opinion in this region">
+					Unemployed · {data.civilians.workforce.unemployed.toLocaleString()} ({Math.round(
+						data.civilians.workforce.unemploymentShare * 100
+					)}%)
+				</span>
+				{#if data.civilians.workforce.moodPenalty > 0}
+					<span class="font-mono text-hostile-fg">−{data.civilians.workforce.moodPenalty} opinion</span>
+				{/if}
+			</div>
 			{#if data.civilians.report?.contributions.length}
 				<div class="mt-2 grid gap-1 text-xs sm:grid-cols-2">
 					{#each data.civilians.report.contributions as c}

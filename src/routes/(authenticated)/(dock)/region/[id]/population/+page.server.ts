@@ -6,7 +6,14 @@ import { eq, desc, asc, sql, count } from "drizzle-orm";
 import { error } from "@sveltejs/kit";
 import type { PageServerLoad } from "./$types";
 import { getRegionName } from "#lib/utils/formatting.js";
-import { CIVILIAN_NEEDS, NEED_META, labourShare, regionDensity, regionPopulation } from "#lib/config/index.js";
+import {
+	CIVILIAN_NEEDS,
+	MIGRATION_CONFIG,
+	NEED_META,
+	labourShare,
+	regionDensity,
+	regionPopulation
+} from "#lib/config/index.js";
 import { regionCivilianNeeds } from "#lib/server/services/civilians/supply.js";
 import { regionPopulationReport } from "#lib/server/services/population-report.js";
 import { populationHistory } from "#lib/server/services/snapshot-history.js";
@@ -102,6 +109,19 @@ export const load: PageServerLoad = async ({ params, url, locals }) => {
 				labour: employment.labour,
 				employed: employment.employed,
 				available: employment.available,
+				unemployed: Math.max(0, employment.labour - employment.employed),
+				unemploymentShare: employment.labour > 0 ? (employment.labour - employment.employed) / employment.labour : 0,
+				moodPenalty:
+					employment.labour > 0
+						? Math.round(
+								Math.min(
+									1,
+									Math.max(0, employment.labour - employment.employed) /
+										employment.labour /
+										MIGRATION_CONFIG.FULL_PENALTY_UNEMPLOYMENT
+								) * MIGRATION_CONFIG.MAX_UNEMPLOYMENT_OPINION_PENALTY
+							)
+						: 0,
 				share: labourShare(region.education ?? 0),
 				education: region.education ?? 0
 			}
