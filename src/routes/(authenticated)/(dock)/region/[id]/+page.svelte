@@ -270,7 +270,7 @@
 				<Logo
 					src={regionCoatUrl(data.region.id)}
 					alt="Coat of arms of {data.region.name}"
-					class="size-16 sm:size-20 rounded-sm shrink-0 ring-2 ring-black/40 shadow-lg"
+					class="size-16 sm:size-20 rounded-sm shrink-0 shadow-lg"
 					placeholderIcon={FluentShield20Filled}
 					placeholderGradient="from-politics-bg/40 to-politics-bg/40"
 				/>

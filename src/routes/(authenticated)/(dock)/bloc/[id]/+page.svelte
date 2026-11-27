@@ -155,7 +155,7 @@
 							<Logo
 								src={state.logo}
 								alt={state.name}
-								class="size-9 rounded-sm ring-1 ring-line/25"
+								class="size-9 rounded-sm"
 								placeholderIcon={FluentBuildingGovernment20Filled}
 							/>
 						</a>
