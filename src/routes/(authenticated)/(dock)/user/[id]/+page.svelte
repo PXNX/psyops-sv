@@ -41,6 +41,7 @@
 	import PartyTag from "#lib/component/PartyTag.svelte";
 	import { shareLink } from "#lib/util.js";
 	import { formatDate } from "#lib/utils/formatting.js";
+	import { formatMoney } from "#lib/utils/money.js";
 	import Logo from "#lib/component/Logo.svelte";
 	import { Button, IconButton, ActionListItem } from "#lib/component/ui/index.js";
 	import PageContainer from "#lib/component/PageContainer.svelte";
@@ -91,8 +92,7 @@
 
 	const partyRole = (role: string) => (role === "leader" ? "Leader" : role === "deputy" ? "Deputy" : "Member");
 
-	const compact = new Intl.NumberFormat("en", { notation: "compact", maximumFractionDigits: 1 });
-	const money = (n: number) => `$${compact.format(n)}`;
+	const money = formatMoney;
 
 	/** The `error` string of a failed form action, or a fallback. */
 	function actionError(data: unknown, fallback: string): string {
