@@ -46,6 +46,7 @@
 	let listQuantity = $state(1);
 	let listPrice = $state(data.shares?.ipoPrice ?? 100);
 	let isListing = $state(false);
+	let isFiring = $state(false);
 
 	let buyQuantities = $state<Record<number, number>>({});
 	let isBuying = $state<Record<number, boolean>>({});
@@ -70,6 +71,20 @@
 			}
 		};
 	}
+
+	/** Dismissals settle in place: toast failures, lock the button while running. */
+	const fireWorker = async ({
+		result,
+		update
+	}: {
+		result: { type: string; data?: unknown };
+		update: () => Promise<void>;
+	}) => {
+		isFiring = true;
+		await update();
+		toastResult(result);
+		isFiring = false;
+	};
 
 	const money = (n: number) => n.toLocaleString();
 </script>
@@ -418,9 +433,11 @@
 						<UserLink id={worker.userId} name={worker.name} size="sm" />
 						<span class="text-xs text-fg-muted truncate">{worker.factoryName}</span>
 						{#if data.isOwner}
-							<form method="POST" action="?/fireWorker" use:enhance class="ml-auto">
+							<form method="POST" action="?/fireWorker" use:enhance={fireWorker} class="ml-auto">
 								<input type="hidden" name="userId" value={worker.userId} />
-								<Button type="submit" size="xs" variant="soft-red">Dismiss</Button>
+								<Button type="submit" size="xs" variant="soft-red" loading={isFiring} loadingText="Dismissing…">
+									Dismiss
+								</Button>
 							</form>
 						{/if}
 					</li>

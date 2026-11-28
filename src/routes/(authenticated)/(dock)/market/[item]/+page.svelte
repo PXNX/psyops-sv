@@ -32,20 +32,27 @@
 	function submitWith(target: () => Element | null | undefined, onSuccess?: () => void): SubmitFunction {
 		return () =>
 			async ({ result, update }) => {
+				submitting = true;
 				await update();
 				toastResult(result);
 				if (result.type === "success") {
 					onSuccess?.();
 					celebrate(target());
 				}
+				submitting = false;
 			};
 	}
 	const withToast: SubmitFunction =
 		() =>
 		async ({ result, update }) => {
+			submitting = true;
 			await update();
 			toastResult(result);
+			submitting = false;
 		};
+
+	/** One lock for every write on this page; prevents double buys/listings. */
+	let submitting = $state(false);
 
 	let buyQuantities = $state<Record<string, number>>({});
 
@@ -343,7 +350,7 @@
 								>
 									${(itemCost + taxAmount).toLocaleString()}
 								</span>
-								<Button type="submit" size="sm" variant="primary">Buy</Button>
+								<Button type="submit" size="sm" variant="primary" disabled={submitting}>Buy</Button>
 							</form>
 							{#if data.governmentState}
 								<form method="POST" action="?/buyListingAsState" use:enhance={submitWith(() => rowEls[listing.id])}>
@@ -351,6 +358,7 @@
 									<input type="hidden" name="quantity" value={buyQty} />
 									<Button
 										type="submit"
+										disabled={submitting}
 										size="sm"
 										variant="soft-amber"
 										icon={FluentBuildingGovernment20Filled}
@@ -415,7 +423,7 @@
 							class="flex-1 flex"
 						>
 							<input type="hidden" name="listingId" value={data.myListing.id} />
-							<Button type="submit" variant="soft-red" size="sm" grow icon={FluentDelete20Filled}>Withdraw</Button>
+							<Button type="submit" variant="soft-red" size="sm" grow icon={FluentDelete20Filled} disabled={submitting}>Withdraw</Button>
 						</form>
 					</div>
 				{:else if data.myListing && isEditing}
@@ -455,7 +463,7 @@
 							>
 								Cancel
 							</Button>
-							<Button type="submit" size="sm" grow icon={FluentCheckmark20Filled}>Save</Button>
+							<Button type="submit" size="sm" grow icon={FluentCheckmark20Filled} disabled={submitting}>Save</Button>
 						</div>
 					</form>
 				{:else if data.userItemQuantity > 0 && cooldownTimeRemaining <= 0}
@@ -480,7 +488,7 @@
 							size="sm"
 							block
 							icon={FluentAdd20Filled}
-							disabled={createQty < 1 || createQty > data.userItemQuantity || createPrice < 1}
+							disabled={submitting || createQty < 1 || createQty > data.userItemQuantity || createPrice < 1}
 						>
 							Post ask
 						</Button>
