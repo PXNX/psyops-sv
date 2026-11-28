@@ -2,6 +2,7 @@
 <script lang="ts">
 	import { fade, fly } from "svelte/transition";
 	import { enhance } from "$app/forms";
+	import { toastResult } from "#lib/ui/toast.svelte.js";
 	import FluentLocation20Filled from "~icons/fluent/location-20-filled";
 	import FluentPeople20Filled from "~icons/fluent/people-20-filled";
 	import FluentBuildingGovernment20Filled from "~icons/fluent/building-government-20-filled";
@@ -86,6 +87,7 @@
 						return async ({ result, update }) => {
 							if (result.type === "success") celebrate();
 							await update();
+							toastResult(result);
 							isSubmitting = false;
 						};
 					}}

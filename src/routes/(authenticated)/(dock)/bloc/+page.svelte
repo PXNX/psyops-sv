@@ -16,9 +16,10 @@
 	import Badge from "#lib/component/ui/Badge.svelte";
 	import Logo from "#lib/component/Logo.svelte";
 	import UserLink from "#lib/component/UserLink.svelte";
+	import FormError from "#lib/component/FormError.svelte";
 	import EmptyState from "#lib/component/EmptyState.svelte";
 
-	const { data } = $props();
+	const { data, form } = $props();
 
 	let searchInput = $state(data.search || "");
 	let sortBy = $state(data.sortBy || "members");
@@ -69,6 +70,7 @@
 </svelte:head>
 
 <PageContainer maxWidth="6xl">
+	<FormError message={form?.error} />
 	<!-- Header -->
 	<PageHeader
 		documentTitle={false}

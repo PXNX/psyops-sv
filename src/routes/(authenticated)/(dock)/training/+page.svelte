@@ -29,7 +29,9 @@
 	import SideRail from "./SideRail.svelte";
 	import { SERVICE_DOMAIN, type Service } from "./forces";
 
-	let { data }: { data: PageData } = $props();
+	import FormError from "#lib/component/FormError.svelte";
+
+	let { data, form }: { data: PageData; form?: { error?: string } } = $props();
 
 	// ── Service tabs (kept in ?view=) ───────────────────────────────────────
 	const SERVICES: { id: Service; label: string; icon: typeof FluentShield20Regular }[] = [
@@ -163,6 +165,7 @@
 <svelte:head><title>Forces · PsyOps</title></svelte:head>
 
 <PageContainer maxWidth="7xl">
+	<FormError message={form?.error} />
 	<!-- Header -->
 	<header class="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
 		<div class="min-w-0">

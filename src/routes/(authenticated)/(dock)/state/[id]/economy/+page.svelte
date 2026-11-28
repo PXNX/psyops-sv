@@ -15,8 +15,11 @@
 	import PageHeader from "#lib/component/PageHeader.svelte";
 	import { Badge } from "#lib/component/ui/index.js";
 	import { STANCE_TONE } from "#lib/config/index.js";
+	import type { PageData } from "./$types";
 
-	let { data } = $props();
+	import FormError from "#lib/component/FormError.svelte";
+
+	let { data, form }: { data: PageData; form?: { error?: string } } = $props();
 
 	const money = new Intl.NumberFormat("en-US", {
 		style: "currency",
@@ -75,6 +78,7 @@
 </script>
 
 <PageContainer maxWidth="5xl">
+	<FormError message={form?.error} />
 	<PageHeader
 		title="Ministry of Economy"
 		subtitle={data.state.name}

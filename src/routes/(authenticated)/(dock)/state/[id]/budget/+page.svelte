@@ -14,9 +14,11 @@
 	import FluentChevronLeft20Filled from "~icons/fluent/chevron-left-20-filled";
 	import FluentChevronRight20Filled from "~icons/fluent/chevron-right-20-filled";
 	import { dtgDate, dtgTime } from "#lib/utils/dtg.js";
+	import type { PageData } from "./$types";
 	import RegionalShare from "./RegionalShare.svelte";
+	import FormError from "#lib/component/FormError.svelte";
 
-	let { data } = $props();
+	let { data, form }: { data: PageData; form?: { error?: string } } = $props();
 
 	const transactionTypeLabels: Record<string, string> = {
 		resource_purchase: "Resource purchase",
@@ -57,6 +59,7 @@
 <svelte:head><title>{data.state.name} Treasury · PsyOps</title></svelte:head>
 
 <PageContainer maxWidth="4xl">
+	<FormError message={form?.error} />
 	<PageHeader
 		documentTitle={false}
 		title="Treasury"

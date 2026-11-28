@@ -23,6 +23,7 @@
 	import { pct, type DomainStatus } from "./shared";
 
 	const { data, form } = $props();
+	import FormError from "#lib/component/FormError.svelte";
 	const p = $derived(data.planner);
 	const targets = $derived(p?.targets ?? []);
 
@@ -91,11 +92,13 @@
 	});
 
 	const lastMessage = $derived(form && "message" in form && form.message ? String(form.message) : null);
+	const lastError = $derived(form && "error" in form && form.error ? String(form.error) : null);
 </script>
 
 <svelte:head><title>Domains · PsyOps</title></svelte:head>
 
 <PageContainer maxWidth="6xl">
+	<FormError message={lastError} />
 	<div class="space-y-5 py-6">
 		<header class="flex flex-wrap items-end justify-between gap-3">
 			<div class="min-w-0">
