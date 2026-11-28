@@ -7,6 +7,7 @@ Game integration handlers for the private bot:
                    game website (reusing the game's existing
                    ``/auth/callback/telegram`` endpoint, which verifies the
                    Telegram hash and creates a session).
+  * ``/start login`` – the same button, opened by the website's sign-in page.
   * ``/premium`` – lets a linked user buy a premium membership with either
                    **Telegram Stars** (native invoice) or **TON** (on-chain
                    transfer verified via the toncenter API).
@@ -119,6 +120,29 @@ async def login_cmd(update: Update, _: CallbackContext) -> None:
         "Tap below to securely log in to the game with your Telegram account.\n\n"
         "After logging in you can buy a <b>Premium membership</b> here with /premium.",
         reply_markup=InlineKeyboardMarkup.from_button(button),
+    )
+
+
+# ─── /start (website deep links) ─────────────────────────────────────────────
+async def start_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    """Answer the sign-in page's `?start=login` link with a login button."""
+    args = context.args or []
+    if args and args[0] == "login":
+        emit("telegram.command", command="/start login", telegram_id=update.effective_user.id)
+        await update.message.reply_text(
+            "Welcome back. Tap below to securely sign in to PsyOps with your Telegram account.",
+            reply_markup=InlineKeyboardMarkup.from_button(
+                InlineKeyboardButton(
+                    "🎮 Log in to the game",
+                    login_url=LoginUrl(url=f"{APP_URL}/auth/callback/telegram"),
+                )
+            ),
+        )
+        return
+
+    await update.message.reply_text(
+        "Welcome to the PsyOps bot.\n\n"
+        "Use /login to sign in to the game, or /premium to manage a membership."
     )
 
 
@@ -494,6 +518,7 @@ async def _ton_verification_job(context: ContextTypes.DEFAULT_TYPE) -> None:
 
 # ─── Registration ─────────────────────────────────────────────────────────────
 def register_premium(app: Application) -> None:
+    app.add_handler(CommandHandler("start", start_cmd, filters.ChatType.PRIVATE))
     app.add_handler(CommandHandler("login", login_cmd, filters.ChatType.PRIVATE))
     app.add_handler(CommandHandler("premium", premium_cmd, filters.ChatType.PRIVATE))
     app.add_handler(CallbackQueryHandler(buy_with_stars, r"^prem_stars_"))
