@@ -96,12 +96,6 @@
 					<p class="text-center text-xs text-fg-muted">Waiting for Telegram…</p>
 				{/if}
 
-				<div class="flex items-center gap-3 py-1 text-[10px] uppercase tracking-[0.2em] text-fg-faint">
-					<span class="h-px flex-1 bg-line/20"></span>
-					or
-					<span class="h-px flex-1 bg-line/20"></span>
-				</div>
-
 				<Button href="/auth/login/google" variant="secondary" size="lg" block icon={LogosGoogleIcon} class="gap-3">
 					<span class="font-semibold">{m.signUp({ provider: "Google" })}</span>
 				</Button>
