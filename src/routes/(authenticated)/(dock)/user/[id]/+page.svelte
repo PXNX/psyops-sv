@@ -43,6 +43,7 @@
 	import { shareLink } from "#lib/util.js";
 	import { formatDate } from "#lib/utils/formatting.js";
 	import { formatMoney } from "#lib/utils/money.js";
+	import { compactNumber } from "#lib/utils/intel-estimate.js";
 	import Logo from "#lib/component/Logo.svelte";
 	import { Button, IconButton, ActionListItem } from "#lib/component/ui/index.js";
 	import PageContainer from "#lib/component/PageContainer.svelte";
@@ -879,7 +880,7 @@
 											subtitle="{rankNames[newspaper.rank] ?? newspaper.rank} · since {formatDate(newspaper.joinedAt)}"
 										>
 											{#snippet aside()}
-												<p class="font-mono text-sm text-fg">{compact.format(newspaper.subscribers)}</p>
+												<p class="font-mono text-sm text-fg">{compactNumber(newspaper.subscribers)}</p>
 												<p class="text-[10px] uppercase tracking-wide text-fg-muted">
 													subscriber{newspaper.subscribers === 1 ? "" : "s"}
 												</p>
