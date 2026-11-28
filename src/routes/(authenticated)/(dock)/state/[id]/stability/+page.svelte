@@ -5,6 +5,7 @@
 	import PageContainer from "#lib/component/PageContainer.svelte";
 	import PageHeader from "#lib/component/PageHeader.svelte";
 	import IntelNote from "#lib/component/intel/IntelNote.svelte";
+	import RelatedLinks from "#lib/component/RelatedLinks.svelte";
 	import FluentShield20Filled from "~icons/fluent/shield-20-filled";
 
 	let { data } = $props();

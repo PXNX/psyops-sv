@@ -5,6 +5,7 @@
 	import PageHeader from "#lib/component/PageHeader.svelte";
 	import Button from "#lib/component/ui/Button.svelte";
 	import UserLink from "#lib/component/UserLink.svelte";
+	import RelatedLinks from "#lib/component/RelatedLinks.svelte";
 	import FluentChevronLeft20Filled from "~icons/fluent/chevron-left-20-filled";
 	import FluentTrophy20Filled from "~icons/fluent/trophy-20-filled";
 
@@ -47,4 +48,12 @@
 			</ol>
 		{/if}
 	</section>
+
+	<RelatedLinks
+		links={[
+			{ href: `/user/${data.viewerId}/networth`, label: "My net worth" },
+			{ href: `/user/${data.viewerId}/history`, label: "My history" },
+			{ href: `/user/${data.viewerId}`, label: "My profile" }
+		]}
+	/>
 </PageContainer>
