@@ -20,8 +20,8 @@ const TELEGRAM_BOT_TOKEN_VAL = RAW_TELEGRAM_BOT_TOKEN || "mock-bot-token";
 
 export const google = new Google(GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, GOOGLE_REDIRECT_URI);
 
-// Telegram login (see src/lib/components/TelegramLoginWidget.svelte and
-// src/routes/(unauthenticated)/auth/callback/telegram/+server.ts)
+// Telegram login (the bot's LoginUrl at /auth/callback/telegram is the primary
+// path; the widget POST below is kept for account linking in settings)
 export const TELEGRAM_BOT_TOKEN = TELEGRAM_BOT_TOKEN_VAL;
 
 export interface TelegramUser {

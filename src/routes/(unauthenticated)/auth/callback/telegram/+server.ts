@@ -205,9 +205,9 @@ export const GET: RequestHandler = async ({ url, cookies }) => {
 	redirect(302, result.redirectTo);
 };
 
-// Handle POST requests from the website's own Telegram login button (see
-// src/lib/components/TelegramLoginWidget.svelte), which uses
-// Telegram.Login.auth()'s popup + JS callback instead of a redirect.
+// Handle POST requests from the Telegram widget kept in account settings,
+// which uses Telegram.Login.auth()'s popup + JS callback instead of a redirect.
+// The sign-in page itself uses the bot's LoginUrl via the GET handler above.
 export const POST: RequestHandler = async ({ request, cookies }) => {
 	try {
 		const body = await request.json();
