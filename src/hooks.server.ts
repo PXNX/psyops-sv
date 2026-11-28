@@ -5,6 +5,7 @@ import { TokenBucket } from "#lib/server/rate-limit.js";
 import { sequence, type HandleServerError, type Handle } from "@sveltejs/kit/hooks";
 import { validateSessionToken } from "#lib/server/auth.js";
 import { paraglideMiddleware } from "#lib/paraglide/server.js";
+import { cookieName as localeCookie } from "#lib/paraglide/runtime.js";
 import { themes } from "#lib/themes.js";
 import { isMockMode } from "#lib/server/db.js";
 import { CRON_SECRET, NODE_ENV } from "$app/env/private";
@@ -242,12 +243,20 @@ export const themesHandle: Handle = async ({ event, resolve }) => {
 
 // creating a handle to use the paraglide middleware
 const paraglideHandle: Handle = ({ event, resolve }) =>
-	paraglideMiddleware(event.request, ({ request: localizedRequest, locale }) => {
+	paraglideMiddleware(event.request, async ({ request: localizedRequest, locale }) => {
 		event.request = localizedRequest;
+		// Remember the first detected locale (browser/Accept-Language) so the
+		// choice sticks until the user changes it in Settings. Cookies must be
+		// set before the response is generated.
+		if (!event.cookies.get(localeCookie)) {
+			event.cookies.set(localeCookie, locale, {
+				path: "/",
+				maxAge: 60 * 60 * 24 * 365,
+				sameSite: "lax"
+			});
+		}
 		return resolve(event, {
-			transformPageChunk: ({ html }) => {
-				return html.replace("%lang%", locale);
-			}
+			transformPageChunk: ({ html }) => html.replace("%lang%", locale)
 		});
 	});
 

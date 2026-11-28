@@ -17,7 +17,9 @@
 	import FluentWeatherMoon20Filled from "~icons/fluent/weather-moon-20-filled";
 	import FluentWeatherSunny20Filled from "~icons/fluent/weather-sunny-20-filled";
 	import FluentCheckmarkCircle20Filled from "~icons/fluent/checkmark-circle-20-filled";
+	import FluentGlobe20Filled from "~icons/fluent/globe-20-filled";
 	import { settings } from "#lib/settings.svelte.js";
+	import { getLocale, setLocale, locales } from "#lib/paraglide/runtime.js";
 	import TelegramLoginWidget from "#lib/components/TelegramLoginWidget.svelte";
 	import PushNotificationManager from "#lib/components/PushNotificationManager.svelte";
 	import PageContainer from "#lib/component/PageContainer.svelte";
@@ -240,6 +242,33 @@
 						class="toggle border-line/25 bg-surface-0 text-fg-muted checked:border-primary/60 checked:bg-primary/20 checked:text-primary-fg"
 					/>
 				</label>
+			</div>
+		</section>
+
+		<!-- Language -->
+		<section class="panel rounded-sm p-5 sm:p-6 space-y-3" aria-labelledby="language-heading">
+			<div class="flex items-center gap-2">
+				<FluentGlobe20Filled class="size-5 text-primary-fg" />
+				<h2 id="language-heading" class="section-title">Language</h2>
+			</div>
+			<p class="field-hint">Chosen from your browser on your first visit. Change it any time here.</p>
+			<div class="grid max-w-md grid-cols-2 gap-2">
+				{#each locales as locale (locale)}
+					<button
+						type="button"
+						onclick={() => setLocale(locale)}
+						aria-pressed={getLocale() === locale}
+						class="press-spring flex items-center justify-center gap-2 rounded-sm border px-4 py-3 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 {getLocale() ===
+						locale
+							? 'border-primary/70 bg-primary/12 text-primary-fg'
+							: 'border-line/15 bg-surface-1 text-fg-soft hover:border-line/30 hover:bg-surface-2'}"
+					>
+						{locale === "en" ? "English" : "Deutsch"}
+						{#if getLocale() === locale}
+							<FluentCheckmarkCircle20Filled class="size-4" />
+						{/if}
+					</button>
+				{/each}
 			</div>
 		</section>
 
