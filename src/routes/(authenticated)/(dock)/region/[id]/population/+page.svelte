@@ -9,6 +9,7 @@
 	import UserLink from "#lib/component/UserLink.svelte";
 	import Logo from "#lib/component/Logo.svelte";
 	import PageContainer from "#lib/component/PageContainer.svelte";
+	import EmptyState from "#lib/component/EmptyState.svelte";
 	import { Button, IconButton, Badge } from "#lib/component/ui/index.js";
 	import Sparkline from "#lib/component/charts/Sparkline.svelte";
 	import CivilianNeeds from "../CivilianNeeds.svelte";
@@ -126,7 +127,12 @@
 	<section class="panel rounded-sm p-4 mt-4">
 		<h2 class="section-title text-base">Recent migration</h2>
 		{#if data.movement.length === 0}
-			<p class="text-sm text-[#8e9abb]">No recent movement recorded for this region.</p>
+			<EmptyState
+				icon={FluentPeople20Filled}
+				title="No recent movement"
+				subtitle="Civilians have not moved in or out of this region lately."
+				class="p-6"
+			/>
 		{:else}
 			<ul class="mt-2 divide-y divide-[#8ea6e0]/10">
 				{#each data.movement as flow (flow.id)}

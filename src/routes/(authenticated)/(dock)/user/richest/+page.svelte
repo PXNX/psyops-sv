@@ -2,6 +2,7 @@
 <!-- Who owns the most, ranked by the same balance sheet the net worth pages use. -->
 <script lang="ts">
 	import PageContainer from "#lib/component/PageContainer.svelte";
+	import EmptyState from "#lib/component/EmptyState.svelte";
 	import PageHeader from "#lib/component/PageHeader.svelte";
 	import Button from "#lib/component/ui/Button.svelte";
 	import UserLink from "#lib/component/UserLink.svelte";
@@ -33,7 +34,12 @@
 			<span class="ml-auto font-mono text-xs text-fg-muted">{data.players.length} players</span>
 		</div>
 		{#if data.players.length === 0}
-			<p class="px-4 py-8 text-center text-sm text-fg-muted">No players yet.</p>
+			<EmptyState
+				icon={FluentTrophy20Filled}
+				title="No players yet"
+				subtitle="The leaderboard fills up as players build their fortunes."
+				class="p-6 sm:p-8"
+			/>
 		{:else}
 			<ol class="divide-y divide-line/10">
 				{#each data.players as player, i (player.id)}

@@ -11,6 +11,7 @@
 	import { celebrate } from "#lib/utils/celebrate.js";
 	import { formatDate } from "#lib/utils/formatting.js";
 	import { Badge } from "#lib/component/ui/index.js";
+	import EmptyState from "#lib/component/EmptyState.svelte";
 	import DividendControls from "./DividendControls.svelte";
 	import FluentCoinMultiple20Filled from "~icons/fluent/coin-multiple-20-filled";
 	import FluentArrowRepeatAll20Filled from "~icons/fluent/arrow-repeat-all-20-filled";
@@ -187,7 +188,12 @@
 			</ol>
 		</div>
 	{:else}
-		<p class="text-sm text-fg-muted">No dividends paid yet.</p>
+		<EmptyState
+			icon={FluentCoinMultiple20Filled}
+			title="No dividends paid yet"
+			subtitle="Payouts and the automatic policy will appear here once they start."
+			class="p-6"
+		/>
 	{/if}
 
 	{#if isOwner && dividends.declareForm && dividends.policyForm}
