@@ -8,6 +8,8 @@
 	import { fade, fly } from "svelte/transition";
 	import { prefersReducedMotion } from "svelte/motion";
 
+	let { showCaptions = true }: { showCaptions?: boolean } = $props();
+
 	const slides = [
 		{
 			src: "/images/docs/psyops.webp",
@@ -63,26 +65,28 @@
 	<div class="showcase-veil"></div>
 
 	<!-- A small placard, like the label under a museum exhibit. -->
-	<div class="showcase-placard absolute bottom-10 left-10 hidden max-w-xs lg:block">
-		{#key active}
-			<div in:fly={{ y: 14, duration: 520 }} out:fade={{ duration: 260 }}>
-				<p class="font-mono text-[10px] uppercase tracking-[0.28em] text-primary-fg">
-					{slides[active].kicker}
-				</p>
-				<p class="mt-1 font-serif text-xl font-bold text-fg">{slides[active].title}</p>
-				<p class="mt-1 text-sm leading-relaxed text-fg-muted">{slides[active].text}</p>
-				<div class="mt-3 flex gap-1.5">
-					{#each slides as slide, i (slide.src)}
-						<span
-							class="h-1 rounded-full transition-all duration-500 {i === active
-								? 'w-6 bg-primary'
-								: 'w-1.5 bg-fg-muted/40'}"
-						></span>
-					{/each}
+	{#if showCaptions}
+		<div class="showcase-placard absolute bottom-10 left-10 hidden max-w-xs lg:block">
+			{#key active}
+				<div in:fly={{ y: 14, duration: 520 }} out:fade={{ duration: 260 }}>
+					<p class="font-mono text-[10px] uppercase tracking-[0.28em] text-primary-fg">
+						{slides[active].kicker}
+					</p>
+					<p class="mt-1 font-serif text-xl font-bold text-fg">{slides[active].title}</p>
+					<p class="mt-1 text-sm leading-relaxed text-fg-muted">{slides[active].text}</p>
+					<div class="mt-3 flex gap-1.5">
+						{#each slides as slide, i (slide.src)}
+							<span
+								class="h-1 rounded-full transition-all duration-500 {i === active
+									? 'w-6 bg-primary'
+									: 'w-1.5 bg-fg-muted/40'}"
+							></span>
+						{/each}
+					</div>
 				</div>
-			</div>
-		{/key}
-	</div>
+			{/key}
+		</div>
+	{/if}
 </div>
 
 <style>
