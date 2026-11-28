@@ -3,6 +3,7 @@
 	import type { HistoryEntry } from "#lib/server/services/military/history.js";
 	import { Badge } from "#lib/component/ui/index.js";
 	import UserLink from "#lib/component/UserLink.svelte";
+	import { formatDate } from "#lib/utils/formatting.js";
 
 	let { entries }: { entries: HistoryEntry[] } = $props();
 
@@ -20,7 +21,6 @@
 		red: "bg-error",
 		amber: "bg-warning"
 	};
-	const format = (d: Date) => new Date(d).toLocaleDateString();
 </script>
 
 {#if entries.length === 0}
@@ -28,10 +28,15 @@
 {:else}
 	<ol class="relative ml-2 border-l border-line/20">
 		{#each entries as entry, i (entry.id)}
-			<li class="soft-lift animate-soft-in relative mb-3 ml-5 rounded-sm border border-line/15 bg-surface-1 p-3" style="--rise-delay: {Math.min(i, 8) * 30}ms">
+			<li
+				class="soft-lift animate-soft-in relative mb-3 ml-5 rounded-sm border border-line/15 bg-surface-1 p-3"
+				style="--rise-delay: {Math.min(i, 8) * 30}ms"
+			>
 				<span class="absolute -left-[27px] top-4 size-3 rounded-full ring-4 ring-surface-0 {dot[entry.tone]}"></span>
 				<div class="flex flex-wrap items-center gap-2">
-					<time class="font-mono text-[11px] text-fg-faint" datetime={new Date(entry.at).toISOString()}>{format(entry.at)}</time>
+					<time class="font-mono text-[11px] text-fg-faint" datetime={new Date(entry.at).toISOString()}>
+						{formatDate(entry.at)}
+					</time>
 					<Badge tone={tone[entry.tone]} size="xs">{entry.kind}</Badge>
 				</div>
 				<div class="mt-1 flex flex-wrap items-center gap-2 text-sm">

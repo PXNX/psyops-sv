@@ -5,7 +5,7 @@
 	import { enhance } from "$app/forms";
 	import type { SubmitFunction } from "$app/forms";
 	import { refreshAll } from "$app/navigation";
-	import { formatDate, getRegionName, regionCoatUrl } from "#lib/utils/formatting.js";
+	import { formatDate, formatDateTime, getRegionName, regionCoatUrl } from "#lib/utils/formatting.js";
 	import { dtgTime } from "#lib/utils/dtg.js";
 	import { celebrate } from "#lib/utils/celebrate.js";
 	import { toastResult } from "#lib/ui/toast.svelte.js";
@@ -310,7 +310,7 @@
 							? 'text-warning'
 							: 'text-fg-muted'}"
 					title={data.strikeRisk.level === "cooldown"
-						? `A crew can strike again after ${data.strikeRisk.cooldownEndsAt ? new Date(data.strikeRisk.cooldownEndsAt).toLocaleString() : "the cooldown ends"}`
+						? `A crew can strike again after ${data.strikeRisk.cooldownEndsAt ? formatDateTime(data.strikeRisk.cooldownEndsAt) : "the cooldown ends"}`
 						: `Workers accept ${data.strikeRisk.fairWage.toLocaleString()}; the current gap would cost ${data.strikeRisk.severity}% output`}
 				>
 					<FluentWarning20Filled class="size-3.5 shrink-0" />

@@ -8,7 +8,7 @@
 	import { superForm } from "sveltekit-superforms";
 	import { valibotClient } from "sveltekit-superforms/adapters/valibot";
 	import { createProposalSchema } from "./schema";
-	import { getRegionName, regionCoatUrl } from "#lib/utils/formatting.js";
+	import { formatDateTime, getRegionName, regionCoatUrl } from "#lib/utils/formatting.js";
 	import ResourceRequirements from "#lib/component/ResourceRequirements.svelte";
 	import PageContainer from "#lib/component/PageContainer.svelte";
 	import PageHeader from "#lib/component/PageHeader.svelte";
@@ -494,7 +494,7 @@
 						</p>
 						{#if data.martialLawUntil && new Date(data.martialLawUntil) > new Date()}
 							<p class="mt-2 text-xs text-warning">
-								Martial law is already in force until {new Date(data.martialLawUntil).toLocaleString()}.
+								Martial law is already in force until {formatDateTime(data.martialLawUntil)}.
 							</p>
 						{/if}
 					</div>

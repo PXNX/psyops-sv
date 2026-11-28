@@ -8,6 +8,7 @@
 	import Sparkline from "#lib/component/charts/Sparkline.svelte";
 	import IntelValue from "#lib/component/intel/IntelValue.svelte";
 	import IntelNote from "#lib/component/intel/IntelNote.svelte";
+	import { formatDateTime } from "#lib/utils/formatting.js";
 	import type { Estimate } from "#lib/utils/intel-estimate.js";
 
 	let { data } = $props();
@@ -155,7 +156,7 @@
 						</li>
 						<li class="flex justify-between">
 							<span class="text-fg-muted">Last tick</span><span class="font-mono text-fg-muted">
-								{usage.lastTick ? new Date(usage.lastTick).toLocaleString() : "—"}
+								{usage.lastTick ? formatDateTime(usage.lastTick) : "—"}
 							</span>
 						</li>
 					</ul>
