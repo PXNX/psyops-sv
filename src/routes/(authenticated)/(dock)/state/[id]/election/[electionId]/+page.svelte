@@ -112,6 +112,14 @@
 			<p class="mt-1 text-[10px] text-fg-muted/80">
 				{formatDateTime(data.election.startDate)} – {formatDateTime(data.election.endDate)}
 			</p>
+			{#if hasEnded}
+				<a
+					href="/state/{data.state.id}/history"
+					class="mt-2 inline-block text-[11px] text-fg-muted hover:text-primary-fg hover:underline"
+				>
+					State timeline →
+				</a>
+			{/if}
 		</header>
 
 		{#if data.userVote}
@@ -199,6 +207,15 @@
 							>
 								{party.name}
 							</a>
+							{#if data.resultsVisible}
+								<a
+									href="/party/{party.id}/history"
+									class="text-[10px] text-fg-muted hover:text-primary-fg hover:underline"
+									onclick={(e) => e.stopPropagation()}
+								>
+									Party timeline →
+								</a>
+							{/if}
 							<div class="flex items-center gap-x-3 gap-y-1 flex-wrap text-xs text-fg-muted">
 								{#if party.leader?.accountId}
 									<span class="min-w-0" onclick={(e) => e.stopPropagation()} role="presentation">
@@ -246,8 +263,10 @@
 								{#if marked}
 									<span
 										class="font-serif text-2xl font-black leading-none animate-stamp"
-										style="--stamp-tilt: -6deg; --rise-delay: 0ms">✕</span
+										style="--stamp-tilt: -6deg; --rise-delay: 0ms"
 									>
+										✕
+									</span>
 								{/if}
 							</span>
 						{/if}
