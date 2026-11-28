@@ -10,6 +10,7 @@
 	import TelegramLoginWidget from "#lib/components/TelegramLoginWidget.svelte";
 	import Button from "#lib/component/ui/Button.svelte";
 	import Seo from "#lib/component/Seo.svelte";
+	import AuthShowcase from "#lib/component/AuthShowcase.svelte";
 
 	const botUsername = PUBLIC_TELEGRAM_BOT_USERNAME || "RW_SupportBot";
 	const next = $derived(page.url.searchParams.get("next") || "/");
@@ -21,7 +22,9 @@
 	robots="noindex, follow"
 />
 
-<main class="relative flex flex-col min-h-dvh justify-center items-center w-full p-4 pb-20">
+<main class="relative isolate flex flex-col min-h-dvh justify-center items-center w-full p-4 pb-20">
+	<AuthShowcase />
+
 	<!-- Main Content -->
 	<div class="relative z-10 flex flex-col items-center max-w-md w-full space-y-8">
 		<!-- Logo & Title Section -->
