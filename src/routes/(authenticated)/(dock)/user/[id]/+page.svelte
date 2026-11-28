@@ -31,6 +31,7 @@
 	import FluentBuilding20Filled from "~icons/fluent/building-20-filled";
 	import FluentMoreHorizontal20Filled from "~icons/fluent/more-horizontal-20-filled";
 	import FluentChevronDown20Filled from "~icons/fluent/chevron-down-20-filled";
+	import FluentHistory20Filled from "~icons/fluent/history-20-filled";
 
 	import Modal from "#lib/component/Modal.svelte";
 	import BottomSheet from "#lib/component/BottomSheet.svelte";
@@ -167,8 +168,8 @@
 	detail: string,
 	placeholder: typeof FluentFlag20Filled = FluentFlag20Filled
 )}
-	<li class="flex min-w-0 items-center gap-2.5 text-[15px]">
-		<span class="w-24 shrink-0 font-mono text-[11px] uppercase tracking-[0.15em] text-fg-muted">{label}</span>
+	<li class="flex min-w-0 items-center gap-2 text-[15px] sm:gap-2.5">
+		<span class="w-16 shrink-0 font-mono text-[11px] uppercase tracking-[0.15em] text-fg-muted sm:w-24">{label}</span>
 		{#if href}
 			<a {href} class="group flex min-w-0 items-center gap-2">
 				{#if logo !== undefined}
@@ -332,8 +333,8 @@
 								)}
 							{/if}
 							{#if data.party}
-								<li class="flex min-w-0 items-center gap-2.5 text-[15px]">
-									<span class="w-24 shrink-0 font-mono text-[11px] uppercase tracking-[0.15em] text-fg-muted">
+								<li class="flex min-w-0 items-center gap-2 text-[15px] sm:gap-2.5">
+									<span class="w-16 shrink-0 font-mono text-[11px] uppercase tracking-[0.15em] text-fg-muted sm:w-24">
 										Party
 									</span>
 									<a href="/party/{data.party.id}" class="group flex min-w-0 items-center gap-1.5">
@@ -361,7 +362,7 @@
 								</li>
 							{:else if data.isOwnProfile}
 								<li class="flex items-center gap-2.5 text-[15px]">
-									<span class="w-24 shrink-0 font-mono text-[11px] uppercase tracking-[0.15em] text-fg-muted">
+									<span class="w-16 shrink-0 font-mono text-[11px] uppercase tracking-[0.15em] text-fg-muted sm:w-24">
 										Party
 									</span>
 									<Button
@@ -507,14 +508,6 @@
 						</dd>
 					</div>
 					<div class="min-w-0">
-						<dt class="font-mono text-[11px] uppercase tracking-[0.15em] text-fg-muted">History</dt>
-						<dd class="border-b border-dotted border-line/40 pb-0.5 font-mono">
-							<a href="/user/{data.user.id}/history" class="text-fg-body hover:text-fg hover:underline">
-								Name changes & milestones →
-							</a>
-						</dd>
-					</div>
-					<div class="min-w-0">
 						<dt class="font-mono text-[11px] uppercase tracking-[0.15em] text-fg-muted">Articles</dt>
 						<dd class="text-fg-body border-b border-dotted border-line/40 pb-0.5 font-mono">
 							{data.articleCount}
@@ -627,6 +620,10 @@
 					{#if data.isOwnProfile}
 						<Button href="/visas" variant="secondary" size="sm" icon={FluentBookCompass24Filled}>Passport</Button>
 					{/if}
+
+					<Button href="/user/{data.user.id}/history" variant="secondary" size="sm" icon={FluentHistory20Filled}>
+						History
+					</Button>
 
 					<IconButton
 						icon={FluentShareAndroid20Filled}
