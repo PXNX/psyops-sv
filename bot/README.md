@@ -19,6 +19,8 @@ not own its own schema.
   echt abgerechnet.
 - Prüft vor jedem Kauf, ob der Telegram-Account bereits über `/login` mit einem psyops-sv-Account
   verknüpft ist.
+- **`/set_cmd`** (nur Admins) — setzt das sichtbare Command-Menü, den Bot-Namen und das Profilbild
+  auf die Werte aus `BOT_DISPLAY_NAME` und `PROFILE_PHOTO` zurück.
 
 ## Layout
 

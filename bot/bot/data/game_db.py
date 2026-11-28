@@ -72,6 +72,21 @@ async def find_account_by_telegram_id(telegram_id: int) -> Optional[str]:
         )
 
 
+async def is_game_admin(telegram_id: int) -> bool:
+    """True when this Telegram id is linked to a game account with the admin role."""
+    async with GameDBPool.connection() as conn:
+        if conn is None:
+            return False
+        return bool(
+            await conn.fetchval(
+                "select exists(select 1 from accounts a "
+                "join user_profiles p on p.account_id = a.id "
+                "where p.telegram_id = $1 and a.role = 'admin')",
+                telegram_id,
+            )
+        )
+
+
 async def grant_premium(account_id: str, days: int) -> Optional[datetime]:
     """Extend an account's premium membership by ``days``.
 

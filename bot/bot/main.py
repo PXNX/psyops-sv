@@ -16,6 +16,7 @@ from telegram.constants import ParseMode
 from telegram.ext import ApplicationBuilder, ContextTypes, Defaults, PicklePersistence
 
 from private.premium import register_premium, schedule_ton_verification
+from private.setup import register_setup
 from settings.config import CONTAINER, TOKEN
 from util.error_logger import get_error_logger
 from util.telemetry import emit
@@ -57,6 +58,7 @@ def main() -> None:
 
     # /login (game login button) and /premium (Telegram Stars / TON purchase)
     register_premium(application)
+    register_setup(application)
     schedule_ton_verification(application)
 
     async def error_handler(update: object, context: ContextTypes.DEFAULT_TYPE) -> None:

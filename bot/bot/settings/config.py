@@ -50,3 +50,16 @@ THREAD_ID: Final[int] = int(getenv("THREAD_ID", "0"))
 # always written to the container logs as structured JSON as well; set this to
 # forward them to the same collector the web app's OTEL_EXPORTER_OTLP_* targets.
 TELEMETRY_ENDPOINT: Final[str] = getenv("TELEMETRY_ENDPOINT", "").strip()
+
+
+# --- Admin controls ----------------------------------------------------------
+# Telegram user ids allowed to run /set_cmd, comma-separated. Game accounts
+# with the "admin" role are accepted too (see data/game_db.is_game_admin).
+def _parse_admin_ids(raw: str) -> frozenset[int]:
+    return frozenset(int(part) for part in raw.replace(" ", "").split(",") if part.isdigit())
+
+
+ADMINS: Final[frozenset[int]] = _parse_admin_ids(getenv("ADMINS", ""))
+BOT_DISPLAY_NAME: Final[str] = getenv("BOT_DISPLAY_NAME", "PsyOps Support")
+RES_PATH: Final[str] = getenv("RES_PATH", "./res")
+PROFILE_PHOTO: Final[str] = getenv("PROFILE_PHOTO", f"{RES_PATH}/profile.png")
