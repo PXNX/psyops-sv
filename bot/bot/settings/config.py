@@ -56,7 +56,8 @@ TELEMETRY_ENDPOINT: Final[str] = getenv("TELEMETRY_ENDPOINT", "").strip()
 # Telegram user ids allowed to run /set_cmd, comma-separated. Game accounts
 # with the "admin" role are accepted too (see data/game_db.is_game_admin).
 def _parse_admin_ids(raw: str) -> frozenset[int]:
-    return frozenset(int(part) for part in raw.replace(" ", "").split(",") if part.isdigit())
+    cleaned = raw.strip().strip("[]").replace(" ", "")
+    return frozenset(int(part) for part in cleaned.split(",") if part.isdigit())
 
 
 ADMINS: Final[frozenset[int]] = _parse_admin_ids(getenv("ADMINS", ""))

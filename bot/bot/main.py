@@ -16,7 +16,7 @@ from telegram.constants import ParseMode
 from telegram.ext import ApplicationBuilder, ContextTypes, Defaults, PicklePersistence
 
 from private.premium import register_premium, schedule_ton_verification
-from private.setup import register_setup
+from private.setup import post_init, register_setup
 from settings.config import CONTAINER, TOKEN
 from util.error_logger import get_error_logger
 from util.telemetry import emit
@@ -50,6 +50,7 @@ def main() -> None:
         ApplicationBuilder()
         .token(TOKEN)
         .defaults(Defaults(parse_mode=ParseMode.HTML, link_preview_options=LinkPreviewOptions(is_disabled=True)))
+        .post_init(post_init)
         .persistence(PicklePersistence(filepath="persistence"))
         .read_timeout(50)
         .get_updates_read_timeout(50)
