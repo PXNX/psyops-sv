@@ -20,6 +20,10 @@ declare global {
 		interface Error {
 			code?: string;
 			requestId?: string;
+			isAdmin?: boolean;
+			/** Only returned to admins: the original exception stack and cause. */
+			stack?: string;
+			cause?: string;
 		}
 		// interface PageData {}
 		// interface PageState {}

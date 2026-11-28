@@ -211,7 +211,16 @@ export const handleError: HandleServerError = async ({ kind, error, event }) => 
 	// already carry a safe, intentional message (e.g. `error(404, "Not found")`) —
 	// leave status/message untouched by omitting them, so they're inherited.
 	if (kind === "unknown") {
-		return { message: "An unexpected error occurred.", requestId };
+		// Admins get the full trace to debug live incidents; everyone else only
+		// gets the request id they can hand to support.
+		const debug =
+			account?.role === "admin"
+				? {
+						stack: err?.stack || event.locals.errorStackTrace,
+						cause: err?.cause ? String(err.cause) : undefined
+					}
+				: {};
+		return { message: "An unexpected error occurred.", requestId, isAdmin: account?.role === "admin", ...debug };
 	}
 
 	return { requestId };

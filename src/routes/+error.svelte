@@ -10,6 +10,8 @@
 	import FluentEmojiLeftArrow from "~icons/fluent-emoji/left-arrow";
 	import FluentEmojiEnvelopeWithArrow from "~icons/fluent-emoji/envelope-with-arrow";
 	import FluentArrowRight20Filled from "~icons/fluent/arrow-right-20-filled";
+	import FluentCopy20Filled from "~icons/fluent/copy-20-filled";
+	import FluentCheckmark20Filled from "~icons/fluent/checkmark-20-filled";
 	import { PUBLIC_TELEGRAM_BOT_USERNAME } from "$app/env/public";
 	import Button from "#lib/component/ui/Button.svelte";
 	import Seo from "#lib/component/Seo.svelte";
@@ -69,6 +71,24 @@
 	});
 
 	const ReportIcon = $derived(report.icon);
+	const trace = $derived.by(() => {
+		const err = page.error;
+		if (!err?.stack) return null;
+		return err.cause ? `${err.stack}\n\nCause: ${err.cause}` : err.stack;
+	});
+
+	let copied = $state(false);
+	async function copyTrace() {
+		if (!trace) return;
+		try {
+			await navigator.clipboard.writeText(trace);
+			copied = true;
+			setTimeout(() => (copied = false), 2000);
+		} catch {
+			copied = false;
+		}
+	}
+
 	const toneClass = $derived(
 		report.tone === "red" ? "text-error" : report.tone === "blue" ? "text-primary-fg" : "text-warning"
 	);
@@ -111,6 +131,24 @@
 						<p class="font-mono text-[10px] uppercase tracking-wide text-fg-muted">Request ID</p>
 						<p class="mt-0.5 select-all font-mono text-xs font-semibold text-fg-body">{page.error.requestId}</p>
 						<p class="mt-1 text-[11px] text-fg-muted">Please include this when reporting the issue.</p>
+					</div>
+				{/if}
+
+				{#if page.error?.isAdmin && trace}
+					<div class="mt-5 text-left">
+						<div class="flex items-center justify-between gap-2">
+							<p class="font-mono text-[10px] uppercase tracking-wide text-fg-muted">Admin trace</p>
+							<Button
+								size="xs"
+								variant="secondary"
+								icon={copied ? FluentCheckmark20Filled : FluentCopy20Filled}
+								onclick={copyTrace}
+							>
+								{copied ? "Copied" : "Copy"}
+							</Button>
+						</div>
+						<pre
+							class="mt-2 max-h-64 overflow-auto rounded-sm border border-line/20 bg-surface-0 p-3 font-mono text-[11px] leading-relaxed whitespace-pre-wrap break-all text-fg-soft">{trace}</pre>
 					</div>
 				{/if}
 
