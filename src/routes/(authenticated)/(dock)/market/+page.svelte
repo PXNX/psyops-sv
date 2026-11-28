@@ -262,11 +262,11 @@
 		{#if data.stocks.length === 0}
 			<p class="mt-3 text-sm text-fg-muted">No public companies yet — shares appear here once one files for an IPO.</p>
 		{:else}
-			<div class="mt-3 overflow-x-auto">
-				<table class="w-full text-sm">
+			<div class="mt-3 overflow-x-auto rounded-sm">
+				<table class="w-full min-w-[36rem] text-sm">
 					<thead class="text-left text-[10px] uppercase tracking-wide text-fg-muted">
 						<tr>
-							<th class="py-1.5 pr-3 font-medium">Company</th>
+							<th class="sticky left-0 z-10 bg-surface-1 py-1.5 pr-3 font-medium">Company</th>
 							<th class="py-1.5 pr-3 text-right font-medium">Quote</th>
 							<th class="py-1.5 pr-3 text-right font-medium">Best ask</th>
 							<th class="py-1.5 pr-3 text-right font-medium">On offer</th>
@@ -277,7 +277,7 @@
 					<tbody class="divide-y divide-line/15">
 						{#each data.stocks as stock (stock.companyId)}
 							<tr>
-								<td class="py-2 pr-3">
+								<td class="sticky left-0 z-10 bg-surface-1 py-2 pr-3">
 									<a href="/company/{stock.companyId}" class="font-semibold text-fg hover:text-primary-fg">
 										{stock.name}
 									</a>

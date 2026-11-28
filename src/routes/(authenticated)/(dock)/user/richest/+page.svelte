@@ -41,17 +41,19 @@
 				class="p-6 sm:p-8"
 			/>
 		{:else}
-			<ol class="divide-y divide-line/10">
-				{#each data.players as player, i (player.id)}
-					<li class="flex items-center gap-3 px-3 py-2.5 sm:px-4 {player.id === data.viewerId ? 'bg-primary/8' : ''}">
-						<span class="w-7 shrink-0 text-right font-mono text-xs text-fg-muted">{i + 1}</span>
-						<span class="min-w-0 flex-1">
-							<UserLink id={player.id} name={player.name} size="sm" />
-						</span>
-						<span class="font-mono text-sm font-bold text-fg">{money(player.total)}</span>
-					</li>
-				{/each}
-			</ol>
+			<div class="overflow-x-auto rounded-sm">
+				<ol class="min-w-[20rem] divide-y divide-line/10">
+					{#each data.players as player, i (player.id)}
+						<li class="flex items-center gap-3 px-3 py-2.5 sm:px-4 {player.id === data.viewerId ? 'bg-primary/8' : ''}">
+							<span class="w-7 shrink-0 text-right font-mono text-xs text-fg-muted">{i + 1}</span>
+							<span class="min-w-0 flex-1">
+								<UserLink id={player.id} name={player.name} size="sm" />
+							</span>
+							<span class="font-mono text-sm font-bold text-fg">{money(player.total)}</span>
+						</li>
+					{/each}
+				</ol>
+			</div>
 		{/if}
 	</section>
 
