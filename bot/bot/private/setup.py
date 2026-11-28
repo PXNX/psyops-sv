@@ -35,7 +35,11 @@ ADMIN_COMMANDS = PUBLIC_COMMANDS + (("set_cmd", "Refresh the bot name, photo and
 async def _is_admin(telegram_id: int) -> bool:
     if telegram_id in ADMINS:
         return True
-    return await is_game_admin(telegram_id)
+    try:
+        return await is_game_admin(telegram_id)
+    except Exception as e:
+        logger.warning("Could not check game admin role for %s: %s", telegram_id, e)
+        return False
 
 
 async def set_cmd(update: Update, context: CallbackContext) -> None:

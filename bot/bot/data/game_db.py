@@ -79,7 +79,7 @@ async def is_game_admin(telegram_id: int) -> bool:
             return False
         return bool(
             await conn.fetchval(
-                "select exists(select 1 from accounts a "
+                "select exists(select 1 from account a "
                 "join user_profiles p on p.account_id = a.id "
                 "where p.telegram_id = $1 and a.role = 'admin')",
                 telegram_id,
