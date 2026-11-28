@@ -3,7 +3,6 @@
 	import { goto } from "$app/navigation";
 	import { onMount } from "svelte";
 	import LogosGoogleIcon from "~icons/logos/google-icon";
-	import FluentBot20Filled from "~icons/fluent/bot-20-filled";
 	import FluentEmojiEnvelopeWithArrow from "~icons/fluent-emoji/envelope-with-arrow";
 	import { PUBLIC_TELEGRAM_BOT_USERNAME } from "$app/env/public";
 	import { page } from "$app/state";
@@ -59,7 +58,7 @@
 <Seo title="Sign in · PsyOps" description="Sign in to PsyOps with the Telegram bot." robots="noindex, follow" />
 
 <main class="relative isolate flex min-h-dvh w-full flex-col items-center justify-center overflow-hidden px-4 py-10">
-	<AuthShowcase showCaptions={false} />
+	<AuthShowcase />
 
 	<div class="relative z-10 w-full max-w-md">
 		<div class="panel rounded-sm p-6 shadow-2xl sm:p-8 space-y-6">
@@ -78,19 +77,20 @@
 			{/if}
 
 			<div class="space-y-3">
-				<Button
+				<a
 					href={botLink}
 					target="_blank"
 					rel="noopener noreferrer"
-					variant="primary"
-					size="lg"
-					block
-					icon={FluentBot20Filled}
-					class="gap-3"
 					onclick={startWaiting}
+					class="btn btn-lg w-full gap-3 border-0 bg-[#24A1DE] text-white shadow-lg transition-all duration-300 hover:-translate-y-0.5 hover:bg-[#2094cc] hover:shadow-xl"
 				>
-					Continue with Telegram
-				</Button>
+					<svg class="size-6" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+						<path
+							d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm5.894 8.221l-1.97 9.28c-.145.658-.537.818-1.084.508l-3-2.21-1.446 1.394c-.16.16-.295.295-.605.295-.042 0-.084 0-.126-.01l.21-3.051 5.56-5.023c.242-.213-.054-.328-.373-.115L6.765 13.08l-2.994-.924c-.651-.204-.666-.651.136-.968l11.708-4.514c.54-.203 1.01.122.84.953z"
+						></path>
+					</svg>
+					<span class="font-semibold">Sign up with Telegram</span>
+				</a>
 
 				{#if awaitingBot}
 					<p class="text-center text-xs text-fg-muted">Waiting for Telegram…</p>

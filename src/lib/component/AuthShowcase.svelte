@@ -15,31 +15,31 @@
 			src: "/images/docs/psyops.webp",
 			kicker: "The board",
 			title: "A world that answers to you",
-			text: "Every region has a population, an economy and a mood. What you do in one place is felt in the next."
+			text: "Regions with their own people, economy and mood."
 		},
 		{
 			src: "/images/docs/five-domains.webp",
 			kicker: "Five domains",
 			title: "War is more than boots on the ground",
-			text: "Land, sea, air, space and covert operations share one map and one set of consequences."
+			text: "Land, sea, air, space and covert ops on one map."
 		},
 		{
 			src: "/images/docs/industry.webp",
 			kicker: "Industry",
 			title: "Build the machine that funds the mission",
-			text: "Factories, resources and trade routes turn a struggling state into a power that can act."
+			text: "Factories, resources and trade routes that fund the mission."
 		},
 		{
 			src: "/images/docs/air-fighter.webp",
 			kicker: "Air power",
 			title: "Decide who owns the sky",
-			text: "Squadrons, sorties and air defence are planned on the same board as your ground troops."
+			text: "Squadrons and sorties planned alongside your ground troops."
 		},
 		{
 			src: "/images/docs/sea-capital.webp",
 			kicker: "Naval command",
 			title: "Project power beyond your coastline",
-			text: "Fleets, sea lanes and coastal strikes extend your reach across the map."
+			text: "Fleets, sea lanes and coastal strikes beyond your coast."
 		}
 	];
 
@@ -72,8 +72,7 @@
 					<p class="font-mono text-[10px] uppercase tracking-[0.28em] text-primary-fg">
 						{slides[active].kicker}
 					</p>
-					<p class="mt-1 font-serif text-xl font-bold text-fg">{slides[active].title}</p>
-					<p class="mt-1 text-sm leading-relaxed text-fg-muted">{slides[active].text}</p>
+					<p class="mt-1 text-xs leading-relaxed text-fg-muted">{slides[active].text}</p>
 					<div class="mt-3 flex gap-1.5">
 						{#each slides as slide, i (slide.src)}
 							<span
@@ -119,7 +118,7 @@
 	}
 
 	.showcase-placard {
-		padding: 0.9rem 1.1rem;
+		padding: 0.6rem 0.85rem;
 		border: 1px solid color-mix(in oklab, var(--color-line) 30%, transparent);
 		border-radius: 0.25rem;
 		background: color-mix(in oklab, var(--color-surface-1) 78%, transparent);
