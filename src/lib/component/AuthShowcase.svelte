@@ -12,34 +12,24 @@
 
 	const slides = [
 		{
-			src: "/images/docs/psyops.webp",
+			src: "/images/backgrounds/wallpaper.png",
 			kicker: "The board",
-			title: "A world that answers to you",
 			text: "Regions with their own people, economy and mood."
 		},
 		{
-			src: "/images/docs/five-domains.webp",
-			kicker: "Five domains",
-			title: "War is more than boots on the ground",
-			text: "Land, sea, air, space and covert ops on one map."
+			src: "/images/backgrounds/tank.png",
+			kicker: "Land power",
+			text: "Plan formations and frontlines on the same map."
 		},
 		{
-			src: "/images/docs/industry.webp",
-			kicker: "Industry",
-			title: "Build the machine that funds the mission",
-			text: "Factories, resources and trade routes that fund the mission."
+			src: "/images/backgrounds/gavel.png",
+			kicker: "Politics",
+			text: "Pass laws, hold elections and shape public opinion."
 		},
 		{
-			src: "/images/docs/air-fighter.webp",
-			kicker: "Air power",
-			title: "Decide who owns the sky",
-			text: "Squadrons and sorties planned alongside your ground troops."
-		},
-		{
-			src: "/images/docs/sea-capital.webp",
-			kicker: "Naval command",
-			title: "Project power beyond your coastline",
-			text: "Fleets, sea lanes and coastal strikes beyond your coast."
+			src: "/images/backgrounds/og.png",
+			kicker: "One world",
+			text: "War, markets and newspapers in one place."
 		}
 	];
 
@@ -47,7 +37,7 @@
 
 	onMount(() => {
 		if (prefersReducedMotion.current) return;
-		const timer = setInterval(() => (active = (active + 1) % slides.length), 6500);
+		const timer = setInterval(() => (active = (active + 1) % slides.length), 3800);
 		return () => clearInterval(timer);
 	});
 </script>
@@ -101,12 +91,12 @@
 		object-fit: cover;
 		opacity: 0;
 		transform: scale(1.02);
-		transition: opacity 1800ms ease-in-out;
+		transition: opacity 1100ms ease-in-out;
 	}
 
 	.showcase-slide.active {
 		opacity: 0.16;
-		animation: showcase-drift 18s ease-out forwards;
+		animation: showcase-drift 12s ease-out forwards;
 	}
 
 	.showcase-veil {
