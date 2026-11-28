@@ -1,5 +1,6 @@
 <script lang="ts">
 	import PageContainer from "#lib/component/PageContainer.svelte";
+	import Seo from "#lib/component/Seo.svelte";
 	import type { PageData } from "./$types";
 
 	let { data }: { data: PageData } = $props();
@@ -11,9 +12,10 @@
 	};
 </script>
 
-<svelte:head>
-	<title>Changelog – PsyOps</title>
-</svelte:head>
+<Seo
+	title="Changelog · PsyOps"
+	description="Every PsyOps release, grouped by features, changes and fixes. See what's new in the global political simulation."
+/>
 
 <PageContainer maxWidth="3xl" class="py-12">
 	<div class="animate-soft-in">

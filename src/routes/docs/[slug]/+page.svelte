@@ -1,14 +1,14 @@
 <script lang="ts">
+	import Seo from "#lib/component/Seo.svelte";
+
 	const { data } = $props();
 
 	const Content = $derived(data.component);
 </script>
 
-<svelte:head>
-	<title>{data.meta.title} – Psyops</title>
-	{#if data.meta.description}
-		<meta name="description" content={data.meta.description} />
-	{/if}
-</svelte:head>
-
+<Seo
+	title="{data.meta.title} · PsyOps"
+	description={data.meta.description || `Guide to ${data.meta.title} in PsyOps.`}
+	type="article"
+/>
 <Content />

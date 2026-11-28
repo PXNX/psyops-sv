@@ -6,14 +6,30 @@
 	import FluentChevronRight20Filled from "~icons/fluent/chevron-right-20-filled";
 	import TutorialArt from "#lib/component/docs/TutorialArt.svelte";
 	import DocArt from "#lib/component/docs/DocArt.svelte";
+	import Seo from "#lib/component/Seo.svelte";
 	import type { TutorialArtKind } from "#lib/component/docs/art.js";
 
 	const { data } = $props();
 	const groups = $derived(groupedDocs(data.docs));
 	const launches: { href: string; title: string; text: string; art: TutorialArtKind }[] = [
-		{ href: "/training?view=navy&tutorial=navy", title: "Flotten-Tutorial", text: "Hafen, Dock, Schiffe, Minen und Seeaufklärung interaktiv üben.", art: "naval" },
-		{ href: "/training?view=aviation&tutorial=air", title: "Luftwaffen-Tutorial", text: "Geschwader auswählen und Einsätze beauftragen.", art: "squadron" },
-		{ href: "/map?tutorial=map", title: "Karten-Tutorial", text: "See-, Land- und Luftraum-Modus, Hex-Auswahl und Kartenhistorie.", art: "history" }
+		{
+			href: "/training?view=navy&tutorial=navy",
+			title: "Flotten-Tutorial",
+			text: "Hafen, Dock, Schiffe, Minen und Seeaufklärung interaktiv üben.",
+			art: "naval"
+		},
+		{
+			href: "/training?view=aviation&tutorial=air",
+			title: "Luftwaffen-Tutorial",
+			text: "Geschwader auswählen und Einsätze beauftragen.",
+			art: "squadron"
+		},
+		{
+			href: "/map?tutorial=map",
+			title: "Karten-Tutorial",
+			text: "See-, Land- und Luftraum-Modus, Hex-Auswahl und Kartenhistorie.",
+			art: "history"
+		}
 	];
 
 	const tile = (category: string) =>
@@ -26,9 +42,10 @@
 					: "border-friendly/30 bg-friendly-bg/18 text-friendly-fg";
 </script>
 
-<svelte:head>
-	<title>Dokumentation – Psyops</title>
-</svelte:head>
+<Seo
+	title="Documentation · PsyOps"
+	description="Guides, mechanics and interactive tutorials for PsyOps. Learn how to run a state, command the military, trade and shape public opinion."
+/>
 
 <div class="animate-soft-in">
 	<div class="mb-6 flex items-start gap-3">
@@ -38,14 +55,18 @@
 		<div>
 			<h1 class="font-serif text-3xl text-heading">Dokumentation</h1>
 			<p class="mt-1 max-w-2xl text-sm text-fg-soft">
-				Anleitungen für alle Bereiche des Spiels. Die Tutorials lassen sich direkt starten; die Seiten
-				dahinter erklären die Mechaniken im Detail.
+				Anleitungen für alle Bereiche des Spiels. Die Tutorials lassen sich direkt starten; die Seiten dahinter erklären
+				die Mechaniken im Detail.
 			</p>
 		</div>
 	</div>
 
 	<div class="not-prose mt-4">
-		<DocArt kind="levers" label="The four levers of power" caption="Every guide below teaches one way to apply pressure. The interactive tours show where the controls are." />
+		<DocArt
+			kind="levers"
+			label="The four levers of power"
+			caption="Every guide below teaches one way to apply pressure. The interactive tours show where the controls are."
+		/>
 	</div>
 
 	<h2 class="section-title">Interaktive Tutorials</h2>

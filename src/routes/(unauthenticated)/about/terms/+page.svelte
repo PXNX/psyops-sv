@@ -5,13 +5,15 @@
 	import FluentDismiss20Filled from "~icons/fluent/dismiss-20-filled";
 	import FluentWarning20Filled from "~icons/fluent/warning-20-filled";
 	import FluentShield20Filled from "~icons/fluent/shield-20-filled";
+	import Seo from "#lib/component/Seo.svelte";
 	import Button from "#lib/component/ui/Button.svelte";
 	import PageContainer from "#lib/component/PageContainer.svelte";
 </script>
 
-<svelte:head>
-	<title>{"Terms of Service · PsyOps"}</title>
-</svelte:head>
+<Seo
+	title="Terms of Service · PsyOps"
+	description="The rules for playing PsyOps: accounts, fair play, content and what happens when an account is suspended."
+/>
 
 <PageContainer maxWidth="4xl" class="animate-soft-in py-12">
 	<div class="space-y-8">

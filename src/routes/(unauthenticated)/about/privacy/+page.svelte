@@ -7,13 +7,15 @@
 	import FluentDelete20Filled from "~icons/fluent/delete-20-filled";
 	import FluentGlobe20Filled from "~icons/fluent/globe-20-filled";
 	import FluentDocument20Filled from "~icons/fluent/document-20-filled";
+	import Seo from "#lib/component/Seo.svelte";
 	import PageContainer from "#lib/component/PageContainer.svelte";
 	import Button from "#lib/component/ui/Button.svelte";
 </script>
 
-<svelte:head>
-	<title>{"Privacy Policy · PsyOps"}</title>
-</svelte:head>
+<Seo
+	title="Privacy Policy · PsyOps"
+	description="How PsyOps handles your data: what we store, why we store it, and the rights you have over your account and personal information."
+/>
 
 <PageContainer maxWidth="4xl" class="animate-soft-in py-12">
 	<div class="space-y-8">
@@ -445,8 +447,10 @@
 								href="https://edpb.europa.eu/about-edpb/board/members_en"
 								class="text-primary-fg hover:text-primary-hover hover:underline"
 								target="_blank"
-								rel="noopener noreferrer">EDPB Member List</a
+								rel="noopener noreferrer"
 							>
+								EDPB Member List
+							</a>
 						</p>
 					</div>
 				</div>

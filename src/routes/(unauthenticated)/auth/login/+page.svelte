@@ -9,14 +9,17 @@
 	import { page } from "$app/state";
 	import TelegramLoginWidget from "#lib/components/TelegramLoginWidget.svelte";
 	import Button from "#lib/component/ui/Button.svelte";
+	import Seo from "#lib/component/Seo.svelte";
 
 	const botUsername = PUBLIC_TELEGRAM_BOT_USERNAME || "RW_SupportBot";
 	const next = $derived(page.url.searchParams.get("next") || "/");
 </script>
 
-<svelte:head>
-	<title>{"Sign in · PsyOps"}</title>
-</svelte:head>
+<Seo
+	title="Sign in · PsyOps"
+	description="Sign in to PsyOps to build a state, command your forces and shape the news. Continue with Telegram or Google."
+	robots="noindex, follow"
+/>
 
 <main class="relative flex flex-col min-h-dvh justify-center items-center w-full p-4 pb-20">
 	<!-- Main Content -->

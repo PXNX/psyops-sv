@@ -10,6 +10,7 @@
 	import FluentChat20Filled from "~icons/fluent/chat-20-filled";
 	import FluentChevronRight20Filled from "~icons/fluent/chevron-right-20-filled";
 	import PageContainer from "#lib/component/PageContainer.svelte";
+	import Seo from "#lib/component/Seo.svelte";
 	import { Badge } from "#lib/component/ui/index.js";
 	import type { PageData } from "./$types";
 
@@ -75,14 +76,17 @@
 	];
 </script>
 
-<svelte:head>
-	<title>About · PsyOps</title>
-</svelte:head>
+<Seo
+	title="About · PsyOps"
+	description="PsyOps is a global political simulation: build a state, command its forces, shape public opinion and write the story everyone else reads."
+/>
 
 <PageContainer maxWidth="4xl" class="py-12">
 	<div class="animate-soft-in">
 		<header class="relative overflow-hidden rounded-md border border-line/20 bg-surface-1 px-6 py-10">
-			<div class="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_85%_10%,color-mix(in_oklab,var(--color-primary)_14%,transparent),transparent_55%)]"></div>
+			<div
+				class="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_85%_10%,color-mix(in_oklab,var(--color-primary)_14%,transparent),transparent_55%)]"
+			></div>
 			<div class="relative flex flex-col items-center gap-5 text-center sm:flex-row sm:text-left">
 				<div class="panel flex size-24 shrink-0 items-center justify-center">
 					<img loading="lazy" decoding="async" alt="PsyOps logo" class="size-20" src="/logo.svg" />
@@ -93,8 +97,8 @@
 						<Badge tone="blue" size="sm">v{data.version}</Badge>
 					</div>
 					<p class="mt-2 max-w-xl text-sm leading-relaxed text-fg-soft">
-						A global political simulation: build a state, command its forces, shape public opinion and write
-						the story everyone else reads.
+						A global political simulation: build a state, command its forces, shape public opinion and write the story
+						everyone else reads.
 					</p>
 				</div>
 			</div>
@@ -127,8 +131,8 @@
 		</section>
 
 		<footer class="mt-12 border-t border-line/20 pt-5 text-xs text-fg-muted">
-			PsyOps is an open project built with {data.licenses.length} open source packages. Made for players who like
-			their politics with a little intrigue.
+			PsyOps is an open project built with {data.licenses.length} open source packages. Made for players who like their politics
+			with a little intrigue.
 		</footer>
 	</div>
 </PageContainer>

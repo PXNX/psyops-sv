@@ -1,4 +1,5 @@
 <script lang="ts">
+	import Seo from "#lib/component/Seo.svelte";
 	import PageContainer from "#lib/component/PageContainer.svelte";
 	import { Badge } from "#lib/component/ui/index.js";
 	import FluentOpen20Filled from "~icons/fluent/open-20-filled";
@@ -8,12 +9,17 @@
 	let { data }: { data: PageData } = $props();
 </script>
 
-<svelte:head><title>Open Source Licenses · PsyOps</title></svelte:head>
+<Seo
+	title="Open Source Licenses · PsyOps"
+	description="The open source packages, icon sets and artwork PsyOps builds on, with credits to everyone who maintains them."
+/>
 
 <PageContainer maxWidth="4xl" class="py-12">
 	<div class="animate-soft-in space-y-10">
 		<header class="flex items-start gap-3 border-b border-line/20 pb-5">
-			<span class="flex size-12 items-center justify-center rounded-sm border border-positive/30 bg-positive-bg/18 text-positive-fg">
+			<span
+				class="flex size-12 items-center justify-center rounded-sm border border-positive/30 bg-positive-bg/18 text-positive-fg"
+			>
 				<FluentCertificate20Filled class="size-6" />
 			</span>
 			<div>
@@ -31,7 +37,12 @@
 					<div class="panel-muted soft-lift flex items-center justify-between gap-3 rounded-sm p-3">
 						<div class="min-w-0">
 							{#if pkg.url}
-								<a href={pkg.url} target="_blank" rel="noopener noreferrer" class="flex items-center gap-1 text-sm font-medium text-fg hover:text-primary-hover">
+								<a
+									href={pkg.url}
+									target="_blank"
+									rel="noopener noreferrer"
+									class="flex items-center gap-1 text-sm font-medium text-fg hover:text-primary-hover"
+								>
 									<span class="truncate">{pkg.name}</span><FluentOpen20Filled class="size-3.5 shrink-0 text-fg-muted" />
 								</a>
 							{:else}
@@ -57,7 +68,9 @@
 						<div class="flex items-center justify-between gap-3">
 							<p class="text-sm font-medium text-fg">{set.name}</p>
 							{#if set.licenseUrl}
-								<a href={set.licenseUrl} target="_blank" rel="noopener noreferrer" class="hover:underline"><Badge tone="green" size="xs">{set.license}</Badge></a>
+								<a href={set.licenseUrl} target="_blank" rel="noopener noreferrer" class="hover:underline">
+									<Badge tone="green" size="xs">{set.license}</Badge>
+								</a>
 							{:else}
 								<Badge tone="green" size="xs">{set.license}</Badge>
 							{/if}
@@ -65,7 +78,9 @@
 						<p class="mt-1 text-xs text-fg-muted">
 							{#if set.author}
 								{#if set.authorUrl}
-									<a href={set.authorUrl} target="_blank" rel="noopener noreferrer" class="hover:text-primary-hover">{set.author}</a>
+									<a href={set.authorUrl} target="_blank" rel="noopener noreferrer" class="hover:text-primary-hover">
+										{set.author}
+									</a>
 								{:else}{set.author}{/if}
 							{/if}
 							{#if set.total}{set.author ? " · " : ""}{set.total.toLocaleString()} icons{/if}
