@@ -31,6 +31,7 @@
 	}: Props = $props();
 
 	let uploading = $state(false);
+	let localError = $state<string | null>(null);
 	let dragActive = $state(false);
 	let selectedFile = $state<File | null>(null);
 	let previewUrl = $state<string | null>(null);
@@ -75,21 +76,25 @@
 		const typePattern = acceptedTypes.replace("*", ".*");
 		const regex = new RegExp(typePattern);
 		if (!regex.test(file.type)) {
-			onError?.("Invalid file type");
+			localError = "Images only — please choose an image file.";
+			onError?.(localError);
 			return;
 		}
 
 		// Validate file size
 		if (file.size > maxSizeBytes) {
-			onError?.(`File size must be less than ${maxSizeMB}MB`);
+			localError = `Images must be ${maxSizeMB}MB or smaller.`;
+			onError?.(localError);
 			return;
 		}
 
 		if (file.size === 0) {
-			onError?.("File is empty");
+			localError = "That image is empty.";
+			onError?.(localError);
 			return;
 		}
 
+		localError = null;
 		selectedFile = file;
 		if (previewUrl) {
 			URL.revokeObjectURL(previewUrl);
@@ -271,7 +276,7 @@
 							</p>
 							{#if !uploading && !disabled}
 								<p class="mt-1 text-xs text-fg-muted">
-									{acceptedTypes.replace("image/*", "Images")} • {maxSizeMB}MB max
+									Images only • {maxSizeMB}MB max
 								</p>
 							{/if}
 						</div>
@@ -330,6 +335,9 @@
 			</button>
 		</div>
 	</div>
+	{#if localError}
+		<p class="mt-2 text-xs text-error-fg" role="alert">{localError}</p>
+	{/if}
 
 	<!-- Submit Button -->
 	<Button type="button" variant="primary" block disabled={!canUpload || disabled} onclick={handleSubmit}>

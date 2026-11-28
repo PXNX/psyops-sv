@@ -245,6 +245,7 @@
 								<FluentImage20Filled class="size-7 text-primary-fg" />
 								<span class="text-[10px] text-fg-muted leading-tight">
 									{dragActive ? "Drop here" : "Optional"}
+									<span class="text-[9px] text-fg-muted leading-tight">Images only • 5MB max</span>
 								</span>
 							</div>
 						{:else}

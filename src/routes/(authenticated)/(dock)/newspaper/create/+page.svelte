@@ -200,7 +200,7 @@
 									{/if}
 								</p>
 								{#if !$submitting}
-									<p class="mt-1 font-mono text-xs text-fg-muted">PNG / JPG / WEBP · 5 MB</p>
+									<p class="mt-1 font-mono text-xs text-fg-muted">Images only • 5MB max</p>
 								{/if}
 							</div>
 						</div>
